@@ -9,12 +9,13 @@ mod builtin;
 mod context;
 mod eval_error;
 mod function;
+mod issue;
 mod source;
 mod symbol;
 mod workbench;
 
 pub use argument_match::*;
-pub use eval_error::*;
+pub use issue::*;
 
 pub use context::EvalContext;
 
