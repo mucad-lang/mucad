@@ -5,7 +5,7 @@ mod stack;
 
 use microcad_lang_resolve::{
     Library, LibraryCache,
-    library::symbol::{SymbolNodeId, SymbolNodeRef},
+    library::symbol::{self, SymbolNodeId, SymbolNodeRef},
 };
 pub use stack::*;
 
@@ -92,6 +92,23 @@ impl EvalContext {
             .get()
             .def
             .call(args, self)
+    }
+
+    /// Call the workbench or function `id` in library `lib_id`.
+    pub(crate) fn call_symbol_workbench(
+        &mut self,
+        call: &symbol::workbench::WorkbenchCall,
+        lib_id: LibraryId,
+        id: SymbolNodeId,
+    ) -> EvalResult {
+        let args = call.args.eval(self)?;
+        self.scope(
+            SymbolCallFrame {
+                path: call.path.clone(),
+                src_ref: call.src_ref,
+            },
+            |context| context.call_symbol(lib_id, id, &args),
+        )
     }
 
     /// Evaluate the symbol `id` in library `lib_id`.

@@ -6,17 +6,16 @@
 use crate::{
     Callable, Eval, EvalContext, EvalError, EvalErrorKind, EvalResult,
     context::{
-        BuiltinItemFrame, ContextScope, SymbolCallFrame, WorkbenchGroupFrame, WorkbenchInitFrame,
-        WorkpieceFrame,
+        BuiltinItemFrame, ContextScope, WorkbenchGroupFrame, WorkbenchInitFrame, WorkpieceFrame,
     },
 };
 
 use microcad_builtin::BuiltinItem;
 use microcad_lang_base::{
-    DisplayWithCtx, LibraryId, PushIssue, SrcReferrer,
+    DisplayWithCtx, PushIssue, SrcReferrer,
     element::{Visibility, WorkbenchKind},
 };
-use microcad_lang_resolve::library::symbol::{self, SymbolNodeId};
+use microcad_lang_resolve::library::symbol;
 
 use microcad_lang_types::{
     ArgumentValue, ArgumentValueList, ModelTree, Value,
@@ -160,11 +159,11 @@ impl Eval for symbol::workbench::WorkbenchCall {
                 }
             }
             Some(symbol::SymbolId::Item(id)) => match context.lib_id() {
-                Some(lib_id) => call_symbol(self, *lib_id, *id, context),
+                Some(lib_id) => context.call_symbol_workbench(self, *lib_id, *id),
                 None => context.catch(EvalErrorKind::NoLibraryToEvaluate),
             },
             Some(symbol::SymbolId::External(external_id)) => {
-                call_symbol(self, external_id.lib_id, external_id.id, context)
+                context.call_symbol_workbench(self, external_id.lib_id, external_id.id)
             }
             _ => context.catch(EvalErrorKind::SymbolCannotBeCalled {
                 path: self.path.to_string(),
@@ -172,21 +171,6 @@ impl Eval for symbol::workbench::WorkbenchCall {
             }),
         }
     }
-}
-
-/// Call the workbench or function `id` in library `lib_id`.
-fn call_symbol(
-    call: &symbol::workbench::WorkbenchCall,
-    lib_id: LibraryId,
-    id: SymbolNodeId,
-    context: &mut EvalContext,
-) -> EvalResult {
-    let args = call.args.eval(context)?;
-    let frame = SymbolCallFrame {
-        path: call.path.clone(),
-        src_ref: call.src_ref,
-    };
-    context.scope(frame, |context| context.call_symbol(lib_id, id, &args))
 }
 
 impl Eval for symbol::WorkbenchExpression {
