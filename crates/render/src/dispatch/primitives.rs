@@ -3,10 +3,12 @@ use microcad_core::{self as core, Polygon};
 
 use crate::{RenderPrimitive, RenderResolution};
 
+/// Helper trait to render a polygon.
 trait RenderPolygon {
     fn render_polygon(&self, resolution: &RenderResolution) -> Polygon;
 }
 
+/// Everything that can be rendered into a polygon, can be rendered as a primitive.
 impl<T> RenderPrimitive for T
 where
     T: RenderPolygon,
