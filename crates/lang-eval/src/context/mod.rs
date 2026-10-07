@@ -11,7 +11,7 @@ pub use stack::*;
 
 use microcad_builtin::BuiltinRegistry;
 use microcad_lang_base::{
-    IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SrcRef, SrcReferrer,
+    IssueList, LibraryId, LookUpName, Name, PushIssue, SharedMut, SrcRef, SrcReferrer,
 };
 use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
@@ -31,7 +31,7 @@ pub struct EvalContext {
     pub lib_id: Option<LibraryId>,
 
     /// All libraries, including the one being evaluated.
-    pub lib_cache: Shared<LibraryCache>,
+    pub lib_cache: SharedMut<LibraryCache>,
 }
 
 /// Builder functions
@@ -53,7 +53,7 @@ impl EvalContext {
         self
     }
 
-    pub fn with_lib_cache(mut self, lib_cache: Shared<LibraryCache>) -> Self {
+    pub fn with_lib_cache(mut self, lib_cache: SharedMut<LibraryCache>) -> Self {
         self.lib_cache = lib_cache;
         self
     }
@@ -62,7 +62,7 @@ impl EvalContext {
 /// Library access functions
 impl EvalContext {
     /// A library by its ID.
-    pub fn library(&self, lib_id: &LibraryId) -> Option<Shared<Library>> {
+    pub fn library(&self, lib_id: &LibraryId) -> Option<SharedMut<Library>> {
         self.lib_cache.read_unwrap().get(lib_id)
     }
 

@@ -13,7 +13,7 @@ pub mod stack;
 mod type_check;
 pub mod visitor;
 
-use microcad_lang_base::{CompilationResult, HashId, IssueList, PushIssue, Shared};
+use microcad_lang_base::{CompilationResult, HashId, IssueList, PushIssue, SharedMut};
 
 use microcad_lang_lower::Ir;
 
@@ -24,8 +24,8 @@ pub use crate::resolve::cache::{LibraryCache, SourceCache};
 #[derive(Debug, Default)]
 pub struct ResolveContext {
     pub lib_search_paths: Vec<std::path::PathBuf>,
-    pub lib_cache: Shared<LibraryCache>,
-    pub src_cache: Shared<SourceCache>,
+    pub lib_cache: SharedMut<LibraryCache>,
+    pub src_cache: SharedMut<SourceCache>,
 }
 
 /// Builder methods.
@@ -40,12 +40,12 @@ impl ResolveContext {
         self
     }
 
-    pub fn with_lib_cache(mut self, lib_cache: Shared<LibraryCache>) -> Self {
+    pub fn with_lib_cache(mut self, lib_cache: SharedMut<LibraryCache>) -> Self {
         self.lib_cache = lib_cache;
         self
     }
 
-    pub fn with_src_cache(mut self, src_cache: Shared<SourceCache>) -> Self {
+    pub fn with_src_cache(mut self, src_cache: SharedMut<SourceCache>) -> Self {
         self.src_cache = src_cache;
         self
     }

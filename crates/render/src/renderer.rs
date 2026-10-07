@@ -1,7 +1,7 @@
 // Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::Shared;
+use microcad_lang_base::SharedMut;
 use microcad_lang_types::ModelTree;
 
 use crate::{
@@ -14,7 +14,7 @@ pub type ProgressTx = std::sync::mpsc::Sender<f32>;
 /// The rendering engine setup and shared resources.
 pub struct Renderer {
     pub resolution: RenderResolution,
-    pub cache: Option<Shared<RenderCache>>,
+    pub cache: Option<SharedMut<RenderCache>>,
     pub hooks: RenderHooks,
     pub progress_tx: Option<ProgressTx>,
 }
@@ -36,7 +36,7 @@ impl Renderer {
     }
 
     /// Render cache.
-    pub fn with_cache(mut self, cache: Shared<RenderCache>) -> Self {
+    pub fn with_cache(mut self, cache: SharedMut<RenderCache>) -> Self {
         self.cache = Some(cache);
         self
     }
