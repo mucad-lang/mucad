@@ -7,19 +7,6 @@ use cgmath::InnerSpace;
 
 use microcad_core as core;
 
-/// A trait that renders something with a reslution
-pub trait RenderPrimitive<T = core::Geometry> {
-    /// The render function.
-    fn render_primitive(&self, resolution: &RenderResolution) -> T;
-
-    /// A render hint to tell whether this geometry is independent from resolution.
-    ///
-    /// Example: a rectangle is resolution independent, but a circle is not.
-    fn is_resolution_independent(&self) -> bool {
-        false
-    }
-}
-
 /// Render resolution when rendering things to polygons or meshes.
 #[derive(Debug, Clone)]
 pub struct RenderResolution {

@@ -3,81 +3,24 @@
 
 //! Render context
 
-use std::sync::mpsc;
-
 use microcad_hash::ToHash;
-use microcad_lang_base::Shared;
 use microcad_lang_types::{ModelNodeRef, ModelTree};
 
 use crate::{
-    GeometryNodeId, GeometryNodeRef, GeometryOutputs, GeometryTree, Render, RenderCache,
-    RenderHooks, RenderResolution, RenderResult,
+    GeometryNodeId, GeometryNodeRef, GeometryOutputs, GeometryTree, Render, RenderResolution,
+    RenderResult, Renderer,
 };
-
-/// Our progress sender.
-pub type ProgressTx = mpsc::Sender<f32>;
-
-/// The rendering engine setup and shared resources.
-pub struct Renderer {
-    pub resolution: RenderResolution,
-    pub cache: Option<Shared<RenderCache>>,
-    pub hooks: RenderHooks,
-    pub progress_tx: Option<ProgressTx>,
-}
-
-impl Renderer {
-    pub fn new() -> Self {
-        Self {
-            resolution: RenderResolution::default(),
-            cache: None,
-            hooks: RenderHooks::new(),
-            progress_tx: None,
-        }
-    }
-
-    /// Override the default render resolution.
-    pub fn with_resolution(mut self, resolution: RenderResolution) -> Self {
-        self.resolution = resolution;
-        self
-    }
-
-    /// Render cache.
-    pub fn with_cache(mut self, cache: Shared<RenderCache>) -> Self {
-        self.cache = Some(cache);
-        self
-    }
-
-    /// With progress tracker.
-    pub fn with_progress(mut self, progress: ProgressTx) -> Self {
-        self.progress_tx = Some(progress);
-        self
-    }
-}
-
-impl Renderer {
-    /// Execute rendering for a given model tree.
-    pub fn render(&mut self, model_tree: &ModelTree) -> RenderResult<GeometryTree> {
-        let mut ctx = RenderContext::new(self, model_tree);
-        ctx.execute()
-    }
-}
-
-impl Default for Renderer {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 /// The render context.
 ///
 /// Keeps a stack of model nodes and the render cache.
 pub struct RenderContext<'a, 'tree> {
-    pub renderer: &'a mut Renderer,
+    pub(crate) renderer: &'a mut Renderer,
 
-    pub model_tree: &'tree ModelTree,
+    pub(crate) model_tree: &'tree ModelTree,
 
     /// Model stack.
-    pub stack: Vec<GeometryNodeId>,
+    stack: Vec<GeometryNodeId>,
 
     /// The number of models to be rendered.
     models_to_render: usize,
@@ -89,7 +32,7 @@ pub struct RenderContext<'a, 'tree> {
 /// Builder methods
 impl<'a, 'tree> RenderContext<'a, 'tree> {
     /// Initialize context with a model tree.
-    pub fn new(renderer: &'a mut Renderer, model_tree: &'tree ModelTree) -> Self {
+    pub(crate) fn new(renderer: &'a mut Renderer, model_tree: &'tree ModelTree) -> Self {
         Self {
             renderer,
             model_tree,
@@ -99,7 +42,7 @@ impl<'a, 'tree> RenderContext<'a, 'tree> {
         }
     }
 
-    pub fn execute(&mut self) -> RenderResult<GeometryTree> {
+    pub(crate) fn execute(&mut self) -> RenderResult<GeometryTree> {
         let mut tree = GeometryTree::new(self.model_tree, self.renderer.resolution.clone());
         /// Recursive DFS helper: processes children first, then renders the current node.
         fn recurse(
