@@ -69,7 +69,7 @@ fn load_source_inline_module() {
         Err(err) => {
             let diagnostics = Diagnostics::from(lib_ctx.issues);
 
-            ctx.src_cache.with_read(|source_cache| {
+            ctx.source_cache().with_read(|source_cache| {
                 panic!(
                     "{diagnostics}\n{err:?}",
                     diagnostics = diagnostics
