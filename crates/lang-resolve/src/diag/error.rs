@@ -62,6 +62,25 @@ pub enum ResolveErrorKind {
 
     #[error("Source '{0}' has no path.")]
     SourceHasNoPath(String),
+
+    #[error("Unresolved symbol: {path}")]
+    UnresolvedPath {
+        path: String,
+        #[label("This symbol could not be found")]
+        src_ref: SrcRef,
+    },
+
+    #[error("Ambiguous symbol: {path}")]
+    #[diagnostic(help("Candidates: {}", candidates.join(", ")))]
+    AmbiguousPath {
+        path: String,
+        candidates: Vec<String>,
+        #[label("This symbol matches multiple definitions")]
+        src_ref: SrcRef,
+    },
+
+    #[error("Library `{name}` not loaded")]
+    LibraryNotLoaded { name: String },
 }
 
 #[derive(Debug)]
@@ -150,6 +169,7 @@ impl SrcReferrer for ResolveError {
             TypeMismatch {
                 specified_src_ref, ..
             } => *specified_src_ref,
+            UnresolvedPath { src_ref, .. } | AmbiguousPath { src_ref, .. } => *src_ref,
             _ => SrcRef::none(),
         }
     }
