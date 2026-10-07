@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::{
@@ -129,15 +129,6 @@ impl CopyrightUpdater {
         }
         self
     }
-
-    /// Finalize and build the [`CopyrightUpdater`].
-    pub fn build(self) -> CopyrightUpdater {
-        CopyrightUpdater {
-            path: self.path,
-            extensions: self.extensions,
-            excluded_patterns: self.excluded_patterns,
-        }
-    }
 }
 
 impl CopyrightUpdater {
@@ -216,7 +207,7 @@ pub fn update_copyright() -> std::io::Result<()> {
         .extensions(&["rs", "pest", "slint", "wgsl", "µcad"], "//")
         .extension("toml", "#")
         .exclude("target/*")
-        .exclude("tests/*.µcad")
+        .exclude("crates/*/tests/*.µcad")
         .with_git_exclusions();
 
     updater.update()
