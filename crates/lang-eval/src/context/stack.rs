@@ -84,13 +84,22 @@ impl ContextScope for FunctionScopeFrame {
 #[derive(Debug)]
 pub struct WorkpieceFrame {
     pub builder: ModelTreeBuilder,
+    /// Input model of an operation, available as `self` (currently `@input`).
+    pub input: Option<Value>,
 }
 
 impl WorkpieceFrame {
     pub fn new(workpiece: Workpiece) -> Self {
         Self {
             builder: ModelTreeBuilder::new(Element::Workpiece(workpiece)),
+            input: None,
         }
+    }
+
+    /// Set the input model of an operation.
+    pub fn with_input(mut self, input: Option<Value>) -> Self {
+        self.input = input;
+        self
     }
 }
 
@@ -102,7 +111,10 @@ impl ModelTreeBuilderMut for WorkpieceFrame {
 
 impl ContextScope for WorkpieceFrame {
     fn look_up_local(&self, name: impl AsRef<str>) -> Option<&Value> {
-        self.builder.get_property(name).map(|prop| &prop.value)
+        match name.as_ref() {
+            "self" => self.input.as_ref(),
+            name => self.builder.get_property(name).map(|prop| &prop.value),
+        }
     }
 }
 

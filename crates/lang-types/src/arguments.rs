@@ -132,6 +132,16 @@ impl ArgumentValueList {
         })
     }
 
+    /// Remove a named argument and return its value.
+    pub fn remove_named(&mut self, name: impl AsRef<str>) -> Option<Value> {
+        let this_name = Identifier::from(name.as_ref());
+        let index = self
+            .args
+            .iter()
+            .position(|arg| arg.id.as_ref() == Some(&this_name))?;
+        Some(self.args.remove(index).value)
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &ArgumentValue> {
         self.args.iter()
     }

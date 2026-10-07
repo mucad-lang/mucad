@@ -13,9 +13,11 @@ use microcad_builtin::BuiltinRegistry;
 use microcad_lang_base::{
     IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SrcRef, SrcReferrer,
 };
-use microcad_lang_types::{Value, model::ModelTreeBuilderMut};
+use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
-use crate::{Eval, EvalError, EvalErrorKind, EvalInfo, EvalIssue, EvalResult, EvalWarning};
+use crate::{
+    Callable, Eval, EvalError, EvalErrorKind, EvalInfo, EvalIssue, EvalResult, EvalWarning,
+};
 
 #[derive(Debug, Default)]
 pub struct EvalContext {
@@ -74,6 +76,25 @@ impl EvalContext {
         };
         let lib = lib.read_unwrap();
         lib.root().get().eval(self)
+    }
+
+    /// Call the symbol `id` in library `lib_id` (e.g. a workbench).
+    ///
+    /// The library's read lock is held during the call.
+    pub(crate) fn call_symbol(
+        &mut self,
+        lib_id: LibraryId,
+        id: SymbolNodeId,
+        args: &ArgumentValueList,
+    ) -> EvalResult {
+        let Some(lib) = self.library(&lib_id) else {
+            return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
+        };
+        let lib = lib.read_unwrap();
+        SymbolNodeRef::new(id, &lib.arena)
+            .get()
+            .def
+            .call(args, self)
     }
 
     /// Evaluate the symbol `id` in library `lib_id`.

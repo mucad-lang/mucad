@@ -83,8 +83,6 @@ pub fn call_workbench<T: Callable<ModelTree>>(
 }
 
 /// Call an operation with `self` and arguments to produce a model tree and test snapshot.
-///
-/// The `@input` placeholders of the resulting model are replaced by `self`.
 pub fn call_op<T: Callable<ModelTree>>(
     name: &str,
     op: &T,
@@ -93,10 +91,10 @@ pub fn call_op<T: Callable<ModelTree>>(
 ) -> ModelTree {
     let mut context = EvalContext::new();
     let input: Value = self_.eval(&mut context).expect("No error");
+    let args = std::iter::once(ArgumentValue::new(input, Some("self".into()))).chain(arg_iter);
     let model: ModelTree = op
-        .call(&ArgumentValueList::from_iter(arg_iter), &mut context)
+        .call(&ArgumentValueList::from_iter(args), &mut context)
         .expect("No error");
-    let model = model.replace_input_placeholders(&input.into());
     insta::assert_snapshot!(name, model.to_string_with_ctx(&context));
     model
 }
@@ -321,41 +319,35 @@ fn op_rotate() {
             matrix = expr!(matrix)
         )))]);
 
-    let mut context = EvalContext::new();
-    let input_shape: Value = call_circle(Value::mm(4.0)).eval(&mut context).unwrap();
-
     // Test calling (angle = 90.0, axis = (x = 0, y = 0, z = 1)) via init(angle, axis)
-    call_workbench(
+    call_op(
         "rotate_angle_axis",
         &workbench,
+        call_circle(Value::mm(4.0)),
         [
             argument_value!(angle = Value::deg(90.0)),
             argument_value!(axis = tuple!(x = 0.0, y = 0.0, z = 1.0)),
         ],
     );
 
-    // Test calling (angle = [90.0, axis = (x = 0, y = 0, z = 0)) via init(angle, axis)
-    {
-        let model = call_workbench(
-            "rotate_angle_axis_multi",
-            &workbench,
-            [
-                argument_value!(
-                    angle = Value::list([Value::deg(0.0), Value::deg(45.0), Value::deg(90.0)])
-                ),
-                argument_value!(axis = tuple!(x = 0.0, y = 0.0, z = 1.0)),
-            ],
-        );
-
-        let model = model.replace_input_placeholders(&input_shape.into());
-
-        insta::assert_snapshot!("rotate_model_replaced", model.to_string_with_ctx(&context));
-    }
+    // Test calling (angle = [0.0, 45.0, 90.0], axis = (x = 0, y = 0, z = 1)) via init(angle, axis)
+    call_op(
+        "rotate_angle_axis_multi",
+        &workbench,
+        call_circle(Value::mm(4.0)),
+        [
+            argument_value!(
+                angle = Value::list([Value::deg(0.0), Value::deg(45.0), Value::deg(90.0)])
+            ),
+            argument_value!(axis = tuple!(x = 0.0, y = 0.0, z = 1.0)),
+        ],
+    );
 
     // Test calling (angle = 90.0) via init(angle, axis)
-    call_workbench(
+    call_op(
         "rotate_angle_axis_default_arg",
         &workbench,
+        call_circle(Value::mm(4.0)),
         [argument_value!(angle = Value::deg(90.0))],
     );
 }

@@ -6,13 +6,17 @@
 use crate::{
     Callable, Eval, EvalContext, EvalError, EvalErrorKind, EvalResult,
     context::{
-        BuiltinItemFrame, ContextScope, WorkbenchGroupFrame, WorkbenchInitFrame, WorkpieceFrame,
+        BuiltinItemFrame, ContextScope, SymbolCallFrame, WorkbenchGroupFrame, WorkbenchInitFrame,
+        WorkpieceFrame,
     },
 };
 
 use microcad_builtin::BuiltinItem;
-use microcad_lang_base::{DisplayWithCtx, PushIssue, SrcReferrer, element::Visibility};
-use microcad_lang_resolve::library::symbol;
+use microcad_lang_base::{
+    DisplayWithCtx, LibraryId, PushIssue, SrcReferrer,
+    element::{Visibility, WorkbenchKind},
+};
+use microcad_lang_resolve::library::symbol::{self, SymbolNodeId};
 
 use microcad_lang_types::{
     ArgumentValue, ArgumentValueList, ModelTree, Value,
@@ -58,8 +62,19 @@ impl Eval for symbol::workbench::WorkbenchIf {
 }
 
 impl Eval<ModelTree> for symbol::workbench::Marker {
-    fn eval(&self, _context: &mut EvalContext) -> EvalResult<ModelTree> {
-        Ok(ModelTree::new(Element::InputPlaceholder))
+    fn eval(&self, context: &mut EvalContext) -> EvalResult<ModelTree> {
+        if !self.is_input_placeholder() {
+            return Ok(ModelTree::new(Element::InputPlaceholder));
+        }
+
+        // `@input` is the input model of the operation, which will become `self` in the future.
+        match context.look_up_local("self") {
+            Some(input) => Ok(ModelTree::from(input.clone())),
+            None => Err(EvalErrorKind::InputNotAvailable {
+                src_ref: self.src_ref,
+            }
+            .into()),
+        }
     }
 }
 
@@ -123,8 +138,14 @@ impl Eval<ArgumentValueList> for symbol::workbench::ArgumentList {
 
 impl Eval for symbol::workbench::WorkbenchCall {
     fn eval(&self, context: &mut EvalContext) -> EvalResult {
-        match &self.path {
-            symbol::Path::Resolved(symbol::SymbolId::Builtin(builtin_id)) => {
+        let symbol_id = match &self.path {
+            symbol::Path::Resolved(symbol_id)
+            | symbol::Path::HumanReadable { id: symbol_id, .. } => Some(symbol_id),
+            symbol::Path::Unresolved(_) => None,
+        };
+
+        match symbol_id {
+            Some(symbol::SymbolId::Builtin(builtin_id)) => {
                 let args = self.args.eval(context)?;
                 let item = context.builtins.get(*builtin_id);
                 let src_ref = context.current_symbol_src_ref();
@@ -138,12 +159,34 @@ impl Eval for symbol::workbench::WorkbenchCall {
                     }),
                 }
             }
-            path => context.catch(EvalErrorKind::SymbolCannotBeCalled {
-                path: path.to_string(),
+            Some(symbol::SymbolId::Item(id)) => match context.lib_id {
+                Some(lib_id) => call_symbol(self, lib_id, *id, context),
+                None => context.catch(EvalErrorKind::NoLibraryToEvaluate),
+            },
+            Some(symbol::SymbolId::External(external_id)) => {
+                call_symbol(self, external_id.lib_id, external_id.id, context)
+            }
+            _ => context.catch(EvalErrorKind::SymbolCannotBeCalled {
+                path: self.path.to_string(),
                 src_ref: self.src_ref,
             }),
         }
     }
+}
+
+/// Call the workbench or function `id` in library `lib_id`.
+fn call_symbol(
+    call: &symbol::workbench::WorkbenchCall,
+    lib_id: LibraryId,
+    id: SymbolNodeId,
+    context: &mut EvalContext,
+) -> EvalResult {
+    let args = call.args.eval(context)?;
+    let frame = SymbolCallFrame {
+        path: call.path.clone(),
+        src_ref: call.src_ref,
+    };
+    context.scope(frame, |context| context.call_symbol(lib_id, id, &args))
 }
 
 impl Eval for symbol::WorkbenchExpression {
@@ -212,10 +255,11 @@ impl Callable for symbol::Workbench {
         fn eval_to_model(
             workbench: &symbol::Workbench,
             input_properties: Properties,
+            input: Option<Value>,
             context: &mut EvalContext,
         ) -> EvalResult<ModelTree> {
             context.scope(
-                WorkpieceFrame::new(Workpiece::new(workbench.signature.kind)),
+                WorkpieceFrame::new(Workpiece::new(workbench.signature.kind)).with_input(input),
                 |context| -> EvalResult<ModelTree> {
                     context
                         .model_tree_builder_mut()
@@ -228,6 +272,23 @@ impl Callable for symbol::Workbench {
                 },
             )
         }
+
+        // An operation takes its input model as `self`, which is not matched with the inits.
+        let mut args = args.clone();
+        let input = match self.signature.kind {
+            WorkbenchKind::Op => match args.remove_named("self") {
+                Some(input) => Some(input),
+                None => {
+                    return Err(EvalErrorKind::CannotCallOperationWithoutWorkpiece {
+                        name: context.current_symbol_name().unwrap_or_default(),
+                        src_ref: context.current_symbol_src_ref(),
+                    }
+                    .into());
+                }
+            },
+            WorkbenchKind::Sketch | WorkbenchKind::Part => None,
+        };
+        let args = &args;
 
         use crate::ArgumentMatch;
 
@@ -273,7 +334,7 @@ impl Callable for symbol::Workbench {
                                 },
                             )?;
 
-                            models.push(eval_to_model(self, properties, context)?);
+                            models.push(eval_to_model(self, properties, input.clone(), context)?);
                         }
                     }
                     Err(err) => {

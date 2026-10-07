@@ -6,4 +6,5 @@ Workpiece(op)
 |   - matrix [in]: Matrix3x3 = Matrix3 [[0, 1, 0], [-1, 0, 0], [0, 0, 1]]
 └── Builtin(RotateMatrix(Matrix3 [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]))
     |   - matrix: Matrix3x3 = Matrix3 [[0, 1, 0], [-1, 0, 0], [0, 0, 1]]
-    └── InputPlaceholder
+    └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+            - radius [in]: Length = 4mm

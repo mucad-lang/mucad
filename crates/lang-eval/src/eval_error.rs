@@ -130,6 +130,22 @@ pub enum EvalErrorKind {
     #[error("No library to evaluate")]
     NoLibraryToEvaluate,
 
+    /// Cannot call operation without workpiece, e.g. `op()`.
+    #[error("Cannot call operation `{name}` without workpiece")]
+    #[diagnostic(help("Call the operation on a workpiece, e.g. `part.{name}()`"))]
+    CannotCallOperationWithoutWorkpiece {
+        name: String,
+        #[label("Workpiece `self` is missing")]
+        src_ref: SrcRef,
+    },
+
+    /// `@input` used outside of an operation.
+    #[error("`@input` is only available in operations")]
+    InputNotAvailable {
+        #[label("Not inside an operation")]
+        src_ref: SrcRef,
+    },
+
     #[error("Library `{lib_id}` not loaded")]
     LibraryNotLoaded { lib_id: LibraryId },
 }
@@ -151,6 +167,8 @@ impl SrcReferrer for EvalErrorKind {
             EvalErrorKind::UnresolvedPath { src_ref, .. } => *src_ref,
             EvalErrorKind::BuiltinNotFound { src_ref, .. } => *src_ref,
             EvalErrorKind::BuiltinConstantExpected { src_ref, .. } => *src_ref,
+            EvalErrorKind::CannotCallOperationWithoutWorkpiece { src_ref, .. } => *src_ref,
+            EvalErrorKind::InputNotAvailable { src_ref } => *src_ref,
             _ => SrcRef::none(),
         }
     }
