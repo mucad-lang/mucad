@@ -50,7 +50,7 @@ impl Eval for symbol::SymbolId {
         use crate::context::ContextScope;
 
         match &self {
-            symbol::SymbolId::Builtin(builtin_id) => match context.builtins.get(*builtin_id) {
+            symbol::SymbolId::Builtin(builtin_id) => match context.builtins().get(*builtin_id) {
                 Some(builtin) => builtin.eval(context),
                 None => {
                     // TODO context.diag(BuiltinError::NoBuiltin { full_name: (), id: *builtin_id })
@@ -61,8 +61,8 @@ impl Eval for symbol::SymbolId {
                 Some(value) => Ok(value.clone()),
                 None => context.catch(EvalErrorKind::LocalNotFound(local_id.clone())),
             },
-            symbol::SymbolId::Item(id) => match context.lib_id {
-                Some(lib_id) => context.eval_symbol(lib_id, *id),
+            symbol::SymbolId::Item(id) => match context.lib_id() {
+                Some(lib_id) => context.eval_symbol(*lib_id, *id),
                 None => context.catch(EvalErrorKind::NoLibraryToEvaluate),
             },
             symbol::SymbolId::External(external_id) => {

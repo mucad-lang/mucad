@@ -10,62 +10,59 @@ use microcad_lang_resolve::{
 pub use stack::*;
 
 use microcad_builtin::BuiltinRegistry;
-use microcad_lang_base::{
-    IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut, SrcRef, SrcReferrer,
-};
+use microcad_lang_base::{IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut};
 use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
 use crate::{
     Callable, Eval, EvalError, EvalErrorKind, EvalInfo, EvalIssue, EvalResult, EvalWarning,
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct EvalContext {
     stack: Stack,
 
     issues: IssueList<EvalIssue>,
 
-    pub builtins: BuiltinRegistry,
+    builtins: Shared<BuiltinRegistry>,
 
     /// ID of the library being evaluated, which is stored in `lib_cache`.
-    pub lib_id: Option<LibraryId>,
+    lib_id: Option<LibraryId>,
 
     /// All libraries, including the one being evaluated.
-    pub lib_cache: SharedMut<LibraryCache>,
+    lib_cache: SharedMut<LibraryCache>,
 }
 
 /// Builder functions
 impl EvalContext {
+    /// Create an `EvalContext` with default settings and standard built-ins (`BuiltinRegistry::new()`).
     pub fn new() -> Self {
-        let builtins = BuiltinRegistry::new();
-
-        Self {
-            builtins,
-            ..Default::default()
-        }
+        EvalContextBuilder::new().build()
     }
 
-    /// Set the library to be evaluated.
-    ///
-    /// The library must be stored in the library cache.
-    pub fn with_lib_id(mut self, lib_id: LibraryId) -> Self {
-        self.lib_id = Some(lib_id);
-        self
-    }
-
-    pub fn with_lib_cache(mut self, lib_cache: SharedMut<LibraryCache>) -> Self {
-        self.lib_cache = lib_cache;
-        self
+    /// Create a builder for customized evaluation context setup.
+    pub fn builder() -> EvalContextBuilder {
+        EvalContextBuilder::new()
     }
 }
 
-/// Library access functions
+/// Accessors
 impl EvalContext {
+    pub fn builtins(&self) -> &BuiltinRegistry {
+        &self.builtins
+    }
+
+    pub fn lib_id(&self) -> Option<&LibraryId> {
+        self.lib_id.as_ref()
+    }
+
     /// A library by its ID.
     pub fn library(&self, lib_id: &LibraryId) -> Option<SharedMut<Library>> {
         self.lib_cache.read_unwrap().get(lib_id)
     }
+}
 
+/// Eval methods
+impl EvalContext {
     /// Evaluate the root symbol of the library being evaluated.
     pub fn eval_library(&mut self) -> EvalResult {
         let Some(lib_id) = self.lib_id else {
@@ -213,11 +210,48 @@ impl PushIssue<EvalIssue> for EvalContext {
     }
 }
 
-impl SrcReferrer for EvalIssue {
-    fn src_ref(&self) -> SrcRef {
-        match self {
-            Self::Err(err) => err.src_ref(),
-            _ => SrcRef::none(),
+/// Builder for constructing an [`EvalContext`].
+#[derive(Debug, Default)]
+pub struct EvalContextBuilder {
+    builtins: Option<Shared<BuiltinRegistry>>,
+    lib_id: Option<LibraryId>,
+    lib_cache: Option<SharedMut<LibraryCache>>,
+}
+
+impl EvalContextBuilder {
+    /// Create a new `EvalContextBuilder` with default settings.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Attach a pre-existing or shared `BuiltinRegistry`.
+    pub fn with_builtins(mut self, builtins: Shared<BuiltinRegistry>) -> Self {
+        self.builtins = Some(builtins);
+        self
+    }
+
+    /// Set the current active library ID being evaluated.
+    pub fn with_lib_id(mut self, lib_id: LibraryId) -> Self {
+        self.lib_id = Some(lib_id);
+        self
+    }
+
+    /// Attach a shared, mutable library cache.
+    pub fn with_lib_cache(mut self, lib_cache: SharedMut<LibraryCache>) -> Self {
+        self.lib_cache = Some(lib_cache);
+        self
+    }
+
+    /// Build and initialize the [`EvalContext`].
+    pub fn build(self) -> EvalContext {
+        EvalContext {
+            stack: Stack::default(),
+            issues: IssueList::default(),
+            builtins: self
+                .builtins
+                .unwrap_or_else(|| Shared::new(BuiltinRegistry::new())),
+            lib_id: self.lib_id,
+            lib_cache: self.lib_cache.unwrap_or_default(),
         }
     }
 }

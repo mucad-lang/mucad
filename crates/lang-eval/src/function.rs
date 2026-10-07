@@ -109,7 +109,7 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
             symbol::Path::Resolved(symbol::SymbolId::Builtin(builtin_id)) => {
                 let args = self.args.eval(context)?;
 
-                match context.builtins.get(*builtin_id) {
+                match context.builtins().get(*builtin_id) {
                     Some(BuiltinItem::Function(f)) => {
                         let args = f.argument_match(&args).map_err(|err| {
                             EvalError::argument_match(self, f.info.item_name(), err)
@@ -146,7 +146,7 @@ impl Eval<FlowSignal> for symbol::Path {
                 }
             }
             symbol::Path::Resolved(symbol::SymbolId::Builtin(builtin)) => {
-                match context.builtins.get(*builtin) {
+                match context.builtins().get(*builtin) {
                     Some(BuiltinItem::Constant(c)) => Ok(FlowSignal::Yield(c.value())),
                     Some(item) => context.catch(EvalErrorKind::BuiltinConstantExpected {
                         name: item.name().to_string(),

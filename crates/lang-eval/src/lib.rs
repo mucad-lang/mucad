@@ -7,7 +7,6 @@ mod argument_match;
 
 mod builtin;
 mod context;
-mod eval_error;
 mod function;
 mod issue;
 mod source;

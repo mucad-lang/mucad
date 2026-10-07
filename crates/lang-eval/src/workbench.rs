@@ -147,7 +147,7 @@ impl Eval for symbol::workbench::WorkbenchCall {
         match symbol_id {
             Some(symbol::SymbolId::Builtin(builtin_id)) => {
                 let args = self.args.eval(context)?;
-                let item = context.builtins.get(*builtin_id);
+                let item = context.builtins().get(*builtin_id);
                 let src_ref = context.current_symbol_src_ref();
                 match item {
                     Some(item) => context.scope(BuiltinItemFrame::new(src_ref, item), |ctx| {
@@ -159,8 +159,8 @@ impl Eval for symbol::workbench::WorkbenchCall {
                     }),
                 }
             }
-            Some(symbol::SymbolId::Item(id)) => match context.lib_id {
-                Some(lib_id) => call_symbol(self, lib_id, *id, context),
+            Some(symbol::SymbolId::Item(id)) => match context.lib_id() {
+                Some(lib_id) => call_symbol(self, *lib_id, *id, context),
                 None => context.catch(EvalErrorKind::NoLibraryToEvaluate),
             },
             Some(symbol::SymbolId::External(external_id)) => {
