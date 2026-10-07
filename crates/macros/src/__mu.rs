@@ -17,14 +17,18 @@ impl Parse for MuInput {
     }
 }
 
-fn get_mod_mu() -> proc_macro2::TokenStream {
+/// Path to the `microcad-builtin` crate root.
+fn get_builtin_crate() -> syn::Result<TokenStream2> {
     match proc_macro_crate::crate_name("microcad-builtin") {
-        Ok(proc_macro_crate::FoundCrate::Itself) => quote! { crate::mu },
+        Ok(proc_macro_crate::FoundCrate::Itself) => Ok(quote! { crate }),
         Ok(proc_macro_crate::FoundCrate::Name(name)) => {
             let ident = Ident::new(&name, Span::call_site());
-            quote! { ::#ident::mu }
+            Ok(quote! { ::#ident })
         }
-        Err(_) => panic!("Crate not found"), // quote! { ::microcad_builtin::mu }, // Fallback
+        Err(err) => Err(syn::Error::new(
+            Span::call_site(),
+            format!("`__mu!` requires the crate `microcad-builtin`: {err}"),
+        )),
     }
 }
 
@@ -41,18 +45,23 @@ pub(crate) fn __mu_impl(input: TokenStream) -> TokenStream {
         .into();
     }
 
-    let __mu = get_mod_mu(); // `__mu`
+    let builtin_crate = match get_builtin_crate() {
+        Ok(builtin_crate) => builtin_crate,
+        Err(err) => return err.to_compile_error().into(),
+    };
     let module = &path.segments[0].ident; // `core`
-    let fn_ident = &path.segments[1].ident; // `add`
-    let static_ident = Ident::new(&fn_ident.to_string().to_uppercase(), fn_ident.span()); // `ADD`
+    let item = &path.segments[1].ident; // `add`
+    let name = format!("__mu::{module}::{item}"); // `__mu::core::add`
 
     quote! {
         {
-            // 1. Compile-time existence check for function item
-            use #__mu::#module::#fn_ident;
+            // 1. Compile-time existence check for the built-in item.
+            #[allow(unused_imports)]
+            use #builtin_crate::mu::#module::#item as _;
 
-            // 2. Resolve static BuiltinId item
-            #__mu::#module::#static_ident.id().into()
+            // 2. The ID is the hash of the full name, like in `builtin_info!`.
+            const ID: #builtin_crate::BuiltinId = #builtin_crate::BuiltinId::from_name(#name);
+            ID
         }
     }
     .into()
