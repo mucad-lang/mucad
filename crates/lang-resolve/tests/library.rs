@@ -67,7 +67,7 @@ fn load_source_inline_module() {
             insta::assert_snapshot!("load_source_inline_module", library);
         }
         Err(err) => {
-            let diagnostics = Diagnostics::from(lib_ctx.issues);
+            let diagnostics = Diagnostics::from(lib_ctx.to_issues());
 
             ctx.source_cache().with_read(|source_cache| {
                 panic!(

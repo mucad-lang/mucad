@@ -29,11 +29,11 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
 
     /// Load a single file as library.
     pub fn load_file(&mut self, file_mu: impl AsRef<std::path::Path>) -> ResolveResult<()> {
-        if !self.lib.no_std() {
-            self.lib.add_std();
+        if !self.lib().no_std() {
+            self.lib_mut().add_std();
         }
 
-        let root = self.lib.root;
+        let root = self.lib().root;
         self._load_source(&file_mu, Some(root))?;
         Ok(())
     }
@@ -48,20 +48,20 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         match Manifest::load(locate::mu_toml_path(lib_path)) {
             Ok(manifest) => {
                 log::debug!("Loaded manifest:\n{manifest}");
-                if !self.lib.no_std() {
-                    self.lib.add_std();
+                if !self.lib().no_std() {
+                    self.lib_mut().add_std();
                 }
 
                 if let Some(deps) = &manifest.dependencies {
                     for (name, dep) in deps.iter() {
                         let lib_id = self.load_external_library(dep.path.as_ref().unwrap())?;
-                        self.lib
+                        self.lib_mut()
                             .dependencies
                             .insert(name.to_compact_string(), lib_id);
                     }
                 }
 
-                self.lib.with_manifest(manifest);
+                self.lib_mut().with_manifest(manifest);
             }
             // Error loading manifest or manifest not found, fallback to defaults.
             Err(err) => {
@@ -75,15 +75,17 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
 
     fn load_source(&mut self, path: impl AsRef<std::path::Path>) -> ResolveResult<HashId> {
         let source = Source::load(path)?;
-        let id = self.ctx.src_cache.write_unwrap().insert(source);
-        let issues = self
-            .ctx
-            .src_cache
-            .read_unwrap()
-            .get(id)
-            .iter()
-            .flat_map(|source_unit| source_unit.issues())
-            .collect::<Vec<_>>();
+        let id = self
+            .ctx()
+            .source_cache()
+            .with_write(|source_cache| source_cache.insert(source));
+        let issues = self.ctx().source_cache().with_read(|source_cache| {
+            source_cache
+                .get(id)
+                .iter()
+                .flat_map(|source_unit| source_unit.issues())
+                .collect::<Vec<_>>()
+        });
 
         self.append_issues(issues);
 
@@ -98,9 +100,9 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         lib_path: impl AsRef<std::path::Path>,
     ) -> ResolveResult<LibraryId> {
         let mut lib = Library::new();
-        let mut context = ResolveLibraryContext::new(&mut lib, self.ctx);
+        let mut context = ResolveLibraryContext::new(&mut lib, self.ctx_mut());
         context.load_library(lib_path)?;
-        self.ctx.lib_cache.write_unwrap().insert(lib)
+        self.ctx().lib_cache.write_unwrap().insert(lib)
     }
 
     pub fn _load_source(
@@ -112,7 +114,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         let id = self.load_source(&path)?;
         println!("Load source file  {path:?}");
 
-        match self.ctx.get_ir(id) {
+        match self.ctx().get_ir(id) {
             // We have a successfully compiled IR, add it to the tree and load file recursively, if necessary.
             Some(ir) => {
                 let source_arena = ir.tree.arena();
@@ -126,12 +128,12 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                     _ => source_node.get().clone().into(),
                 };
                 let id = if let Some(parent_id) = parent_id {
-                    let id = self.lib.arena.new_node(symbol);
-                    parent_id.append(id, &mut self.lib.arena);
+                    let id = self.arena_mut().new_node(symbol);
+                    parent_id.append(id, self.arena_mut());
                     id
                 } else {
-                    *self.lib.root_mut().get_mut() = symbol;
-                    self.lib.root
+                    *self.lib_mut().root_mut().get_mut() = symbol;
+                    self.lib().root
                 };
 
                 // Traverse children recursively
@@ -144,13 +146,13 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                                 Ok(id) => id,
                                 Err(err) => {
                                     self.push_err(err);
-                                    self.lib.arena.new_node(Symbol::root(None))
+                                    self.arena_mut().new_node(Symbol::root(None))
                                 }
                             }
                         }
-                        _ => tree::adopt_tree_to_arena(&mut self.lib.arena, child.id, source_arena),
+                        _ => tree::adopt_tree_to_arena(self.arena_mut(), child.id, source_arena),
                     };
-                    id.append(child_id, &mut self.lib.arena);
+                    id.append(child_id, self.arena_mut());
                 }
 
                 Ok(id)

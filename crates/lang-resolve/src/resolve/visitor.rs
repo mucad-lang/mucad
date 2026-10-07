@@ -29,7 +29,7 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
     where
         F: FnMut(&mut ResolveVisitor<'a, 'lib, 'ctx>, SymbolNodeId, &mut Symbol),
     {
-        let lib = &mut *self.lib_ctx.lib;
+        let lib = &mut *self.lib_ctx.lib_mut();
         let node_ids: Vec<SymbolNodeId> = lib.root.descendants(&lib.arena).collect();
         let arena_ptr = &mut lib.arena as *mut SymbolArena;
         node_ids.into_iter().for_each(|id| {
@@ -146,7 +146,7 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
 
         // Look up in current library being resolved.
         if let Some(symbol_node_id) = self.stack.symbol_node_id()
-            && let Some(node_id) = self.lib_ctx.lib.look_up(symbol_node_id, unresolved_path)
+            && let Some(node_id) = self.lib_ctx.lib().look_up(symbol_node_id, unresolved_path)
         {
             paths.push(symbol::Path::Resolved(SymbolId::Item(node_id)));
         }
@@ -154,9 +154,9 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
         // Look up external libraries.
         if !unresolved_path.is_absolute
             && let Some(external_name) = unresolved_path.external_name()
-            && let Some(dep) = self.lib_ctx.lib.dependencies.get(&external_name)
+            && let Some(dep) = self.lib_ctx.lib().dependencies.get(&external_name)
         {
-            let lib = self.lib_ctx.ctx().lib_cache.read_unwrap().get(dep);
+            let lib = self.lib_ctx.lib_cache().read_unwrap().get(dep);
             match lib {
                 Some(lib) => {
                     let lib = lib.read_unwrap();
