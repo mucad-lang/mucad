@@ -22,7 +22,7 @@ pub(crate) mod prelude {
     pub use proc_macro::TokenStream;
     pub use proc_macro2::TokenStream as TokenStream2;
 
-    pub use quote::{format_ident, quote};
+    pub use quote::quote;
     pub use syn::parse::{Parse, ParseStream};
     pub use syn::spanned::Spanned;
     pub use syn::{

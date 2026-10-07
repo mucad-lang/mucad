@@ -39,12 +39,20 @@ pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
             syn::Item::Fn(ItemFn { attrs, sig, .. })
                 if helpers::attr_exists(attrs, "builtin_fn") =>
             {
-                Some(format_ident!("{}", sig.ident.to_string().to_uppercase()))
+                let ident = helpers::ident_upper(&sig.ident);
+                Some(quote! { &#mod_name::#ident })
             }
             syn::Item::Static(ItemStatic { attrs, ident, .. })
                 if helpers::attr_exists(attrs, "builtin_constant") =>
             {
-                Some(ident.clone())
+                Some(quote! { &#mod_name::#ident })
+            }
+            // Primitive statics are already references: `pub static CIRCLE: &BuiltinItem`.
+            syn::Item::Struct(ItemStruct { attrs, ident, .. })
+                if helpers::attr_exists(attrs, "builtin_primitive") =>
+            {
+                let ident = helpers::ident_upper(ident);
+                Some(quote! { #mod_name::#ident })
             }
             _ => None,
         })
@@ -55,7 +63,7 @@ pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
     quote! {
         #item_mod
 
-        pub static #mod_upper_name: BuiltinItem = builtin_item!(Module #doc #mod_name [#(&#mod_name::#collected_builtins),*]);
+        pub static #mod_upper_name: BuiltinItem = builtin_item!(Module #doc #mod_name [#(#collected_builtins),*]);
     }
     .into()
 }
