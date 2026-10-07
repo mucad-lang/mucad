@@ -22,7 +22,7 @@ impl std::fmt::Debug for BuiltinRegistry {
 impl BuiltinRegistry {
     /// Create a new [`BuiltinRegistry`] and register default modules.
     pub fn new() -> Self {
-        let mut registry = Self::default();
+        let mut registry = Self::empty();
 
         use crate::mu;
         [
@@ -39,6 +39,14 @@ impl BuiltinRegistry {
         .for_each(|module| registry.register(module));
 
         registry
+    }
+
+    /// Create an empty [`BuiltinRegistry`] with no registered modules.
+    pub fn empty() -> Self {
+        Self {
+            builtins: HashMap::default(),
+            modules: Vec::new(),
+        }
     }
 
     pub fn register(&mut self, builtin: &'static BuiltinItem) {
