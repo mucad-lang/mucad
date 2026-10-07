@@ -9601,6 +9601,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d49784317cd0d1ee7ec5c716dd598ec5b4483ea832a2dced265471cc0f690ae"
 
 [[package]]
+name = "update_copyright"
+version = "0.6.0"
+dependencies = [
+ "clap",
+ "env_logger",
+ "glob",
+ "regex",
+ "walkdir",
+]
+
+[[package]]
 name = "url"
 version = "2.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"

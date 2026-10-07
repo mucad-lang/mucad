@@ -1,132 +1,223 @@
 // Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    ops::RangeInclusive,
+    path::{Path, PathBuf},
+    process::Command,
+};
+
 use regex::Regex;
-use scan_dir::ScanDir;
-use std::{fs, process::Command};
+use walkdir::WalkDir;
 
-/// Search a path for specific files and update copyright notice
-/// # Arguments
-/// `search_path`: Path which will be recursively searched
-/// `has_extensions`: List of extensions
-pub fn update_copyrights(
-    search_path: impl AsRef<std::path::Path>,
-    extensions: &[(&str, &[&str])],
-    exclusions: &[&str],
-    check_only: bool,
-) -> std::io::Result<bool> {
-    let mut check_failed = false;
+/// Executes `git log` once for the entire repository at `repo_path` and returns
+/// a mapping from file path to its min and max commit years (as a `RangeInclusive<u32>`).
+pub fn get_revision_years(repo_path: impl AsRef<Path>) -> HashMap<PathBuf, RangeInclusive<u32>> {
+    let mut file_years = HashMap::new();
 
-    // convert exclusions into patterns
-    let exclusions: Vec<_> = exclusions
-        .iter()
-        .map(|pattern| glob::Pattern::new(pattern).expect("bad exclusion pattern"))
-        .collect();
+    // Run git log once to dump:
+    //   <year>
+    //   <blank line>
+    //   path/to/file1
+    //   path/to/file2
+    let output = Command::new("git")
+        .current_dir(&repo_path)
+        .args(["log", "--name-only", "--format=%ad", "--date=format:%Y"])
+        .output();
 
-    let re = Regex::new(r"Copyright © (\d{4}(-\d{4})?)").unwrap();
+    let Ok(output) = output else {
+        return HashMap::new();
+    };
 
-    let files = ScanDir::files()
-        .walk(&search_path, |iter| {
-            iter.filter(|(entry, _)| {
-                !exclusions
-                    .iter()
-                    .any(|exclusion| exclusion.matches(&entry.path().to_string_lossy()))
-            })
-            .filter(|(_, name)| {
-                extensions.iter().any(|extensions| {
-                    extensions
-                        .1
-                        .iter()
-                        .any(|extension| name.ends_with(extension))
+    if !output.status.success() {
+        return HashMap::new();
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut current_year: Option<u32> = None;
+
+    for line in stdout.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+
+        // Check if the line is a 4-digit year header
+        if line.len() == 4 && line.chars().all(|c| c.is_ascii_digit()) {
+            if let Ok(year) = line.parse::<u32>() {
+                current_year = Some(year);
+                continue;
+            }
+        }
+
+        // Path entry associated with the current commit year
+        if let Some(year) = current_year {
+            let path = PathBuf::from(line);
+            file_years
+                .entry(path)
+                .and_modify(|range: &mut RangeInclusive<u32>| {
+                    let min = (*range.start()).min(year);
+                    let max = (*range.end()).max(year);
+                    *range = min..=max;
                 })
-            })
-            .map(|(ref entry, _)| entry.path())
-            .collect::<Vec<_>>()
-        })
-        .expect("scan_path failed");
-
-    for path in files {
-        if let Some(prefix) = extensions.iter().find_map(|(prefix, extensions)| {
-            if let Some(ext) = path.extension() {
-                extensions
-                    .contains(&ext.to_string_lossy().to_string().as_str())
-                    .then_some(*prefix)
-            } else {
-                None
-            }
-        }) {
-            let mut content = fs::read_to_string(&path)?;
-            let lines: Vec<&str> = content.lines().collect();
-            if lines.len() < 2
-                || !lines[0].starts_with(&format!("{prefix} Copyright"))
-                || !lines[1].starts_with(&format!("{prefix} SPDX-License-Identifier"))
-            {
-                let copyright_notice = format!(
-                    "{prefix} Copyright © 0000 The µcad authors <info@microcad.xyz>\n{prefix} SPDX-License-Identifier: AGPL-3.0-or-later\n\n"
-                );
-
-                let mut new_content = String::new();
-                new_content.push_str(&copyright_notice);
-                new_content.push_str(&content);
-                println!("cargo:warning=new: {path:?}");
-                content = new_content;
-            }
-
-            let git_log = Command::new("git")
-                .arg("log")
-                .arg("--follow")
-                .arg("--format=%ad")
-                .arg("--date=short")
-                .arg(path.to_str().unwrap())
-                .output()?;
-
-            let git_log = String::from_utf8(git_log.stdout).unwrap();
-            if !git_log.is_empty() {
-                let years: Vec<&str> = git_log
-                    .lines()
-                    .map(|s| s.split('-').next().unwrap())
-                    .collect();
-                let min_year = years.iter().min().unwrap();
-                let max_year = years.iter().max().unwrap();
-
-                let year_range = if min_year == max_year {
-                    min_year.to_string()
-                } else {
-                    format!("{min_year}-{max_year}")
-                };
-
-                let new_content = re.replace(&content, format!("Copyright © {year_range}"));
-
-                if new_content != content {
-                    println!("cargo:warning=update: {path:?} -> {year_range}");
-                    if check_only {
-                        check_failed = true;
-                    } else {
-                        fs::write(&path, new_content.to_string())?;
-                    }
-                }
-            } else {
-                eprintln!("untracked file: {path:?}");
-            }
+                .or_insert(year..=year);
         }
     }
 
-    Ok(check_failed)
+    file_years
 }
 
-fn update_copyright() {
-    update_copyright::update_copyrights(
-        "../",
-        &[
-            ("#", &["toml"]),
-            ("//", &["rs", "pest", "slint", "wgsl", "µcad"]),
-        ],
-        &[
-            "../target/*",
-            "../tests/*.µcad",
-            "../crates/cli/examples/*.µcad",
-        ],
-        check_only,
-    )
-    .into_diagnostic()
+/// Manages updating copyright notices across source files in a repository.
+pub struct CopyrightUpdater {
+    path: PathBuf,
+    extensions: HashMap<String, String>,
+    excluded_patterns: HashSet<PathBuf>,
+}
+
+impl CopyrightUpdater {
+    pub fn new(path: impl Into<PathBuf>) -> Self {
+        Self {
+            path: path.into(),
+            extensions: Default::default(),
+            excluded_patterns: Default::default(),
+        }
+    }
+
+    /// Add a single extension and its associated comment prefix (e.g. `"rs"`, `"//"`).
+    pub fn extension(mut self, extension: &str, prefix: &str) -> Self {
+        self.extensions.insert(
+            extension.trim_start_matches('.').to_string(),
+            prefix.to_string(),
+        );
+        self
+    }
+
+    /// Add multiple extensions mapped to the same comment prefix.
+    pub fn extensions(mut self, extensions: &[&str], prefix: &str) -> Self {
+        for ext in extensions {
+            self.extensions
+                .insert(ext.trim_start_matches('.').to_string(), prefix.to_string());
+        }
+        self
+    }
+
+    /// Add an explicit excluded path or glob pattern.
+    pub fn exclude(mut self, path: impl Into<PathBuf>) -> Self {
+        self.excluded_patterns.insert(path.into());
+        self
+    }
+
+    /// Automatically query Git (`git check-ignore`) to collect ignored files/patterns.
+    pub fn with_git_exclusions(mut self) -> Self {
+        if let Ok(output) = Command::new("git")
+            .current_dir(&self.path)
+            .args(["status", "--ignored", "--porcelain"])
+            .output()
+        {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                for line in stdout.lines() {
+                    // Lines starting with '!! ' represent ignored files/directories in git status
+                    if line.starts_with("!! ") {
+                        let path_str = line[3..].trim();
+                        self.excluded_patterns.insert(PathBuf::from(path_str));
+                    }
+                }
+            }
+        }
+        self
+    }
+
+    /// Finalize and build the [`CopyrightUpdater`].
+    pub fn build(self) -> CopyrightUpdater {
+        CopyrightUpdater {
+            path: self.path,
+            extensions: self.extensions,
+            excluded_patterns: self.excluded_patterns,
+        }
+    }
+}
+
+impl CopyrightUpdater {
+    /// Scan directory, query revision years, and update copyright notices in files.
+    pub fn update(&self) -> std::io::Result<()> {
+        let revision_years = get_revision_years(&self.path);
+        let copyright_re = Regex::new(r"Copyright © (\d{4})(-\d{4})?").unwrap();
+
+        // Prepare exclusion glob patterns
+        let exclusion_globs: Vec<_> = self
+            .excluded_patterns
+            .iter()
+            .filter_map(|p| glob::Pattern::new(&p.to_string_lossy()).ok())
+            .collect();
+
+        for entry in WalkDir::new(&self.path).into_iter().filter_map(Result::ok) {
+            let path = entry.path();
+            if !path.is_file() {
+                continue;
+            }
+
+            // Relative path check for git matching and exclusion evaluation
+            let relative_path = path.strip_prefix(&self.path).unwrap_or(path);
+            let path_str = relative_path.to_string_lossy();
+
+            if exclusion_globs.iter().any(|p| p.matches(&path_str)) {
+                continue;
+            }
+
+            let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+            let Some(prefix) = self.extensions.get(ext) else {
+                continue;
+            };
+
+            // Determine year range from Git history or default to current year
+            let year_range = revision_years
+                .get(relative_path)
+                .cloned()
+                .unwrap_or_else(|| {
+                    let current_year = 2026;
+                    current_year..=current_year
+                });
+
+            let formatted_years = if year_range.start() == year_range.end() {
+                format!("{}", year_range.start())
+            } else {
+                format!("{}-{}", year_range.start(), year_range.end())
+            };
+
+            let content = fs::read_to_string(path)?;
+
+            let updated_content = if let Some(_) = copyright_re.captures(&content) {
+                copyright_re
+                    .replace(&content, format!("Copyright © {formatted_years}"))
+                    .to_string()
+            } else {
+                // Header missing: Prepend notice
+                let header = format!(
+                    "{prefix} Copyright © {formatted_years} The µcad authors <info@microcad.xyz>\n\
+                     {prefix} SPDX-License-Identifier: AGPL-3.0-or-later\n\n"
+                );
+                format!("{header}{content}")
+            };
+
+            if updated_content != content {
+                println!("cargo:warning=updated: {path:?} -> {formatted_years}");
+                fs::write(path, updated_content.as_bytes())?;
+            }
+        }
+
+        Ok(())
+    }
+}
+pub fn update_copyright() -> std::io::Result<()> {
+    let updater = CopyrightUpdater::new(".")
+        .extensions(&["rs", "pest", "slint", "wgsl", "µcad"], "//")
+        .extension("toml", "#")
+        .exclude("target/*")
+        .exclude("tests/*.µcad")
+        .with_git_exclusions();
+
+    updater.update()
 }
