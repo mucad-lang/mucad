@@ -111,7 +111,7 @@ impl Desugar<ast::Expression> for ir::FunctionExpression {
                     Ok(match &element.inner {
                         Attribute(_) => panic!("Attribute access not allowed"),
                         Tuple(t) => Self::Call(ir::Call {
-                            path: __mu!(core::member_access),
+                            path: __mu!(core::member_access).into(),
                             args: ir::ArgumentList::from_iter([
                                 lhs,
                                 Self::Value(
@@ -128,7 +128,7 @@ impl Desugar<ast::Expression> for ir::FunctionExpression {
                             src_ref,
                         }),
                         ListElement(e) => Self::Call(ir::Call {
-                            path: __mu!(core::list_access),
+                            path: __mu!(core::list_access).into(),
                             args: ir::ArgumentList::from_iter([
                                 lhs,
                                 Self::desugar(e.as_ref(), context)?,

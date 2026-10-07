@@ -221,7 +221,7 @@ impl Desugar<ast::Expression> for ir::WorkbenchExpression {
 
                     Ok(match &element.inner {
                         Attribute(a) => Self::Call(ir::Call {
-                            path: __mu!(core::attribute_access),
+                            path: __mu!(core::attribute_access).into(),
                             args: ir::ArgumentList::from_iter([
                                 lhs,
                                 Self::Value(
@@ -232,7 +232,7 @@ impl Desugar<ast::Expression> for ir::WorkbenchExpression {
                             src_ref,
                         }),
                         Tuple(t) => Self::Call(ir::Call {
-                            path: __mu!(core::member_access),
+                            path: __mu!(core::member_access).into(),
                             args: ir::ArgumentList::from_iter([
                                 lhs,
                                 Self::Value(
@@ -249,7 +249,7 @@ impl Desugar<ast::Expression> for ir::WorkbenchExpression {
                             src_ref,
                         }),
                         ListElement(e) => Self::Call(ir::Call {
-                            path: __mu!(core::list_access),
+                            path: __mu!(core::list_access).into(),
                             args: ir::ArgumentList::from_iter([
                                 lhs,
                                 Self::desugar(e.as_ref(), context)?,

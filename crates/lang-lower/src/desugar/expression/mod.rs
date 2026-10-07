@@ -86,7 +86,7 @@ where
     fn desugar(a: &ast::RangeExpression, context: &mut LowerContext) -> LowerResult<Self> {
         let unit = ir::Unit::desugar(&a.unit, context)?;
         let range = Expr::from(ir::Call {
-            path: __mu!(core::range),
+            path: __mu!(core::range).into(),
             args: ir::ArgumentList::from_iter([
                 Expr::desugar(&a.start.expr, context)?,
                 Expr::desugar(&a.end.expr, context)?,
@@ -98,7 +98,7 @@ where
             range
         } else {
             Expr::from(ir::Call {
-                path: __mu!(core::mul),
+                path: __mu!(core::mul).into(),
                 args: ir::ArgumentList::from_iter([
                     range,
                     Expr::from(ir::ConstantValue::from(
@@ -125,7 +125,7 @@ where
             .collect::<Result<Vec<Expr>, _>>()?;
 
         let list = Expr::from(ir::Call {
-            path: __mu!(core::list),
+            path: __mu!(core::list).into(),
             args: ir::ArgumentList::from_iter(args),
             src_ref: context.span_to_src_ref(&a.span),
         });
@@ -134,7 +134,7 @@ where
             list
         } else {
             Expr::from(ir::Call {
-                path: __mu!(core::mul),
+                path: __mu!(core::mul).into(),
                 args: ir::ArgumentList::from_iter([
                     list,
                     Expr::from(ir::ConstantValue::from(
@@ -153,7 +153,7 @@ where
 {
     fn desugar(node: &ast::TupleExpression, context: &mut LowerContext) -> LowerResult<Self> {
         Ok(Self {
-            path: __mu!(core::tuple),
+            path: __mu!(core::tuple).into(),
             args: ir::ArgumentList::desugar(&node.values, context)?,
             src_ref: context.span_to_src_ref(&node.span),
         })

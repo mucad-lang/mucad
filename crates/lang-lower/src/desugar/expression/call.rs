@@ -94,7 +94,8 @@ impl<Expr: DesugarExpr> Desugar<ast::UnaryOperation> for ir::Call<Expr> {
                 ast::UnaryOperator::Minus => __mu!(core::neg),
                 ast::UnaryOperator::Plus => __mu!(core::plus),
                 ast::UnaryOperator::Not => __mu!(core::not),
-            },
+            }
+            .into(),
             args: ir::ArgumentList::from_iter([Expr::desugar(&node.rhs, context)?]),
             src_ref: context.span_to_src_ref(&node.span),
         })
@@ -121,7 +122,8 @@ impl<Expr: DesugarExpr> Desugar<ast::BinaryOperation> for ir::Call<Expr> {
                 ast::BinaryOperator::And => __mu!(core::and),
                 ast::BinaryOperator::Or => __mu!(core::or),
                 ast::BinaryOperator::Xor | ast::BinaryOperator::PowerXor => __mu!(core::xor),
-            },
+            }
+            .into(),
             args: ir::ArgumentList::from_iter([
                 ir::Argument::Named {
                     name: Identifier::no_ref("lhs"),
@@ -161,7 +163,7 @@ pub fn lower_spec(
         .unwrap_or(ir::ConstantExpression::Invalid);
 
     Ok(ir::Call {
-        path: __mu!(core::format_spec),
+        path: __mu!(core::format_spec).into(),
         args: ir::ArgumentList::from_iter([expr, width, precision]),
         src_ref: context.span_to_src_ref(&spec.span),
     })
@@ -210,7 +212,7 @@ impl Desugar<ast::FormatString> for ir::Call<ir::ConstantExpression> {
         }
 
         Ok(Self {
-            path: __mu!(core::format),
+            path: __mu!(core::format).into(),
             args: ir::ArgumentList::from_iter(args_vec),
             src_ref: context.span_to_src_ref(&node.span),
         })
