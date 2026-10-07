@@ -82,6 +82,25 @@ pub fn call_workbench<T: Callable<ModelTree>>(
     model
 }
 
+/// Call an operation with `self` and arguments to produce a model tree and test snapshot.
+///
+/// The `@input` placeholders of the resulting model are replaced by `self`.
+pub fn call_op<T: Callable<ModelTree>>(
+    name: &str,
+    op: &T,
+    self_: impl Eval,
+    arg_iter: impl IntoIterator<Item = ArgumentValue>,
+) -> ModelTree {
+    let mut context = EvalContext::new();
+    let input: Value = self_.eval(&mut context).expect("No error");
+    let model: ModelTree = op
+        .call(&ArgumentValueList::from_iter(arg_iter), &mut context)
+        .expect("No error");
+    let model = model.replace_input_placeholders(&input.into());
+    insta::assert_snapshot!(name, model.to_string_with_ctx(&context));
+    model
+}
+
 /// { __mu::geo2d::Circle(radius = 4.0mm); }
 #[test]
 fn group() {
@@ -341,36 +360,61 @@ fn op_rotate() {
     );
 }
 
-/*
+/// An operation that arranges copies of a part on a circle.
+///
+/// Today's µcad source would take `n` and compute the angles itself:
+///
+/// ```µcad
 /// op polar_array(n: Integer, r: Length) {
 ///     @input.__mu::ops::translate(x = r, y = 0.0mm, z = 0.0mm)
 ///         .rotate([1..n] / n * 360°)
 /// }
+/// ```
+///
+/// The evaluator cannot expand a computed list inside a workbench yet, so this test takes the
+/// angles as parameter and lets the parameter multiplicity create the copies:
+///
+/// ```µcad
+/// op polar_array(angle: Angle, r: Length) {
+///     __mu::ops::rotate(
+///         self = __mu::ops::translate(self = @input, x = r, y = 0.0mm, z = 0.0mm),
+///         matrix = __mu::math::rotate_around_axis(angle, x = 0.0, y = 0.0, z = 1.0),
+///     )
+/// }
+///
+/// __mu::geo2d::Circle(radius = 4.0mm).polar_array(angle = [1..8] / 8 * 360°, r = 10.0mm)
+/// ```
 #[test]
 fn op_polar_array() {
     use helper::*;
-    use symbol::workbench::Argument as Arg;
 
-    let polar_expr: WorkbenchExpression = polar_expr().into();
-    let rotate = call(__mu!(ops::rotate), vec![
-        Arg::named("m", microcad_lang_types::math::rotate_around_axis(p, x, y, z))
-    ]);
+    let workbench = symbol::Workbench::op(parameter_list!(angle: Angle, r: Length))
+        .with_statements([WorkbenchStatement::expr(call_builtin!(ops::rotate(
+            self = call_builtin!(ops::translate(
+                self = input(),
+                x = expr!(r),
+                y = expr!(0.0 mm),
+                z = expr!(0.0 mm),
+            )),
+            matrix = call_builtin!(math::rotate_around_axis(
+                angle = expr!(angle),
+                x = expr!(0.0),
+                y = expr!(0.0),
+                z = expr!(1.0),
+            )),
+        )))]);
 
-    let workbench = symbol::Workbench {
-        signature: workbench::WorkbenchSignature::op(vec![
-            Parameter::new("n", Type::Integer),
-            Parameter::new("r", Type::length()),
-        ]),
-        statements: workbench_statements([
-            call_op(__mu!(ops::rotate), vec![
-                ::named("self", call_op(__mu!(ops::translate), vec![
-                    workbench::Argument::named()
-                ])),
-            ])
+    // [1..n] / n * 360°
+    let n = 3;
+    let angles = Value::list((1..=n).map(|i| Value::deg(i as f64 / n as f64 * 360.0)));
 
-            WorkbenchStatement::expr(call_circle(Path::Resolved(
-            SymbolId::Local("radius".into()),
-        )))]),
-    };
+    call_op(
+        "polar_array",
+        &workbench,
+        call_circle(Value::mm(4.0)),
+        [
+            argument_value!(angle = angles),
+            argument_value!(r = Value::mm(10.0)),
+        ],
+    );
 }
-*/
