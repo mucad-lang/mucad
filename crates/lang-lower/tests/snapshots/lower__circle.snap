@@ -10,7 +10,7 @@ expression: "ir.to_ron().expect(\"No error\")"
     ),
     payload: (
         input_hash: "0xa18f78da53e23991",
-        output_hash: "0x6d4f7210df822696",
+        output_hash: "0xfe362f9b81df123d",
         tree: (
             root: (
                 index1: 1,
@@ -409,16 +409,22 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             args: (
                                                                 src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
                                                                 args: [
-                                                                    Unnamed(Path(Unresolved((
-                                                                        is_absolute: false,
-                                                                        parts: [
-                                                                            ((
-                                                                                value: "radius",
-                                                                                src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
-                                                                            )),
-                                                                        ],
-                                                                        src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
-                                                                    )))),
+                                                                    AutoNamed(
+                                                                        name: ((
+                                                                            value: "radius",
+                                                                            src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
+                                                                        )),
+                                                                        expr: Path(Unresolved((
+                                                                            is_absolute: false,
+                                                                            parts: [
+                                                                                ((
+                                                                                    value: "radius",
+                                                                                    src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
+                                                                                )),
+                                                                            ],
+                                                                            src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
+                                                                        ))),
+                                                                    ),
                                                                 ],
                                                             ),
                                                             src_ref: "11:5 @ 0x6fea70d2e98e16db (323..359)",
@@ -438,16 +444,22 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             args: (
                                                                 src_ref: "None",
                                                                 args: [
-                                                                    Unnamed(Path(Unresolved((
-                                                                        is_absolute: false,
-                                                                        parts: [
-                                                                            ((
-                                                                                value: "center",
-                                                                                src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
-                                                                            )),
-                                                                        ],
-                                                                        src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
-                                                                    )))),
+                                                                    AutoNamed(
+                                                                        name: ((
+                                                                            value: "center",
+                                                                            src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
+                                                                        )),
+                                                                        expr: Path(Unresolved((
+                                                                            is_absolute: false,
+                                                                            parts: [
+                                                                                ((
+                                                                                    value: "center",
+                                                                                    src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
+                                                                                )),
+                                                                            ],
+                                                                            src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
+                                                                        ))),
+                                                                    ),
                                                                     Unnamed(Value((
                                                                         value: String("x"),
                                                                         src_ref: "12:42 @ 0x6fea70d2e98e16db (392..393)",
@@ -471,16 +483,22 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             args: (
                                                                 src_ref: "None",
                                                                 args: [
-                                                                    Unnamed(Path(Unresolved((
-                                                                        is_absolute: false,
-                                                                        parts: [
-                                                                            ((
-                                                                                value: "center",
-                                                                                src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
-                                                                            )),
-                                                                        ],
-                                                                        src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
-                                                                    )))),
+                                                                    AutoNamed(
+                                                                        name: ((
+                                                                            value: "center",
+                                                                            src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
+                                                                        )),
+                                                                        expr: Path(Unresolved((
+                                                                            is_absolute: false,
+                                                                            parts: [
+                                                                                ((
+                                                                                    value: "center",
+                                                                                    src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
+                                                                                )),
+                                                                            ],
+                                                                            src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
+                                                                        ))),
+                                                                    ),
                                                                     Unnamed(Value((
                                                                         value: String("y"),
                                                                         src_ref: "12:56 @ 0x6fea70d2e98e16db (406..407)",

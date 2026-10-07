@@ -59,7 +59,7 @@ impl SingleIdentifier for UnresolvedPath {
     }
 
     fn is_single_identifier(&self) -> bool {
-        self.is_absolute && self.parts.len() == 1
+        !self.is_absolute && self.parts.len() == 1
     }
 }
 
