@@ -58,17 +58,19 @@ impl Eval for symbol::SymbolId {
                     todo!("Error handling: Local '{local_id}' not found")
                 }
             },
-            symbol::SymbolId::Item(id) => context.eval_symbol_node(context.library(), *id),
-            symbol::SymbolId::External(external_id) => context.eval_symbol_node(
-                context.external_library(&external_id.lib_id),
-                external_id.id,
-            ),
+            symbol::SymbolId::Item(id) => match context.lib_id {
+                Some(lib_id) => context.eval_symbol(lib_id, *id),
+                None => todo!("Error handling: No library to evaluate"),
+            },
+            symbol::SymbolId::External(external_id) => {
+                context.eval_symbol(external_id.lib_id, external_id.id)
+            }
         }
     }
 }
 
 impl Eval for symbol::Symbol {
-    fn eval(&self, _context: &mut EvalContext) -> EvalResult<Value> {
-        todo!()
+    fn eval(&self, context: &mut EvalContext) -> EvalResult<Value> {
+        self.def.eval(context)
     }
 }

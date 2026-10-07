@@ -25,8 +25,11 @@ pub struct EvalContext {
 
     pub builtins: BuiltinRegistry,
 
-    pub lib: Option<Shared<Library>>,
-    pub lib_cache: Option<Shared<LibraryCache>>,
+    /// ID of the library being evaluated, which is stored in `lib_cache`.
+    pub lib_id: Option<LibraryId>,
+
+    /// All libraries, including the one being evaluated.
+    pub lib_cache: Shared<LibraryCache>,
 }
 
 /// Builder functions
@@ -40,45 +43,48 @@ impl EvalContext {
         }
     }
 
-    /// Add a library to the context.
+    /// Set the library to be evaluated.
     ///
-    /// This is needed when you want to evaluate other symbols too.
-    pub fn with_lib(mut self, lib: Shared<Library>) -> Self {
-        self.lib = Some(lib);
+    /// The library must be stored in the library cache.
+    pub fn with_lib_id(mut self, lib_id: LibraryId) -> Self {
+        self.lib_id = Some(lib_id);
         self
     }
 
     pub fn with_lib_cache(mut self, lib_cache: Shared<LibraryCache>) -> Self {
-        self.lib_cache = Some(lib_cache);
+        self.lib_cache = lib_cache;
         self
     }
 }
 
 /// Library access functions
 impl EvalContext {
-    /// The library currently being evaluated (`SymbolId::Item`).
-    pub fn library(&self) -> Option<Shared<Library>> {
-        self.lib.clone()
+    /// A library by its ID.
+    pub fn library(&self, lib_id: &LibraryId) -> Option<Shared<Library>> {
+        self.lib_cache.read_unwrap().get(lib_id)
     }
 
-    /// An external library (`SymbolId::External`).
-    pub fn external_library(&self, lib_id: &LibraryId) -> Option<Shared<Library>> {
-        self.lib_cache.as_ref()?.read_unwrap().get(lib_id)
-    }
-
-    /// Evaluate the symbol `id` in library `lib`.
-    ///
-    /// The library is passed as owned [`Shared`], so its read lock does not borrow `self`.
-    pub(crate) fn eval_symbol_node(
-        &mut self,
-        lib: Option<Shared<Library>>,
-        id: SymbolNodeId,
-    ) -> EvalResult {
-        let Some(lib) = lib else {
+    /// Evaluate the root symbol of the library being evaluated.
+    pub fn eval_library(&mut self) -> EvalResult {
+        let Some(lib_id) = self.lib_id else {
+            todo!("Error handling: No library to evaluate")
+        };
+        let Some(lib) = self.library(&lib_id) else {
             todo!("Error handling: Library not loaded")
         };
         let lib = lib.read_unwrap();
-        SymbolNodeRef::new(id, &lib.arena).get().def.eval(self)
+        lib.root().get().eval(self)
+    }
+
+    /// Evaluate the symbol `id` in library `lib_id`.
+    ///
+    /// The library's read lock is held during the evaluation.
+    pub(crate) fn eval_symbol(&mut self, lib_id: LibraryId, id: SymbolNodeId) -> EvalResult {
+        let Some(lib) = self.library(&lib_id) else {
+            todo!("Error handling: Library not loaded")
+        };
+        let lib = lib.read_unwrap();
+        SymbolNodeRef::new(id, &lib.arena).get().eval(self)
     }
 }
 
@@ -93,7 +99,7 @@ impl EvalContext {
         // 2. Define a guard that pops the frame on Drop
         struct PopGuard<'a>(&'a mut EvalContext);
 
-        impl<'a> Drop for PopGuard<'a> {
+        impl Drop for PopGuard<'_> {
             fn drop(&mut self) {
                 self.0.stack.pop();
             }
