@@ -18,7 +18,7 @@ use microcad_lang_base::{DisplayWithCtx, IssueList, PushIssue};
 pub use registry::BuiltinRegistry;
 
 use derive_more::Debug;
-use microcad_lang_types::{Arguments, Model, Value, model};
+use microcad_lang_types::{Arguments, Model, ModelTree, Value, model};
 
 pub use microcad_lang_base::{BuiltinId, BuiltinInfo, builtin_info};
 pub use microcad_macros::__mu;
@@ -86,6 +86,11 @@ pub trait BuiltinPrimitiveCall: BuiltinConstruct {
     fn call(args: Arguments, _ctx: &mut BuiltinEvalContext) -> Result<Model, BuiltinError> {
         Ok(Model::new(Self::element()).with_properties(args))
     }
+}
+
+pub trait BuiltinOperationCall: BuiltinConstruct {
+    /// Call this operation with arguments and evaluate it into a model tree.
+    fn call(args: Arguments, ctx: &mut BuiltinEvalContext) -> Result<ModelTree, BuiltinError>;
 }
 
 #[macro_export]

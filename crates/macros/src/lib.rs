@@ -7,6 +7,7 @@ mod __mu;
 mod builtin_constant;
 mod builtin_fn;
 mod builtin_mod;
+mod builtin_op;
 mod builtin_primitive;
 mod derive_artifact;
 mod derive_identifiable;
@@ -54,6 +55,22 @@ pub fn builtin_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn builtin_mod(_attr: TokenStream, item: TokenStream) -> TokenStream {
     builtin_mod::builtin_mod_impl(item)
+}
+
+/// Declare a built-in operation with a struct and a function.
+///
+/// On a struct, the argument is the model type of `self` and the result, e.g.
+/// `#[builtin_op(Geometry2D -> Geometry3D)]`. Implements `BuiltinConstruct` and
+/// `BuiltinOperationCall` for the struct and generates a static, e.g.
+/// `pub static EXTRUDE: &BuiltinItem = Extrude::ITEM;`.
+///
+/// On a function, `#[builtin_op]` has no arguments. The function is named after the struct in
+/// snake case (e.g. `Extrude` -> `extrude`) and is called by `BuiltinOperationCall::call`.
+///
+/// Must be used inside a `#[builtin_mod]` module, which provides the module name.
+#[proc_macro_attribute]
+pub fn builtin_op(attr: TokenStream, item: TokenStream) -> TokenStream {
+    builtin_op::builtin_op_impl(attr, item)
 }
 
 /// Declare a struct as built-in primitive.

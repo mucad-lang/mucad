@@ -623,40 +623,29 @@ pub mod geo2d {
 pub mod ops {
     use std::rc::Rc;
 
-    use microcad_lang_base::BuiltinInfo;
     use microcad_lang_types::{
-        Length, Mat3, Model, ModelTree, ModelType, Type, function_type,
-        math::AffineTransform,
-        model::{self, element::BuiltinWorkpiece},
+        Length, Mat3, Model, ModelTree, math::AffineTransform, model::element::BuiltinWorkpiece,
         parse_args,
     };
-    use microcad_macros::__mu;
-
-    use crate::{BuiltinConstruct, BuiltinOperation, construct_from_model};
+    use microcad_macros::{__mu, builtin_op};
 
     use super::*;
 
+    /// Translate a model.
+    ///
+    /// Note: The resulting model is an affine transform, not an operation.
+    /// Hence, [`BuiltinConstruct::from_model`] cannot be used.
+    #[builtin_op(Any -> Any)]
     pub struct Translate {
+        /// Translation in X direction.
         pub x: Length,
+        /// Translation in Y direction.
         pub y: Length,
+        /// Translation in Z direction.
         pub z: Length,
     }
 
-    impl BuiltinConstruct for Translate {
-        const ITEM: &'static BuiltinItem = &BuiltinItem::Operation(BuiltinOperation::new(
-            BuiltinInfo::new("__mu::ops::translate"),
-            || function_type!((self: Type::Model(ModelType::Any), x: Type::length(), y: Type::length(), z: Type::length()) -> Type::Model(ModelType::Any)),
-            translate,
-        ));
-
-        fn from_model(model: &Model) -> Result<Self, BuiltinError> {
-            construct_from_model!(model, Translate { x, y, z })
-        }
-    }
-
-    pub static TRANSLATE: &BuiltinItem = Translate::ITEM;
-
-    //#[builtin_op(ops::translate(self: Model, x: Length, y: Length, z: Length) -> Model)]
+    #[builtin_op]
     pub fn translate(
         args: Arguments,
         _ctx: &mut BuiltinEvalContext,
@@ -678,25 +667,17 @@ pub mod ops {
         Ok(tree)
     }
 
+    /// Rotate a model by a rotation matrix.
+    ///
+    /// Note: The resulting model is an affine transform, not an operation.
+    /// Hence, [`BuiltinConstruct::from_model`] cannot be used.
+    #[builtin_op(Any -> Any)]
     pub struct Rotate {
+        /// Rotation matrix.
         pub matrix: Mat3,
     }
 
-    impl BuiltinConstruct for Rotate {
-        const ITEM: &'static BuiltinItem = &BuiltinItem::Operation(BuiltinOperation::new(
-            BuiltinInfo::new("__mu::ops::rotate"),
-            || function_type!((self: Type::Model(ModelType::Any), matrix: Type::mat3()) -> Type::Model(ModelType::Any)),
-            rotate,
-        ));
-
-        fn from_model(model: &Model) -> Result<Self, BuiltinError> {
-            construct_from_model!(model, Rotate { matrix })
-        }
-    }
-
-    pub static ROTATE: &BuiltinItem = Rotate::ITEM;
-
-    //#[builtin_op(ops::translate(self: Model, x: Length, y: Length, z: Length) -> Model)]
+    #[builtin_op]
     pub fn rotate(
         args: Arguments,
         _ctx: &mut BuiltinEvalContext,
@@ -716,27 +697,11 @@ pub mod ops {
         Ok(tree)
     }
 
+    /// Subtract all following child models from the first one.
+    #[builtin_op(Any -> Any)]
     pub struct Difference;
 
-    impl BuiltinConstruct for Difference {
-        const ITEM: &'static BuiltinItem = &BuiltinItem::Operation(BuiltinOperation::new(
-            BuiltinInfo::new("__mu::ops::difference"),
-            || function_type!((self: Type::Model(ModelType::Any)) -> Type::Model(ModelType::Any)),
-            difference,
-        ));
-
-        /// Returns the primitive element descriptor.
-        fn element() -> model::Element {
-            model::BuiltinWorkpiece::Operation(Self::ITEM.id()).into()
-        }
-
-        fn from_model(model: &Model) -> Result<Self, BuiltinError> {
-            construct_from_model!(model, Difference {})
-        }
-    }
-
-    pub static DIFFERENCE: &BuiltinItem = Difference::ITEM;
-
+    #[builtin_op]
     pub fn difference(
         args: Arguments,
         _ctx: &mut BuiltinEvalContext,
@@ -753,29 +718,14 @@ pub mod ops {
         Ok(tree)
     }
 
+    /// Linear extrusion of a 2D model.
+    #[builtin_op(Geometry2D -> Geometry3D)]
     pub struct Extrude {
+        /// Height in mm.
         pub height: Length,
     }
 
-    impl BuiltinConstruct for Extrude {
-        const ITEM: &'static BuiltinItem = &BuiltinItem::Operation(BuiltinOperation::new(
-            BuiltinInfo::new("__mu::ops::extrude"),
-            || function_type!((self: Type::Model(ModelType::Geometry2D), height: Type::length()) -> Type::Model(ModelType::Geometry3D)),
-            extrude,
-        ));
-
-        /// Returns the primitive element descriptor.
-        fn element() -> model::Element {
-            model::BuiltinWorkpiece::Operation(Self::ITEM.id()).into()
-        }
-
-        fn from_model(model: &Model) -> Result<Self, BuiltinError> {
-            construct_from_model!(model, Extrude { height })
-        }
-    }
-
-    pub static EXTRUDE: &BuiltinItem = Extrude::ITEM;
-
+    #[builtin_op]
     pub fn extrude(
         args: Arguments,
         _ctx: &mut BuiltinEvalContext,

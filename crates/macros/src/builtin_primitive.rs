@@ -3,9 +3,7 @@
 
 //! Implementation for the `#[builtin_primitive(...)]` attribute macro.
 
-use quote::ToTokens;
-
-use crate::{helpers::BuiltinType, prelude::*};
+use crate::prelude::*;
 
 // Parses the syntax inside #[builtin_primitive(#model_type, mod = #mod_name)]
 //
@@ -57,38 +55,10 @@ pub(crate) fn builtin_primitive_impl(attr: TokenStream, item: TokenStream) -> To
         .into();
     };
 
-    let Fields::Named(fields) = &input_struct.fields else {
-        return syn::Error::new_spanned(
-            struct_name,
-            "#[builtin_primitive] requires a struct with named fields",
-        )
-        .to_compile_error()
-        .into();
+    let (field_names, params) = match helpers::struct_params(&input_struct.fields) {
+        Ok(fields) => fields,
+        Err(err) => return err.to_compile_error().into(),
     };
-
-    let mut field_names = Vec::new();
-    let mut params = Vec::new();
-    for field in &fields.named {
-        let name = field.ident.as_ref().expect("named field");
-        let syn::Type::Path(type_path) = &field.ty else {
-            return syn::Error::new_spanned(&field.ty, "unsupported built-in field type")
-                .to_compile_error()
-                .into();
-        };
-        let ty = BuiltinType::from(
-            type_path
-                .path
-                .segments
-                .last()
-                .expect("type path segment")
-                .ident
-                .clone(),
-        )
-        .into_token_stream();
-
-        params.push(quote! { #name: #ty });
-        field_names.push(name);
-    }
 
     let static_name = helpers::ident_upper(struct_name);
     let doc_comment = helpers::attr_fetch_doc(&input_struct.attrs);

@@ -10,22 +10,36 @@ pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
 
     let mod_name = item_mod.ident.clone();
 
-    // Pass the module name to `#[builtin_primitive(...)]`, because it cannot know its parent module.
+    // Pass the module name to `#[builtin_primitive(...)]` and `#[builtin_op(...)]`,
+    // because they cannot know their parent module.
     item_mod
         .content
         .iter_mut()
         .flat_map(|(_, items)| items)
         .filter_map(|item| match item {
-            syn::Item::Struct(ItemStruct { attrs, .. }) => Some(attrs),
+            syn::Item::Struct(ItemStruct { attrs, .. }) | syn::Item::Fn(ItemFn { attrs, .. }) => {
+                Some(attrs)
+            }
             _ => None,
         })
         .flatten()
-        .filter(|attr| attr.path().is_ident("builtin_primitive"))
-        .for_each(|attr| {
-            if let syn::Meta::List(list) = &mut attr.meta {
+        .filter(|attr| {
+            attr.path().is_ident("builtin_primitive") || attr.path().is_ident("builtin_op")
+        })
+        .for_each(|attr| match &mut attr.meta {
+            syn::Meta::List(list) if list.tokens.is_empty() => {
+                list.tokens = quote! { mod = #mod_name };
+            }
+            syn::Meta::List(list) => {
                 let tokens = &list.tokens;
                 list.tokens = quote! { #tokens, mod = #mod_name };
             }
+            // `#[builtin_op]` without arguments.
+            meta @ syn::Meta::Path(_) => {
+                let path = meta.path().clone();
+                *meta = syn::parse_quote! { #path(mod = #mod_name) };
+            }
+            syn::Meta::NameValue(_) => {}
         });
 
     let mod_name = &mod_name;
@@ -52,6 +66,13 @@ pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
                 if helpers::attr_exists(attrs, "builtin_primitive") =>
             {
                 let ident = helpers::ident_upper(ident);
+                Some(quote! { #mod_name::#ident })
+            }
+            // Operation statics are references, too, named after the operation function.
+            syn::Item::Struct(ItemStruct { attrs, ident, .. })
+                if helpers::attr_exists(attrs, "builtin_op") =>
+            {
+                let ident = helpers::ident_upper(&helpers::ident_snake(ident));
                 Some(quote! { #mod_name::#ident })
             }
             _ => None,

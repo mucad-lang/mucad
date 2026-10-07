@@ -38,10 +38,6 @@ impl BuiltinRegistry {
         .iter()
         .for_each(|module| registry.register(module));
 
-        registry.register(mu::ops::TRANSLATE);
-        registry.register(mu::ops::EXTRUDE);
-        registry.register(mu::ops::ROTATE);
-
         registry
     }
 

@@ -100,6 +100,48 @@ impl Parse for BuiltinParam {
     }
 }
 
+/// Generate built-in parameters from struct fields.
+///
+/// Returns the field names and the parameters, e.g. `radius: Type::length()`.
+pub(crate) fn struct_params(fields: &Fields) -> Result<(Vec<&Ident>, Vec<TokenStream2>)> {
+    let fields = match fields {
+        Fields::Named(fields) => &fields.named,
+        Fields::Unit => return Ok(Default::default()),
+        Fields::Unnamed(fields) => {
+            return Err(syn::Error::new_spanned(
+                fields,
+                "built-in structs require named fields",
+            ));
+        }
+    };
+
+    let mut field_names = Vec::new();
+    let mut params = Vec::new();
+    for field in fields {
+        let name = field.ident.as_ref().expect("named field");
+        let syn::Type::Path(type_path) = &field.ty else {
+            return Err(syn::Error::new_spanned(
+                &field.ty,
+                "unsupported built-in field type",
+            ));
+        };
+        let ty = BuiltinType::from(
+            type_path
+                .path
+                .segments
+                .last()
+                .expect("type path segment")
+                .ident
+                .clone(),
+        );
+
+        params.push(quote! { #name: #ty });
+        field_names.push(name);
+    }
+
+    Ok((field_names, params))
+}
+
 /// Extract doc comment string from attributes.
 pub fn attr_fetch_doc(attrs: &[syn::Attribute]) -> String {
     attrs
@@ -124,6 +166,22 @@ pub fn attr_fetch_doc(attrs: &[syn::Attribute]) -> String {
 /// Check if an attribute with a name exists with an attribute list.
 pub fn attr_exists(attrs: &[syn::Attribute], name: &str) -> bool {
     attrs.iter().any(|attr| attr.path().is_ident(name))
+}
+
+/// Generate snake case name (e.g., `LinearExtrude` -> `linear_extrude`)
+pub fn ident_snake(ident: &syn::Ident) -> syn::Ident {
+    let mut name = String::new();
+    for (i, c) in ident.to_string().chars().enumerate() {
+        if c.is_uppercase() {
+            if i > 0 {
+                name.push('_');
+            }
+            name.extend(c.to_lowercase());
+        } else {
+            name.push(c);
+        }
+    }
+    quote::format_ident!("{name}")
 }
 
 /// Generate uppercase name (e.g., `add` -> `ADD`)
