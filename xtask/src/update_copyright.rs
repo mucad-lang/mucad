@@ -55,7 +55,8 @@ impl CopyrightUpdater {
     pub fn new(path: impl Into<PathBuf>) -> Self {
         Self {
             path: path.into(),
-            ..Default::default()
+            extensions: Default::default(),
+            excluded_patterns: Default::default(),
         }
     }
 

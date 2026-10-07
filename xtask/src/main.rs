@@ -6,7 +6,7 @@ use clap::{Parser, Subcommand};
 mod update_copyright;
 
 #[derive(Parser)]
-#[command(name = "mycli")]
+#[command(name = "microcad-xtask")]
 #[command(author, version, about = "A CLI tool for copyright updates and doc testing", long_about = None)]
 struct Cli {
     #[command(subcommand)]
@@ -19,30 +19,14 @@ enum Commands {
     UpdateCopyright,
 
     /// Run documentation tests
-    DocTest {
-        /// Filter specific tests by name
-        #[arg(short, long)]
-        filter: Option<String>,
-
-        /// Run tests without executing actions
-        #[arg(long)]
-        dry_run: bool,
-    },
+    DocTest,
 }
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::UpdateCopyright => {
-            update_copyright::update_copyright();
-        }
-        Commands::DocTest { filter, dry_run } => {
-            println!("Running doc tests... (dry_run = {dry_run})");
-            if let Some(f) = filter {
-                println!("Filter applied: {f}");
-            }
-            // TODO: Add doc test logic
-        }
+        Commands::UpdateCopyright => update_copyright::update_copyright(),
+        Commands::DocTest => Ok(()),
     }
 }
