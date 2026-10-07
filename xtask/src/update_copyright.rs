@@ -86,19 +86,17 @@ impl CopyrightUpdater {
     }
 
     /// Add a single extension and its associated comment prefix (e.g. `"rs"`, `"//"`).
-    pub fn extension(mut self, extension: &str, prefix: &str) -> Self {
-        self.extensions.insert(
-            extension.trim_start_matches('.').to_string(),
-            prefix.to_string(),
-        );
+    pub fn extension(mut self, extension: impl Into<String>, prefix: impl Into<String>) -> Self {
+        let ext = extension.into();
+        self.extensions
+            .insert(ext.trim_start_matches('.').to_string(), prefix.into());
         self
     }
 
     /// Add multiple extensions mapped to the same comment prefix.
     pub fn extensions(mut self, extensions: &[&str], prefix: &str) -> Self {
-        for ext in extensions {
-            self.extensions
-                .insert(ext.trim_start_matches('.').to_string(), prefix.to_string());
+        for &ext in extensions {
+            self = self.extension(ext, prefix);
         }
         self
     }
@@ -111,19 +109,22 @@ impl CopyrightUpdater {
 
     /// Automatically query Git (`git check-ignore`) to collect ignored files/patterns.
     pub fn with_git_exclusions(mut self) -> Self {
-        if let Ok(output) = Command::new("git")
+        let Ok(output) = Command::new("git")
             .current_dir(&self.path)
             .args(["status", "--ignored", "--porcelain"])
             .output()
-        {
-            if output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                for line in stdout.lines() {
-                    // Lines starting with '!! ' represent ignored files/directories in git status
-                    if line.starts_with("!! ") {
-                        let path_str = line[3..].trim();
-                        self.excluded_patterns.insert(PathBuf::from(path_str));
-                    }
+        else {
+            return self;
+        };
+
+        if output.status.success() {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            for line in stdout.lines() {
+                if let Some(ignored_path) = line.strip_prefix("!! ") {
+                    let trimmed = ignored_path.trim().trim_end_matches('/');
+                    self.excluded_patterns.insert(PathBuf::from(trimmed));
+                    self.excluded_patterns
+                        .insert(PathBuf::from(format!("{trimmed}/*")));
                 }
             }
         }
@@ -136,6 +137,7 @@ impl CopyrightUpdater {
     pub fn update(&self) -> std::io::Result<()> {
         let revision_years = get_revision_years(&self.path);
         let copyright_re = Regex::new(r"Copyright © (\d{4})(-\d{4})?").unwrap();
+        let year = chrono::Datelike::year(&chrono::Utc::now()) as u32;
 
         // Prepare exclusion glob patterns
         let exclusion_globs: Vec<_> = self
@@ -144,14 +146,14 @@ impl CopyrightUpdater {
             .filter_map(|p| glob::Pattern::new(&p.to_string_lossy()).ok())
             .collect();
 
-        for entry in WalkDir::new(&self.path).into_iter().filter_map(Result::ok) {
-            let path = entry.path();
-            if !path.is_file() {
-                continue;
-            }
-
+        for path in WalkDir::new(&self.path)
+            .into_iter()
+            .filter_map(Result::ok)
+            .map(|entry| entry.path().to_path_buf())
+            .filter(|path| path.is_file())
+        {
             // Relative path check for git matching and exclusion evaluation
-            let relative_path = path.strip_prefix(&self.path).unwrap_or(path);
+            let relative_path = path.strip_prefix(&self.path).unwrap_or(&path);
             let path_str = relative_path.to_string_lossy();
 
             if exclusion_globs.iter().any(|p| p.matches(&path_str)) {
@@ -167,10 +169,7 @@ impl CopyrightUpdater {
             let year_range = revision_years
                 .get(relative_path)
                 .cloned()
-                .unwrap_or_else(|| {
-                    let current_year = 2026;
-                    current_year..=current_year
-                });
+                .unwrap_or(year..=year);
 
             let formatted_years = if year_range.start() == year_range.end() {
                 format!("{}", year_range.start())
@@ -178,9 +177,9 @@ impl CopyrightUpdater {
                 format!("{}-{}", year_range.start(), year_range.end())
             };
 
-            let content = fs::read_to_string(path)?;
+            let content = fs::read_to_string(&path)?;
 
-            let updated_content = if let Some(_) = copyright_re.captures(&content) {
+            let updated_content = if copyright_re.is_match(&content) {
                 copyright_re
                     .replace(&content, format!("Copyright © {formatted_years}"))
                     .to_string()
@@ -195,7 +194,7 @@ impl CopyrightUpdater {
 
             if updated_content != content {
                 println!("cargo:warning=updated: {path:?} -> {formatted_years}");
-                fs::write(path, updated_content.as_bytes())?;
+                fs::write(&path, updated_content.as_bytes())?;
             }
         }
 
