@@ -1,3 +1,6 @@
+// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use microcad_builtin::{BuiltinConstruct, BuiltinId, mu};
 
 use crate::{GeometryOutputs, GeometryTree, Render, RenderContext, RenderError};

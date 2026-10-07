@@ -1,3 +1,6 @@
+// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 //! Test the LSP processor
 
 use tower_lsp::{LanguageServer, lsp_types as lsp};

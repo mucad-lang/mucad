@@ -1,3 +1,6 @@
+// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use microcad_lang_base::{CompilationResult, MICROCAD_EXTENSION, Source};
 use microcad_lang_lower::{self as lower, Ir, LowerContext, LowerIssue, ir};
 use microcad_lang_parse as parse;

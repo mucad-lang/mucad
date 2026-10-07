@@ -9601,17 +9601,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d49784317cd0d1ee7ec5c716dd598ec5b4483ea832a2dced265471cc0f690ae"
 
 [[package]]
-name = "update_copyright"
-version = "0.6.0"
-dependencies = [
- "clap",
- "env_logger",
- "glob",
- "regex",
- "walkdir",
-]
-
-[[package]]
 name = "url"
 version = "2.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10971,6 +10960,17 @@ name = "xmlwriter"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
+
+[[package]]
+name = "xtask"
+version = "0.6.0"
+dependencies = [
+ "clap",
+ "env_logger",
+ "glob",
+ "regex",
+ "walkdir",
+]
 
 [[package]]
 name = "y4m"
