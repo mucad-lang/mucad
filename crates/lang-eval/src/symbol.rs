@@ -1,7 +1,7 @@
 // Copyright © 2024-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{PushIssue, SrcReferrer};
+use microcad_lang_base::{PushIssue, SrcRef, SrcReferrer};
 use microcad_lang_resolve::library::symbol;
 use microcad_lang_types::{ArgumentValueList, Value};
 
@@ -13,7 +13,10 @@ impl Callable for symbol::SymbolDef {
         match self {
             Workbench(workbench) => workbench.call(args, context),
             Function(function) => function.call(args, context),
-            _ => todo!("This symbol cannot be called"),
+            def => context.catch(EvalErrorKind::SymbolCannotBeCalled {
+                path: def.to_string(),
+                src_ref: SrcRef::none(),
+            }),
         }
     }
 }
@@ -25,7 +28,7 @@ impl Eval for symbol::SymbolDef {
         match self {
             Root(source_file) => match source_file {
                 Some(source_file) => source_file.eval(context),
-                None => todo!("Source File not loaded"),
+                None => context.catch(EvalErrorKind::SourceFileNotLoaded),
             },
 
             Constant(constant) => match constant.value() {
@@ -35,7 +38,9 @@ impl Eval for symbol::SymbolDef {
                 }),
             },
             SourceFile(source_file) => source_file.eval(context),
-            def => todo!("Error handling: {def} not evaluated"),
+            def => context.catch(EvalErrorKind::SymbolNotEvaluable {
+                symbol: def.to_string(),
+            }),
         }
     }
 }
@@ -54,13 +59,11 @@ impl Eval for symbol::SymbolId {
             },
             symbol::SymbolId::Local(local_id) => match context.look_up_local(local_id) {
                 Some(value) => Ok(value.clone()),
-                None => {
-                    todo!("Error handling: Local '{local_id}' not found")
-                }
+                None => context.catch(EvalErrorKind::LocalNotFound(local_id.clone())),
             },
             symbol::SymbolId::Item(id) => match context.lib_id {
                 Some(lib_id) => context.eval_symbol(lib_id, *id),
-                None => todo!("Error handling: No library to evaluate"),
+                None => context.catch(EvalErrorKind::NoLibraryToEvaluate),
             },
             symbol::SymbolId::External(external_id) => {
                 context.eval_symbol(external_id.lib_id, external_id.id)

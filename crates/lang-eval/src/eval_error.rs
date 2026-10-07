@@ -5,10 +5,9 @@
 
 use microcad_builtin::BuiltinError;
 use microcad_lang_base::{
-    Identifier, IdentifierList, Issue, Name, SrcRef, SrcReferrer, ToCompactString,
-    element::WorkbenchKind,
+    Identifier, Issue, LibraryId, Name, SrcRef, SrcReferrer, ToCompactString,
 };
-use microcad_lang_types::{Type, Value, ValueError, model::ModelType};
+use microcad_lang_types::{Value, ValueError};
 use miette::{Diagnostic, Severity};
 
 use thiserror::Error;

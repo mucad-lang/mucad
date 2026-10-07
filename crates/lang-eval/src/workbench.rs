@@ -4,7 +4,7 @@
 //! Workbench evaluation
 
 use crate::{
-    Callable, Eval, EvalContext, EvalErrorKind, EvalResult,
+    Callable, Eval, EvalContext, EvalError, EvalErrorKind, EvalResult,
     context::{
         BuiltinItemFrame, ContextScope, WorkbenchGroupFrame, WorkbenchInitFrame, WorkpieceFrame,
     },
@@ -64,10 +64,13 @@ impl Eval<ModelTree> for symbol::workbench::Marker {
 }
 
 impl Eval for BuiltinItem {
-    fn eval(&self, _context: &mut EvalContext) -> EvalResult {
+    fn eval(&self, context: &mut EvalContext) -> EvalResult {
         match self {
             BuiltinItem::Constant(builtin_constant) => Ok(builtin_constant.value()),
-            _ => todo!("Error handling: Builtin constant expected"),
+            item => context.catch(EvalErrorKind::BuiltinConstantExpected {
+                name: item.name().to_string(),
+                src_ref: context.current_symbol_src_ref(),
+            }),
         }
     }
 }
@@ -146,7 +149,8 @@ impl Eval for symbol::workbench::WorkbenchCall {
 impl Eval for symbol::WorkbenchExpression {
     fn eval(&self, context: &mut EvalContext) -> EvalResult {
         match &self {
-            symbol::WorkbenchExpression::Invalid => unreachable!(),
+            // The error has already been reported when lowering.
+            symbol::WorkbenchExpression::Invalid => Ok(Value::None),
             symbol::WorkbenchExpression::Value(constant_value) => {
                 Ok(constant_value.value().clone())
             }
@@ -272,7 +276,13 @@ impl Callable for symbol::Workbench {
                             models.push(eval_to_model(self, properties, context)?);
                         }
                     }
-                    Err(_) => todo!(),
+                    Err(err) => {
+                        return Err(EvalError::argument_match(
+                            self.signature.parameters.src_ref,
+                            context.current_symbol_name().unwrap_or_default(),
+                            err,
+                        ));
+                    }
                 }
 
                 Ok(ModelTree::to_multiplicity(models).into())

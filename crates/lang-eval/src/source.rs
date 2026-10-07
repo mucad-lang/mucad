@@ -9,7 +9,9 @@ use microcad_lang_types::{
     model::{ModelTreeBuilderMut, Property, PropertyType},
 };
 
-use crate::{Eval, EvalContext, EvalResult, context::SourceFrame};
+use microcad_lang_base::PushIssue;
+
+use crate::{Eval, EvalContext, EvalErrorKind, EvalResult, context::SourceFrame};
 
 impl Eval<()> for symbol::SourceStatement {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<()> {
@@ -55,7 +57,7 @@ impl Eval for symbol::Source {
 impl Eval for symbol::SourceFile {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<Value> {
         match self {
-            symbol::SourceFile::NotLoaded => todo!(),
+            symbol::SourceFile::NotLoaded => context.catch(EvalErrorKind::SourceFileNotLoaded),
             symbol::SourceFile::Loaded { source, .. } => source.eval(context),
         }
     }

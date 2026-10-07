@@ -4,13 +4,13 @@
 //! Evaluate function
 
 use microcad_builtin::BuiltinItem;
-use microcad_lang_base::{PushIssue, SrcRef, SrcReferrer, ToCompactString};
+use microcad_lang_base::{DisplayWithCtx, PushIssue, SrcRef, SrcReferrer, ToCompactString};
 use microcad_lang_resolve::library::symbol;
 use microcad_lang_types::{ArgumentValue, ArgumentValueList, Value};
 
 use crate::{
     Callable, Eval, EvalContext, EvalError, EvalErrorKind, EvalResult,
-    context::{FunctionFrame, FunctionScopeFrame},
+    context::{ContextScope, FunctionFrame, FunctionScopeFrame},
 };
 
 #[derive(Debug, Default)]
@@ -117,8 +117,14 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
 
                         Ok(FlowSignal::Yield(f.call_isolated(args)?))
                     }
-                    None => unimplemented!("Function not found"),
-                    _ => todo!(),
+                    Some(_) => context.catch(EvalErrorKind::SymbolCannotBeCalled {
+                        path: self.path.to_string(),
+                        src_ref: self.src_ref,
+                    }),
+                    None => context.catch(EvalErrorKind::BuiltinNotFound {
+                        name: builtin_id.to_string_with_ctx(context),
+                        src_ref: self.src_ref,
+                    }),
                 }
             }
             path => context.catch(EvalError::new(EvalErrorKind::SymbolCannotBeCalled {
@@ -142,10 +148,25 @@ impl Eval<FlowSignal> for symbol::Path {
             symbol::Path::Resolved(symbol::SymbolId::Builtin(builtin)) => {
                 match context.builtins.get(*builtin) {
                     Some(BuiltinItem::Constant(c)) => Ok(FlowSignal::Yield(c.value())),
-                    _ => todo!("Error handling"),
+                    Some(item) => context.catch(EvalErrorKind::BuiltinConstantExpected {
+                        name: item.name().to_string(),
+                        src_ref: self.src_ref(),
+                    }),
+                    None => context.catch(EvalErrorKind::BuiltinNotFound {
+                        name: builtin.to_string_with_ctx(context),
+                        src_ref: self.src_ref(),
+                    }),
                 }
             }
-            _ => todo!("Error handling"),
+            symbol::Path::Resolved(id) | symbol::Path::HumanReadable { id, .. } => {
+                Ok(FlowSignal::Yield(id.eval(context)?))
+            }
+            symbol::Path::Unresolved(unresolved_path) => {
+                context.catch(EvalErrorKind::UnresolvedPath {
+                    path: unresolved_path.to_string(),
+                    src_ref: unresolved_path.src_ref,
+                })
+            }
         }
     }
 }
@@ -154,7 +175,8 @@ impl Eval<FlowSignal> for symbol::FunctionExpression {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<FlowSignal> {
         use symbol::FunctionExpression as Expr;
         match self {
-            Expr::Invalid => todo!("Error handling"),
+            // The error has already been reported when lowering.
+            Expr::Invalid => Ok(FlowSignal::Yield(Value::None)),
             Expr::Value(literal) => Ok(FlowSignal::Yield(literal.value().clone())),
             Expr::Path(name) => name.eval(context),
             Expr::Scope(s) => s.eval(context),
@@ -234,7 +256,11 @@ impl Callable for symbol::Function {
             Ok(args) => context.scope(FunctionFrame::new(args), |context| {
                 Ok(self.statements.eval(context)?.into_value())
             }),
-            Err(_) => todo!(),
+            Err(err) => Err(EvalError::argument_match(
+                context.current_symbol_src_ref(),
+                context.current_symbol_name().unwrap_or_default(),
+                err,
+            )),
         }
     }
 }

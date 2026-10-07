@@ -15,7 +15,7 @@ use microcad_lang_base::{
 };
 use microcad_lang_types::{Value, model::ModelTreeBuilderMut};
 
-use crate::{Eval, EvalError, EvalInfo, EvalIssue, EvalResult, EvalWarning};
+use crate::{Eval, EvalError, EvalErrorKind, EvalInfo, EvalIssue, EvalResult, EvalWarning};
 
 #[derive(Debug, Default)]
 pub struct EvalContext {
@@ -67,10 +67,10 @@ impl EvalContext {
     /// Evaluate the root symbol of the library being evaluated.
     pub fn eval_library(&mut self) -> EvalResult {
         let Some(lib_id) = self.lib_id else {
-            todo!("Error handling: No library to evaluate")
+            return self.catch(EvalErrorKind::NoLibraryToEvaluate);
         };
         let Some(lib) = self.library(&lib_id) else {
-            todo!("Error handling: Library not loaded")
+            return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
         };
         let lib = lib.read_unwrap();
         lib.root().get().eval(self)
@@ -81,7 +81,7 @@ impl EvalContext {
     /// The library's read lock is held during the evaluation.
     pub(crate) fn eval_symbol(&mut self, lib_id: LibraryId, id: SymbolNodeId) -> EvalResult {
         let Some(lib) = self.library(&lib_id) else {
-            todo!("Error handling: Library not loaded")
+            return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
         };
         let lib = lib.read_unwrap();
         SymbolNodeRef::new(id, &lib.arena).get().eval(self)
