@@ -3,43 +3,7 @@
 
 //! Short-cut definition of `Rc<std::cell::RefCell<T>>` and `Rc<T>`
 
-pub use std::rc::Rc;
-
-use std::{
-    cell::RefCell,
-    sync::{Arc, LockResult, RwLock, RwLockReadGuard, RwLockWriteGuard},
-};
-
-use derive_more::{Deref, DerefMut};
-
-/// Just a short cut definition
-#[derive(Deref, DerefMut)]
-pub struct RcMut<T>(Rc<RefCell<T>>);
-
-impl<T> RcMut<T> {
-    /// Create new instance
-    pub fn new(t: T) -> Self {
-        Self(Rc::new(RefCell::new(t)))
-    }
-}
-
-impl<T> Clone for RcMut<T> {
-    fn clone(&self) -> Self {
-        Self(self.0.clone())
-    }
-}
-
-impl<T> From<T> for RcMut<T> {
-    fn from(value: T) -> Self {
-        RcMut::new(value)
-    }
-}
-
-impl<T: std::fmt::Debug> std::fmt::Debug for RcMut<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("RcMut").field(&self.0.borrow()).finish()
-    }
-}
+use std::sync::{Arc, LockResult, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 /// An object that can be safely shared and mutated across contexts and threads.
 #[repr(transparent)]

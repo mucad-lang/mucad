@@ -45,7 +45,7 @@ pub use id::{
     HashId, LibraryId, LibraryInfo, LookUpName, Name, SymbolId, hash_id,
 };
 pub use output::{Capture, Output, Stdout};
-pub use rc::{Rc, RcMut, Shared};
+pub use rc::Shared;
 pub use source::{Source, SourceKind, SourceLocation, SourceMap, TextEdit};
 pub use src_ref::{LineCol, LineIndex, Refer, Span, SpanToSrcRef, Spanned, SrcRef, SrcReferrer};
 pub use tree::{TreeDisplay, TreeState};

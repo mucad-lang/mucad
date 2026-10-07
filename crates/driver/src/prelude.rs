@@ -18,8 +18,8 @@ pub mod base {
 
 pub use base::{
     Artifact, ArtifactKind, CompilationResult, Diagnostic, Diagnostics, HashId, HashMap, HashSet,
-    Hashed, Identifier, RcMut, Refer, Source, SourceKind, SourceLocation, SrcRef, StageResult,
-    TextEdit, Url,
+    Hashed, Identifier, Refer, Source, SourceKind, SourceLocation, SrcRef, StageResult, TextEdit,
+    Url,
 };
 
 pub mod parse {
