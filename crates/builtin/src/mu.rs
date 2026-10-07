@@ -588,42 +588,24 @@ pub mod color {
 /// Built-in 2D primitives
 #[builtin_mod]
 pub mod geo2d {
-    use microcad_lang_types::{Length, Model, ModelType, Type, function_type};
+    use microcad_lang_types::Length;
+    use microcad_macros::builtin_primitive;
 
-    use crate::{BuiltinConstruct, BuiltinPrimitiveCall, construct_from_model};
+    use crate::{BuiltinConstruct, BuiltinPrimitiveCall};
 
     use super::*;
 
-    pub static CIRCLE: &BuiltinItem = Circle::ITEM;
-
     /// A circle with a radius.
     #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
     pub struct Circle {
         /// Radius in mm.
         pub radius: Length,
     }
 
-    impl BuiltinConstruct for Circle {
-        const ITEM: &'static BuiltinItem = &builtin_item!(
-            Primitive
-            "A circle with a radius."
-            geo2d::Circle(function_type!((radius: Type::length()) -> Type::Model(ModelType::Geometry2D)))
-        );
-
-        fn from_model(model: &Model) -> Result<Self, BuiltinError> {
-            Self::check_element(model)?;
-            Ok(Circle {
-                radius: model.get_property_as("radius")?,
-            })
-        }
-    }
-
-    impl BuiltinPrimitiveCall for Circle {}
-
-    pub static RECT: &BuiltinItem = Rect::ITEM;
-
     /// A rectangle.
     #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
     pub struct Rect {
         /// Width of the rectangle.
         pub width: Length,
@@ -634,29 +616,6 @@ pub mod geo2d {
         /// Y position (bottom side) of the rectangle.
         pub y: Length,
     }
-
-    impl BuiltinConstruct for Rect {
-        const ITEM: &'static BuiltinItem = &builtin_item!(
-            Primitive
-            "A rectangle."
-            geo2d::Rect(function_type!((width: Type::length(), height: Type::length(), x: Type::length(), y: Type::length()) -> Type::model_2d()))
-        );
-
-        fn from_model(model: &Model) -> Result<Self, BuiltinError> {
-            Self::check_element(model)?;
-            construct_from_model!(
-                model,
-                Rect {
-                    x,
-                    y,
-                    width,
-                    height
-                }
-            )
-        }
-    }
-
-    impl BuiltinPrimitiveCall for Rect {}
 }
 
 /// Built-in Operations

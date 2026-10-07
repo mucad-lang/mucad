@@ -7,6 +7,7 @@ mod __mu;
 mod builtin_constant;
 mod builtin_fn;
 mod builtin_mod;
+mod builtin_primitive;
 mod derive_artifact;
 mod derive_identifiable;
 mod derive_scaffold;
@@ -25,8 +26,8 @@ pub(crate) mod prelude {
     pub use syn::parse::{Parse, ParseStream};
     pub use syn::spanned::Spanned;
     pub use syn::{
-        Data, DeriveInput, Expr, Fields, Ident, ItemFn, ItemMod, ItemStatic, Path, Result, Token,
-        parse_macro_input,
+        Data, DeriveInput, Expr, Fields, Ident, ItemFn, ItemMod, ItemStatic, ItemStruct, Path,
+        Result, Token, parse_macro_input,
     };
 
     pub(crate) use super::helpers;
@@ -53,6 +54,18 @@ pub fn builtin_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn builtin_mod(_attr: TokenStream, item: TokenStream) -> TokenStream {
     builtin_mod::builtin_mod_impl(item)
+}
+
+/// Declare a struct as built-in primitive.
+///
+/// Implements `BuiltinConstruct` and `BuiltinPrimitiveCall` for the struct and generates
+/// a static, e.g. `pub static CIRCLE: &BuiltinItem = Circle::ITEM;`.
+///
+/// The argument is the output model type, e.g. `#[builtin_primitive(Geometry2D)]`.
+/// Must be used inside a `#[builtin_mod]` module, which provides the module name.
+#[proc_macro_attribute]
+pub fn builtin_primitive(attr: TokenStream, item: TokenStream) -> TokenStream {
+    builtin_primitive::builtin_primitive_impl(attr, item)
 }
 
 /// Create a test case for a built-in function.

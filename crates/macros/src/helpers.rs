@@ -14,6 +14,12 @@ impl Parse for BuiltinType {
     }
 }
 
+impl From<syn::Ident> for BuiltinType {
+    fn from(ident: syn::Ident) -> Self {
+        Self(ident)
+    }
+}
+
 impl quote::ToTokens for BuiltinType {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         let ty = &self.0;

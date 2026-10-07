@@ -6,9 +6,29 @@
 use crate::prelude::*;
 
 pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
-    let item_mod = parse_macro_input!(item as ItemMod);
+    let mut item_mod = parse_macro_input!(item as ItemMod);
 
-    let mod_name = &item_mod.ident;
+    let mod_name = item_mod.ident.clone();
+
+    // Pass the module name to `#[builtin_primitive(...)]`, because it cannot know its parent module.
+    item_mod
+        .content
+        .iter_mut()
+        .flat_map(|(_, items)| items)
+        .filter_map(|item| match item {
+            syn::Item::Struct(ItemStruct { attrs, .. }) => Some(attrs),
+            _ => None,
+        })
+        .flatten()
+        .filter(|attr| attr.path().is_ident("builtin_primitive"))
+        .for_each(|attr| {
+            if let syn::Meta::List(list) = &mut attr.meta {
+                let tokens = &list.tokens;
+                list.tokens = quote! { #tokens, mod = #mod_name };
+            }
+        });
+
+    let mod_name = &mod_name;
     let mod_upper_name = helpers::ident_upper(mod_name);
 
     let collected_builtins: Vec<_> = item_mod
