@@ -11,7 +11,7 @@ pub use stack::*;
 
 use microcad_builtin::BuiltinRegistry;
 use microcad_lang_base::{
-    IssueList, LibraryId, LookUpName, Name, PushIssue, SharedMut, SrcRef, SrcReferrer,
+    IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut, SrcRef, SrcReferrer,
 };
 use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 

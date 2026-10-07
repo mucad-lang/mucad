@@ -14,8 +14,8 @@ mod scaffold;
 
 use microcad_builtin::BuiltinRegistry;
 use microcad_lang_base::{
-    CompilationResult, HashId, IssueList, LookUpName, PushIssue, Source, Span, SpanToSrcRef,
-    SrcRef, SymbolId, hash_id,
+    CompilationResult, HashId, IssueList, LookUpName, PushIssue, Shared, Source, Span,
+    SpanToSrcRef, SrcRef, SymbolId, hash_id,
 };
 
 pub use ir::CastInto;
@@ -25,7 +25,7 @@ use microcad_lang_parse::Ast;
 use microcad_macros::Artifact;
 use serde::{Deserialize, Serialize};
 
-use crate::{ir::Arena, scaffold::Scaffold};
+use crate::scaffold::Scaffold;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Artifact)]
 pub struct Ir {
@@ -48,7 +48,7 @@ pub struct LowerContext<'source> {
     pub source: &'source Source,
     pub arena: ir::Arena,
     pub node_id_stack: Vec<ir::NodeId>,
-    pub builtins: BuiltinRegistry,
+    pub builtins: Shared<BuiltinRegistry>,
     pub issues: IssueList<LowerIssue>,
 }
 
@@ -61,17 +61,21 @@ impl<'source> LookUpName for LowerContext<'source> {
     }
 }
 
+/// Builder patterns
 impl<'source> LowerContext<'source> {
+    /// Create a context with default settings and a fresh `BuiltinRegistry`.
     pub fn new(source: &'source Source) -> Self {
-        Self {
-            source,
-            arena: Arena::default(),
-            node_id_stack: vec![],
-            builtins: BuiltinRegistry::new(),
-            issues: Default::default(),
-        }
+        LowerContextBuilder::new(source).build()
     }
 
+    /// Create a builder for customized lowering setup (e.g., passing shared builtins).
+    pub fn builder(source: &'source Source) -> LowerContextBuilder<'source> {
+        LowerContextBuilder::new(source)
+    }
+}
+
+/// Accessors
+impl<'source> LowerContext<'source> {
     pub fn top_node(&self) -> &ir::NodeId {
         self.node_id_stack.last().unwrap()
     }
@@ -139,6 +143,39 @@ impl Unresolver for BuiltinRegistry {
                 }
             }
             _ => String::new(),
+        }
+    }
+}
+
+pub struct LowerContextBuilder<'source> {
+    source: &'source Source,
+    builtins: Option<Shared<BuiltinRegistry>>,
+}
+
+impl<'source> LowerContextBuilder<'source> {
+    pub fn new(source: &'source Source) -> Self {
+        Self {
+            source,
+            builtins: None,
+        }
+    }
+
+    /// Provide a custom or shared `BuiltinRegistry`.
+    pub fn with_builtins(mut self, builtins: Shared<BuiltinRegistry>) -> Self {
+        self.builtins = Some(builtins);
+        self
+    }
+
+    /// Build and initialize the lowering context.
+    pub fn build(self) -> LowerContext<'source> {
+        LowerContext {
+            source: self.source,
+            arena: ir::Arena::default(),
+            node_id_stack: Vec::new(),
+            builtins: self
+                .builtins
+                .unwrap_or_else(|| Shared::new(BuiltinRegistry::new())),
+            issues: IssueList::default(),
         }
     }
 }
