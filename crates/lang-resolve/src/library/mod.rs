@@ -15,11 +15,12 @@ pub use manifest::{Dependency, LibrarySection, Manifest, ManifestError};
 use microcad_lang_base::{HashSet, LibraryId, LibraryInfo, Name, Version};
 
 use microcad_lang_lower::ir::UnresolvedPath;
+use microcad_macros::Artifact;
 use serde::{Deserialize, Serialize};
 
 pub use symbol::*;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Artifact)]
 pub struct Library {
     pub manifest: Option<Manifest>,
 

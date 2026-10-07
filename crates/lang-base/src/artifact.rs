@@ -47,8 +47,8 @@ pub enum ArtifactKind {
     Ast,
     /// Intermediate representation
     Ir,
-    /// Resolved Symbol Tree
-    SymbolTree,
+    /// Resolved Library
+    Library,
     /// Model tree
     ModelTree,
 }
