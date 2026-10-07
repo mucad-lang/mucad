@@ -4,6 +4,7 @@
 //! Resolve stack.
 
 use derive_more::From;
+use microcad_lang_base::Identifier;
 
 use crate::library::SymbolNodeId;
 
@@ -159,6 +160,15 @@ impl ResolveStack {
 
     pub fn top_mut(&mut self) -> &mut ResolveStackFrame {
         self.0.last_mut().expect("A stack frame")
+    }
+
+    /// Returns true if `id` is a local in any frame of the current symbol.
+    pub fn is_local(&self, id: &Identifier) -> bool {
+        self.current_symbol_scope().any(|frame| {
+            frame
+                .local_table()
+                .is_some_and(|local_table| local_table.exists(id))
+        })
     }
 
     pub fn current_symbol_scope(&self) -> impl Iterator<Item = &ResolveStackFrame> {

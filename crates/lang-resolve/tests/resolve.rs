@@ -25,3 +25,30 @@ fn resolve() {
 
     insta::assert_snapshot!("resolve", &symbol)
 }
+
+/// Single identifiers resolve to constants, workbenches, parameters and locals.
+#[test]
+fn resolve_single_identifier() {
+    let mut ctx = ResolveContext::new();
+    let (_lib, issues) =
+        microcad_lang_resolve::resolve("tests/test_cases/single_identifier.µcad", &mut ctx)
+            .expect("No error");
+
+    assert!(!issues.has_errors(), "{issues:?}");
+}
+
+/// An unknown identifier is reported as unresolved symbol instead of panicking.
+#[test]
+fn resolve_unresolved_path() {
+    let mut ctx = ResolveContext::new();
+    let (_lib, issues) =
+        microcad_lang_resolve::resolve("tests/test_cases/unresolved_path.µcad", &mut ctx)
+            .expect("No fatal error");
+
+    assert!(
+        issues
+            .iter()
+            .any(|issue| issue.to_string() == "Unresolved symbol: undefined_radius"),
+        "{issues:?}"
+    );
+}

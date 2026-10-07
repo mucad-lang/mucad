@@ -4,11 +4,13 @@
 //! Resolve locals.
 
 use crate::{
-    ResolveLibraryContext, SymbolNodeRef,
+    ResolveErrorKind, ResolveLibraryContext, SymbolNodeRef,
     library::{Symbol, SymbolArena, SymbolNodeId, symbol, visitor},
     resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
-use microcad_lang_base::{ExternalId, Identifier, SingleIdentifier, SymbolId, ToCompactString};
+use microcad_lang_base::{
+    ExternalId, Identifier, PushIssue, SingleIdentifier, SymbolId, ToCompactString,
+};
 
 pub struct ResolveVisitor<'a, 'lib, 'ctx> {
     stack: ResolveStack,
@@ -128,59 +130,61 @@ impl<'a, 'lib, 'ctx> visitor::VisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
 
 impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
     fn visit_path(&mut self, path: &mut symbol::Path) {
-        if let symbol::Path::Unresolved(unresolved_path) = path {
-            let mut paths = Vec::new();
+        let symbol::Path::Unresolved(unresolved_path) = path else {
+            return;
+        };
 
-            // Look up in current library being resolved.
-            if let Some(symbol_node_id) = self.stack.symbol_node_id()
-                && let Some(node_id) = self.lib_ctx.lib.look_up(symbol_node_id, unresolved_path)
-            {
-                paths.push(symbol::Path::Resolved(SymbolId::Item(node_id)));
-            }
+        // Locals shadow symbols.
+        if let Some(id) = unresolved_path.single_identifier()
+            && self.stack.is_local(id)
+        {
+            *path = symbol::Path::Resolved(SymbolId::Local(id.to_compact_string()));
+            return;
+        }
 
-            // Look up external libraries.
-            if !unresolved_path.is_absolute
-                && let Some(external_name) = unresolved_path.external_name()
-                && let Some(dep) = self.lib_ctx.lib.dependencies.get(&external_name)
-            {
-                let lib = self
-                    .lib_ctx
-                    .ctx()
-                    .lib_cache
-                    .read_unwrap()
-                    .get(dep)
-                    .expect("Library not loaded.");
-                let lib = lib.read_unwrap();
+        let mut paths = Vec::new();
 
-                let resolved = lib.look_up(lib.root, unresolved_path).map(|id| {
-                    symbol::Path::Resolved(SymbolId::External(ExternalId {
-                        lib_id: lib.id(),
-                        id,
-                    }))
-                });
+        // Look up in current library being resolved.
+        if let Some(symbol_node_id) = self.stack.symbol_node_id()
+            && let Some(node_id) = self.lib_ctx.lib.look_up(symbol_node_id, unresolved_path)
+        {
+            paths.push(symbol::Path::Resolved(SymbolId::Item(node_id)));
+        }
 
-                paths.extend(resolved);
-            }
-
-            if let Some(id) = unresolved_path.single_identifier() {
-                if self.local_table().unwrap().exists(id) {
-                    paths.push(symbol::Path::Resolved(SymbolId::Local(
-                        id.to_compact_string(),
-                    )));
-                } else {
-                    todo!("Error handling: Local not in scope {id}")
+        // Look up external libraries.
+        if !unresolved_path.is_absolute
+            && let Some(external_name) = unresolved_path.external_name()
+            && let Some(dep) = self.lib_ctx.lib.dependencies.get(&external_name)
+        {
+            let lib = self.lib_ctx.ctx().lib_cache.read_unwrap().get(dep);
+            match lib {
+                Some(lib) => {
+                    let lib = lib.read_unwrap();
+                    paths.extend(lib.look_up(lib.root, unresolved_path).map(|id| {
+                        symbol::Path::Resolved(SymbolId::External(ExternalId {
+                            lib_id: lib.id(),
+                            id,
+                        }))
+                    }));
                 }
+                None => self.lib_ctx.push_err(ResolveErrorKind::LibraryNotLoaded {
+                    name: external_name.to_string(),
+                }),
             }
+        }
 
-            match paths.len() {
-                0 => todo!("Could not resolve path {unresolved_path}"),
-                1 => {
-                    *path = paths.first().cloned().unwrap();
-                }
-                n => {
-                    todo!("Ambiguous symbols, found {n} paths");
-                }
-            }
+        // Unresolved and ambiguous paths stay unresolved, evaluation reports them again.
+        match paths.len() {
+            0 => self.lib_ctx.push_err(ResolveErrorKind::UnresolvedPath {
+                path: unresolved_path.to_string(),
+                src_ref: unresolved_path.src_ref,
+            }),
+            1 => *path = paths.remove(0),
+            _ => self.lib_ctx.push_err(ResolveErrorKind::AmbiguousPath {
+                path: unresolved_path.to_string(),
+                candidates: paths.iter().map(|path| path.to_string()).collect(),
+                src_ref: unresolved_path.src_ref,
+            }),
         }
     }
 }
@@ -189,12 +193,16 @@ impl<'a, 'lib, 'ctx> visitor::ConstantVisitorMut for ResolveVisitor<'a, 'lib, 'c
 impl<'a, 'lib, 'ctx> visitor::WorkbenchVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
     fn visit_workbench(&mut self, workbench: &mut microcad_lang_lower::ir::workbench::Workbench) {
         use microcad_lang_lower::ir::visitor::WorkbenchExpressionVisitorMut;
-        self.visit_workbench_signature(&mut workbench.signature);
 
-        workbench
-            .statements
-            .iter_mut()
-            .for_each(|stmt| self.visit_workbench_statement(stmt))
+        // Workbench parameters are locals of the workbench body.
+        self.scope(stack::WorkbenchFrame::default(), |visitor| {
+            visitor.visit_workbench_signature(&mut workbench.signature);
+
+            workbench
+                .statements
+                .iter_mut()
+                .for_each(|stmt| visitor.visit_workbench_statement(stmt))
+        })
     }
 
     fn visit_workbench_signature(
@@ -222,13 +230,17 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchVisitorMut for ResolveVisitor<'a, 'lib, '
 
         self.visit_workbench_init_attr(&mut init.attr);
         self.visit_parameter_list(&mut init.parameters);
-        init.parameters
-            .iter()
-            .for_each(|param| self.declare_local(param.id.clone()));
 
-        init.statements.iter_mut().for_each(|init_statement| {
-            self.visit_name(&mut init_statement.name);
-            self.visit_workbench_expr(&mut init_statement.expression);
+        // Init parameters are only visible inside the init.
+        self.scope(stack::WorkbenchGroupFrame::default(), |visitor| {
+            init.parameters
+                .iter()
+                .for_each(|param| visitor.declare_local(param.id.clone()));
+
+            init.statements.iter_mut().for_each(|init_statement| {
+                visitor.visit_name(&mut init_statement.name);
+                visitor.visit_workbench_expr(&mut init_statement.expression);
+            });
         });
     }
 
