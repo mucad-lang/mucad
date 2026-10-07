@@ -49,7 +49,7 @@ impl DriverConfig {
             let fallback = DriverConfig::default().default_extension;
             log::warn!(
                 "`{}` is a valid µcad extension, switching to `{fallback}`.",
-                &config.default_extension
+                config.default_extension
             );
             config.default_extension = fallback;
         }

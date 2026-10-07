@@ -4,7 +4,7 @@
 //! STL exporter.
 
 use microcad_lang_types::{ModelTree, ModelType, Value};
-use microcad_render::{RenderContext, Renderer};
+use microcad_render::Renderer;
 
 use crate::{
     ExportError, Exporter, ExporterParameters, Writer,
@@ -33,11 +33,11 @@ impl Exporter for StlExporter {
         if self.binary {
             let mut writer = BinaryStlWriter::new(f);
             geometry.write_binary_stl(&mut writer)?;
-            let _ = writer.finalize()?;
+            writer.finalize()?;
         } else {
             let mut writer = AsciiStlWriter::new(f);
             geometry.write_ascii_stl(&mut writer)?;
-            let _ = writer.finalize()?;
+            writer.finalize()?;
         }
 
         Ok(Value::None)

@@ -59,6 +59,7 @@ pub fn is_microcad_file(path: impl AsRef<std::path::Path>) -> bool {
 /// - my/library/my_design -> my/library/my_design.mcad # In case the extension of the existing file is `.mcad`.
 /// - my/library/my_design -> my/library/my_design.ucad # In case the extension of the existing file is `.ucad`.
 /// - my/library/my_design -> my/library/my_design/mod.µcad # `my_design` is directory and a module.
+///
 /// Retrieve actual path of µcad file, even if this path does not have an extension or is a folder.
 pub fn resolved_path(path: impl AsRef<std::path::Path>) -> Result<std::path::PathBuf, LocateError> {
     let path = path.as_ref();

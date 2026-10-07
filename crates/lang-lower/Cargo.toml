@@ -38,4 +38,4 @@ microcad-builtin = { workspace = true }
 [dev-dependencies]
 pretty_assertions = "1.4"
 insta = "1.48.0"
-test-that = "0.5"
+test-that = "0.6"

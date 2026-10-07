@@ -43,8 +43,7 @@ impl AsTriangleIterator for Geometry3D {
 
 impl AsTriangleIterator for Geometries3D {
     fn triangle_iter(&self) -> TriangleIter {
-        let manifold: Manifold = self.union().into();
-        manifold.triangle_iter()
+        self.union().triangle_iter()
     }
 }
 

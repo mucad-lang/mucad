@@ -17,7 +17,7 @@ pub enum Geometry3D {
     /// Triangle mesh.
     Mesh(TriangleMesh),
     /// Manifold.
-    Manifold(Manifold),
+    Manifold(Box<Manifold>),
     /// Collection.
     Collection(Geometries3D),
 }
@@ -39,7 +39,7 @@ impl Geometry3D {
     pub fn boolean_op(&self, other: &Geometry3D, op: BooleanOp) -> Option<Self> {
         let a: Manifold = self.clone().into();
         let b: Manifold = other.clone().into();
-        Some(Geometry3D::Manifold(a.boolean(&b, op.into())))
+        Some(a.boolean(&b, op.into()).into())
     }
 
     /// Calculate contex hull.
@@ -98,7 +98,7 @@ impl TransformAffine for Geometry3D {
         match self {
             Geometry3D::Mesh(triangle_mesh) => triangle_mesh.transform_affine(m),
             Geometry3D::Manifold(manifold) => {
-                *self = Geometry3D::Manifold(manifold.transform(&mat4_to_mat3x4(m)))
+                *self = manifold.transform(&mat4_to_mat3x4(m)).into();
             }
             Geometry3D::Collection(geo3d) => geo3d.transform_affine(m),
         }
@@ -122,9 +122,15 @@ impl From<Geometry3D> for Manifold {
     fn from(geo: Geometry3D) -> Self {
         match geo {
             Geometry3D::Mesh(triangle_mesh) => triangle_mesh.to_manifold(),
-            Geometry3D::Manifold(manifold) => manifold,
+            Geometry3D::Manifold(manifold) => *manifold,
             Geometry3D::Collection(ref collection) => TriangleMesh::from(collection).to_manifold(),
         }
+    }
+}
+
+impl From<Manifold> for Geometry3D {
+    fn from(manifold: Manifold) -> Self {
+        Self::Manifold(Box::new(manifold))
     }
 }
 

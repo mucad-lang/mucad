@@ -190,7 +190,7 @@ impl Library {
                 if let Path::Unresolved(unresolved_path) = &wildcard.path {
                     // Look up the target path of the wildcard `a::path`
                     if let Some(target_module_id) =
-                        self.look_up_internal(scope_id, &unresolved_path, visited_wildcards)
+                        self.look_up_internal(scope_id, unresolved_path, visited_wildcards)
                     {
                         let target_ref = SymbolNodeRef::new(target_module_id, &self.arena);
 

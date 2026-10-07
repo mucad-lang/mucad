@@ -180,7 +180,7 @@ impl Render for GeometryNodeData {
                 .builtin_id()
                 .and_then(|builtin_id| context.renderer.hooks.get(builtin_id))
             {
-                Some(hook) => GeometryOutputs::from(hook(tree, context)?),
+                Some(hook) => hook(tree, context)?,
                 None => context.collect_outputs(tree).primary(),
             };
 

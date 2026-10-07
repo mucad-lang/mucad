@@ -16,7 +16,7 @@ impl Callable for BuiltinPrimitive {
     fn call(&self, args: &ArgumentValueList, context: &mut EvalContext) -> EvalResult {
         use crate::ArgumentMatch;
 
-        let multi_args = self.argument_multi_match(&args).map_err(|err| {
+        let multi_args = self.argument_multi_match(args).map_err(|err| {
             EvalError::argument_match(context.current_symbol_src_ref(), self.info.item_name(), err)
         })?;
         let mut models = Vec::new();

@@ -218,9 +218,7 @@ impl<'a> SymbolNodeExt for SymbolNodeRef<'a> {
 
     fn find_symbol_node(&self, name: impl AsRef<str>) -> Option<SymbolNodeRef<'_>> {
         let name = Identifier::from(name.as_ref());
-        self.children().find_map(|child| match child.name() {
-            Some(child_name) if child_name == &name => Some(child),
-            _ => None,
-        })
+        self.children()
+            .find(|child| matches!(child.name(), Some(child_name) if child_name == &name))
     }
 }

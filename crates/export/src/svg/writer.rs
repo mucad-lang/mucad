@@ -72,7 +72,7 @@ impl<W: Write> SvgWriter<W> {
 
     /// Get current attributes.
     pub fn attr(&self) -> &SvgTagAttributes {
-        self.attr_stack.last().unwrap()
+        self.attr_stack.last().expect("At least one attribute")
     }
 
     fn tag_inner(tag: &str, attr: &SvgTagAttributes) -> String {

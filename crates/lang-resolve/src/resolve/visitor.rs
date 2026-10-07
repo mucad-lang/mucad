@@ -4,12 +4,9 @@
 //! Resolve locals.
 
 use crate::{
-    Library, ResolveLibraryContext, SymbolNodeRef,
+    ResolveLibraryContext, SymbolNodeRef,
     library::{Symbol, SymbolArena, SymbolNodeId, symbol, visitor},
-    resolve::{
-        ResolveContext,
-        stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
-    },
+    resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
 use microcad_lang_base::{ExternalId, Identifier, SingleIdentifier, SymbolId, ToCompactString};
 
@@ -24,14 +21,6 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
             stack: ResolveStack::default(),
             lib_ctx,
         }
-    }
-
-    pub fn lib(&'lib self) -> &'lib Library {
-        self.lib_ctx.lib
-    }
-
-    pub fn ctx(&'ctx self) -> &'ctx ResolveContext {
-        self.lib_ctx.ctx()
     }
 
     pub fn transform<F>(&mut self, mut f: F)

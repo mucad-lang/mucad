@@ -34,7 +34,7 @@ microcad-driver = { workspace = true }
 microcad-viewer-ipc = { workspace = true }
 
 [dev-dependencies]
-test-that = "0.5"
+test-that = "0.6"
 
 microcad-driver = { workspace = true }
 

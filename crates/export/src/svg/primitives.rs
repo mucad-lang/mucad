@@ -470,10 +470,12 @@ impl SizeMeasure {
 impl MapToCanvas for SizeMeasure {
     fn map_to_canvas(&mut self, canvas: &Canvas) {
         self.bounds.map_to_canvas(canvas);
-        self.width.as_mut().map(|width| width.map_to_canvas(canvas));
-        self.height
-            .as_mut()
-            .map(|height| height.map_to_canvas(canvas));
+        if let Some(width) = self.width.as_mut() {
+            width.map_to_canvas(canvas)
+        }
+        if let Some(height) = self.height.as_mut() {
+            height.map_to_canvas(canvas)
+        }
     }
 }
 

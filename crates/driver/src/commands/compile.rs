@@ -39,7 +39,7 @@ pub struct CompileParameters {
 /// Trait for compilation toolchain.
 pub trait Compile /*+ Eval */ {
     /// Compile a document into a `Model`.
-    fn compile(&mut self, parameters: impl Into<CompileParameters>) -> Result {
+    fn compile(&mut self, _parameters: impl Into<CompileParameters>) -> Result {
         todo!()
     }
 }

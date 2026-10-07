@@ -56,9 +56,15 @@ impl Renderer {
 
 impl Renderer {
     /// Execute rendering for a given model tree.
-    pub fn render<'tree>(&mut self, model_tree: &'tree ModelTree) -> RenderResult<GeometryTree> {
+    pub fn render(&mut self, model_tree: &ModelTree) -> RenderResult<GeometryTree> {
         let mut ctx = RenderContext::new(self, model_tree);
         ctx.execute()
+    }
+}
+
+impl Default for Renderer {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
