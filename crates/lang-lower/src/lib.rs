@@ -45,11 +45,11 @@ impl Desugar<Ast> for ir::desugared::Source {
 }
 
 pub struct LowerContext<'source> {
-    pub source: &'source Source,
-    pub arena: ir::Arena,
-    pub node_id_stack: Vec<ir::NodeId>,
-    pub builtins: Shared<BuiltinRegistry>,
-    pub issues: IssueList<LowerIssue>,
+    source: &'source Source,
+    arena: ir::Arena,
+    node_id_stack: Vec<ir::NodeId>,
+    builtins: Shared<BuiltinRegistry>,
+    issues: IssueList<LowerIssue>,
 }
 
 impl<'source> LookUpName for LowerContext<'source> {
@@ -61,7 +61,7 @@ impl<'source> LookUpName for LowerContext<'source> {
     }
 }
 
-/// Builder patterns
+/// Builder methods
 impl<'source> LowerContext<'source> {
     /// Create a context with default settings and a fresh `BuiltinRegistry`.
     pub fn new(source: &'source Source) -> Self {
@@ -76,6 +76,11 @@ impl<'source> LowerContext<'source> {
 
 /// Accessors
 impl<'source> LowerContext<'source> {
+    /// Access built-in registry.
+    pub fn builtins(&self) -> &BuiltinRegistry {
+        &self.builtins
+    }
+
     pub fn top_node(&self) -> &ir::NodeId {
         self.node_id_stack.last().unwrap()
     }
