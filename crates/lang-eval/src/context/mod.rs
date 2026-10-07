@@ -3,14 +3,19 @@
 
 mod stack;
 
-use microcad_lang_resolve::{Library, LibraryCache};
+use microcad_lang_resolve::{
+    Library, LibraryCache,
+    library::symbol::{SymbolNodeId, SymbolNodeRef},
+};
 pub use stack::*;
 
 use microcad_builtin::BuiltinRegistry;
-use microcad_lang_base::{IssueList, LookUpName, Name, PushIssue, Shared, SrcRef, SrcReferrer};
+use microcad_lang_base::{
+    IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SrcRef, SrcReferrer,
+};
 use microcad_lang_types::{Value, model::ModelTreeBuilderMut};
 
-use crate::{EvalError, EvalInfo, EvalIssue, EvalWarning};
+use crate::{Eval, EvalError, EvalInfo, EvalIssue, EvalResult, EvalWarning};
 
 #[derive(Debug, Default)]
 pub struct EvalContext {
@@ -46,6 +51,34 @@ impl EvalContext {
     pub fn with_lib_cache(mut self, lib_cache: Shared<LibraryCache>) -> Self {
         self.lib_cache = Some(lib_cache);
         self
+    }
+}
+
+/// Library access functions
+impl EvalContext {
+    /// The library currently being evaluated (`SymbolId::Item`).
+    pub fn library(&self) -> Option<Shared<Library>> {
+        self.lib.clone()
+    }
+
+    /// An external library (`SymbolId::External`).
+    pub fn external_library(&self, lib_id: &LibraryId) -> Option<Shared<Library>> {
+        self.lib_cache.as_ref()?.read_unwrap().get(lib_id)
+    }
+
+    /// Evaluate the symbol `id` in library `lib`.
+    ///
+    /// The library is passed as owned [`Shared`], so its read lock does not borrow `self`.
+    pub(crate) fn eval_symbol_node(
+        &mut self,
+        lib: Option<Shared<Library>>,
+        id: SymbolNodeId,
+    ) -> EvalResult {
+        let Some(lib) = lib else {
+            todo!("Error handling: Library not loaded")
+        };
+        let lib = lib.read_unwrap();
+        SymbolNodeRef::new(id, &lib.arena).get().def.eval(self)
     }
 }
 
