@@ -36,10 +36,6 @@ pub enum EvalErrorKind {
         err: ArgumentMatchError,
     },
 
-    /// Trying to use multiplicity where it is not allowed
-    #[error("Multiplicity not allowed '{0}'")]
-    MultiplicityNotAllowed(IdentifierList),
-
     /// A condition of an if statement is not a boolean
     #[error("If condition is not a boolean: {err}")]
     IfConditionIsNotBool {
@@ -73,58 +69,6 @@ pub enum EvalErrorKind {
         inits: Vec<String>,
     },
 
-    /// This error happens if the workbench produced a different output type.
-    #[error("The {kind} workbench produced a {produced} output, but expected a {expected} output.")]
-    WorkbenchInvalidOutput {
-        kind: WorkbenchKind,
-        produced: ModelType,
-        expected: ModelType,
-    },
-
-    /// Cannot call operation without workpiece, e.g. `op()`.
-    #[error("Cannot call operation without workpiece.")]
-    CannotCallOperationWithoutWorkpiece,
-
-    /// There is no model in this workbench
-    #[error("Missing model in workbench")]
-    NoModelInWorkbench,
-
-    /// Assignment failed because a property already has been defined before.
-    #[error("Property `{name}` already defined: {value}")]
-    #[diagnostic(help("Values in microcad are immutable"))]
-    PropertyAlreadyDefined {
-        /// Location of the error
-        #[label(primary, "{name} is already defined")]
-        location: SrcRef,
-        /// Name of the value
-        name: Identifier,
-        /// Previous value
-        value: String,
-        /// Previous definition
-        #[label("Previously defined here")]
-        previous_location: SrcRef,
-    },
-
-    /// Unused local.
-    #[error("Unused local {0}.")]
-    UnusedLocal(Identifier),
-
-    /// Ambiguous types in tuple
-    #[error("Ambiguous type '{ty}' in tuple")]
-    AmbiguousType {
-        ty: Type,
-        #[label(
-            "Some unnamed values in this tuple share the same type '{ty}'.\nMaybe check the units or use identifiers in this tuple."
-        )]
-        src_ref: SrcRef,
-    },
-
-    #[error("range expression boundaries must be integers")]
-    InvalidRangeBoundaryType {
-        #[label("This expression does not evaluate to an integer")]
-        src_ref: SrcRef,
-    },
-
     #[error("This expression is expected to return a value.")]
     ExpectedExpression { src_ref: SrcRef },
 
@@ -150,18 +94,6 @@ pub enum EvalErrorKind {
     #[error("Local `{0}` not found in scope.")]
     LocalNotFound(Name),
 
-    #[error("Duplicated argument {id}.")]
-    DuplicateArgument {
-        #[label("The argument")]
-        id: Identifier,
-    },
-
-    #[error("Too many arguments: got {given}, expected {expected}")]
-    TooManyArguments { given: usize, expected: usize },
-
-    #[error("Missing required argument {id}")]
-    MissingRequiredArgument { id: Identifier },
-
     #[error("Constant expression expected")]
     ConstantExpressionExpected {
         #[label("This expression is not a constant")]
@@ -182,6 +114,25 @@ pub enum EvalErrorKind {
         #[label("Built-in was called from here")]
         src_ref: SrcRef,
     },
+
+    #[error("Built-in `{name}` is not a constant")]
+    BuiltinConstantExpected {
+        name: String,
+        #[label("Constant expected")]
+        src_ref: SrcRef,
+    },
+
+    #[error("Symbol `{symbol}` cannot be evaluated into a value")]
+    SymbolNotEvaluable { symbol: String },
+
+    #[error("Source file not loaded")]
+    SourceFileNotLoaded,
+
+    #[error("No library to evaluate")]
+    NoLibraryToEvaluate,
+
+    #[error("Library `{lib_id}` not loaded")]
+    LibraryNotLoaded { lib_id: LibraryId },
 }
 
 impl SrcReferrer for EvalErrorKind {
@@ -190,22 +141,17 @@ impl SrcReferrer for EvalErrorKind {
             EvalErrorKind::ArgumentMatch {
                 context_src_ref, ..
             } => *context_src_ref,
-            EvalErrorKind::MultiplicityNotAllowed(identifier_list) => identifier_list.src_ref,
             EvalErrorKind::IfConditionIsNotBool { src_ref, .. } => *src_ref,
             EvalErrorKind::NoInitializationFound { src_ref, .. } => *src_ref,
             EvalErrorKind::AmbiguousInitialization { src_ref, .. } => *src_ref,
-            EvalErrorKind::UnusedLocal(identifier) => identifier.src_ref(),
-            EvalErrorKind::AmbiguousType { src_ref, .. } => *src_ref,
-            EvalErrorKind::InvalidRangeBoundaryType { src_ref } => *src_ref,
             EvalErrorKind::ExpectedExpression { src_ref } => *src_ref,
             EvalErrorKind::CallReturnValueIgnored(src_ref) => *src_ref,
             EvalErrorKind::SymbolCannotBeCalled { src_ref, .. } => *src_ref,
             EvalErrorKind::LocalExpressionDidNotProduceAValue { src_ref, .. } => *src_ref,
-            EvalErrorKind::DuplicateArgument { id } => id.src_ref(),
-            EvalErrorKind::MissingRequiredArgument { id } => id.src_ref(),
             EvalErrorKind::ConstantExpressionExpected { src_ref } => *src_ref,
             EvalErrorKind::UnresolvedPath { src_ref, .. } => *src_ref,
             EvalErrorKind::BuiltinNotFound { src_ref, .. } => *src_ref,
+            EvalErrorKind::BuiltinConstantExpected { src_ref, .. } => *src_ref,
             _ => SrcRef::none(),
         }
     }
