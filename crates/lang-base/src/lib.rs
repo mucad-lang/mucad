@@ -14,7 +14,7 @@ pub mod element;
 mod fs;
 mod id;
 mod output;
-mod rc;
+mod shared;
 mod source;
 mod src_ref;
 pub mod tree;
@@ -45,7 +45,7 @@ pub use id::{
     HashId, LibraryId, LibraryInfo, LookUpName, Name, SymbolId, hash_id,
 };
 pub use output::{Capture, Output, Stdout};
-pub use rc::SharedMut;
+pub use shared::{Shared, SharedMut};
 pub use source::{Source, SourceKind, SourceLocation, SourceMap, TextEdit};
 pub use src_ref::{LineCol, LineIndex, Refer, Span, SpanToSrcRef, Spanned, SrcRef, SrcReferrer};
 pub use tree::{TreeDisplay, TreeState};

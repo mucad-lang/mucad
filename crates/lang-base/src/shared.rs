@@ -5,6 +5,52 @@
 
 use std::sync::{Arc, LockResult, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
+/// An immutable, ref-counted object shared safely across contexts and threads.
+#[repr(transparent)]
+#[derive(Debug)]
+pub struct Shared<T>(Arc<T>);
+
+impl<T> Shared<T> {
+    #[inline]
+    pub fn new(val: T) -> Self {
+        Self(Arc::new(val))
+    }
+
+    #[inline]
+    pub fn get_mut(this: &mut Self) -> Option<&mut T> {
+        Arc::get_mut(&mut this.0)
+    }
+
+    #[inline]
+    pub fn make_mut(this: &mut Self) -> &mut T
+    where
+        T: Clone,
+    {
+        Arc::make_mut(&mut this.0)
+    }
+}
+
+impl<T> std::ops::Deref for Shared<T> {
+    type Target = T;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<T> Clone for Shared<T> {
+    fn clone(&self) -> Self {
+        Self(Arc::clone(&self.0))
+    }
+}
+
+impl<T> From<T> for Shared<T> {
+    fn from(val: T) -> Self {
+        Self::new(val)
+    }
+}
+
 /// An object that can be safely shared and mutated across contexts and threads.
 #[repr(transparent)]
 #[derive(Debug)]
