@@ -47,12 +47,7 @@ pub(crate) fn builtin_primitive_impl(attr: TokenStream, item: TokenStream) -> To
     let struct_name = &input_struct.ident;
 
     let Some(mod_name) = mod_name else {
-        return syn::Error::new_spanned(
-            struct_name,
-            "#[builtin_primitive] must be used inside a #[builtin_mod] module",
-        )
-        .to_compile_error()
-        .into();
+        return helpers::missing_mod_error("builtin_primitive", struct_name);
     };
 
     let (field_names, params) = match helpers::struct_params(&input_struct.fields) {
@@ -62,30 +57,40 @@ pub(crate) fn builtin_primitive_impl(attr: TokenStream, item: TokenStream) -> To
 
     let static_name = helpers::ident_upper(struct_name);
     let doc_comment = helpers::attr_fetch_doc(&input_struct.attrs);
+    let id_doc = helpers::static_id_doc(&mod_name, struct_name);
 
     quote! {
+        #id_doc
         #input_struct
 
-        pub static #static_name: &BuiltinItem = #struct_name::ITEM;
+        pub static #static_name: &crate::BuiltinItem = <#struct_name as crate::Builtin>::ITEM;
 
-        impl BuiltinConstruct for #struct_name {
-            const ITEM: &'static BuiltinItem = &builtin_item!(
-                Primitive
-                #doc_comment
-                #mod_name::#struct_name(microcad_lang_types::function_type!(
+        impl crate::Builtin for #struct_name {
+            const ITEM: &'static crate::BuiltinItem = &crate::BuiltinItem::Primitive(crate::BuiltinPrimitive::new(
+                crate::builtin_info!(#doc_comment #mod_name::#struct_name),
+                || microcad_lang_types::function_type!(
                     (#(#params),*) -> microcad_lang_types::Type::Model(microcad_lang_types::ModelType::#model_type)
-                ))
-            );
+                ),
+                <#struct_name as crate::BuiltinPrimitiveCall>::call,
+            ));
+        }
 
-            fn from_model(model: &microcad_lang_types::Model) -> Result<Self, BuiltinError> {
-                Self::check_element(model)?;
+        impl crate::BuiltinConstruct for #struct_name {
+            fn element() -> microcad_lang_types::model::Element {
+                microcad_lang_types::model::BuiltinWorkpiece::Primitive(
+                    <Self as crate::Builtin>::ITEM.id()
+                ).into()
+            }
+
+            fn from_model(model: &microcad_lang_types::Model) -> Result<Self, crate::BuiltinError> {
+                <Self as crate::BuiltinConstruct>::check_element(model)?;
                 Ok(Self {
                     #(#field_names: model.get_property_as(stringify!(#field_names))?,)*
                 })
             }
         }
 
-        impl BuiltinPrimitiveCall for #struct_name {}
+        impl crate::BuiltinPrimitiveCall for #struct_name {}
     }
     .into()
 }

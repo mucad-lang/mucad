@@ -168,6 +168,126 @@ pub fn attr_exists(attrs: &[syn::Attribute], name: &str) -> bool {
     attrs.iter().any(|attr| attr.path().is_ident(name))
 }
 
+/// Generate the static ID doc comment of a built-in, e.g. for `__mu::ops::extrude`.
+pub fn static_id_doc(mod_name: &syn::Ident, name: &syn::Ident) -> TokenStream2 {
+    let id_doc = format!(
+        "**Static ID:** `{}`",
+        microcad_hash::HashId::compile_time_hash(format!("__mu::{mod_name}::{name}").as_str())
+    );
+    quote! {
+        #[doc = ""]
+        #[doc = #id_doc]
+    }
+}
+
+/// Parses `mod = #mod_name`, which is injected by `#[builtin_mod]`.
+pub(crate) fn parse_mod_name(input: ParseStream) -> Result<Ident> {
+    input.parse::<Token![mod]>()?;
+    input.parse::<Token![=]>()?;
+    input.parse()
+}
+
+/// Error for built-in structs used outside of `#[builtin_mod]`.
+pub(crate) fn missing_mod_error(macro_name: &str, span: &impl quote::ToTokens) -> TokenStream {
+    syn::Error::new_spanned(
+        span,
+        format!("#[{macro_name}] must be used inside a #[builtin_mod] module"),
+    )
+    .to_compile_error()
+    .into()
+}
+
+/// A function declaration without body, e.g.:
+///
+/// ```rs
+/// pub fn extrude(args: Arguments, ctx: &mut BuiltinEvalContext) -> Result<ModelTree, BuiltinError>;
+/// ```
+pub(crate) struct BodylessFn {
+    attrs: Vec<syn::Attribute>,
+    vis: syn::Visibility,
+    sig: syn::Signature,
+}
+
+impl Parse for BodylessFn {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let attrs = input.call(syn::Attribute::parse_outer)?;
+        let vis = input.parse()?;
+        let sig: syn::Signature = input.parse()?;
+        if input.peek(syn::token::Brace) {
+            return Err(syn::Error::new_spanned(
+                &sig,
+                "the function body is generated, remove it and end the declaration with `;`",
+            ));
+        }
+        input.parse::<Token![;]>()?;
+        Ok(Self { attrs, vis, sig })
+    }
+}
+
+/// Complete a bodyless function by forwarding to `BuiltinOperationCall::call`
+/// of the struct named after the function (e.g. `extrude` -> `Extrude`).
+pub(crate) fn expand_operation_call_fn(
+    macro_name: &str,
+    attr: TokenStream,
+    item: TokenStream,
+) -> TokenStream {
+    if !attr.is_empty() {
+        return syn::Error::new(
+            proc_macro2::Span::call_site(),
+            format!("#[{macro_name}] on functions takes no arguments"),
+        )
+        .to_compile_error()
+        .into();
+    }
+
+    let BodylessFn { attrs, vis, sig } = parse_macro_input!(item as BodylessFn);
+
+    let args = match sig
+        .inputs
+        .iter()
+        .map(|arg| match arg {
+            syn::FnArg::Typed(syn::PatType { pat, .. }) => match pat.as_ref() {
+                syn::Pat::Ident(pat_ident) => Ok(&pat_ident.ident),
+                pat => Err(syn::Error::new_spanned(pat, "expected a parameter name")),
+            },
+            syn::FnArg::Receiver(receiver) => Err(syn::Error::new_spanned(
+                receiver,
+                "unexpected `self` parameter",
+            )),
+        })
+        .collect::<Result<Vec<_>>>()
+    {
+        Ok(args) => args,
+        Err(err) => return err.to_compile_error().into(),
+    };
+
+    let struct_name = ident_pascal(&sig.ident);
+
+    quote! {
+        #(#attrs)*
+        #vis #sig {
+            <#struct_name as crate::BuiltinOperationCall>::call(#(#args),*)
+        }
+    }
+    .into()
+}
+
+/// Generate pascal case name (e.g., `linear_extrude` -> `LinearExtrude`)
+pub fn ident_pascal(ident: &syn::Ident) -> syn::Ident {
+    let name: String = ident
+        .to_string()
+        .split('_')
+        .map(|part| {
+            let mut chars = part.chars();
+            chars
+                .next()
+                .map(|first| first.to_uppercase().chain(chars).collect::<String>())
+                .unwrap_or_default()
+        })
+        .collect();
+    quote::format_ident!("{name}", span = ident.span())
+}
+
 /// Generate snake case name (e.g., `LinearExtrude` -> `linear_extrude`)
 pub fn ident_snake(ident: &syn::Ident) -> syn::Ident {
     let mut name = String::new();

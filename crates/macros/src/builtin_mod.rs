@@ -5,26 +5,29 @@
 
 use crate::prelude::*;
 
+/// Attribute macros on structs which need the module name.
+const BUILTIN_STRUCT_ATTRS: [&str; 3] = ["builtin_primitive", "builtin_op", "builtin_transform"];
+
 pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
     let mut item_mod = parse_macro_input!(item as ItemMod);
 
     let mod_name = item_mod.ident.clone();
 
-    // Pass the module name to `#[builtin_primitive(...)]` and `#[builtin_op(...)]`,
+    // Pass the module name to built-in structs (e.g. `#[builtin_primitive(...)]`),
     // because they cannot know their parent module.
     item_mod
         .content
         .iter_mut()
         .flat_map(|(_, items)| items)
         .filter_map(|item| match item {
-            syn::Item::Struct(ItemStruct { attrs, .. }) | syn::Item::Fn(ItemFn { attrs, .. }) => {
-                Some(attrs)
-            }
+            syn::Item::Struct(ItemStruct { attrs, .. }) => Some(attrs),
             _ => None,
         })
         .flatten()
         .filter(|attr| {
-            attr.path().is_ident("builtin_primitive") || attr.path().is_ident("builtin_op")
+            BUILTIN_STRUCT_ATTRS
+                .iter()
+                .any(|name| attr.path().is_ident(name))
         })
         .for_each(|attr| match &mut attr.meta {
             syn::Meta::List(list) if list.tokens.is_empty() => {
@@ -34,7 +37,7 @@ pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
                 let tokens = &list.tokens;
                 list.tokens = quote! { #tokens, mod = #mod_name };
             }
-            // `#[builtin_op]` without arguments.
+            // `#[builtin_transform]` without arguments.
             meta @ syn::Meta::Path(_) => {
                 let path = meta.path().clone();
                 *meta = syn::parse_quote! { #path(mod = #mod_name) };
@@ -68,9 +71,10 @@ pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
                 let ident = helpers::ident_upper(ident);
                 Some(quote! { #mod_name::#ident })
             }
-            // Operation statics are references, too, named after the operation function.
+            // Operation and transform statics are references, too, named after their function.
             syn::Item::Struct(ItemStruct { attrs, ident, .. })
-                if helpers::attr_exists(attrs, "builtin_op") =>
+                if helpers::attr_exists(attrs, "builtin_op")
+                    || helpers::attr_exists(attrs, "builtin_transform") =>
             {
                 let ident = helpers::ident_upper(&helpers::ident_snake(ident));
                 Some(quote! { #mod_name::#ident })

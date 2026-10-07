@@ -591,8 +591,6 @@ pub mod geo2d {
     use microcad_lang_types::Length;
     use microcad_macros::builtin_primitive;
 
-    use crate::{BuiltinConstruct, BuiltinPrimitiveCall};
-
     use super::*;
 
     /// A circle with a radius.
@@ -621,21 +619,13 @@ pub mod geo2d {
 /// Built-in Operations
 #[builtin_mod]
 pub mod ops {
-    use std::rc::Rc;
-
-    use microcad_lang_types::{
-        Length, Mat3, Model, ModelTree, math::AffineTransform, model::element::BuiltinWorkpiece,
-        parse_args,
-    };
-    use microcad_macros::{__mu, builtin_op};
+    use microcad_lang_types::{Length, Mat3, ModelTree, math::AffineTransform};
+    use microcad_macros::{builtin_op, builtin_transform};
 
     use super::*;
 
     /// Translate a model.
-    ///
-    /// Note: The resulting model is an affine transform, not an operation.
-    /// Hence, [`BuiltinConstruct::from_model`] cannot be used.
-    #[builtin_op(Any -> Any)]
+    #[builtin_transform]
     pub struct Translate {
         /// Translation in X direction.
         pub x: Length,
@@ -645,78 +635,49 @@ pub mod ops {
         pub z: Length,
     }
 
-    #[builtin_op]
-    pub fn translate(
-        args: Arguments,
-        _ctx: &mut BuiltinEvalContext,
-    ) -> Result<ModelTree, BuiltinError> {
-        parse_args!(
-            args,
-            self_: Rc<ModelTree> => "self",
-            x: Length,
-            y: Length,
-            z: Length,
-        );
-
-        let mut tree = ModelTree::new(
-            Model::from(AffineTransform::Translation { x, y, z }).with_op_properties(args),
-        );
-
-        tree.append(Rc::unwrap_or_clone(self_));
-
-        Ok(tree)
+    impl From<Translate> for AffineTransform {
+        fn from(Translate { x, y, z }: Translate) -> Self {
+            AffineTransform::Translation { x, y, z }
+        }
     }
 
+    /// Translate a model by `x`, `y` and `z`.
+    #[builtin_transform]
+    pub fn translate(
+        args: Arguments,
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
+
     /// Rotate a model by a rotation matrix.
-    ///
-    /// Note: The resulting model is an affine transform, not an operation.
-    /// Hence, [`BuiltinConstruct::from_model`] cannot be used.
-    #[builtin_op(Any -> Any)]
+    #[builtin_transform]
     pub struct Rotate {
         /// Rotation matrix.
         pub matrix: Mat3,
     }
 
-    #[builtin_op]
+    impl From<Rotate> for AffineTransform {
+        fn from(Rotate { matrix }: Rotate) -> Self {
+            AffineTransform::RotateMatrix { m: matrix }
+        }
+    }
+
+    /// Rotate a model by a rotation matrix.
+    #[builtin_transform]
     pub fn rotate(
         args: Arguments,
-        _ctx: &mut BuiltinEvalContext,
-    ) -> Result<ModelTree, BuiltinError> {
-        parse_args!(
-            args,
-            self_: Rc<ModelTree> => "self",
-            matrix: Mat3,
-        );
-
-        let mut tree = ModelTree::new(
-            Model::from(AffineTransform::RotateMatrix { m: matrix }).with_op_properties(args),
-        );
-
-        tree.append(Rc::unwrap_or_clone(self_));
-
-        Ok(tree)
-    }
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
 
     /// Subtract all following child models from the first one.
     #[builtin_op(Any -> Any)]
     pub struct Difference;
 
+    /// Subtract all following child models from the first one.
     #[builtin_op]
     pub fn difference(
         args: Arguments,
-        _ctx: &mut BuiltinEvalContext,
-    ) -> Result<ModelTree, BuiltinError> {
-        parse_args!(args, self_: Rc<ModelTree> => "self");
-
-        // Create the actual operation node
-        let mut tree = ModelTree::new(
-            Model::new(BuiltinWorkpiece::Operation(__mu!(ops::difference)))
-                .with_op_properties(args),
-        );
-        tree.append(Rc::unwrap_or_clone(self_));
-
-        Ok(tree)
-    }
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
 
     /// Linear extrusion of a 2D model.
     #[builtin_op(Geometry2D -> Geometry3D)]
@@ -725,19 +686,12 @@ pub mod ops {
         pub height: Length,
     }
 
+    /// Linear extrusion of a 2D model.
     #[builtin_op]
     pub fn extrude(
         args: Arguments,
-        _ctx: &mut BuiltinEvalContext,
-    ) -> Result<ModelTree, BuiltinError> {
-        let self_: Rc<ModelTree> = args.try_get("self")?;
-        let mut tree = ModelTree::new(
-            Model::new(BuiltinWorkpiece::Operation(__mu!(ops::extrude))).with_op_properties(args),
-        );
-        tree.append(Rc::unwrap_or_clone(self_));
-
-        Ok(tree)
-    }
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
 }
 
 pub static __MU: &str = include_inner_docs!("src/mu.rs");

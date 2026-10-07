@@ -9,6 +9,7 @@ mod builtin_fn;
 mod builtin_mod;
 mod builtin_op;
 mod builtin_primitive;
+mod builtin_transform;
 mod derive_artifact;
 mod derive_identifiable;
 mod derive_scaffold;
@@ -57,15 +58,16 @@ pub fn builtin_mod(_attr: TokenStream, item: TokenStream) -> TokenStream {
     builtin_mod::builtin_mod_impl(item)
 }
 
-/// Declare a built-in operation with a struct and a function.
+/// Declare a built-in operation with a struct and a bodyless function.
 ///
 /// On a struct, the argument is the model type of `self` and the result, e.g.
-/// `#[builtin_op(Geometry2D -> Geometry3D)]`. Implements `BuiltinConstruct` and
+/// `#[builtin_op(Geometry2D -> Geometry3D)]`. Implements `Builtin`, `BuiltinConstruct` and
 /// `BuiltinOperationCall` for the struct and generates a static, e.g.
 /// `pub static EXTRUDE: &BuiltinItem = Extrude::ITEM;`.
 ///
 /// On a function, `#[builtin_op]` has no arguments. The function is named after the struct in
-/// snake case (e.g. `Extrude` -> `extrude`) and is called by `BuiltinOperationCall::call`.
+/// snake case (e.g. `Extrude` -> `extrude`) and its generated body calls
+/// `BuiltinOperationCall::call`.
 ///
 /// Must be used inside a `#[builtin_mod]` module, which provides the module name.
 #[proc_macro_attribute]
@@ -73,10 +75,26 @@ pub fn builtin_op(attr: TokenStream, item: TokenStream) -> TokenStream {
     builtin_op::builtin_op_impl(attr, item)
 }
 
+/// Declare a built-in affine transform with a struct and a bodyless function.
+///
+/// On a struct, `#[builtin_transform]` has no arguments and the struct must implement
+/// `Into<AffineTransform>`. Implements `Builtin` and `BuiltinOperationCall` for the struct
+/// and generates a static, e.g. `pub static TRANSLATE: &BuiltinItem = Translate::ITEM;`.
+///
+/// On a function, `#[builtin_transform]` has no arguments. The function is named after the
+/// struct in snake case (e.g. `Translate` -> `translate`) and its generated body calls
+/// `BuiltinOperationCall::call`.
+///
+/// Must be used inside a `#[builtin_mod]` module, which provides the module name.
+#[proc_macro_attribute]
+pub fn builtin_transform(attr: TokenStream, item: TokenStream) -> TokenStream {
+    builtin_transform::builtin_transform_impl(attr, item)
+}
+
 /// Declare a struct as built-in primitive.
 ///
-/// Implements `BuiltinConstruct` and `BuiltinPrimitiveCall` for the struct and generates
-/// a static, e.g. `pub static CIRCLE: &BuiltinItem = Circle::ITEM;`.
+/// Implements `Builtin`, `BuiltinConstruct` and `BuiltinPrimitiveCall` for the struct and
+/// generates a static, e.g. `pub static CIRCLE: &BuiltinItem = Circle::ITEM;`.
 ///
 /// The argument is the output model type, e.g. `#[builtin_primitive(Geometry2D)]`.
 /// Must be used inside a `#[builtin_mod]` module, which provides the module name.

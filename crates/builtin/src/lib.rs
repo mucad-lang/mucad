@@ -57,13 +57,15 @@ pub type BuiltinEvalFn<T = Value> =
 /// A type of a function returning a T as builtin.
 pub type BuiltinFn<T> = fn() -> T;
 
-pub trait BuiltinConstruct: Sized {
+/// A built-in with a static descriptor.
+pub trait Builtin {
     const ITEM: &'static BuiltinItem;
+}
 
-    /// Returns the primitive element descriptor.
-    fn element() -> model::Element {
-        model::BuiltinWorkpiece::Primitive(Self::ITEM.id()).into()
-    }
+/// A built-in which can be reconstructed from an evaluated model (primitives, operations).
+pub trait BuiltinConstruct: Builtin + Sized {
+    /// Returns the element descriptor of the model created by this built-in.
+    fn element() -> model::Element;
 
     fn check_element(model: &Model) -> Result<(), BuiltinError> {
         if model.element == Self::element() {
@@ -88,7 +90,8 @@ pub trait BuiltinPrimitiveCall: BuiltinConstruct {
     }
 }
 
-pub trait BuiltinOperationCall: BuiltinConstruct {
+/// A built-in operation or transform, evaluating into a model tree.
+pub trait BuiltinOperationCall: Builtin {
     /// Call this operation with arguments and evaluate it into a model tree.
     fn call(args: Arguments, ctx: &mut BuiltinEvalContext) -> Result<ModelTree, BuiltinError>;
 }
