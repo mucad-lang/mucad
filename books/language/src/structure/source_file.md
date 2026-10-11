@@ -36,14 +36,14 @@ with a radius of one centimeter.
 
 [![test](.test/source_file_2D.svg)](.test/source_file_2D.log)
 
-```µcad,source_file_2D
+```mu,source_file_2D
 // simply draw a circle
 std::geo2d::Circle(radius = 1cm);
 ```
 
 [![test](.test/source_file_3D.svg)](.test/source_file_3D.log)
 
-```µcad,source_file_3D
+```mu,source_file_3D
 // simply draw a sphere
 std::geo3d::Sphere(radius = 1cm);
 ```
@@ -54,7 +54,7 @@ Mixing 2D and 3D statements in the same file will result in an error:
 
 [![test](.test/source_file_mixed.svg)](.test/source_file_mixed.log)
 
-```µcad,source_file_mixed#fail
+```mu,source_file_mixed#fail
 std::geo2d::Circle(radius = 1cm);
 std::geo3d::Sphere(radius = 1cm); // error: can't mix 2D and 3D
 ```

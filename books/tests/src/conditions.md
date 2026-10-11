@@ -2,7 +2,7 @@
 
 [![test](.test/condition_return.svg)](.test/condition_return.log)
 
-```µcad,condition_return
+```mu,condition_return
 fn f(x: Integer) {
     if x == 5 or x == 4 {
         return "match";

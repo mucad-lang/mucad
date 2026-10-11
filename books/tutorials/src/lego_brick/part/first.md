@@ -7,7 +7,7 @@ Afterwards, we combine the three components using the `|` operator.
 
 [![test](.test/first_version.svg)](.test/first_version.log)
 
-```µcad,first_version(hires)
+```mu,first_version(hires)
 use std::ops::*;
 use std::geo2d::*;
 

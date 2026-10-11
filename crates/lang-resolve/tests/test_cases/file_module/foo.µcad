@@ -1,3 +1,0 @@
-mod bar; // Loads foo/bar.µcad
-
-pub const FOO = 42mm;

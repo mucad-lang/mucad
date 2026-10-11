@@ -14,7 +14,14 @@ pub enum LocateError {
     #[error("No µcad file found at: {path}")]
     #[diagnostic(
         code(microcad::locate::file_not_found),
-        help("Ensure the file exists or has a supported extension (.µcad, .mcad, .ucad)")
+        help(
+            "Ensure the file exists or has a supported extension ({})",
+            MICROCAD_EXTENSIONS
+                .iter()
+                .map(|ext| format!(".{ext}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
     )]
     FileNotFound { path: std::path::PathBuf },
 
@@ -54,11 +61,9 @@ pub fn is_microcad_file(path: impl AsRef<std::path::Path>) -> bool {
 /// It is agnostic about file extension and will always return the file with the extension that actually exists.
 /// If the path is a directory, it will be checked if the directory contains a `mod` file with µcad extension.
 ///
-/// - my/library/my_design.µcad -> my/library/my_design.µcad
-/// - my/library/my_design -> my/library/my_design.µcad # In case the extension of the existing file is `.µcad`.
-/// - my/library/my_design -> my/library/my_design.mcad # In case the extension of the existing file is `.mcad`.
-/// - my/library/my_design -> my/library/my_design.ucad # In case the extension of the existing file is `.ucad`.
-/// - my/library/my_design -> my/library/my_design/mod.µcad # `my_design` is directory and a module.
+/// - my/library/my_design.mu -> my/library/my_design.mu
+/// - my/library/my_design -> my/library/my_design.mu # In case the extension of the existing file is `.mu`.
+/// - my/library/my_design -> my/library/my_design/mod.mu # `my_design` is directory and a module.
 ///
 /// Retrieve actual path of µcad file, even if this path does not have an extension or is a folder.
 pub fn resolved_path(path: impl AsRef<std::path::Path>) -> Result<std::path::PathBuf, LocateError> {

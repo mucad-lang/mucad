@@ -4,7 +4,7 @@
 
 [![test](.test/scopes.svg)](.test/scopes.log)
 
-```µcad,scopes
+```mu,scopes
 a = 1;
 use __builtin::debug::assert_valid;
 use __builtin::debug::assert_invalid;

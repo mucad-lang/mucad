@@ -20,7 +20,7 @@ a public function which then are used from outside the modules:
 
 [![test](.test/mod_example.svg)](.test/mod_example.log)
 
-```µcad,mod_example
+```mu,mod_example
 // define private module
 mod my {
     // define public module

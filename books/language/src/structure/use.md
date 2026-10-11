@@ -7,7 +7,7 @@ The following example which uses two *parts* of `std::geo3d` shows the problem w
 
 [![test](.test/none.svg)](.test/none.log)
 
-```µcad,none
+```mu,none
 std::geo3d::Sphere(radius = 40mm);
 std::geo3d::Cube(size = 40mm);
 ```
@@ -23,7 +23,7 @@ this would shorten things quite a lot:
 
 [![test](.test/use.svg)](.test/use.log)
 
-```µcad,use
+```mu,use
 use std::geo3d::Sphere;
 use std::geo3d::Cube;
 
@@ -35,7 +35,7 @@ Alternatively, you may also use an entire **module** `geo3d` and to get rid of t
 
 [![test](.test/use_module.svg)](.test/use_module.log)
 
-```µcad,use_module
+```mu,use_module
 use std::geo3d;
 
 geo3d::Sphere(radius = 40mm); // Drops the `std::` prefix.
@@ -50,7 +50,7 @@ To prevent name collisions or to improve clarity, you can provide a custom *iden
 
 [![test](.test/use_as.svg)](.test/use_as.log)
 
-```µcad,use_as
+```mu,use_as
 use std::geo3d::Sphere as Ball;
 
 Ball(radius = 4mm);
@@ -60,7 +60,7 @@ Of course you can use `use as` with a whole *module*:
 
 [![test](.test/use_as_module.svg)](.test/use_as_module.log)
 
-```µcad,use_as_module
+```mu,use_as_module
 use std::geo3d as space;
 
 space::Sphere(radius = 4mm);
@@ -73,7 +73,7 @@ The following example defines aliases for **all** symbols of `std::geo3d`.
 
 [![test](.test/use_all.svg)](.test/use_all.log)
 
-```µcad,use_all
+```mu,use_all
 use std::geo3d::*;
 
 Sphere(radius = 4mm);
@@ -92,7 +92,7 @@ See the [visibility section](../visibility.md) for information.
 
 [![test](.test/use_statement_pub.svg)](.test/use_statement_pub.log)
 
-```µcad,use_statement_pub
+```mu,use_statement_pub
 mod my {
     pub use std::geo3d::Sphere;
     pub use std::geo3d::Cube;

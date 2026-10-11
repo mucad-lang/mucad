@@ -13,7 +13,7 @@ Tuples support the following operators.
 
 [![test](.test/tuple_operations.svg)](.test/tuple_operations.log)
 
-```µcad,tuple_operations
+```mu,tuple_operations
 std::debug::assert_eq([(x = 1, y = 2) + (x = 3, y = 4), (x = 4, y = 6)]);
 std::debug::assert_eq([(x = 2, y = 3) - (x = 1, y = 4), (x = 1, y = -1)]);
 std::debug::assert_eq([(x = 1.0, y = 2.0) * 2, (x = 2.0, y = 4.0)]);
@@ -27,7 +27,7 @@ Names or types must match like the element count.
 
 [![test](.test/tuple_error_mismatch.svg)](.test/tuple_error_mismatch.log)
 
-```µcad,tuple_error_mismatch#fail
+```mu,tuple_error_mismatch#fail
 (x = 1, y = 2) + (x = 3, z = 4); // error: mismatch (x, y) + (x, z)
 (x = 1, y = 2) + (x = 3mm, y = 4mm); // error: mismatch (Integer, Integer) + (Length, Length)
 (x = 1, y = 2) + (x = 3, y = 4, z = 5); // error: mismatch unexpected z

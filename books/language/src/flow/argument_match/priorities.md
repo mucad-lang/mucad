@@ -22,7 +22,7 @@ Matches when both the arguments and parameters are empty.
 
 [![test](.test/argument_match_empty.svg)](.test/argument_match_empty.log)
 
-```µcad,argument_match_empty
+```mu,argument_match_empty
 fn f() {} // no parameters
 
 f(); // no arguments
@@ -34,7 +34,7 @@ The following example demonstrates calling a function `f` with each argument spe
 
 [![test](.test/argument_match_id.svg)](.test/argument_match_id.log)
 
-```µcad,argument_match_id
+```mu,argument_match_id
 fn f(width: Length, height: Length) -> Area { width * height }
 
 x = f(height = 2cm, width = 1cm); // call f() with parameters in arbitrary order
@@ -50,7 +50,7 @@ The short form consists of the first letter of each word separated by underscore
 
 [![test](.test/argument_match_short.svg)](.test/argument_match_short.log)
 
-```µcad,argument_match_short
+```mu,argument_match_short
 fn f(width: Length, height: Length) -> Area { width * height }
 
 // use short identifiers
@@ -77,7 +77,7 @@ Nameless values can be used if all parameter types of the called function
 
 [![test](.test/argument_match_type.svg)](.test/argument_match_type.log)
 
-```µcad,argument_match_type
+```mu,argument_match_type
 fn f(a: Scalar, b: Length, c: Area) {} // warning: unused a,b,c
 // Who needs names?
 f(1.0, 2cm, 3cm²);
@@ -90,7 +90,7 @@ are not identical.
 
 [![test](.test/argument_match_type_compatible.svg)](.test/argument_match_type_compatible.log)
 
-```µcad,argument_match_type_compatible
+```mu,argument_match_type_compatible
 fn f(a: Scalar, b: Length, c: Area) {} // warning: unused a,b,c
 // giving an integer `1` to a `Scalar` parameter `a`
 f(1, 2cm, 3cm²);
@@ -103,7 +103,7 @@ the default will be used.
 
 [![test](.test/argument_match_default.svg)](.test/argument_match_default.log)
 
-```µcad,argument_match_default
+```mu,argument_match_default
 fn f(a = 1mm) {} // warning: unused a
 // a has default
 f();
@@ -115,7 +115,7 @@ You can combine all these methods.
 
 [![test](.test/argument_match_mix.svg)](.test/argument_match_mix.log)
 
-```µcad,argument_match_mix
+```mu,argument_match_mix
 fn f(a: Scalar, b: Length, c = 2cm, d: Length) -> Volume {} // warning: unused a,b,c,d
 
 // `a` gets the Integer (1) which is compatible to Scalar (1.0)

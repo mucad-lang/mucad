@@ -15,8 +15,8 @@ fn path(name: &str) -> UnresolvedPath {
 #[test]
 fn resolve() {
     let mut ctx = ResolveContext::new();
-    let (lib, _diags) = microcad_lang_resolve::resolve("tests/test_cases/resolve.µcad", &mut ctx)
-        .expect("No error");
+    let (lib, _diags) =
+        microcad_lang_resolve::resolve("tests/test_cases/resolve.mu", &mut ctx).expect("No error");
 
     let symbol = lib
         .look_up(lib.root, &path("::resolve"))
@@ -31,7 +31,7 @@ fn resolve() {
 fn resolve_single_identifier() {
     let mut ctx = ResolveContext::new();
     let (_lib, issues) =
-        microcad_lang_resolve::resolve("tests/test_cases/single_identifier.µcad", &mut ctx)
+        microcad_lang_resolve::resolve("tests/test_cases/single_identifier.mu", &mut ctx)
             .expect("No error");
 
     assert!(!issues.has_errors(), "{issues:?}");
@@ -42,7 +42,7 @@ fn resolve_single_identifier() {
 fn resolve_unresolved_path() {
     let mut ctx = ResolveContext::new();
     let (_lib, issues) =
-        microcad_lang_resolve::resolve("tests/test_cases/unresolved_path.µcad", &mut ctx)
+        microcad_lang_resolve::resolve("tests/test_cases/unresolved_path.mu", &mut ctx)
             .expect("No fatal error");
 
     assert!(

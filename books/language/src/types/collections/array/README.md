@@ -10,7 +10,7 @@ An array is an ordered collection of values with a common type.
 
 [![test](.test/arrays.svg)](.test/arrays.log)
 
-```µcad,arrays
+```mu,arrays
 a: [Integer] = [1, 2, 3, 4, 5];
 b: [Scalar] = [1.42, 2.3, 3.1, 4.42, 5.23];
 c: [Length] = [1.42mm, 2.3m, 3.1cm, 4.42cm, 5.23m];
@@ -29,6 +29,6 @@ Array support *unit bundling*, which means the you can write a unit behind the b
 
 [![test](.test/array_unit_bundling.svg)](.test/array_unit_bundling.log)
 
-```µcad,array_unit_bundling
+```mu,array_unit_bundling
 std::debug::assert_eq([[1mm, 2mm, 3mm], [1, 2, 3]mm]);
 ```

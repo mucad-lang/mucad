@@ -10,7 +10,7 @@ be initialized (except those with *default values*).
 
 [![test](.test/init_property.svg)](.test/init_property.log)
 
-```µcad,init_property
+```mu,init_property
 sketch Wheel(radius: Length, thickness = 5mm) {
     use std::geo2d::Circle;
 
@@ -45,7 +45,7 @@ you will get an error:
 
 [![test](.test/missed_property.svg)](.test/missed_property.log)
 
-```µcad,missed_property#fail
+```mu,missed_property#fail
 sketch Wheel(radius: Length, thickness = 5mm) {
     use std::geo2d::Circle;
 
@@ -63,7 +63,7 @@ need to be set in the initializers.
 
 [![test](.test/building_plan_defaults.svg)](.test/building_plan_defaults.log)
 
-```µcad,building_plan_defaults#todo
+```mu,building_plan_defaults#todo
 sketch Wheel(radius: Length, thickness = 5mm) {
     use std::geo2d::Circle;
 
@@ -87,7 +87,7 @@ You cannot read building plan items from within initializers.
 
 [![test](.test/no_building_plan_in_initializers.svg)](.test/no_building_plan_in_initializers.log)
 
-```µcad,no_building_plan_in_initializers#todo
+```mu,no_building_plan_in_initializers#todo
 sketch Wheel(radius: Length, thickness = 5mm) {
     use std::geo2d::Circle;
 
@@ -109,7 +109,7 @@ second time.
 
 [![test](.test/no_building_plan_same_name.svg)](.test/no_building_plan_same_name.log)
 
-```µcad,no_building_plan_same_name#fail
+```mu,no_building_plan_same_name#fail
 sketch Wheel(radius: Length, thickness: Length) {
     use std::geo2d::Circle;
 
@@ -128,7 +128,7 @@ Types must match when using a name from building plan in initializer parameters.
 
 [![test](.test/no_building_plan_same_name_different_type.svg)](.test/no_building_plan_same_name_different_type.log)
 
-```µcad,no_building_plan_same_name_different_type#todo
+```mu,no_building_plan_same_name_different_type#todo
 sketch Wheel(radius: Length, thickness: Length) {
     use std::geo2d::Circle;
 
@@ -149,7 +149,7 @@ It's not allowed to write any code between *initializers*.
 
 [![test](.test/code_between_initializers.svg)](.test/code_between_initializers.log)
 
-```µcad,code_between_initializers#fail
+```mu,code_between_initializers#fail
 sketch Wheel(radius: Length, thickness = 5mm) {
     use std::geo2d::Circle;
 

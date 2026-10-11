@@ -18,13 +18,13 @@ cargo install microcad-inspector
 After installing, you can run the microcad inspector by typing `microcad-inspector` into your console.
 
 ```sh
-microcad-inspector some_file.µcad
+microcad-inspector some_file.mu
 ```
 
 ### Run workspace root using Cargo
 
 ```sh
-RUST_LOG=info cargo run --bin microcad-inspector --package microcad-inspector -- examples/csg_cube.µcad
+RUST_LOG=info cargo run --bin microcad-inspector --package microcad-inspector -- examples/csg_cube.mu
 ```
 
 ## ❤️ Support the project

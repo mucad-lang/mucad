@@ -5,7 +5,7 @@ In this section, we will look at some literals.
 
 [![test](.test/expression_literals.svg)](.test/expression_literals.log)
 
-```µcad,expression_literals
+```mu,expression_literals
 5; // Scalar literal
 4.0mm; // Quantity literal
 "Hello"; // String literal
@@ -28,7 +28,7 @@ Here are a few examples:
 
 [![test](.test/integer_literal.svg)](.test/integer_literal.log)
 
-```µcad,integer_literal
+```mu,integer_literal
 50;
 1350;
 -6
@@ -42,7 +42,7 @@ with a sign (but without a unit).
 
 [![test](.test/scalar_literal.svg)](.test/scalar_literal.log)
 
-```µcad,scalar_literal
+```mu,scalar_literal
 1.23;
 0.3252;
 .4534;
@@ -58,7 +58,7 @@ Booleans contain either the value `true` or `false`:
 
 [![test](.test/boolean_literal.svg)](.test/boolean_literal.log)
 
-```µcad,boolean_literal
+```mu,boolean_literal
 true;
 false
 ```
@@ -69,7 +69,7 @@ Strings are texts enclosed in quotation marks:
 
 [![test](.test/string_literal.svg)](.test/string_literal.log)
 
-```µcad,string_literal
+```mu,string_literal
 "Hello, World!"
 ```
 
@@ -80,7 +80,7 @@ you wanna draw something.
 
 [![test](.test/quantity_literal.svg)](.test/quantity_literal.log)
 
-```µcad,quantity_literal
+```mu,quantity_literal
 4.0mm; // 4 millimeters
 5l; // 5 liters
 4m²; // 4 square meters

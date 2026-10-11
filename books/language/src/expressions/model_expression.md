@@ -5,7 +5,7 @@ We call this a *model expression*:
 
 [![test](.test/model_expression.svg)](.test/model_expression.log)
 
-```µcad,model_expression
+```mu,model_expression
 std::geo2d::Rect(1cm) - std::geo2d::Circle(radius = 3mm);
 ```
 
@@ -20,7 +20,7 @@ builtin method `subtract` to it is equivalent to the above code:
 
 [![test](.test/model_expression_builtin.svg)](.test/model_expression_builtin.log)
 
-```µcad,model_expression_builtin
+```mu,model_expression_builtin
 use __builtin::ops::subtract;
 
 {

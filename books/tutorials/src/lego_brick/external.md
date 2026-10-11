@@ -19,7 +19,7 @@ my_brick.µcad
 Let's add the following content to the `my_brick.µcad` file to
 create a few bricks with different parameters:
 
-```µcad
+```mu
 mod lego_brick;
 
 use lego_brick::*;
@@ -49,7 +49,7 @@ As you can see in the first line we use a `mod` statement to load our external m
 
 To make this work, we also need to change one line in our final part:
 
-```µcad
+```mu
 pub part LegoBrick(rows = 2, columns = 4, base_height = 9.6mm) {}
 ```
 

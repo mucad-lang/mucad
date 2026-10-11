@@ -2,7 +2,7 @@
 
 [![test](.test/visibility.svg)](.test/visibility.log)
 
-```µcad,visibility
+```mu,visibility
 mod my {
     mod mod_private {
         pub const_public = 1;

@@ -4,7 +4,7 @@ The term `[-1, 0, 1]` can be replaced with a range expression `[-1..1]`, which y
 
 [![test](.test/ranges.svg)](.test/ranges.log)
 
-```µcad,ranges
+```mu,ranges
 use std::geo2d::*;
 use std::ops::*;
 

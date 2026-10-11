@@ -25,7 +25,7 @@ are quite handy:
 
 [![test](.test/types_def_vs_decl.svg)](.test/types_def_vs_decl.log)
 
-```µcad,types_def_vs_decl
+```mu,types_def_vs_decl
 x: Length = 4mm; // explicit type declaration
 y = 4mm; // implicit type declaration via units.
 ```
@@ -35,7 +35,7 @@ Hence, the following example will fail:
 
 [![test](.test/types_no_declaration.svg)](.test/types_no_declaration.log)
 
-```µcad,types_no_declaration#ignore
+```mu,types_no_declaration#ignore
 x: Length;         // parse_error
 ```
 
@@ -45,7 +45,7 @@ you can declare the type only but also pass a default value:
 
 [![test](.test/types_bundles_functions.svg)](.test/types_bundles_functions.log)
 
-```µcad,types_bundles_functions
+```mu,types_bundles_functions
 fn f(x = 4mm) {} // use unit (with default)
 fn g(x: Length) {} // use type (without default)
 ```

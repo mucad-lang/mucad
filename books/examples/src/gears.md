@@ -4,7 +4,7 @@
 
 [![test](.test/gears_gear_2d.svg)](.test/gears_gear_2d.log)
 
-```µcad,gears_gear_2d
+```mu,gears_gear_2d
 // file: gear_2d.µcad
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -26,7 +26,7 @@ InvoluteGearProfile(1.0mm, 100);
 
 [![test](.test/gears_gears_3d.svg)](.test/gears_gears_3d.log)
 
-```µcad,gears_gears_3d
+```mu,gears_gears_3d
 // file: gears_3d.µcad
 // Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -101,7 +101,7 @@ gear3
 
 [![test](.test/gears_herringbone_gears.svg)](.test/gears_herringbone_gears.log)
 
-```µcad,gears_herringbone_gears
+```mu,gears_herringbone_gears
 // file: herringbone_gears.µcad
 // Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later

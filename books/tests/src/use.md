@@ -2,7 +2,7 @@
 
 [![test](.test/use_test.svg)](.test/use_test.log)
 
-```µcad,use_test
+```mu,use_test
 // use debug from `std/module.µcad`
 use std::debug::assert;
 use std::debug::assert_valid;
@@ -44,7 +44,7 @@ assert_valid("MyPart");
 
 [![test](.test/use_as_test.svg)](.test/use_as_test.log)
 
-```µcad,use_as_test
+```mu,use_as_test
 use std::geo2d::*; 
 use Rect as Cap;
 
@@ -53,7 +53,7 @@ Cap(width=1mm,height=1mm);
 
 [![test](.test/use_statement_test.svg)](.test/use_statement_test.log)
 
-```µcad,use_statement_test
+```mu,use_statement_test
 // use symbol `circle` in file `geo2d.µcad`
 use std::geo2d::Circle;
 // use all symbols in file `geo3d.µcad`
@@ -79,7 +79,7 @@ z = baz(-1.0);
 
 [![test](.test/use_local.svg)](.test/use_local.log)
 
-```µcad,use_local
+```mu,use_local
 fn f() {
     use std::math::abs;
     x = abs(-1.0);
@@ -90,7 +90,7 @@ f();
 
 [![test](.test/use_all_local.svg)](.test/use_all_local.log)
 
-```µcad,use_all_local
+```mu,use_all_local
 fn f() {
     use std::math::*;
     x = abs(-1.0);
@@ -101,7 +101,7 @@ f();
 
 [![test](.test/use_statement_pub_in_module.svg)](.test/use_statement_pub_in_module.log)
 
-```µcad,use_statement_pub_in_module
+```mu,use_statement_pub_in_module
 mod my {
     mod name {
         pub mod space {

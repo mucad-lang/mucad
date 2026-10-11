@@ -7,7 +7,7 @@ assign it to a constant `v` with the following code:
 
 [![test](.test/expression_multiply.svg)](.test/expression_multiply.log)
 
-```µcad,expression_multiply
+```mu,expression_multiply
 v = 5 * 4.0mm;
 
 std::debug::assert_eq([v, 20mm]);
@@ -30,7 +30,7 @@ the units of the operands in an expression like the following examples show.
 
 [![test](.test/expression_quantity.svg)](.test/expression_quantity.log)
 
-```µcad,expression_quantity
+```mu,expression_quantity
 use std::debug::assert_eq;
 
 // an integer multiplied with another one remains a integer
@@ -57,7 +57,7 @@ Boolean operations (e.g. `!`, `>`, `==` or `&&`) lead to a boolean result.
 
 [![test](.test/expression_boolean.svg)](.test/expression_boolean.log)
 
-```µcad,expression_boolean
+```mu,expression_boolean
 // Using logical operators lead to a boolean result
 std::debug::assert_eq([5mm > 4mm, true]);
 ```
@@ -66,7 +66,7 @@ Even when using them with models:
 
 [![test](.test/expression_model.svg)](.test/expression_model.log)
 
-```µcad,expression_model#todo
+```mu,expression_model#todo
 // Using logical operators between models too
 std::debug::assert_eq([std::geo2d::Circle(1cm) == std::geo2d::Circle(10mm), true]);
 ```

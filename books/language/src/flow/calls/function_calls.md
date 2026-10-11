@@ -4,7 +4,7 @@ A function is simply called by appending a parameter list to it's name:
 
 [![test](.test/function_call.svg)](.test/function_call.log)
 
-```µcad,function_call
+```mu,function_call
 // function definition
 fn f() {}
 
@@ -14,7 +14,7 @@ f();
 
 [![test](.test/function_param_return.svg)](.test/function_param_return.log)
 
-```µcad,function_param_return
+```mu,function_param_return
 // function definition with parameter
 fn f(n: Integer) {
     return n * 2;

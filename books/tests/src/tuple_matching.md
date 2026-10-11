@@ -6,7 +6,7 @@ This makes it easy to pre-configure parts of arguments:
 
 [![test](.test/tuple_match.svg)](.test/tuple_match.log)
 
-```µcad,tuple_match#todo
+```mu,tuple_match#todo
 // Function with three parameters: x, y, and z
 fn f( x: Length, y: Length, z: Length ) {}
 
@@ -24,7 +24,7 @@ The same function can be called in various ways using named tuples:
 
 [![test](.test/tuple_match_variants.svg)](.test/tuple_match_variants.log)
 
-```µcad,tuple_match_variants#todo
+```mu,tuple_match_variants#todo
 fn f( x: Length, y: Length, z: Length ) {}
 
 // Every parameter given by name
@@ -52,7 +52,7 @@ Another example uses an array of tuples and produces the same output:
 
 [![test](.test/multiplicity_tuple_array.svg)](.test/multiplicity_tuple_array.log)
 
-```µcad,multiplicity_tuple_array#todo
+```mu,multiplicity_tuple_array#todo
 r = std::geo2d::Rect(width = 2mm, height = 2mm);
 
 r.std::ops::translate([(x=-4mm, y=-4mm), (x=-4mm, y=4mm), (x=4mm, y=-4mm), (x=4mm, y=4mm)]);

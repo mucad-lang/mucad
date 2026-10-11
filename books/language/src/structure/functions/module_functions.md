@@ -7,7 +7,7 @@ available for use outside the module.
 
 [![test](.test/mod.svg)](.test/mod.log)
 
-```µcad,mod#fail
+```mu,mod#fail
 // module math
 mod math {
     // pow cannot be called from outside math

@@ -12,7 +12,7 @@ in the building plan, called `radius`, of type `Length`:
 
 [![test](.test/building_plan.svg)](.test/building_plan.log)
 
-```µcad,building_plan
+```mu,building_plan
 // sketch with a radius as building plan
 sketch Wheel(radius: Length, thickness = 5mm) {
     use std::geo2d::Circle;

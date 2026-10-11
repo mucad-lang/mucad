@@ -7,14 +7,14 @@ can easily import this second file via its name `second`:
 
 [![test](.test/file_modules_main.svg)](.test/file_modules_main.log)
 
-```µcad,file_modules_main
+```mu,file_modules_main
 mod second;
 second::f();
 ```
 
 [![test](.test/file_modules_second.svg)](.test/file_modules_second.log)
 
-```µcad,file_modules_second
+```mu,file_modules_second
 // file: second.µcad
 pub fn f() {}
 ```

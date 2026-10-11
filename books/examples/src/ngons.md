@@ -2,7 +2,7 @@
 
 [![test](.test/ngons.svg)](.test/ngons.log)
 
-```µcad,ngons
+```mu,ngons
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

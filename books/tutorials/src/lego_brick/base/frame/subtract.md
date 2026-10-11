@@ -9,7 +9,7 @@ So let's put some around the frame's rectangles.
 
 [![test](.test/group.svg)](.test/group.log)
 
-```µcad,group
+```mu,group
 thickness = 1.2mm;
 width = 31.8mm;
 height = 15.8mm;
@@ -33,7 +33,7 @@ In our case, we want to subtract the *outer part* by the *inner part* in our fra
 
 [![test](.test/subtract.svg)](.test/subtract.log)
 
-```µcad,subtract
+```mu,subtract
 thickness = 1.2mm;
 width = 31.8mm;
 height = 15.8mm;

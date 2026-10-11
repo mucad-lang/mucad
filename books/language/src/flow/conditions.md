@@ -17,7 +17,7 @@ Here is a simple example:
 
 [![test](.test/if_statement.svg)](.test/if_statement.log)
 
-```µcad,if_statement
+```mu,if_statement
 use std::geo2d::*;
 
 x = 0; // output changes if you change that value
@@ -43,7 +43,7 @@ and put side by side with the operation `std::ops::align`.
 
 [![test](.test/if_statement_sketch.svg)](.test/if_statement_sketch.log)
 
-```µcad,if_statement_sketch
+```mu,if_statement_sketch
 use std::ops::*;
 use std::math::*;
 use std::geo2d::*;
@@ -71,7 +71,7 @@ the chosen branch.
 
 [![test](.test/if_expression.svg)](.test/if_expression.log)
 
-```µcad,if_expression
+```mu,if_expression
 use std::ops::*;
 use std::math::*;
 use std::geo2d::*;

@@ -2,7 +2,7 @@
 
 [![test](.test/bike_pack_mount.svg)](.test/bike_pack_mount.log)
 
-```µcad,bike_pack_mount
+```mu,bike_pack_mount
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

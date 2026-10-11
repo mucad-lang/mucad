@@ -16,7 +16,7 @@ Let's *encapsulate* the construction of the frame into a `sketch` workbench call
 
 [![test](.test/base.svg)](.test/base.log)
 
-```µcad,base
+```mu,base
 use std::geo2d::*;
 use std::ops::*;
 

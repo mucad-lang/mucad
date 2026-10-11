@@ -11,7 +11,7 @@ Assume you have created a model and want to export it to a specific file:
 
 [![test](.test/attributes_export.svg)](.test/attributes_export.log)
 
-```µcad,attributes_export
+```mu,attributes_export
 #[export("rect.svg")] // Will be exported to `rect.svg`
 std::geo2d::Rect(42mm);
 

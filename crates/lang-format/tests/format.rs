@@ -5,8 +5,7 @@ use microcad_lang_base::Source;
 
 fn _formatted_test_case(name: &str) {
     use microcad_lang_format::{FormatConfig, format_ast};
-    let source =
-        Source::load(format!("tests/test_cases/formatted/{name}.µcad")).expect("No errors");
+    let source = Source::load(format!("tests/test_cases/formatted/{name}.mu")).expect("No errors");
     let ast = microcad_lang_parse::parse(&source).expect("No errors").0;
 
     pretty_assertions::assert_eq!(
@@ -19,7 +18,7 @@ fn _formatted_test_case(name: &str) {
 fn _unformatted_test_case(name: &str) {
     use microcad_lang_format::{FormatConfig, format_ast};
     let source =
-        Source::load(format!("tests/test_cases/unformatted/{name}.µcad")).expect("no errors");
+        Source::load(format!("tests/test_cases/unformatted/{name}.mu")).expect("no errors");
     let ast = microcad_lang_parse::parse(&source).expect("No errors").0;
     insta::assert_snapshot!(name, format_ast(&ast, &FormatConfig::default()))
 }

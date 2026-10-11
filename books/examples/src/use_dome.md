@@ -2,7 +2,7 @@
 
 [![test](.test/use_dome.svg)](.test/use_dome.log)
 
-```µcad,use_dome
+```mu,use_dome
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

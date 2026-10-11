@@ -63,7 +63,7 @@ pub enum Block {
     /// A paragraph with text.
     Paragraph(String),
 
-    /// A µcad code block starting with ```µcad or with `[![test](...)` banner.
+    /// A µcad code block starting with ```mu or with `[![test](...)` banner.
     CodeBlock(CodeBlock),
 
     /// A table. Each line starts with `|`.

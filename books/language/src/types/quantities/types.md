@@ -25,7 +25,7 @@ The type `Scalar` contains a floating number (without any *unit*) and must be wr
 
 [![test](.test/types_quantity_scalar.svg)](.test/types_quantity_scalar.log)
 
-```µcad,types_quantity_scalar
+```mu,types_quantity_scalar
 zero = 0;
 pi = 3.1415;
 percent = 55%;
@@ -37,7 +37,7 @@ percent = 55%;
 
 [![test](.test/types_quantity_length.svg)](.test/types_quantity_length.log)
 
-```µcad,types_quantity_length
+```mu,types_quantity_length
 millimeters = 1000mm;
 centimeters = 100cm;
 meters = 1m;
@@ -52,7 +52,7 @@ Angles are used with rotations and in constrains when proving measures.
 
 [![test](.test/types_quantity_angle.svg)](.test/types_quantity_angle.log)
 
-```µcad,types_quantity_angle
+```mu,types_quantity_angle
 pi = std::math::PI;
 radian = 1rad * pi;
 degree = 180°;
@@ -69,7 +69,7 @@ An `Area` is a two-dimensional quantity. It is the result when multiplying two `
 
 [![test](.test/types_quantity_area.svg)](.test/types_quantity_area.log)
 
-```µcad,types_quantity_area
+```mu,types_quantity_area
 a = 3cm;
 b = 2cm;
 area = a * b;
@@ -80,7 +80,7 @@ Here is an example of how to use different areal units:
 
 [![test](.test/types_quantity_area_units.svg)](.test/types_quantity_area_units.log)
 
-```µcad,types_quantity_area_units
+```mu,types_quantity_area_units
 square_millimeter = 100000mm²;
 square_centimeter = 1000cm2;
 square_meter = 0.1m²;
@@ -95,7 +95,7 @@ A `Volume` is a three-dimensional quantity. It is the result when multiplying th
 
 [![test](.test/types_quantity_volume.svg)](.test/types_quantity_volume.log)
 
-```µcad,types_quantity_volume
+```mu,types_quantity_volume
 a = 3mm;
 b = 2mm;
 c = 4mm;
@@ -109,7 +109,7 @@ Here is an example for units:
 
 [![test](.test/types_quantity_volume_units.svg)](.test/types_quantity_volume_units.log)
 
-```µcad,types_quantity_volume_units
+```mu,types_quantity_volume_units
 cubic_millimeter = 1000000.0mm³;
 cubic_centimeter = 100.0cl;
 cubic_meter = 0.001m3;
@@ -135,7 +135,7 @@ Currently `Density` has not specific use in µcad and only can use unit `g/mm³`
 
 [![test](.test/types_quantity_density_units.svg)](.test/types_quantity_density_units.log)
 
-```µcad,types_quantity_density_units
+```mu,types_quantity_density_units
 gramm_per_square_centimeters = 19.302g/mm³;
 ```
 
@@ -145,7 +145,7 @@ Weights can be calculated by applying volumes to materials.
 
 [![test](.test/types_quantity_weight.svg)](.test/types_quantity_weight.log)
 
-```µcad,types_quantity_weight
+```mu,types_quantity_weight
 gram = 1000.0g;
 kilogram = 1.0kg;
 pound = 2.204623lb;

@@ -19,7 +19,7 @@ and the result is a *value*:
 
 [![test](.test/call_function.svg)](.test/call_function.log)
 
-```µcad,call_function
+```mu,call_function
 // call function -2 and store result in x
 x = std::math::abs(-2);
 
@@ -34,7 +34,7 @@ except that the result is a *model*.
 
 [![test](.test/call_workbench.svg)](.test/call_workbench.log)
 
-```µcad,call_workbench
+```mu,call_workbench
 // call sketch Circle with a size and store object node in s
 s = std::geo2d::Circle(diameter = 2cm);
 
@@ -48,7 +48,7 @@ a [model](../../types/models/) which come out of [workbenches](../../structure/w
 
 [![test](.test/call_model.svg)](.test/call_model.log)
 
-```µcad,call_model
+```mu,call_model
 // call square with a size and store object node in s
 s = std::geo2d::Circle(radius = 2cm);
 
@@ -60,7 +60,7 @@ Surely this looks better when using thw `use statement`.
 
 [![test](.test/call_model_use.svg)](.test/call_model_use.log)
 
-```µcad,call_model_use
+```mu,call_model_use
 // use translate
 use std::ops::translate;
 

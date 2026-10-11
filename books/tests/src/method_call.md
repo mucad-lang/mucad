@@ -2,7 +2,7 @@
 
 [![test](.test/method_call.svg)](.test/method_call.log)
 
-```µcad,method_call
+```mu,method_call
 op scale() {}
 sketch Sketch(scale: Scalar) { std::geo2d::Rect(size = scale * 40mm) }
 Sketch(4.0);

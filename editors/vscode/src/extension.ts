@@ -53,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const clientOptions: LanguageClientOptions = {
             documentSelector: [{ scheme: 'file', language: 'microcad' }],
             synchronize: {
-                fileEvents: vscode.workspace.createFileSystemWatcher('**/*.µcad')
+                fileEvents: vscode.workspace.createFileSystemWatcher('**/*.mu')
             }
         };
 

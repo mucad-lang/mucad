@@ -7,7 +7,7 @@ basically *floating point[^float] values* with physical *units* (e.g.  Meter, Li
 
 [![test](.test/quantity_types_number_literals.svg)](.test/quantity_types_number_literals.log)
 
-```µcad,quantity_types_number_literals
+```mu,quantity_types_number_literals
 // declare variable `height` of type `Length` to 1.4 Meters
 height = 1.4m;
 

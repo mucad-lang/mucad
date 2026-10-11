@@ -50,7 +50,7 @@ rounded corners and three cylinders as holes:
 
 ![csg_cube](examples/csg_cube.png)
 
-```µcad,first_example
+```mu,first_example
 use std::math::*;
 use std::ops::*;
 use std::geo3d::*;

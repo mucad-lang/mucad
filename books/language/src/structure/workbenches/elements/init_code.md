@@ -9,7 +9,7 @@ and *functions*).
 
 [![test](.test/pre_init_code.svg)](.test/pre_init_code.log)
 
-```µcad,pre_init_code
+```mu,pre_init_code
 sketch Wheel(radius: Length) {
     // init code
     const FACTOR = 2.0;
@@ -45,7 +45,7 @@ If there are no initializers, the initialization code is just part of the
 
 [![test](.test/init_code_no_building_plan.svg)](.test/init_code_no_building_plan.log)
 
-```µcad,init_code_no_building_plan#todo
+```mu,init_code_no_building_plan#todo
 sketch Wheel(radius: Length, thickness = 5mm) {
     use std::geo2d::Circle;
 

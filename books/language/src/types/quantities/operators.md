@@ -9,7 +9,7 @@ where units remain flexible.
 
 [![test](.test/types_quantity_operators.svg)](.test/types_quantity_operators.log)
 
-```µcad,types_quantity_operators
+```mu,types_quantity_operators
 use std::debug::assert_eq;
 
 assert_eq([6cm * 2cm, 12cm²]);

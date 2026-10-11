@@ -2,7 +2,7 @@
 
 [![test](.test/cylinder_stack.svg)](.test/cylinder_stack.log)
 
-```µcad,cylinder_stack
+```mu,cylinder_stack
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

@@ -4,7 +4,7 @@
 
 [![test](.test/bricks_brick.svg)](.test/bricks_brick.log)
 
-```µcad,bricks_brick
+```mu,bricks_brick
 // file: brick.µcad
 // Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -73,7 +73,7 @@ Brick(
 
 [![test](.test/bricks_tutorial.svg)](.test/bricks_tutorial.log)
 
-```µcad,bricks_tutorial
+```mu,bricks_tutorial
 // file: tutorial.µcad
 // Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -138,7 +138,7 @@ LegoBrick();
 
 [![test](.test/bricks_use_bricks.svg)](.test/bricks_use_bricks.log)
 
-```µcad,bricks_use_bricks
+```mu,bricks_use_bricks
 // file: use_bricks.µcad
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later

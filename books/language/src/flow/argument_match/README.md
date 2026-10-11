@@ -12,7 +12,7 @@ Like `x` is in the following example:
 
 [![test](.test/call_match.svg)](.test/call_match.log)
 
-```µcad,call_match
+```mu,call_match
 fn f(x: Length) -> Length { x * 2 }
 
 std::debug::assert_eq([f(x = 10m), 20m]);

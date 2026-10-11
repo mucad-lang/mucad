@@ -13,7 +13,7 @@ Using it, we can achieve the same result as before but with a much simpler expre
 
 [![test](.test/frame.svg)](.test/frame.log)
 
-```µcad,frame
+```mu,frame
 // Include all from std::geo2d using * (including Frame)
 use std::geo2d::*;
 

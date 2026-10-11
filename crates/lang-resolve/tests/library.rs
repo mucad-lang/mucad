@@ -35,7 +35,7 @@ fn load_source_inline_module() {
     let mut ctx = ResolveContext::new();
     let mut lib_ctx = lib_ctx(&mut library, &mut ctx);
 
-    match lib_ctx.load_file("tests/test_cases/inline_module.µcad") {
+    match lib_ctx.load_file("tests/test_cases/inline_module.mu") {
         Ok(_) => {
             let library = lib_ctx.lib();
             for child in library.root().children() {
@@ -88,7 +88,7 @@ fn load_source_file_module() {
     let mut lib_ctx = lib_ctx(&mut lib, &mut ctx);
 
     lib_ctx
-        .load_file("tests/test_cases/file_module.µcad")
+        .load_file("tests/test_cases/file_module.mu")
         .expect("No error");
 
     insta::assert_snapshot!("load_source_file_module", lib)

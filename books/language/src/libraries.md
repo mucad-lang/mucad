@@ -13,7 +13,7 @@ documented in a [reference book](https://docs.microcad.xyz/builtin/book).
 
 [![test](.test/lib_builtin.svg)](.test/lib_builtin.log)
 
-```µcad,lib_builtin
+```mu,lib_builtin
 use __builtin::print;
 
 print("Hello, µcad builtin library!");
@@ -29,7 +29,7 @@ documented in a [reference book](https://docs.microcad.xyz/std/book).
 
 [![test](.test/lib_std.svg)](.test/lib_std.log)
 
-```µcad,lib_std
+```mu,lib_std
 use std::print;
 
 print("Hello, µcad standard library!");

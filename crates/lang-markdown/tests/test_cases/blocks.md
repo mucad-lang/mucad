@@ -12,7 +12,7 @@ A text
 
 ## Code
 
-```µcad
+```mu
 Circle(r = 42mm);
 ```
 

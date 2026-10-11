@@ -7,7 +7,7 @@ Via using parameters, we want to:
 * control the brick's height
 * create a reusable Lego brick library so that we can write this:
 
-    ```µcad
+    ```mu
     lego_brick::LegoBrick(rows = 2, columns = 2, base_height = 9.6mm * 2);
     ```
 

@@ -16,7 +16,7 @@ In a viewer and for some exporter, the model will be rendered in the specified c
 
 [![test](.test/attributes_color.svg)](.test/attributes_color.log)
 
-```µcad,attributes_color
+```mu,attributes_color
 #[color = "#FFFFFF"]
 c = std::geo2d::Circle(r = 42.0mm);
 
@@ -40,7 +40,7 @@ This means the circle in the example below will be rendered with a resolution `0
 
 [![test](.test/attributes_precision.svg)](.test/attributes_precision.log)
 
-```µcad,attributes_precision
+```mu,attributes_precision
 #[resolution = 200%]
 c = std::geo2d::Circle(r = 42.0mm);
 

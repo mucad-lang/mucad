@@ -2,7 +2,7 @@
 
 [![test](.test/builtin_modules.svg)](.test/builtin_modules.log)
 
-```µcad,builtin_modules
+```mu,builtin_modules
 mod a {
     pub mod b {
         pub mod c {

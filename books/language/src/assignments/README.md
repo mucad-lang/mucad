@@ -10,7 +10,7 @@ This is different from the variables known in other programming languages.
 
 [![test](.test/assignment.svg)](.test/assignment.log)
 
-```µcad,assignment
+```mu,assignment
 use std::math::sqrt;
 
 a = 2cm;

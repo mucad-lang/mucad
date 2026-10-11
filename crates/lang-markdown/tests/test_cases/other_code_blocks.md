@@ -9,10 +9,10 @@ echo "µcad"
 
 - A list item
 
-  ```µcad,in_list
+  ```mu,in_list
   Circle(r = 1mm);
   ```
 
-```µcad,top_level
+```mu,top_level
 Rect(width = 1mm, height = 1mm);
 ```

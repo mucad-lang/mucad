@@ -7,7 +7,7 @@ which arranges elements in a grid which is centered to origin:
 
 [![test](.test/grid.svg)](.test/grid.log)
 
-```µcad,grid
+```mu,grid
 use std::ops::*;
 
 const SPACING = 8mm;
@@ -31,7 +31,7 @@ as parameter and using the `grid` operation:
 
 [![test](.test/custom_op.svg)](.test/custom_op.log)
 
-```µcad,custom_op
+```mu,custom_op
 use std::geo2d::*;
 use std::ops::*;
 

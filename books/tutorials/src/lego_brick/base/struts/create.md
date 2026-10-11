@@ -9,7 +9,7 @@ and translate them using `std::ops::translate()`.
 
 [![test](.test/multiple.svg)](.test/multiple.log)
 
-```µcad,multiple
+```mu,multiple
 use std::geo2d::*;
 use std::ops::*;
 

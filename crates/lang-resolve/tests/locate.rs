@@ -14,7 +14,7 @@ fn test_external_url_pass_through() {
 #[test]
 fn test_filesystem_resolution_with_extension() {
     let dir = tempfile::tempdir().expect("No error");
-    let file_path = dir.path().join("my_design.µcad");
+    let file_path = dir.path().join("my_design.mu");
     std::fs::write(&file_path, "test content").unwrap();
 
     // Test raw string path
@@ -48,7 +48,7 @@ fn test_directory_mod_resolution() {
     let sub_dir = dir.path().join("my_module");
     std::fs::create_dir(&sub_dir).expect("No error");
 
-    let mod_file = sub_dir.join("mod.µcad");
+    let mod_file = sub_dir.join("mod.mu");
     std::fs::write(&mod_file, "module content").expect("No error");
 
     // Input is the directory path
@@ -56,10 +56,7 @@ fn test_directory_mod_resolution() {
     let result = locate::to_url(input).unwrap();
 
     assert!(
-        result
-            .to_file_path()
-            .unwrap()
-            .ends_with("my_module/mod.µcad"),
+        result.to_file_path().unwrap().ends_with("my_module/mod.mu"),
         "{result}"
     );
 }
@@ -73,7 +70,7 @@ fn test_invalid_path_fails() {
 #[test]
 fn test_file_scheme_input() {
     let dir = tempfile::tempdir().unwrap();
-    let file_path = dir.path().join("direct.µcad");
+    let file_path = dir.path().join("direct.mu");
     std::fs::write(&file_path, "content").unwrap();
 
     let file_url = Url::from_file_path(&file_path).unwrap();

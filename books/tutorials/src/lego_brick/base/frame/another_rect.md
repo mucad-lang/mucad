@@ -4,7 +4,7 @@ Like the outer frame, the inner frame is a `std::geo2d::Rect` too:
 
 [![test](.test/inner.svg)](.test/inner.log)
 
-```µcad,inner
+```mu,inner
 thickness = 1.2mm;
 std::geo2d::Rect(
     width = 31.8mm - 2 * thickness,
@@ -24,7 +24,7 @@ values to shorten the code:
 
 [![test](.test/inner_outer.svg)](.test/inner_outer.log)
 
-```µcad,inner_outer
+```mu,inner_outer
 thickness = 1.2mm;
 width = 31.8mm;
 height = 15.8mm;
@@ -39,7 +39,7 @@ names of it we do not need to write extra parameter names here.
 This is called *auto-matching*.
 It prevents us from having to write the argument names twice:
 
-```µcad
+```mu
 std::geo2d::Rect(width = width, height = height);
 ```
 

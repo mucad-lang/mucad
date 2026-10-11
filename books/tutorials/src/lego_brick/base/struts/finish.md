@@ -7,7 +7,7 @@ So let's shorten our strut code a last time:
 
 [![test](.test/ring.svg)](.test/ring.log)
 
-```µcad,ring
+```mu,ring
 use std::geo2d::*;
 use std::ops::*;
 

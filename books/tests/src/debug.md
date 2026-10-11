@@ -12,13 +12,13 @@ that point.
 
 [![test](.test/verify_assert.svg)](.test/verify_assert.log)
 
-```µcad,verify_assert
+```mu,verify_assert
 std::debug::assert(true, "You won't see this message");
 ```
 
 [![test](.test/verify_assert_fail.svg)](.test/verify_assert_fail.log)
 
-```µcad,verify_assert_fail#fail
+```mu,verify_assert_fail#fail
 std::debug::assert(false, "this assertion fails"); // error
 ```
 
@@ -26,7 +26,7 @@ std::debug::assert(false, "this assertion fails"); // error
 
 [![test](.test/verify_error.svg)](.test/verify_error.log)
 
-```µcad,verify_error#fail
+```mu,verify_error#fail
 std::log::error("this should not have happened"); // error
 ```
 
@@ -36,7 +36,7 @@ std::log::error("this should not have happened"); // error
 
 [![test](.test/verify_todo.svg)](.test/verify_todo.log)
 
-```µcad,verify_todo
+```mu,verify_todo
 a = 0;
 
 if a == 0 {

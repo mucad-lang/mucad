@@ -15,7 +15,7 @@ The following code demonstrates (on the basis of a `sketch`) most of these eleme
 
 [![test](.test/part_declaration.svg)](.test/part_declaration.log)
 
-```µcad,part_declaration
+```mu,part_declaration
 // Sketch with a `radius` as building plan.
 // Which will automatically become a property.
 sketch Wheel(radius: Length) {

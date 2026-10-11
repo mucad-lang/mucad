@@ -13,7 +13,7 @@ In this case the source code file itself:
 
 [![test](.test/assignment_value.svg)](.test/assignment_value.log)
 
-```µcad,assignment_value
+```mu,assignment_value
 // source code file is the scope of a and b
 
 use std::debug::*;
@@ -31,7 +31,7 @@ value is only available within that specific scope:
 
 [![test](.test/assignment_value_scope.svg)](.test/assignment_value_scope.log)
 
-```µcad,assignment_value_scope#todo
+```mu,assignment_value_scope#todo
 // source code file is the topmost scope #0
 
 use std::debug::*;
@@ -75,7 +75,7 @@ prohibited.
 
 [![test](.test/assignment_shadow.svg)](.test/assignment_shadow.log)
 
-```µcad,assignment_shadow#fail
+```mu,assignment_shadow#fail
 a = 5;
 a = a * 2; // error: a already defined in this scope
 ```
@@ -84,7 +84,7 @@ Even if using *anonymous scopes* this does not change.
 
 [![test](.test/assignment_shadow_scope.svg)](.test/assignment_shadow_scope.log)
 
-```µcad,assignment_shadow_scope#todo
+```mu,assignment_shadow_scope#todo
 a = 5;
 {
     a = a * 2;
@@ -101,7 +101,7 @@ Value assignments are not available in modules:
 
 [![test](.test/assignment_module.svg)](.test/assignment_module.log)
 
-```µcad,assignment_module#fail
+```mu,assignment_module#fail
 mod my_module {
     a = 1; // error
 }
@@ -113,7 +113,7 @@ Value assignments are not available in workbenches' initialization code:
 
 [![test](.test/assignment_workbench.svg)](.test/assignment_workbench.log)
 
-```µcad,assignment_workbench#fail
+```mu,assignment_workbench#fail
 sketch MySketch() {
     a = 1; // error
     init(_x: Scalar) {}

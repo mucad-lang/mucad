@@ -14,7 +14,7 @@ This means instead of the previous code, we can simply write:
 
 [![test](.test/use.svg)](.test/use.log)
 
-```µcad,use
+```mu,use
 use std::geo2d::Rect;
 use std::ops::subtract;
 

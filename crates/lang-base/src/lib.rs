@@ -31,7 +31,7 @@ pub use microcad_hash::{HashMap, HashSet, Hashed, Hasher, ToHash};
 pub const MICROCAD_EXTENSIONS: &[&str] = &["mu", "µcad", "mcad", "ucad"];
 
 /// Default extension for µcad files.
-pub const MICROCAD_EXTENSION: &str = "µcad";
+pub const MICROCAD_EXTENSION: &str = "mu";
 
 pub use artifact::{Artifact, ArtifactError, ArtifactHeader, ArtifactKind, StageResult};
 pub use diag::{

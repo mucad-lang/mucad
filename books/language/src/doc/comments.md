@@ -6,7 +6,7 @@ By using `//` or `/* ... */` you may insert comments within the code.
 
 [![test](.test/comment.svg)](.test/comment.log)
 
-```µcad,comment
+```mu,comment
 // This is a line comment...
 
 /* This is a block comment */
@@ -31,7 +31,7 @@ Markdown may be used to shape sections or format text.
 
 [![test](.test/outer_doc_comment.svg)](.test/outer_doc_comment.log)
 
-```µcad,outer_doc_comment
+```mu,outer_doc_comment
 /// A function which returns what it gets.
 ///
 /// It simply returns the **same** value...
@@ -76,7 +76,7 @@ Inner doc comments are used to document code inside a source file:
 
 [![test](.test/inner_doc_comment.svg)](.test/inner_doc_comment.log)
 
-```µcad,inner_doc_comment
+```mu,inner_doc_comment
 //! This inner doc comment documents the whole source file.
 
 fn f(n: Integer) -> Integer { n }

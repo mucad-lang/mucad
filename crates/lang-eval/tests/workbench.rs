@@ -356,7 +356,7 @@ fn op_rotate() {
 ///
 /// Today's µcad source would take `n` and compute the angles itself:
 ///
-/// ```µcad
+/// ```mu
 /// op polar_array(n: Integer, r: Length) {
 ///     @input.__mu::ops::translate(x = r, y = 0.0mm, z = 0.0mm)
 ///         .rotate([1..n] / n * 360°)
@@ -366,7 +366,7 @@ fn op_rotate() {
 /// The evaluator cannot expand a computed list inside a workbench yet, so this test takes the
 /// angles as parameter and lets the parameter multiplicity create the copies:
 ///
-/// ```µcad
+/// ```mu
 /// op polar_array(angle: Angle, r: Length) {
 ///     __mu::ops::rotate(
 ///         self = __mu::ops::translate(self = @input, x = r, y = 0.0mm, z = 0.0mm),

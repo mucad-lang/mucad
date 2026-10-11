@@ -6,7 +6,7 @@ Boolean is the result type of boolean expressions, which may be `true` or `false
 
 [![test](.test/types_primitive_bool.svg)](.test/types_primitive_bool.log)
 
-```µcad,types_primitive_bool
+```mu,types_primitive_bool
 std::debug::assert(true != false);
 ```
 
@@ -14,7 +14,7 @@ Boolean values can be combined with `or` and `and` [operators](../expressions/op
 
 [![test](.test/boolean.svg)](.test/boolean.log)
 
-```µcad,boolean
+```mu,boolean
 std::debug::assert_eq([true or false, true]);
 std::debug::assert_eq([true and false, false]);
 
@@ -30,7 +30,7 @@ The type `Integer` contains an integer number.
 
 [![test](.test/types_primitive_integer.svg)](.test/types_primitive_integer.log)
 
-```µcad,types_primitive_integer
+```mu,types_primitive_integer
 i = 3;
 ```
 
@@ -40,7 +40,7 @@ i = 3;
 
 [![test](.test/types_primitive_string.svg)](.test/types_primitive_string.log)
 
-```µcad,types_primitive_string
+```mu,types_primitive_string
 text = "Hello µcad!";
 std::debug::assert_eq([std::string::len(text), 11]);
 

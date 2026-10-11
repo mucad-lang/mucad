@@ -28,7 +28,9 @@
           "mcad"
         ],
         "extensions": [
+          ".mu",
           ".µcad",
+          ".ucad",
           ".mcad"
         ],
         "configuration": "./language-configuration.json"

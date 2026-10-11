@@ -11,7 +11,7 @@ The following example will produce 4 rectangles at different positions:
 
 [![test](.test/multiplicity_arrays.svg)](.test/multiplicity_arrays.log)
 
-```µcad,multiplicity_arrays
+```mu,multiplicity_arrays
 r = std::geo2d::Rect(width = 2mm, height = 2mm);
 
 r.std::ops::translate(x = [-4mm, 4mm], y = [-4mm, 4mm]);
@@ -22,7 +22,7 @@ are four (2×2) calls:
 
 [![test](.test/no_multiplicity.svg)](.test/no_multiplicity.log)
 
-```µcad,no_multiplicity
+```mu,no_multiplicity
 r = std::geo2d::Rect(width = 2mm, height = 2mm);
 
 use std::ops::translate;

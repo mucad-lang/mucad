@@ -2,7 +2,7 @@
 
 [![test](.test/multi_export.svg)](.test/multi_export.log)
 
-```µcad,multi_export
+```mu,multi_export
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

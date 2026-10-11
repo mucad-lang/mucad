@@ -10,7 +10,7 @@ We do not have to define a specific `sketch Cap`, instead we can use an *alias*:
 
 [![test](.test/cap.svg)](.test/cap.log)
 
-```µcad,cap
+```mu,cap
 // alias Rect as Cap
 use std::geo2d::Rect as Cap;
 
@@ -28,7 +28,7 @@ We can easily construct a grid with circles via multiplicity:
 
 [![test](.test/knobs_multiplicity.svg)](.test/knobs_multiplicity.log)
 
-```µcad,knobs_multiplicity
+```mu,knobs_multiplicity
 std::geo2d::Circle(
     diameter = 4.8mm,
     center = (x = ([-1..2] - 0.5) * 8mm, y = ([0..1] - 0.5) * 8mm),
@@ -47,7 +47,7 @@ By default, if we do not pass any arguments to operation, it will center the obj
 
 [![test](.test/knobs_center.svg)](.test/knobs_center.log)
 
-```µcad,knobs_center
+```mu,knobs_center
 std::geo2d::Circle(
     diameter = 4.8mm,
     center = (x = [0..3] * 8mm, y = [0..1] * 8mm),
@@ -71,7 +71,7 @@ Let's create a sketch for the knobs:
 
 [![test](.test/knobs.svg)](.test/knobs.log)
 
-```µcad,knobs
+```mu,knobs
 sketch Knobs(diameter = 4.8mm) {
     std::geo2d::Circle(
         diameter = 4.8mm,

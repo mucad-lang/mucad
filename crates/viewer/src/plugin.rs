@@ -20,7 +20,7 @@ use crate::{stdin::StdinMessageReceiver, *};
 ///
 /// The plugin can be represented as URL:
 ///
-/// * File: file://my_file.µcad?symbol=my::mod::MyPart#L11
+/// * File: file://my_file.mu?symbol=my::mod::MyPart#L11
 /// * Stdin: stdin://
 #[derive(Clone)]
 pub enum MicrocadPluginInput {

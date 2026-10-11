@@ -2,7 +2,7 @@
 
 [![test](.test/function.svg)](.test/function.log)
 
-```µcad,function
+```mu,function
 // function definition
 fn f() {}
 // call
@@ -11,7 +11,7 @@ f();
 
 [![test](.test/function_value.svg)](.test/function_value.log)
 
-```µcad,function_value
+```mu,function_value
 // parameter
 fn f(n: Scalar) {
     // result value
@@ -24,7 +24,7 @@ assert_eq([ f(4), 5 ]);
 
 [![test](.test/function_return_value.svg)](.test/function_return_value.log)
 
-```µcad,function_return_value
+```mu,function_return_value
 fn f(n: Scalar) {
     return n+1;
 }
@@ -35,7 +35,7 @@ assert_eq([ f(4), 5 ]);
 
 [![test](.test/function_if_result.svg)](.test/function_if_result.log)
 
-```µcad,function_if_result
+```mu,function_if_result
 fn f(n: Scalar) {
     if n > 3 {
         n-1
@@ -50,7 +50,7 @@ assert_eq([ f(4), 3 ]);
 
 [![test](.test/function_mixed.svg)](.test/function_mixed.log)
 
-```µcad,function_mixed
+```mu,function_mixed
 fn f(n: Scalar) {
     if n > 3 {
         return n-1;
@@ -64,7 +64,7 @@ assert_eq([ f(4), 3 ]);
 
 [![test](.test/function_missing.svg)](.test/function_missing.log)
 
-```µcad,function_missing#todo
+```mu,function_missing#todo
 fn f(n: Scalar) { // error: not all paths return a value
     if n > 3 {
         n - 1

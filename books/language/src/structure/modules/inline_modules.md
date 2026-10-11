@@ -5,7 +5,7 @@ followed by a name and a body `{...}` as the following example shows:
 
 [![test](.test/inline_mod.svg)](.test/inline_mod.log)
 
-```µcad,inline_mod
+```mu,inline_mod
 mod my_module {
     // e.g. define a constant
     pub const VALUE = 1;

@@ -2,7 +2,7 @@
 
 [![test](.test/operation_with_body.svg)](.test/operation_with_body.log)
 
-```µcad,operation_with_body
+```mu,operation_with_body
 use std::geo2d::Circle;
 use std::ops::translate;
 
@@ -13,7 +13,7 @@ use std::ops::translate;
 
 [![test](.test/operation_no_body.svg)](.test/operation_no_body.log)
 
-```µcad,operation_no_body
+```mu,operation_no_body
 use std::geo2d::Circle;
 use std::ops::translate;
 
@@ -24,7 +24,7 @@ Circle( radius = 5mm )
 
 [![test](.test/sketch_missing_semicolon.svg)](.test/sketch_missing_semicolon.log)
 
-```µcad,sketch_missing_semicolon
+```mu,sketch_missing_semicolon
 use std::geo2d::Circle;
 use std::ops::translate;
 
@@ -35,13 +35,13 @@ use std::ops::translate;
 
 [![test](.test/sketch_with_empty_body.svg)](.test/sketch_with_empty_body.log)
 
-```µcad,sketch_with_empty_body#todo
+```mu,sketch_with_empty_body#todo
 {}.std::ops::translate(x = 5mm);
 ```
 
 [![test](.test/sketch_with_body.svg)](.test/sketch_with_body.log)
 
-```µcad,sketch_with_body#fail
+```mu,sketch_with_body#fail
 use std::geo2d::Circle;
 
 Circle(radius = 2mm) { Circle(radius = 1mm); } // parse_error: sketch with body
@@ -49,14 +49,14 @@ Circle(radius = 2mm) { Circle(radius = 1mm); } // parse_error: sketch with body
 
 [![test](.test/empty_op.svg)](.test/empty_op.log)
 
-```µcad,empty_op#fail
+```mu,empty_op#fail
 std::ops::translate(x = 3.0mm); // error: Cannot call operation without workpiece. 
 {}.std::ops::translate(x = 3.0mm);
 ```
 
 [![test](.test/group.svg)](.test/group.log)
 
-```µcad,group
+```mu,group
 use std::geo2d::Circle;
 use std::ops::translate;
 
@@ -69,7 +69,7 @@ use std::ops::translate;
 
 [![test](.test/group_assignment.svg)](.test/group_assignment.log)
 
-```µcad,group_assignment
+```mu,group_assignment
 use std::geo2d::Circle;
 use std::ops::translate;
 

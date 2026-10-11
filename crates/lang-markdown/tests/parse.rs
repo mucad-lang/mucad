@@ -174,7 +174,7 @@ fn other_code_blocks() {
         content[1],
         Block::UnorderedList(UnorderedList::new([ListItem::new("A list item")
             .with_children([Block::Paragraph(
-                "```µcad,in_list\nCircle(r = 1mm);\n```".into()
+                "```mu,in_list\nCircle(r = 1mm);\n```".into()
             )])]))
     );
 
@@ -236,7 +236,7 @@ fn lists_round_trip() {
 
 #[test]
 fn unclosed_code_block() {
-    let err = "# Circle\n\n```µcad\nCircle(r = 4mm);\n\n## Rectangle\n"
+    let err = "# Circle\n\n```mu\nCircle(r = 4mm);\n\n## Rectangle\n"
         .parse::<Markdown>()
         .unwrap_err();
     assert!(
@@ -247,7 +247,7 @@ fn unclosed_code_block() {
 
 #[test]
 fn duplicated_code_block_name() {
-    let err = "```µcad,a\n```\n\n```µcad,a\n```\n"
+    let err = "```mu,a\n```\n\n```mu,a\n```\n"
         .parse::<Markdown>()
         .unwrap_err();
     assert!(
@@ -258,6 +258,6 @@ fn duplicated_code_block_name() {
 
 #[test]
 fn malformed_header() {
-    let err = "```µcad,a(hires\n```\n".parse::<Markdown>().unwrap_err();
+    let err = "```mu,a(hires\n```\n".parse::<Markdown>().unwrap_err();
     assert!(matches!(err, ParseError::MalformedHeader), "{err:?}");
 }

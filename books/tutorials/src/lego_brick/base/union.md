@@ -8,7 +8,7 @@ The code in the `lego_brick.µcad` with the whole 2D geometry of the brick's bas
 
 [![test](.test/operations.svg)](.test/operations.log)
 
-```µcad,operations
+```mu,operations
 use std::geo2d::*;
 use std::ops::*;
 

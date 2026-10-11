@@ -4,7 +4,7 @@ Below is an intermediate result of the sketches of the three components which we
 
 [![test](.test/overview.svg)](.test/overview.log)
 
-```µcad,overview
+```mu,overview
 use std::geo2d::*;
 use std::ops::*;
 

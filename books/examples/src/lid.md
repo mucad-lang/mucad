@@ -2,7 +2,7 @@
 
 [![test](.test/lid.svg)](.test/lid.log)
 
-```µcad,lid
+```mu,lid
 // Copyright © 2024-2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

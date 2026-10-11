@@ -2,18 +2,18 @@
 
 ## Empty code block
 
-```µcad,test_empty
+```mu,test_empty
 ```
 
 ## Code block with failing test
 
-```µcad,test_fail#fail
+```mu,test_fail#fail
 Circle(r = 42mm);
 ```
 
 ## Code block with parameters
 
-```µcad,test_params(hires)
+```mu,test_params(hires)
 Rect(r = 42mm);
 ```
 
@@ -21,7 +21,7 @@ Rect(r = 42mm);
 
 [![test](.test/test_params.svg)](.test/test_params.log)
 
-```µcad,test_result_params#fail(no_format)
+```mu,test_result_params#fail(no_format)
 Rect(r = 42mm);
 ```
 
@@ -29,7 +29,7 @@ Rect(r = 42mm);
 
 [![test](.test/multi_line.svg)](.test/multi_line.log)
 
-```µcad,multi_line
+```mu,multi_line
 use std::print;
 
 print("Hello, µcad standard library!");

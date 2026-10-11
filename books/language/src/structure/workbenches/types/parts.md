@@ -5,7 +5,7 @@ They are named in `PascalCase`:
 
 [![test](.test/part_basic.svg)](.test/part_basic.log)
 
-```µcad,part_basic
+```mu,part_basic
 part MyPart(radius: Length) {
     use std::geo3d::*;
     Sphere(radius) - Cube(radius)
@@ -24,7 +24,7 @@ You will get an error if you generate a 2D model with a part:
 
 [![test](.test/part_2d.svg)](.test/part_2d.log)
 
-```µcad,part_2d#fail
+```mu,part_2d#fail
 part MyPart(radius: Length) {
     std::geo2d::Circle(radius); // error: Circle is not a 3D primitive
 }

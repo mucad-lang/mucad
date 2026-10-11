@@ -6,7 +6,7 @@ similarly to a key-value store.
 
 [![test](.test/named_tuple_access.svg)](.test/named_tuple_access.log)
 
-```µcad,named_tuple_access
+```mu,named_tuple_access
 use std::debug::assert_eq;
 
 tuple = (width = 10cm, depth = 10cm, volume = 1l);
@@ -25,7 +25,7 @@ In such cases, these *unnamed values* within the tuple must all be of different 
 
 [![test](.test/unnamed_tuple.svg)](.test/unnamed_tuple.log)
 
-```µcad,unnamed_tuple
+```mu,unnamed_tuple
 (10cm, 10cm², 1l);
 ```
 
@@ -38,7 +38,7 @@ The order of values have no consequences for equality.
 
 [![test](.test/unnamed_tuple_order.svg)](.test/unnamed_tuple_order.log)
 
-```µcad,unnamed_tuple_order
+```mu,unnamed_tuple_order
 // these tuples are equal
 std::debug::assert_eq([(1l, 10cm, 10cm²), (10cm, 10cm², 1l)]);
 ```
@@ -49,7 +49,7 @@ Different units of values have no consequences for equality.
 
 [![test](.test/unnamed_tuple_units.svg)](.test/unnamed_tuple_units.log)
 
-```µcad,unnamed_tuple_units
+```mu,unnamed_tuple_units
 // these tuples are equal
 std::debug::assert_eq([(1000cm3, 100mm, 0.01m²), (10cm, 100cm², 1l)]);
 ```
@@ -60,6 +60,6 @@ Either names or types must be unique in a tuple.
 
 [![test](.test/unnamed_tuple_ambiguous.svg)](.test/unnamed_tuple_ambiguous.log)
 
-```µcad,unnamed_tuple_ambiguous#fail
+```mu,unnamed_tuple_ambiguous#fail
 (10cm, 10mm, 1m); // error: ambiguous type Length
 ```

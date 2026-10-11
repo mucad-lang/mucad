@@ -6,7 +6,7 @@ In the next we want to give the rectangle a name `outer`, so we can identify it 
 
 [![test](.test/assignment.svg)](.test/assignment.log)
 
-```µcad,assignment
+```mu,assignment
 outer = std::geo2d::Rect(width = 31.8mm, height = 15.8mm);
 ```
 
@@ -20,7 +20,7 @@ A second statement `outer;` is needed to output the geometry stored in the `oute
 
 [![test](.test/output.svg)](.test/output.log)
 
-```µcad,output
+```mu,output
 outer = std::geo2d::Rect(width = 31.8mm, height = 15.8mm);
 outer;
 ```
@@ -34,7 +34,7 @@ This makes more sense, if you use an *Operator* (`-`) instead of an *Operation* 
 
 [![test](.test/operator.svg)](.test/operator.log)
 
-```µcad,operator
+```mu,operator
 use std::geo2d::Rect;
 
 thickness = 1.2mm;

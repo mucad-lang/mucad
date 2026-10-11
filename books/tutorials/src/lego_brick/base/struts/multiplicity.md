@@ -9,7 +9,7 @@ This allows us to shorten the previous example significantly:
 
 [![test](.test/multiplicity.svg)](.test/multiplicity.log)
 
-```µcad,multiplicity
+```mu,multiplicity
 use std::geo2d::*;
 use std::ops::*;
 
@@ -27,7 +27,7 @@ But we still have to write `8mm` twice, but we can change this be multiplying th
 
 [![test](.test/array_mul.svg)](.test/array_mul.log)
 
-```µcad,array_mul
+```mu,array_mul
 use std::geo2d::*;
 use std::ops::*;
 

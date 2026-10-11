@@ -22,7 +22,7 @@ Outer attributes are placed **outside** and **before** a statement. They apply t
 
 [![test](.test/outer_attributes.svg)](.test/outer_attributes.log)
 
-```µcad,outer_attributes
+```mu,outer_attributes
 #[color = "#FF0000"]
 {
     std::geo2d::Circle(r = 20mm);
@@ -38,7 +38,7 @@ The following code is semantically equivalent to the outer attribute example abo
 
 [![test](.test/inner_attributes.svg)](.test/inner_attributes.log)
 
-```µcad,inner_attributes
+```mu,inner_attributes
 {
     #![color = "#FF0000"]
 

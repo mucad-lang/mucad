@@ -52,8 +52,8 @@ fn builtin_mdbook() {
 #[test]
 fn library_mdbook() {
     let mut ctx = ResolveContext::new();
-    let (lib, issues) = microcad_lang_resolve::resolve("tests/test_cases/doc_lib.µcad", &mut ctx)
-        .expect("No error");
+    let (lib, issues) =
+        microcad_lang_resolve::resolve("tests/test_cases/doc_lib.mu", &mut ctx).expect("No error");
     assert!(!issues.has_errors(), "{issues:?}");
 
     let mdbook = LibraryDocGenerator::new(&lib)

@@ -10,8 +10,6 @@ while IFS= read -r -d '' file; do
     cargo run --release -- export "$file"
 done < <(
     find "$DIR" -type f \( \
-        -iname "*.ucad" -o \
-        -iname "*.µcad" -o \
-        -iname "*.mcad" \
+        -iname "*.mu" -o \
     \) -print0
 )

@@ -12,7 +12,7 @@ Let's open this file in VSCode:
 
 [![test](.test/create.svg)](.test/create.log)
 
-```µcad,create
+```mu,create
 // microcad generated file
 
 sketch YourSketch( /* your building plan */ ) {

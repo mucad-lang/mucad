@@ -2,7 +2,7 @@
 
 [![test](.test/csg_cube.svg)](.test/csg_cube.log)
 
-```µcad,csg_cube
+```mu,csg_cube
 // Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

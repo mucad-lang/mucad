@@ -30,7 +30,7 @@ Here are some examples of each operator:
 
 [![test](.test/operator_examples.svg)](.test/operator_examples.log)
 
-```µcad,operator_examples
+```mu,operator_examples
 use std::debug::assert_eq; // used for testing
 
 assert_eq([-5, 0 - 5]); // Negation

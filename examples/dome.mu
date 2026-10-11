@@ -1,6 +1,6 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// file: dome.µcad
+// file: dome.mu
 
 use std::geo2d::*;
 use std::ops::*;
@@ -14,4 +14,3 @@ pub part Dome(size: Length, strut_width = 1mm) {
 }
 
 Dome(10mm, strut_width = 0.25mm);
-

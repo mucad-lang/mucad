@@ -9,7 +9,7 @@ In the following example we declare a building plan which consists of a `radius`
 
 [![test](.test/property.svg)](.test/property.log)
 
-```µcad,property
+```mu,property
 // `outer` will automatically become a property because
 // it is declared in the building plan:
 sketch Wheel(outer: Length) {
@@ -40,7 +40,7 @@ If you remove the `prop` keyword you will fail at accessing `inner`:
 
 [![test](.test/property_wrong.svg)](.test/property_wrong.log)
 
-```µcad,property_wrong#fail
+```mu,property_wrong#fail
 sketch Wheel(outer: Length) {
     use std::geo2d::Circle;
 
@@ -67,7 +67,7 @@ You may not define a property within an initializer.
 
 [![test](.test/property_no_prop_in_initializer.svg)](.test/property_no_prop_in_initializer.log)
 
-```µcad,property_no_prop_in_initializer#fail
+```mu,property_no_prop_in_initializer#fail
 sketch Wheel(radius: Length, thickness = 5cm) {
     init(radius: Length, inner: Length) {
         thickness = radius - inner;
@@ -91,7 +91,7 @@ Also you may not use `prop` within initialization code.
 
 [![test](.test/property_no_prop_in_init_code.svg)](.test/property_no_prop_in_init_code.log)
 
-```µcad,property_no_prop_in_init_code#fail
+```mu,property_no_prop_in_init_code#fail
 sketch Wheel(outer: Length) {
     prop max = 100; // error: do not use prop here
 

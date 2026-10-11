@@ -2,7 +2,7 @@
 
 [![test](.test/torus.svg)](.test/torus.log)
 
-```µcad,torus
+```mu,torus
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 

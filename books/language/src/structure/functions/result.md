@@ -5,7 +5,7 @@ To do so, you need to define the *return type* (using `->`) as shown in the foll
 
 [![test](.test/function_result.svg)](.test/function_result.log)
 
-```µcad,function_result
+```mu,function_result
 fn square(x: Scalar) -> Scalar {
     x * x
 }
@@ -17,7 +17,7 @@ You may also use `if` to decide between different results.
 
 [![test](.test/function_conditional_result.svg)](.test/function_conditional_result.log)
 
-```µcad,function_conditional_result#todo
+```mu,function_conditional_result#todo
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         x * pow(x, n - 1)
@@ -36,7 +36,7 @@ Of course returning a value twice is not allowed.
 
 [![test](.test/return_twice.svg)](.test/return_twice.log)
 
-```µcad,return_twice#todo
+```mu,return_twice#todo
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         x * pow(x, n - 1)
@@ -57,7 +57,7 @@ statement.
 
 [![test](.test/function_return.svg)](.test/function_return.log)
 
-```µcad,function_return#todo
+```mu,function_return#todo
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         return x * pow(x, n - 1);

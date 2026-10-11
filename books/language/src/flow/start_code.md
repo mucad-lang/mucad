@@ -12,7 +12,7 @@ The **top level code** within this file is where microcad starts processing top 
 
 [![test](.test/start.svg)](.test/start.log)
 
-```µcad,start
+```mu,start
 // 1. Start code begins here.
 use std::geo2d::*;
 

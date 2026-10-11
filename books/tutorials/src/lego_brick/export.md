@@ -9,7 +9,7 @@ microcad export lego_brick
 
 But we also can use the `#[export]` attribute to export each brick to a different file:
 
-```µcad
+```mu
 mod lego_brick;
 
 use lego_brick::*;

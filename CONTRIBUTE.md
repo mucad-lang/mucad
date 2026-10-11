@@ -103,7 +103,7 @@ One may insert *µcad* code into the *markdown* files, which then will get teste
 `cargo test` and name them like:
 
 ````md
-```µcad,my_test
+```mu,my_test
 ````
 
 The *markdown* will be searched for any *µcad* code and appropriate *rust* tests will be
@@ -114,7 +114,7 @@ The *markdown* will be searched for any *µcad* code and appropriate *rust* test
 beside the name you may add a test mode (see table below):
 
 ````md
-```µcad,my_test#fail
+```mu,my_test#fail
 ````
 
 The tests will create `.test` folders beside the *markdown* files.
@@ -124,7 +124,7 @@ They can be included in the *markdown*, if you use this code:
 
 ````md
 ![test](.test/my_test.svg)
-```µcad,my_test
+```mu,my_test
 ````
 
 #### Accessing test logs
@@ -133,7 +133,7 @@ You may also give the reader access to the logs by clicking on the banner with:
 
 ````md
 [![test](.test/my_test.svg)](.test/my_test.log)
-```µcad,my_test
+```mu,my_test
 ````
 
 #### Automatically update test banners
@@ -162,7 +162,7 @@ Any unmarked warnings will be ignored.
 In the following example a warning and an error are marked with comments:
 
 ````md
-```µcad,missed_property#fail
+```mu,missed_property#fail
 sketch Wheel(radius: Length) { // warning (no output)
     init( width: Length ) { } // error: Workbench plan incomplete. Missing properties: radius
 }
@@ -177,7 +177,7 @@ Tests are run in **low resolution** to make them faster.
 If you require a test output to be **high resolution**, then add `(hires)` to the header line:
 
 ````md
-```µcad,final(hires)
+```mu,final(hires)
 ````
 
 ## Contributing to the books

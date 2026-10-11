@@ -7,7 +7,7 @@ replace it with the following single statement:
 
 [![test](.test/rect.svg)](.test/rect.log)
 
-```µcad,rect
+```mu,rect
 std::geo2d::Rect(width = 31.8mm, height = 15.8mm);
 ```
 

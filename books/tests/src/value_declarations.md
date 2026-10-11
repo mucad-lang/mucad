@@ -14,7 +14,7 @@
 
 [![test](.test/value_declarations.svg)](.test/value_declarations.log)
 
-```µcad,value_declarations
+```mu,value_declarations
 use std::debug::*;
 
 mod module {

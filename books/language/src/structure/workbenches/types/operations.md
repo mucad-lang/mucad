@@ -12,7 +12,7 @@ passes-through the original input model:
 
 [![test](.test/op_example.svg)](.test/op_example.log)
 
-```µcad,op_example
+```mu,op_example
 // define operation nop without parameters
 op nop() { @input }
 
@@ -34,7 +34,7 @@ In the following example `punshed_disk` awaits a group of exactly two children.
 
 [![test](.test/input.svg)](.test/input.log)
 
-```µcad,input#todo
+```mu,input#todo
 // define operation which takes multiple items
 op punched_disk() {
     // check number of input models
@@ -60,7 +60,7 @@ Like other workbenches operations can have parameters too:
 
 [![test](.test/parameters.svg)](.test/parameters.log)
 
-```µcad,parameters#todo
+```mu,parameters#todo
 // define operation which takes multiple items
 op punch_disk(radius: Length) {
     if @input.count() == 1 {

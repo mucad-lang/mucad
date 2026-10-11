@@ -5,7 +5,7 @@ them in the last statement where we call `LegoBrick()`.
 
 [![test](.test/final.svg)](.test/final.log)
 
-```µcad,final(hires)
+```mu,final(hires)
 use std::geo2d::*;
 use std::ops::*;
 

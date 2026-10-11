@@ -26,8 +26,8 @@ pub struct Args {
     /// The input URL defines the resource to be displayed.
     ///
     /// Examples:
-    /// * `my_file.µcad` Display contents in file.
-    /// * `my_file.µcad?symbol=MyPart#L11`: Display some symbol `MyPart` at line 11.
+    /// * `my_file.mu` Display contents in file.
+    /// * `my_file.mu?symbol=MyPart#L11`: Display some symbol `MyPart` at line 11.
     /// * `stdin://`: Read from stdin.
     input: Option<String>,
 

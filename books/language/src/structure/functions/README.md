@@ -10,7 +10,7 @@ The function definition starts with the keyword `fn`, followed by an
 
 [![test](.test/example.svg)](.test/example.log)
 
-```µcad,example
+```mu,example
 // define function print_error with text as parameter of type String
 fn print_error(text: String) {
     // code body
@@ -36,7 +36,7 @@ type is inferred from the unit of the provided value.
 
 [![test](.test/function_default.svg)](.test/function_default.log)
 
-```µcad,function_default
+```mu,function_default
 fn f(x: Scalar, y = 1mm) -> Length {
     x * y
 }

@@ -2,7 +2,7 @@
 
 [![test](.test/symbol_doublet.svg)](.test/symbol_doublet.log)
 
-```µcad,symbol_doublet#fail
+```mu,symbol_doublet#fail
 mod foo {
     pub const A = 1mm;
 }
