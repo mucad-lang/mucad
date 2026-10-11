@@ -15,7 +15,7 @@ use microcad_lang_markdown::{
 
 use crate::{
     BuiltinLibraryDocGenerator, GenerateDoc,
-    mdbook::to_md::{ToMd, doc_block},
+    mdbook::{ToMd, doc_block},
 };
 
 /// A link with a summary: `[name](path): summary`.
@@ -106,7 +106,7 @@ impl ToMd for BuiltinModule {
     }
 }
 
-impl<'builtins> BuiltinLibraryDocGenerator<'builtins> {
+impl<'lib> BuiltinLibraryDocGenerator<'lib> {
     /// The start page with a list of all modules.
     fn index(&self) -> Markdown {
         let mut md = Markdown::page(
