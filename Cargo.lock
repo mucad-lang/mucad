@@ -5895,7 +5895,6 @@ dependencies = [
  "microcad-lang-parse",
  "microcad-lang-types",
  "microcad-macros",
- "microcad-std",
  "miette",
  "postcard",
  "semver",
