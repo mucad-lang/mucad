@@ -14,8 +14,8 @@ mod scaffold;
 
 use microcad_builtin::BuiltinLibrary;
 use microcad_lang_base::{
-    IssueResult, HashId, IssueList, LookUpName, PushIssue, Shared, Source, Span,
-    SpanToSrcRef, SrcRef, SymbolId, hash_id,
+    HashId, IssueList, IssueResult, LookUpName, PushIssue, Shared, Source, Span, SpanToSrcRef,
+    SrcRef, SymbolId, hash_id,
 };
 
 pub use ir::CastInto;
@@ -215,11 +215,7 @@ pub fn lower<'source>(
         tree,
     };
 
+    // Errors recovered from (e.g. an unknown built-in) are returned with the IR, see `IssueResult`.
     let issues = std::mem::take(&mut context.issues);
-
-    if issues.has_errors() {
-        Err(issues)
-    } else {
-        Ok((ir, issues))
-    }
+    Ok((ir, issues))
 }

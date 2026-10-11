@@ -88,45 +88,44 @@ macro_rules! test_diagnostic {
             let parse_context = microcad_lang_parse::ParseContext::from(&source);
             let ast = Ast::parse(&parse_context).unwrap();
             let mut context = microcad_lang_lower::LowerContext::new(&source);
-            let ir = lower::lower(&mut context, &ast);
             let expected = ast::visitor::collect_expected_diagnostics(&parse_context, &ast);
+            let no_diagnostics_expected = expected.is_empty();
 
-            match ir {
-                Ok((mut ir, _)) => {
-                    if !expected.is_empty() {
-                        panic!("Test '{}' was expected to fail, but succeeded.", filename);
-                    }
-                    use microcad_lang_lower::ir::visitor::VisitorMut;
-                    microcad_lang_lower::ir::visitor::MakeHumanReadable::new(&context)
-                        .visit(&mut ir);
+            // Errors may be recovered from (`Ok` with issues) or not (`Err`).
+            let (ir, issues) = match lower::lower(&mut context, &ast) {
+                Ok((ir, issues)) => (Some(ir), issues),
+                Err(issues) => (None, issues),
+            };
 
-                    insta::assert_snapshot!(stringify!($name), ir);
-                }
-                Err(errors) => {
-                    let diags = microcad_lang_base::Diagnostics::from(errors);
-                    let observed = ExpectedDiagnostics::new(
-                        diags
-                            .iter()
-                            .map(|diag| ExpectedDiagnostic {
-                                severity: diag.severity().unwrap_or_default(),
-                                line: diag.src_ref.line().unwrap(),
-                                code: diag.code().map(|code| code.to_string()),
-                            })
-                            .collect(),
-                    );
+            let diags = microcad_lang_base::Diagnostics::from(issues);
+            let observed = ExpectedDiagnostics::new(
+                diags
+                    .iter()
+                    .map(|diag| ExpectedDiagnostic {
+                        severity: diag.severity().unwrap_or_default(),
+                        line: diag.src_ref.line().unwrap(),
+                        code: diag.code().map(|code| code.to_string()),
+                    })
+                    .collect(),
+            );
 
-                    let expected = ast::visitor::collect_expected_diagnostics(&parse_context, &ast);
+            // Display diagnostics on failure
+            assert_that!(
+                observed,
+                eq(expected),
+                "{}",
+                diags
+                    .render_to_string(&&source, &Default::default())
+                    .unwrap(),
+            );
 
-                    // Display diagnostics on failure
-                    assert_that!(
-                        observed,
-                        eq(expected),
-                        "{}",
-                        diags
-                            .render_to_string(&&source, &Default::default())
-                            .unwrap(),
-                    );
-                }
+            // Snapshot the IR of tests without expected diagnostics.
+            if no_diagnostics_expected {
+                let mut ir = ir.unwrap_or_else(|| panic!("Test '{filename}' produced no IR"));
+                use microcad_lang_lower::ir::visitor::VisitorMut;
+                microcad_lang_lower::ir::visitor::MakeHumanReadable::new(&context).visit(&mut ir);
+
+                insta::assert_snapshot!(stringify!($name), ir);
             }
         }
     };
@@ -134,6 +133,26 @@ macro_rules! test_diagnostic {
 
 snapshot_test!(circle => ok);
 snapshot_test!(builtin => ok);
+
+/// An unknown built-in is reported, but the rest of the source is still lowered.
+#[test]
+fn unknown_builtin() {
+    let source = microcad_lang_base::Source::from(
+        "__mu::geo2d::Unknown(radius = 1mm);\n__mu::geo2d::Circle(radius = 2mm);\n",
+    );
+    let (ir, issues) = common::ir_from_source(&source).expect("An IR despite the error");
+
+    let errors: Vec<_> = issues.iter().map(|issue| issue.to_string()).collect();
+    assert_eq!(errors.len(), 1, "{errors:?}");
+    assert!(
+        errors[0].contains("No built-in `__mu::geo2d::Unknown`"),
+        "{errors:?}"
+    );
+
+    let ron = ir.to_ron().expect("No error");
+    assert!(ron.contains("Unknown"), "{ron}");
+    assert!(ron.contains("Circle"), "{ron}");
+}
 
 test_diagnostic!(unexpected_statements);
 test_diagnostic!(init);

@@ -37,6 +37,32 @@ fn resolve_single_identifier() {
     assert!(!issues.has_errors(), "{issues:?}");
 }
 
+/// A file with an unknown built-in is still loaded and the built-in is reported once.
+#[test]
+fn resolve_unknown_builtin() {
+    let mut ctx = ResolveContext::new();
+    let (lib, issues) =
+        microcad_lang_resolve::resolve("tests/test_cases/unknown_builtin.mu", &mut ctx)
+            .expect("No fatal error");
+
+    let errors: Vec<_> = issues.iter().map(|issue| issue.to_string()).collect();
+    assert_eq!(errors.len(), 1, "{errors:?}");
+    assert!(
+        errors[0].contains("No built-in `__mu::geo2d::Unknown`"),
+        "{errors:?}"
+    );
+
+    // The rest of the file is loaded.
+    assert!(
+        lib.look_up(lib.root, &path("::unknown_builtin::Known"))
+            .is_some()
+    );
+    assert!(
+        lib.look_up(lib.root, &path("::unknown_builtin::Missing"))
+            .is_some()
+    );
+}
+
 /// An unknown identifier is reported as unresolved symbol instead of panicking.
 #[test]
 fn resolve_unresolved_path() {

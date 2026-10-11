@@ -134,6 +134,11 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
             return;
         };
 
+        // Known built-ins are resolved while lowering, unknown ones have been reported there.
+        if unresolved_path.builtin_id().is_some() {
+            return;
+        }
+
         // Locals shadow symbols.
         if let Some(id) = unresolved_path.single_identifier()
             && self.stack.is_local(id)
