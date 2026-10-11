@@ -9,11 +9,11 @@ use mu::base::DisplayWithCtx;
 /// A sketch and an operation, called as method on the sketch.
 const DISC: &str = r#"
 sketch Disc(radius: Length) {
-    __mu::geo2d::Circle(radius = radius);
+    __mu::geo2d::Circle(radius);
 }
 
 op Raise(height: Length) {
-    __mu::ops::extrude(self = @input, height = height);
+    @input.__mu::ops::extrude(height);
 }
 
 Disc(radius = 4mm).Raise(height = 2mm);
