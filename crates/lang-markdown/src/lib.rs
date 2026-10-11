@@ -17,7 +17,7 @@ pub use code_block::{CodeBlock, CodeBlockHeader};
 pub use error::ParseError;
 pub use list::{ListItem, OrderedList, UnorderedList};
 pub use markdown::{Markdown, MarkdownError};
-pub use mdbook::{MdBook, MdBookError, MdBookSummary, MdBookSummaryEntry, MdbookConfig};
+pub use mdbook::{MdBook, MdBookConfig, MdBookError, MdBookSummary, MdBookSummaryEntry};
 pub use section::Section;
 
 /// Helper macro to construct a Markdown from any format string.

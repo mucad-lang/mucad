@@ -10,7 +10,7 @@ use microcad_lang_base::{HashMap, WriteToFile};
 use miette::Diagnostic;
 use thiserror::Error;
 
-pub use config::MdbookConfig;
+pub use config::MdBookConfig;
 pub use summary::{MdBookSummary, MdBookSummaryEntry};
 
 use crate::{CodeBlock, Markdown, MarkdownError};
@@ -38,15 +38,15 @@ pub enum MdBookError {
 
 /// Directory that contains a markdown book.
 pub struct MdBook {
-    /// Relative paths to `src` folder in md book folder
+    /// Markdown files, with paths relative to the source folder of the book (e.g. `src`).
     pub md_files: HashMap<std::path::PathBuf, Markdown>,
 
     /// Book.toml file
-    pub config: MdbookConfig,
+    pub config: MdBookConfig,
 }
 
 impl MdBook {
-    pub fn new(config: MdbookConfig) -> Self {
+    pub fn new(config: MdBookConfig) -> Self {
         Self {
             config,
             md_files: HashMap::default(),
@@ -75,7 +75,7 @@ impl MdBook {
             return Err(MdBookError::NoMdBookDirectory(root));
         }
 
-        let config = MdbookConfig::load(config_path)?;
+        let config = MdBookConfig::load(config_path)?;
 
         // 2. Identify the src directory
         let src_path = root.join("src");
@@ -101,6 +101,8 @@ impl MdBook {
     }
 
     /// Add a new markdown file to the mdbook.
+    ///
+    /// The path is relative to the source folder of the book, e.g. `SUMMARY.md` or `geo2d/README.md`.
     pub fn add_md(&mut self, path: impl AsRef<std::path::Path>, md: impl Into<Markdown>) {
         self.md_files.insert(path.as_ref().to_path_buf(), md.into());
     }
@@ -109,9 +111,14 @@ impl MdBook {
         self.config.src_path().join(md_file.as_ref())
     }
 
-    pub fn save_all(&self, path: impl AsRef<std::path::Path>) -> Result<(), MdBookError> {
+    /// Write the book into directory `path`: `book.toml` and all markdown files in the source folder.
+    pub fn save(&self, path: impl AsRef<std::path::Path>) -> Result<(), MdBookError> {
+        let root = path.as_ref();
+        self.config.write_to_file(root.join("book.toml"))?;
+
+        let src_path = root.join(self.config.src_path());
         self.md_files.iter().try_for_each(|(md_file_path, md)| {
-            let md_file_path = path.as_ref().join(md_file_path);
+            let md_file_path = src_path.join(md_file_path);
 
             md.write_to_file(&md_file_path)
                 .map_err(|err| MdBookError::Save {

@@ -9,15 +9,15 @@ use crate::MdBookError;
 
 /// Wrapper around `book.toml` using format-preserving TOML AST.
 #[derive(Debug, Clone)]
-pub struct MdbookConfig {
+pub struct MdBookConfig {
     pub doc: DocumentMut,
 }
 
 /// Builder methods
-impl MdbookConfig {}
+impl MdBookConfig {}
 
 /// Accessors
-impl MdbookConfig {
+impl MdBookConfig {
     /// Load `book.toml` from a path.
     pub fn load(path: impl AsRef<std::path::Path>) -> Result<Self, MdBookError> {
         Ok(Self {
@@ -79,13 +79,13 @@ impl MdbookConfig {
     }
 }
 
-impl std::fmt::Display for MdbookConfig {
+impl std::fmt::Display for MdBookConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.doc.fmt(f)
     }
 }
 
-impl Default for MdbookConfig {
+impl Default for MdBookConfig {
     fn default() -> Self {
         // Embed and parse the default book.toml template at compile time.
         // Adjust the relative path to wherever your default template file lives.
