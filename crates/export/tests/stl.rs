@@ -58,7 +58,7 @@ fn test_cube() -> std::io::Result<()> {
 /// (Rect(0mm, 0mm, 100mm, 100mm) - Rect(0mm, 0mm, 100mm, 100mm).translate(50mm, 50mm)).extrude(10mm)
 #[test]
 fn stl_export() -> std::io::Result<()> {
-    let bounds = Rect::new((0., 0.), (100., 100.));
+    let bounds = Rect::new((0., 0.), (30., 30.));
 
     let mut ctx = BuiltinEvalContext::default();
     let mut group = ModelTree::new(Element::Group);
@@ -68,8 +68,8 @@ fn stl_export() -> std::io::Result<()> {
     let translate = mu::ops::translate(
         arguments!(
             self = rect,
-            x = Value::mm(50.0),
-            y = Value::mm(50.0),
+            x = Value::mm(10.0),
+            y = Value::mm(10.0),
             z = Value::mm(0.0)
         ),
         &mut ctx,
@@ -78,7 +78,7 @@ fn stl_export() -> std::io::Result<()> {
     group.append(translate);
 
     let diff = mu::ops::difference(arguments!(self = group), &mut ctx).expect("No error");
-    let extrude = mu::ops::extrude(arguments!(self = diff, height = Value::mm(10.0)), &mut ctx)
+    let extrude = mu::ops::extrude(arguments!(self = diff, height = Value::mm(3.0)), &mut ctx)
         .expect("No error");
 
     // Test write ASCII STL
