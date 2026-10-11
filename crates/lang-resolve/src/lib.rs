@@ -17,7 +17,9 @@ pub use diag::{
     ResolveError, ResolveErrorKind, ResolveInfo, ResolveIssue, ResolveResult, ResolveWarning,
 };
 
-pub use resolve::{LibraryCache, ResolveContext, ResolveLibraryContext, SourceCache, resolve};
+pub use resolve::{
+    LibraryCache, ResolveContext, ResolveLibraryContext, SourceCache, resolve, resolve_source,
+};
 
 pub mod library;
 

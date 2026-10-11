@@ -16,9 +16,24 @@ mod workbench;
 pub use argument_match::*;
 pub use issue::*;
 
-pub use context::EvalContext;
+pub use context::{EvalContext, EvalContextBuilder};
 
+use microcad_lang_base::{IssueResult, PushIssue};
 use microcad_lang_types::{ArgumentValueList, ModelTree, Value};
+
+/// The eval compiler stage: evaluate the library of the context into a model tree.
+///
+/// Recoverable errors are returned with the model, see [`IssueResult`].
+pub fn eval(mut context: EvalContext) -> IssueResult<ModelTree, EvalIssue> {
+    match context.eval_library() {
+        Ok(value) => Ok((ModelTree::from(value), context.issues())),
+        Err(err) => {
+            let mut issues = context.issues();
+            issues.push_err(err);
+            Err(issues)
+        }
+    }
+}
 
 /// Evaluation trait.
 ///

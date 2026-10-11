@@ -7,8 +7,10 @@ mod loader;
 
 pub use cache::{LibraryCache, SourceCache};
 pub use lib_ctx::ResolveLibraryContext;
-use microcad_lang_base::{HashId, SharedMut};
+use microcad_lang_base::{HashId, IssueResult, LibraryId, PushIssue, SharedMut};
 use microcad_lang_lower::Ir;
+
+use crate::{Library, ResolveIssue};
 
 #[derive(Debug, Default)]
 pub struct ResolveContext {
@@ -43,6 +45,34 @@ impl ResolveContext {
     /// Source cache
     pub fn source_cache(&self) -> SharedMut<SourceCache> {
         self.src_cache.clone()
+    }
+
+    /// Library cache
+    pub fn lib_cache(&self) -> SharedMut<LibraryCache> {
+        self.lib_cache.clone()
+    }
+}
+
+/// Library loading
+impl ResolveContext {
+    /// Load and resolve an external library (a dependency) from a directory with a `mu.toml` file
+    /// and insert it into the library cache.
+    pub fn load_external_library(
+        &mut self,
+        lib_path: impl AsRef<std::path::Path>,
+    ) -> IssueResult<LibraryId, ResolveIssue> {
+        let mut lib = Library::new();
+        let mut lib_ctx = ResolveLibraryContext::new(&mut lib, self);
+        let result = lib_ctx.load(lib_path);
+        let mut issues = lib_ctx.to_issues();
+
+        match result.and_then(|()| self.lib_cache.write_unwrap().insert(lib)) {
+            Ok(lib_id) => Ok((lib_id, issues)),
+            Err(err) => {
+                issues.push_err(err);
+                Err(issues)
+            }
+        }
     }
 }
 

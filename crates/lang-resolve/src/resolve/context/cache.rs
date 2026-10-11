@@ -3,7 +3,7 @@
 
 use microcad_lang_base::{GetSourceByHash, HashId, HashMap, LibraryId, SharedMut, Source};
 
-use crate::{Library, ResolveResult, SourceUnit};
+use crate::{Library, ResolveErrorKind, ResolveResult, SourceUnit};
 
 #[derive(Debug, Default)]
 pub struct LibraryCache {
@@ -12,10 +12,25 @@ pub struct LibraryCache {
 }
 
 impl LibraryCache {
+    /// Insert an external library (a dependency).
+    ///
+    /// The library must have a manifest, because its name and version define the library ID.
     pub fn insert(&mut self, library: Library) -> ResolveResult<LibraryId> {
+        if library.manifest.is_none() {
+            return Err(ResolveErrorKind::LibraryWithoutManifest.into());
+        }
         let id = library.id();
         self.libraries.insert(id, SharedMut::from(library));
         Ok(id)
+    }
+
+    /// Insert the main library under [`LibraryId::ROOT`], replacing a previous main library.
+    ///
+    /// The main library does not need a manifest, e.g. if it is a single source file.
+    pub fn insert_root(&mut self, library: Library) -> LibraryId {
+        self.libraries
+            .insert(LibraryId::ROOT, SharedMut::from(library));
+        LibraryId::ROOT
     }
 
     pub fn get(&self, id: &LibraryId) -> Option<SharedMut<Library>> {

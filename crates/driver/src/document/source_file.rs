@@ -16,7 +16,7 @@ pub struct SourceFile {
     pub source: mu::Source,
     pub ast: mu::StageResult<mu::Ast, mu::parse::ParseIssue>,
     pub ir: mu::StageResult<mu::Ir, mu::lower::LowerIssue>,
-    //pub model: Option<mu::CompilationResult<mu::Model>>,
+    //pub model: Option<mu::IssueResult<mu::Model>>,
 }
 
 impl SourceFile {

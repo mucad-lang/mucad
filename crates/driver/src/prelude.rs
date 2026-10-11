@@ -17,9 +17,8 @@ pub mod base {
 }
 
 pub use base::{
-    Artifact, ArtifactKind, CompilationResult, Diagnostic, Diagnostics, HashId, HashMap, HashSet,
-    Hashed, Identifier, Refer, Source, SourceKind, SourceLocation, SrcRef, StageResult, TextEdit,
-    Url,
+    Artifact, ArtifactKind, Diagnostic, Diagnostics, HashId, HashMap, HashSet, Hashed, Identifier,
+    IssueResult, Refer, Source, SourceKind, SourceLocation, SrcRef, StageResult, TextEdit, Url,
 };
 
 pub mod builtin {
@@ -43,6 +42,20 @@ pub mod resolve {
 }
 
 pub use resolve::{Library, ResolveContext, ResolveLibraryContext};
+
+pub mod eval {
+    pub use microcad_lang_eval::*;
+}
+
+pub use eval::EvalContext;
+
+pub mod types {
+    pub use microcad_lang_types::*;
+}
+
+pub use types::{ModelTree, Value};
+
+pub use crate::Compiler;
 
 pub use crate::config::DriverConfig;
 pub use crate::document::{Document, SourceFile};

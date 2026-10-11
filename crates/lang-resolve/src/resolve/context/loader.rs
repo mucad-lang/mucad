@@ -3,11 +3,11 @@
 
 //! Load a library
 
-use microcad_lang_base::{HashId, LibraryId, PushIssue, Source, ToCompactString, tree};
+use microcad_lang_base::{HashId, PushIssue, Source, ToCompactString, tree};
 use microcad_lang_lower::ir;
 
 use crate::{
-    Library, Manifest, ResolveError, ResolveErrorKind, ResolveLibraryContext, ResolveResult,
+    Manifest, ResolveError, ResolveErrorKind, ResolveLibraryContext, ResolveResult,
     library::{Symbol, SymbolNodeId},
     locate,
     resolve::visitor::ResolveVisitor,
@@ -22,6 +22,21 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         } else {
             self.load_library(path)?;
         };
+
+        ResolveVisitor::new(self).visit();
+        Ok(())
+    }
+
+    /// Load and resolve a source (e.g. an editor buffer) as library.
+    ///
+    /// File modules are located relative to the source's path, if it has one.
+    pub fn load_source(&mut self, source: Source) -> ResolveResult<()> {
+        if !self.lib().no_std() {
+            self.lib_mut().add_std();
+        }
+
+        let root = self.lib().root;
+        self.load_source_symbol(source, Some(root))?;
 
         ResolveVisitor::new(self).visit();
         Ok(())
@@ -54,10 +69,19 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
 
                 if let Some(deps) = &manifest.dependencies {
                     for (name, dep) in deps.iter() {
-                        let lib_id = self.load_external_library(dep.path.as_ref().unwrap())?;
-                        self.lib_mut()
-                            .dependencies
-                            .insert(name.to_compact_string(), lib_id);
+                        // A failed dependency is recorded, its symbols remain unresolved.
+                        match self
+                            .ctx_mut()
+                            .load_external_library(dep.path.as_ref().unwrap())
+                        {
+                            Ok((lib_id, issues)) => {
+                                self.append_issues(issues);
+                                self.lib_mut()
+                                    .dependencies
+                                    .insert(name.to_compact_string(), lib_id);
+                            }
+                            Err(issues) => self.append_issues(issues),
+                        }
                     }
                 }
 
@@ -73,8 +97,8 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         Ok(())
     }
 
-    fn load_source(&mut self, path: impl AsRef<std::path::Path>) -> ResolveResult<HashId> {
-        let source = Source::load(path)?;
+    /// Parse and lower a source into the source cache and record its issues.
+    fn insert_source(&mut self, source: Source) -> HashId {
         let id = self
             .ctx()
             .source_cache()
@@ -89,30 +113,31 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
 
         self.append_issues(issues);
 
-        Ok(id)
+        id
     }
 
-    /// Load lib with a path of directory containing a `mu.toml` file.
-    ///
-    /// TODO: Move this to ResolveContext.
-    pub fn load_external_library(
-        &mut self,
-        lib_path: impl AsRef<std::path::Path>,
-    ) -> ResolveResult<LibraryId> {
-        let mut lib = Library::new();
-        let mut context = ResolveLibraryContext::new(&mut lib, self.ctx_mut());
-        context.load_library(lib_path)?;
-        self.ctx().lib_cache.write_unwrap().insert(lib)
-    }
-
+    /// Load a source file and its file modules into the symbol tree.
     pub fn _load_source(
         &mut self,
         path: impl AsRef<std::path::Path>,
         parent_id: Option<SymbolNodeId>,
     ) -> ResolveResult<SymbolNodeId> {
         let path = path.as_ref().to_path_buf();
-        let id = self.load_source(&path)?;
         println!("Load source file  {path:?}");
+        self.load_source_symbol(Source::load(&path)?, parent_id)
+    }
+
+    /// Load a source and its file modules into the symbol tree.
+    ///
+    /// If `parent_id` is `None`, the source becomes the root of the library.
+    fn load_source_symbol(
+        &mut self,
+        source: Source,
+        parent_id: Option<SymbolNodeId>,
+    ) -> ResolveResult<SymbolNodeId> {
+        let path = source.path();
+        let source_name = source.to_string();
+        let id = self.insert_source(source);
 
         match self.ctx().get_ir(id) {
             // We have a successfully compiled IR, add it to the tree and load file recursively, if necessary.
@@ -122,9 +147,11 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
 
                 // Create matching node in target arena
                 let symbol = match &source_node.def {
-                    ir::Def::Source(source) => {
-                        Symbol::loaded_source_file(source_node.get(), path.clone(), source.clone())
-                    }
+                    ir::Def::Source(source) => Symbol::loaded_source_file(
+                        source_node.get(),
+                        path.clone().unwrap_or_default(),
+                        source.clone(),
+                    ),
                     _ => source_node.get().clone().into(),
                 };
                 let id = if let Some(parent_id) = parent_id {
@@ -141,8 +168,17 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                     let item = child.get();
                     let child_id = match child.get().def {
                         ir::Def::FileModule(_) => {
-                            let path = locate::file_module_path(&path, item.name())?;
-                            match self._load_source(path, Some(id)) {
+                            // File modules are located relative to the source file.
+                            let loaded = match &path {
+                                Some(path) => locate::file_module_path(path, item.name())
+                                    .map_err(ResolveError::from)
+                                    .and_then(|path| self._load_source(path, Some(id))),
+                                None => {
+                                    Err(ResolveErrorKind::SourceHasNoPath(source_name.clone())
+                                        .into())
+                                }
+                            };
+                            match loaded {
                                 Ok(id) => id,
                                 Err(err) => {
                                     self.push_err(err);
@@ -157,7 +193,10 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
 
                 Ok(id)
             }
-            None => Err(ResolveErrorKind::CompileError { path }.into()),
+            None => Err(ResolveErrorKind::CompileError {
+                path: path.unwrap_or_default(),
+            }
+            .into()),
         }
     }
 }

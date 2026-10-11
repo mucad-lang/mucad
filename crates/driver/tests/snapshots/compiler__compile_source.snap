@@ -1,0 +1,13 @@
+---
+source: crates/driver/tests/compiler.rs
+expression: display(&model)
+---
+Group
+└── Workpiece(op)
+    |   - height [in]: Length = 2mm
+    └── Builtin(__mu::ops::extrude[0x9a631419a5cbe800])
+        |   - height: Length = 2mm
+        └── Workpiece(sketch)
+            |   - radius [in]: Length = 4mm
+            └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+                    - radius [in]: Length = 4mm

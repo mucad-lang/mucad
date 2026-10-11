@@ -5691,12 +5691,14 @@ name = "microcad-driver"
 version = "0.6.0"
 dependencies = [
  "derive_more",
+ "insta",
  "log",
  "microcad-builtin",
  "microcad-core",
  "microcad-docgen",
  "microcad-export",
  "microcad-lang-base",
+ "microcad-lang-eval",
  "microcad-lang-format",
  "microcad-lang-lower",
  "microcad-lang-markdown",

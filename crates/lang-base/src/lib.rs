@@ -107,8 +107,11 @@ pub trait Identifiable {
     }
 }
 
-/// A result that contains the compilation artifact bundled with issues occured during compilation.
-pub type CompilationResult<T, I> = Result<(T, IssueList<I>), IssueList<I>>;
+/// Result of a single compiler stage: the artifact bundled with the issues of that stage.
+///
+/// - `Ok`: The stage produced an artifact. The issues may contain errors the stage recovered from.
+/// - `Err`: The stage produced no artifact. The issues contain at least one error.
+pub type IssueResult<T, I> = Result<(T, IssueList<I>), IssueList<I>>;
 
 /// Write the display output of type to file.
 #[cfg(feature = "io")]

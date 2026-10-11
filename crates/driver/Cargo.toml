@@ -30,6 +30,7 @@ microcad-render = { workspace = true }
 microcad-docgen = { workspace = true }
 microcad-export = { workspace = true }
 microcad-lang-base = { workspace = true }
+microcad-lang-eval = { workspace = true }
 microcad-lang-format = { workspace = true }
 microcad-lang-lower = { workspace = true }
 microcad-lang-markdown = { workspace = true }
@@ -37,3 +38,6 @@ microcad-lang-parse = { workspace = true }
 microcad-lang-resolve = { workspace = true }
 microcad-lang-types = { workspace = true }
 microcad-std = { workspace = true }
+
+[dev-dependencies]
+insta = "1.48.0"

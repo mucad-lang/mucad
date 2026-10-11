@@ -9,7 +9,7 @@ use miette::Diagnostic as MietteDiagnostic;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{CompilationResult, Diagnostics, Issue, IssueList, LanguageVersion, ToDiagnostics};
+use crate::{IssueResult, Diagnostics, Issue, IssueList, LanguageVersion, ToDiagnostics};
 
 #[derive(Debug, Error, MietteDiagnostic)]
 pub enum ArtifactError {
@@ -174,10 +174,10 @@ pub trait Artifact: Sized {
 
 /// The result of a compilation stage.
 #[derive(Debug)]
-pub struct StageResult<T: Artifact, I: Issue>(Option<CompilationResult<T, I>>);
+pub struct StageResult<T: Artifact, I: Issue>(Option<IssueResult<T, I>>);
 
 impl<T: Artifact, I: Issue> StageResult<T, I> {
-    pub fn new(result: CompilationResult<T, I>) -> Self {
+    pub fn new(result: IssueResult<T, I>) -> Self {
         Self(Some(result))
     }
 
@@ -223,8 +223,8 @@ impl<T: Artifact, I: Issue> Default for StageResult<T, I> {
     }
 }
 
-impl<T: Artifact, I: Issue> From<CompilationResult<T, I>> for StageResult<T, I> {
-    fn from(result: CompilationResult<T, I>) -> Self {
+impl<T: Artifact, I: Issue> From<IssueResult<T, I>> for StageResult<T, I> {
+    fn from(result: IssueResult<T, I>) -> Self {
         Self::new(result)
     }
 }

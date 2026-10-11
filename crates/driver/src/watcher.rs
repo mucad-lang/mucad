@@ -3,9 +3,9 @@
 
 //! µcad CLI watcher. Most parts proudly taken from [typst](https://github.com/typst/typst/blob/main/crates/typst-cli/src/watch.rs)
 
-use std::{iter, path::PathBuf, sync::mpsc::Receiver, time::Duration};
 use miette::IntoDiagnostic;
 use notify::{Event, RecommendedWatcher};
+use std::{iter, path::PathBuf, sync::mpsc::Receiver, time::Duration};
 
 /// Watches file system activity.
 pub struct Watcher {
@@ -85,7 +85,9 @@ impl Watcher {
 
             // Watch the path if it's not already watched.
             if !self.watched.contains_key(&path) {
-                self.watcher.watch(&path, RecursiveMode::NonRecursive).into_diagnostic()?;
+                self.watcher
+                    .watch(&path, RecursiveMode::NonRecursive)
+                    .into_diagnostic()?;
             }
 
             // Mark the file as "seen" so that we don't unwatch it.

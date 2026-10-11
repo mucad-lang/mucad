@@ -4,7 +4,9 @@
 //! µcad driver is a high-level API to be integrated in LSP, CLI or Viewer.
 
 pub mod commands;
+mod compiler;
 mod config;
+
 pub mod document;
 pub mod prelude;
 //mod session;
@@ -13,6 +15,8 @@ mod watcher;
 use microcad_lang_base::{DiagRenderOptions, IssueList, ToDiagnostics};
 use microcad_lang_parse::ParseIssue;
 use microcad_lang_types::Value;
+
+pub use compiler::Compiler;
 
 /// We use [`miette::Result`] throught-out this crate.
 pub type Result<T = ()> = miette::Result<T>;

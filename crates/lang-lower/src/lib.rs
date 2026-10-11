@@ -14,7 +14,7 @@ mod scaffold;
 
 use microcad_builtin::BuiltinLibrary;
 use microcad_lang_base::{
-    CompilationResult, HashId, IssueList, LookUpName, PushIssue, Shared, Source, Span,
+    IssueResult, HashId, IssueList, LookUpName, PushIssue, Shared, Source, Span,
     SpanToSrcRef, SrcRef, SymbolId, hash_id,
 };
 
@@ -188,7 +188,7 @@ impl<'source> LowerContextBuilder<'source> {
 pub fn lower<'source>(
     context: &mut LowerContext<'source>,
     ast: &Ast,
-) -> CompilationResult<Ir, LowerIssue> {
+) -> IssueResult<Ir, LowerIssue> {
     // Short-circuit on fatal errors
     let ir = match ir::desugared::Source::desugar(ast.tree(), context) {
         Ok(ir) => ir,

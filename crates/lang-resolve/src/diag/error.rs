@@ -81,6 +81,10 @@ pub enum ResolveErrorKind {
 
     #[error("Library `{name}` not loaded")]
     LibraryNotLoaded { name: String },
+
+    /// Only libraries with a manifest can be used as dependency, because the manifest defines the library ID.
+    #[error("Library has no manifest (`mu.toml`) and cannot be used as dependency")]
+    LibraryWithoutManifest,
 }
 
 #[derive(Debug)]

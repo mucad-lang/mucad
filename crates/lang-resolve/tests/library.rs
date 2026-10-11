@@ -17,12 +17,9 @@ where
     'lib: 'ctx,
     'ctx: 'lib,
 {
-    // Rename `ctx` to `lib_ctx` to avoid shadowing the parameter `ctx`
-    let mut lib_ctx = ResolveLibraryContext::new(lib, ctx);
-    lib_ctx
-        .load_external_library("../../crates/std/lib/std")
+    ctx.load_external_library("../../crates/std/lib/std")
         .expect("No error");
-    lib_ctx
+    ResolveLibraryContext::new(lib, ctx)
 }
 
 fn path(name: &str) -> UnresolvedPath {

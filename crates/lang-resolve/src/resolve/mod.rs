@@ -11,26 +11,43 @@ pub mod stack;
 mod type_check;
 pub mod visitor;
 
-use microcad_lang_base::{CompilationResult, PushIssue};
+use microcad_lang_base::{IssueResult, PushIssue, Source};
 
-use crate::{Library, ResolveIssue};
+use crate::{Library, ResolveIssue, ResolveResult};
 
 pub use context::{LibraryCache, ResolveContext, ResolveLibraryContext, SourceCache};
 
+/// Resolve a single source file or a library directory.
 pub fn resolve(
     path: impl AsRef<std::path::Path>,
     ctx: &mut ResolveContext,
-) -> CompilationResult<Library, ResolveIssue> {
+) -> IssueResult<Library, ResolveIssue> {
+    resolve_with(ctx, |lib_ctx| lib_ctx.load(path))
+}
+
+/// Resolve a source, e.g. an editor buffer or stdin.
+///
+/// File modules are located relative to the source's path, if it has one.
+pub fn resolve_source(
+    source: impl Into<Source>,
+    ctx: &mut ResolveContext,
+) -> IssueResult<Library, ResolveIssue> {
+    resolve_with(ctx, |lib_ctx| lib_ctx.load_source(source.into()))
+}
+
+/// Resolve a new library with `load`.
+fn resolve_with(
+    ctx: &mut ResolveContext,
+    load: impl FnOnce(&mut ResolveLibraryContext) -> ResolveResult<()>,
+) -> IssueResult<Library, ResolveIssue> {
     let mut lib = Library::new();
     let mut lib_ctx = ResolveLibraryContext::new(&mut lib, ctx);
 
-    match lib_ctx.load(path) {
-        Ok(()) => {
-            let issues = lib_ctx.to_issues();
-            Ok((lib, issues))
-        }
+    let result = load(&mut lib_ctx);
+    let mut issues = lib_ctx.to_issues();
+    match result {
+        Ok(()) => Ok((lib, issues)),
         Err(err) => {
-            let mut issues = lib_ctx.to_issues();
             issues.push_err(err);
             Err(issues)
         }

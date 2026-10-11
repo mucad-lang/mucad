@@ -63,7 +63,7 @@ impl EvalContext {
 
 /// Eval methods
 impl EvalContext {
-    /// Evaluate the root symbol of the library being evaluated.
+    /// Evaluate the main source of the library being evaluated.
     pub fn eval_library(&mut self) -> EvalResult {
         let Some(lib_id) = self.lib_id else {
             return self.catch(EvalErrorKind::NoLibraryToEvaluate);
@@ -72,7 +72,17 @@ impl EvalContext {
             return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
         };
         let lib = lib.read_unwrap();
-        lib.root().get().eval(self)
+        let root = lib.root();
+
+        // A single source file is loaded as child of an empty library root.
+        let main = match &root.get().def {
+            symbol::SymbolDef::Root(None) => root
+                .children()
+                .find(|child| matches!(child.get().def, symbol::SymbolDef::SourceFile(_)))
+                .unwrap_or(root),
+            _ => root,
+        };
+        main.get().eval(self)
     }
 
     /// Call the symbol `id` in library `lib_id` (e.g. a workbench).
