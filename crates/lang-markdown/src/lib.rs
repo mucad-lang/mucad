@@ -5,26 +5,24 @@
 
 mod block;
 mod code_block;
+mod error;
 mod markdown;
 mod mdbook;
-mod parser;
 mod section;
 pub mod table_builder;
 
 pub use block::Block;
 pub use code_block::{CodeBlock, CodeBlockHeader};
+pub use error::ParseError;
 pub use markdown::{Markdown, MarkdownError};
-pub use mdbook::{MdBook, MdBookError};
+pub use mdbook::{MdBook, MdBookError, MdBookSummary, MdBookSummaryEntry, MdbookConfig};
 pub use section::Section;
-
-pub use parser::ParseError;
-pub use parser::parse;
 
 /// Helper macro to construct a Markdown from any format string.
 #[macro_export]
 macro_rules! md {
     ($($arg:tt)*) => {
-        $crate::parse(&format!($($arg)*)).unwrap_or_default()
+        format!($($arg)*).parse::<$crate::Markdown>().unwrap_or_default()
     };
 }
 

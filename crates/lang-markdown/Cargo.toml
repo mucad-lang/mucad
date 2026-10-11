@@ -22,6 +22,8 @@ required-features = ["bin_extract"]
 
 [dependencies]
 derive_more = { version = "2", features = ["deref", "deref_mut"] }
+pulldown-cmark = { version = "0.13", default-features = false }
+toml_edit = "0.25"
 thiserror = "2.0"
 miette = "7.3.0"
 

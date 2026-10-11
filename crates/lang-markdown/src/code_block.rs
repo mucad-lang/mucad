@@ -27,11 +27,60 @@ impl CodeBlockHeader {
         line.starts_with("[![test]")
     }
 
-    pub(crate) fn is_code_block_start(line: &str) -> bool {
-        microcad_lang_base::MICROCAD_EXTENSIONS
-            .iter()
-            .any(|ext| line.starts_with(&format!("```{ext}")))
-            || Self::is_test_banner(line)
+    /// Returns true if the info string of a fenced code block starts with a µcad language,
+    /// e.g. `µcad,name#ok(hires)`.
+    pub(crate) fn is_microcad(info: &str) -> bool {
+        let language = info
+            .split([',', '#', '('])
+            .next()
+            .unwrap_or_default()
+            .trim();
+        microcad_lang_base::MICROCAD_EXTENSIONS.contains(&language)
+    }
+}
+
+/// Parse the info string of a fenced code block, e.g. `µcad,name#fragment(param1,param2)`.
+impl std::str::FromStr for CodeBlockHeader {
+    type Err = crate::ParseError;
+
+    fn from_str(info: &str) -> Result<Self, Self::Err> {
+        let info = info.trim();
+
+        // 1. Locate structural delimiters
+        let hash_pos = info.find('#');
+        let paren_pos = info.find('(');
+
+        // 2. Parse name (`µcad,my_name`)
+        let name_end = hash_pos.or(paren_pos).unwrap_or(info.len());
+        let name_part = info[..name_end].trim();
+        let name = name_part
+            .find(',')
+            .map(|comma_idx| name_part[comma_idx + 1..].trim().to_string());
+
+        // 3. Parse fragment (`#ok`, `#fail`, etc.)
+        let fragment = hash_pos.map(|start| {
+            let end = paren_pos.unwrap_or(info.len());
+            info[start + 1..end].trim().to_string()
+        });
+
+        // 4. Parse parameters (`(hires, lowres)`)
+        let parameters = match paren_pos {
+            Some(start) => {
+                let end = info.find(')').ok_or(crate::ParseError::MalformedHeader)?;
+                info[start + 1..end]
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect()
+            }
+            None => Vec::new(),
+        };
+
+        Ok(Self {
+            name,
+            fragment,
+            parameters,
+        })
     }
 }
 

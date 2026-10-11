@@ -3,11 +3,12 @@
 
 use clap::{Parser, Subcommand};
 
+mod builtin_docgen;
 mod update_copyright;
 
 #[derive(Parser)]
 #[command(name = "microcad-xtask")]
-#[command(author, version, about = "A CLI tool for copyright updates and doc testing", long_about = None)]
+#[command(author, version, about = "microcad repo task executor", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -19,7 +20,7 @@ enum Commands {
     UpdateCopyright,
 
     /// Run documentation tests
-    DocTest,
+    BuiltinDocGen { path: Option<std::path::PathBuf> },
 }
 
 fn main() -> std::io::Result<()> {
@@ -27,6 +28,6 @@ fn main() -> std::io::Result<()> {
 
     match &cli.command {
         Commands::UpdateCopyright => update_copyright::update_copyright(),
-        Commands::DocTest => Ok(()),
+        Commands::BuiltinDocGen { path } => builtin_docgen::builtin_docgen(path),
     }
 }

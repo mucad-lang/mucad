@@ -1,6 +1,8 @@
 // Copyright © 2026 The µcad authors <info@ucad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use derive_more::Display;
+
 use crate::code_block::CodeBlock;
 
 /// A block quote. Each line starts with `>`.
@@ -35,7 +37,7 @@ impl FromIterator<String> for BlockQuote {
     }
 }
 
-/// A block quote. Each line starts with `>`.
+/// A table in markdown. Each line starts with `|`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Table(Vec<String>);
 
@@ -58,7 +60,7 @@ impl FromIterator<String> for Table {
 }
 
 /// A block in a section. Each block ends with a new line.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Display, Clone, PartialEq)]
 pub enum Block {
     /// A paragraph with text.
     Paragraph(String),
@@ -71,15 +73,4 @@ pub enum Block {
 
     /// A block quote. Each line starts with `>`.
     BlockQuote(BlockQuote),
-}
-
-impl std::fmt::Display for Block {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self {
-            Block::Paragraph(text) => writeln!(f, "{text}"),
-            Block::CodeBlock(code_block) => writeln!(f, "{code_block}"),
-            Block::Table(table) => writeln!(f, "{table}"),
-            Block::BlockQuote(block_quote) => writeln!(f, "{block_quote}"),
-        }
-    }
 }

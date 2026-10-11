@@ -34,11 +34,16 @@ impl Section {
 
 impl std::fmt::Display for Section {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{} {}", "#".repeat(self.level as usize), self.heading)?;
+        // Level 0 is the content before the first heading.
+        if self.level > 0 {
+            writeln!(f, "{} {}", "#".repeat(self.level as usize), self.heading)?;
+            if !self.content.is_empty() {
+                writeln!(f)?;
+            }
+        }
         if self.content.is_empty() {
             Ok(())
         } else {
-            writeln!(f)?;
             self.content.iter().enumerate().try_for_each(|(i, block)| {
                 if i > 0 {
                     writeln!(f)?;

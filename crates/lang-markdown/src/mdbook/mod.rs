@@ -3,9 +3,15 @@
 
 //! µcad markdown book support.
 
+mod config;
+mod summary;
+
 use microcad_lang_base::{HashMap, WriteToFile};
 use miette::Diagnostic;
 use thiserror::Error;
+
+pub use config::MdbookConfig;
+pub use summary::{MdBookSummary, MdBookSummaryEntry};
 
 use crate::{CodeBlock, Markdown, MarkdownError};
 
@@ -14,6 +20,10 @@ pub enum MdBookError {
     /// Io Error
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
+
+    /// Toml Error
+    #[error("TOML error: {0}")]
+    TomlEdit(#[from] toml_edit::TomlError),
 
     /// The directory does not contain an mdbook.
     #[error("No mdbook in directory: {0}")]
@@ -28,20 +38,17 @@ pub enum MdBookError {
 
 /// Directory that contains a markdown book.
 pub struct MdBook {
-    pub name: String,
-
     /// Relative paths to `src` folder in md book folder
     pub md_files: HashMap<std::path::PathBuf, Markdown>,
 
-    /// Source directory inside book, usually `src`.
-    pub src_path: std::path::PathBuf,
+    /// Book.toml file
+    pub config: MdbookConfig,
 }
 
 impl MdBook {
-    pub fn new(name: impl Into<String>) -> Self {
+    pub fn new(config: MdbookConfig) -> Self {
         Self {
-            name: name.into(),
-            src_path: std::path::PathBuf::from("src"),
+            config,
             md_files: HashMap::default(),
         }
     }
@@ -61,10 +68,14 @@ impl MdBook {
             root.to_path_buf()
         };
 
+        let config_path = root.join("book.toml");
+
         // 1. Validate book.toml existence
-        if !root.join("book.toml").exists() {
+        if !config_path.exists() {
             return Err(MdBookError::NoMdBookDirectory(root));
         }
+
+        let config = MdbookConfig::load(config_path)?;
 
         // 2. Identify the src directory
         let src_path = root.join("src");
@@ -86,26 +97,16 @@ impl MdBook {
             })
             .collect();
 
-        let name = root
-            .file_name()
-            .expect("Some directory name")
-            .to_str()
-            .expect("Valid string")
-            .to_string();
-
-        Ok(Self {
-            name,
-            src_path: std::path::PathBuf::from("src"),
-            md_files,
-        })
+        Ok(Self { config, md_files })
     }
 
-    pub fn add_md(&mut self, path: impl AsRef<std::path::Path>, md: Markdown) {
-        self.md_files.insert(path.as_ref().to_path_buf(), md);
+    /// Add a new markdown file to the mdbook.
+    pub fn add_md(&mut self, path: impl AsRef<std::path::Path>, md: impl Into<Markdown>) {
+        self.md_files.insert(path.as_ref().to_path_buf(), md.into());
     }
 
     pub fn abs_md_file_path(&self, md_file: impl AsRef<std::path::Path>) -> std::path::PathBuf {
-        self.src_path.join(md_file.as_ref())
+        self.config.src_path().join(md_file.as_ref())
     }
 
     pub fn save_all(&self, path: impl AsRef<std::path::Path>) -> Result<(), MdBookError> {
