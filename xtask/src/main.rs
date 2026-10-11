@@ -24,8 +24,11 @@ enum Commands {
     /// Update copyright notices across project files
     UpdateCopyright,
 
-    /// Run documentation tests
+    /// Generate documentation for builtins
     BuiltinDocGen { path: Option<std::path::PathBuf> },
+
+    /// Generate documentation for standard library
+    StdDocGen { path: Option<std::path::PathBuf> },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -44,9 +47,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             Ok(())
         }
         Commands::BuiltinDocGen { path } => {
-            let builtins = microcad_builtin::BuiltinRegistry::new();
+            let builtins = microcad_builtin::BuiltinLibrary::new();
             microcad_docgen::BuiltinLibraryDocGenerator::new(&builtins)
                 .write_doc(path.unwrap_or(std::path::PathBuf::from("target/docs/builtin")))
+        }
+        Commands::StdDocGen { .. } => {
+            todo!()
         }
     }
 }

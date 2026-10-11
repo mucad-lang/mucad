@@ -12,7 +12,7 @@ mod desugar;
 mod fold;
 mod scaffold;
 
-use microcad_builtin::BuiltinRegistry;
+use microcad_builtin::BuiltinLibrary;
 use microcad_lang_base::{
     CompilationResult, HashId, IssueList, LookUpName, PushIssue, Shared, Source, Span,
     SpanToSrcRef, SrcRef, SymbolId, hash_id,
@@ -48,7 +48,7 @@ pub struct LowerContext<'source> {
     source: &'source Source,
     arena: ir::Arena,
     node_id_stack: Vec<ir::NodeId>,
-    builtins: Shared<BuiltinRegistry>,
+    builtins: Shared<BuiltinLibrary>,
     issues: IssueList<LowerIssue>,
 }
 
@@ -77,7 +77,7 @@ impl<'source> LowerContext<'source> {
 /// Accessors
 impl<'source> LowerContext<'source> {
     /// Access built-in registry.
-    pub fn builtins(&self) -> &BuiltinRegistry {
+    pub fn builtins(&self) -> &BuiltinLibrary {
         &self.builtins
     }
 
@@ -136,7 +136,7 @@ pub trait Desugar<AstNode>: Sized {
     fn desugar(node: &AstNode, context: &mut LowerContext) -> LowerResult<Self>;
 }
 
-impl Unresolver for BuiltinRegistry {
+impl Unresolver for BuiltinLibrary {
     fn unresolve(&self, id: impl Into<SymbolId>) -> String {
         let id = id.into();
         match id {
@@ -154,7 +154,7 @@ impl Unresolver for BuiltinRegistry {
 
 pub struct LowerContextBuilder<'source> {
     source: &'source Source,
-    builtins: Option<Shared<BuiltinRegistry>>,
+    builtins: Option<Shared<BuiltinLibrary>>,
 }
 
 impl<'source> LowerContextBuilder<'source> {
@@ -166,7 +166,7 @@ impl<'source> LowerContextBuilder<'source> {
     }
 
     /// Provide a custom or shared `BuiltinRegistry`.
-    pub fn with_builtins(mut self, builtins: Shared<BuiltinRegistry>) -> Self {
+    pub fn with_builtins(mut self, builtins: Shared<BuiltinLibrary>) -> Self {
         self.builtins = Some(builtins);
         self
     }
@@ -179,7 +179,7 @@ impl<'source> LowerContextBuilder<'source> {
             node_id_stack: Vec::new(),
             builtins: self
                 .builtins
-                .unwrap_or_else(|| Shared::new(BuiltinRegistry::new())),
+                .unwrap_or_else(|| Shared::new(BuiltinLibrary::new())),
             issues: IssueList::default(),
         }
     }

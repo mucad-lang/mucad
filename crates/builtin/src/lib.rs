@@ -12,10 +12,10 @@ pub use item::{
     BuiltinPrimitive,
 };
 
+mod library;
 pub mod mu;
-mod registry;
+pub use library::BuiltinLibrary;
 use microcad_lang_base::{DisplayWithCtx, IssueList, PushIssue};
-pub use registry::BuiltinRegistry;
 
 use derive_more::Debug;
 use microcad_lang_types::{Arguments, Model, ModelTree, Value, model};

@@ -20,7 +20,7 @@ fn md_file(mdbook: &MdBook, path: &str) -> String {
 
 #[test]
 fn builtin_mdbook() {
-    let registry = microcad_builtin::BuiltinRegistry::new();
+    let registry = microcad_builtin::BuiltinLibrary::new();
     let mdbook = BuiltinLibraryDocGenerator::new(&registry)
         .generate_doc()
         .expect("No error");
@@ -114,7 +114,7 @@ fn write_builtin_mdbook() {
     let dir = std::env::temp_dir().join("microcad-docgen-test-builtin");
     let _ = std::fs::remove_dir_all(&dir);
 
-    let registry = microcad_builtin::BuiltinRegistry::new();
+    let registry = microcad_builtin::BuiltinLibrary::new();
     BuiltinLibraryDocGenerator::new(&registry)
         .write_doc(&dir)
         .expect("No error");

@@ -7,20 +7,21 @@ use microcad_lang_base::{BuiltinId, HashMap, LookUpName, ToCompactString};
 
 use crate::{BuiltinItem, BuiltinModule};
 
+/// µcad built-in library struct.
 #[derive(Default)]
-pub struct BuiltinRegistry {
+pub struct BuiltinLibrary {
     builtins: HashMap<BuiltinId, &'static BuiltinItem>,
     modules: Vec<&'static BuiltinModule>,
 }
 
-impl std::fmt::Debug for BuiltinRegistry {
+impl std::fmt::Debug for BuiltinLibrary {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "BuiltinRegistry")
     }
 }
 
-impl BuiltinRegistry {
-    /// Create a new [`BuiltinRegistry`] and register default modules.
+impl BuiltinLibrary {
+    /// Create a new [`BuiltinLibrary`] with default modules.
     pub fn new() -> Self {
         let mut registry = Self::empty();
 
@@ -78,7 +79,7 @@ impl BuiltinRegistry {
     }
 }
 
-impl LookUpName for BuiltinRegistry {
+impl LookUpName for BuiltinLibrary {
     fn look_up_built_in_name(&self, id: &BuiltinId) -> Option<microcad_lang_base::Name> {
         self.get(*id)
             .map(|builtin| builtin.name().to_compact_string())

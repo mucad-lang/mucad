@@ -1,17 +1,17 @@
 // Copyright © 2026 The µcad authors <info@ucad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_builtin::BuiltinRegistry;
+use microcad_builtin::BuiltinLibrary;
 use microcad_lang_resolve::Library;
 
 #[derive(Debug)]
 pub struct BuiltinLibraryDocGenerator<'lib> {
     /// Registered builtins,
-    pub lib: &'lib BuiltinRegistry,
+    pub lib: &'lib BuiltinLibrary,
 }
 
 impl<'lib> BuiltinLibraryDocGenerator<'lib> {
-    pub fn new(lib: &'lib BuiltinRegistry) -> Self {
+    pub fn new(lib: &'lib BuiltinLibrary) -> Self {
         Self { lib }
     }
 }

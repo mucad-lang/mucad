@@ -9,7 +9,7 @@ use microcad_lang_resolve::{
 };
 pub use stack::*;
 
-use microcad_builtin::BuiltinRegistry;
+use microcad_builtin::BuiltinLibrary;
 use microcad_lang_base::{IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut};
 use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
@@ -23,7 +23,7 @@ pub struct EvalContext {
 
     issues: IssueList<EvalIssue>,
 
-    builtins: Shared<BuiltinRegistry>,
+    builtins: Shared<BuiltinLibrary>,
 
     /// ID of the library being evaluated, which is stored in `lib_cache`.
     lib_id: Option<LibraryId>,
@@ -47,7 +47,7 @@ impl EvalContext {
 
 /// Accessors
 impl EvalContext {
-    pub fn builtins(&self) -> &BuiltinRegistry {
+    pub fn builtins(&self) -> &BuiltinLibrary {
         &self.builtins
     }
 
@@ -230,7 +230,7 @@ impl PushIssue<EvalIssue> for EvalContext {
 /// Builder for constructing an [`EvalContext`].
 #[derive(Debug, Default)]
 pub struct EvalContextBuilder {
-    builtins: Option<Shared<BuiltinRegistry>>,
+    builtins: Option<Shared<BuiltinLibrary>>,
     lib_id: Option<LibraryId>,
     lib_cache: Option<SharedMut<LibraryCache>>,
 }
@@ -242,7 +242,7 @@ impl EvalContextBuilder {
     }
 
     /// Attach a pre-existing or shared `BuiltinRegistry`.
-    pub fn with_builtins(mut self, builtins: Shared<BuiltinRegistry>) -> Self {
+    pub fn with_builtins(mut self, builtins: Shared<BuiltinLibrary>) -> Self {
         self.builtins = Some(builtins);
         self
     }
@@ -266,7 +266,7 @@ impl EvalContextBuilder {
             issues: IssueList::default(),
             builtins: self
                 .builtins
-                .unwrap_or_else(|| Shared::new(BuiltinRegistry::new())),
+                .unwrap_or_else(|| Shared::new(BuiltinLibrary::new())),
             lib_id: self.lib_id,
             lib_cache: self.lib_cache.unwrap_or_default(),
         }

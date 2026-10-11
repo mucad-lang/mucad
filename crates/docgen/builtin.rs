@@ -16,7 +16,7 @@ pub struct BuiltinCli {
 
 fn main() -> miette::Result<()> {
     let cli = BuiltinCli::parse();
-    let builtins = microcad_builtin::BuiltinRegistry::new();
+    let builtins = microcad_builtin::BuiltinLibrary::new();
     docgen::BuiltinMdbookGenerator::new(&builtins)
         .write_doc(cli.output)
         .map_err(|err| miette::miette!("{err}"))

@@ -22,6 +22,10 @@ pub use base::{
     Url,
 };
 
+pub mod builtin {
+    pub use microcad_builtin::*;
+}
+
 pub mod parse {
     pub use microcad_lang_parse::*;
 }
