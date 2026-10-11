@@ -21,6 +21,6 @@ glob = "0.3"
 regex = "1.10"
 walkdir = "2.5"
 
-
+microcad-lang-base = { workspace = true }
 microcad-builtin = { workspace = true }
 microcad-docgen = { workspace = true }

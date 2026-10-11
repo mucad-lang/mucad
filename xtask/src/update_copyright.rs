@@ -13,7 +13,7 @@ use std::{
 use walkdir::WalkDir;
 
 /// Executes `git log` once for the repository and maps file paths to their commit year ranges.
-pub fn get_revision_years(repo_path: impl AsRef<Path>) -> HashMap<PathBuf, RangeInclusive<u32>> {
+fn get_revision_years(repo_path: impl AsRef<Path>) -> HashMap<PathBuf, RangeInclusive<u32>> {
     let mut file_years = HashMap::new();
     let Ok(output) = Command::new("git")
         .current_dir(&repo_path)
@@ -165,14 +165,4 @@ impl CopyrightUpdater {
 
         Ok(())
     }
-}
-
-pub fn update_copyright() -> std::io::Result<()> {
-    CopyrightUpdater::new(".")
-        .extensions(&["rs", "pest", "slint", "wgsl", "µcad"], "//")
-        .extension("toml", "#")
-        .exclude("target/*")
-        .exclude("crates/*/tests/*.µcad")
-        .with_git_exclusions()
-        .update()
 }

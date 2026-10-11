@@ -1,9 +1,14 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use clap::{Parser, Subcommand};
+use std::error::Error;
 
-mod builtin_docgen;
+use clap::{Parser, Subcommand};
+use microcad_docgen::GenerateDoc;
+use microcad_lang_base::{MICROCAD_EXTENSION, MICROCAD_EXTENSIONS};
+
+use crate::update_copyright::CopyrightUpdater;
+
 mod update_copyright;
 
 #[derive(Parser)]
@@ -23,11 +28,25 @@ enum Commands {
     BuiltinDocGen { path: Option<std::path::PathBuf> },
 }
 
-fn main() -> std::io::Result<()> {
+fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
-    match &cli.command {
-        Commands::UpdateCopyright => update_copyright::update_copyright(),
-        Commands::BuiltinDocGen { path } => builtin_docgen::builtin_docgen(path),
+    match cli.command {
+        Commands::UpdateCopyright => {
+            CopyrightUpdater::new(".")
+                .extensions(MICROCAD_EXTENSIONS, "//")
+                .extensions(&["rs", "slint", "wgsl"], "//")
+                .extension("toml", "#")
+                .exclude("target/*")
+                .exclude(format!("crates/*/tests/*.{MICROCAD_EXTENSION}"))
+                .with_git_exclusions()
+                .update()?;
+            Ok(())
+        }
+        Commands::BuiltinDocGen { path } => {
+            let builtins = microcad_builtin::BuiltinRegistry::new();
+            microcad_docgen::BuiltinLibraryDocGenerator::new(&builtins)
+                .write_doc(path.unwrap_or(std::path::PathBuf::from("target/docs/builtin")))
+        }
     }
 }
