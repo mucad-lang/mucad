@@ -1,0 +1,42 @@
+---
+source: crates/lang-markdown/tests/parse.rs
+expression: load(name)
+---
+# Code blocks
+
+## Empty code block
+
+[![test](.test/test_empty.svg)](.test/test_empty.log)
+
+```µcad,test_empty
+```
+## Code block with failing test
+
+[![test](.test/test_fail.svg)](.test/test_fail.log)
+
+```µcad,test_fail#fail
+Circle(r = 42mm);
+```
+## Code block with parameters
+
+[![test](.test/test_params.svg)](.test/test_params.log)
+
+```µcad,test_params(hires)
+Rect(r = 42mm);
+```
+## Code block with test result and parameters
+
+[![test](.test/test_result_params.svg)](.test/test_result_params.log)
+
+```µcad,test_result_params#fail(no_format)
+Rect(r = 42mm);
+```
+## Multi-line Code block
+
+[![test](.test/multi_line.svg)](.test/multi_line.log)
+
+```µcad,multi_line
+use std::print;
+
+print("Hello, µcad standard library!");
+```
