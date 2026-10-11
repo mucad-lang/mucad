@@ -3,12 +3,14 @@
 
 //! Generate a single markdown file for symbol.
 
-use std::str::FromStr;
+use std::{ops::Range, str::FromStr};
 
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 use thiserror::Error;
 
-use crate::{Block, CodeBlock, CodeBlockHeader, ParseError, Section};
+use crate::{
+    Block, CodeBlock, CodeBlockHeader, ListItem, OrderedList, ParseError, Section, UnorderedList,
+};
 
 #[derive(Error, Debug)]
 pub enum MarkdownError {
@@ -36,7 +38,8 @@ impl std::str::FromStr for Markdown {
     /// Parse markdown into sections, using `pulldown-cmark` events.
     ///
     /// Only top-level blocks become blocks of a section.
-    /// Nested content (e.g. code inside lists) is kept as written in its parent block.
+    /// Lists are parsed into items, other nested content (e.g. code inside a list item)
+    /// is kept as written.
     fn from_str(text: &str) -> Result<Self, Self::Err> {
         let mut md = Markdown(vec![Section::default()]); // content before the first heading
         let mut depth = 0;
@@ -44,7 +47,8 @@ impl std::str::FromStr for Markdown {
         let mut code: Option<(CodeBlockHeader, String)> = None;
         let mut code_block_names = std::collections::HashSet::new();
 
-        for (event, range) in Parser::new_ext(text, Options::ENABLE_TABLES).into_offset_iter() {
+        let mut events = Parser::new_ext(text, Options::ENABLE_TABLES).into_offset_iter();
+        while let Some((event, range)) = events.next() {
             let raw = &text[range.clone()];
             match event {
                 Event::Start(tag) => {
@@ -78,12 +82,20 @@ impl std::str::FromStr for Markdown {
                             md.flush_banner(&mut banner);
                             banner = Some(raw.trim_end().to_string());
                         }
+                        Tag::List(start) => {
+                            // Consumes the events up to the end of the list.
+                            let list = Self::parse_list(&mut events, text, start);
+                            depth -= 1;
+                            md.push_block(&mut banner, list);
+                        }
                         Tag::Table(_) => md.push_block(&mut banner, Block::Table(Self::lines(raw))),
                         Tag::BlockQuote(_) => {
                             md.push_block(&mut banner, Block::BlockQuote(Self::lines(raw)))
                         }
                         // Paragraphs, lists, other code blocks, HTML: preserved as written.
-                        _ => md.push_block(&mut banner, Block::Paragraph(raw.trim_end().to_string())),
+                        _ => {
+                            md.push_block(&mut banner, Block::Paragraph(raw.trim_end().to_string()))
+                        }
                     }
                 }
                 Event::Text(text) if depth == 1 => {
@@ -166,6 +178,140 @@ impl Markdown {
 
     fn lines<T: FromIterator<String>>(raw: &str) -> T {
         raw.lines().map(String::from).collect()
+    }
+
+    /// Parse a list after its start event, up to and including its end event.
+    fn parse_list<'a>(
+        events: &mut impl Iterator<Item = (Event<'a>, Range<usize>)>,
+        text: &str,
+        start: Option<u64>,
+    ) -> Block {
+        let mut items = Vec::new();
+        while let Some((event, _)) = events.next() {
+            match event {
+                Event::Start(Tag::Item) => items.push(Self::parse_list_item(events, text)),
+                Event::End(TagEnd::List(_)) => break,
+                _ => {}
+            }
+        }
+
+        match start {
+            Some(start) => Block::OrderedList(OrderedList::new(start, items)),
+            None => Block::UnorderedList(UnorderedList::new(items)),
+        }
+    }
+
+    /// Parse a list item after its start event, up to and including its end event.
+    ///
+    /// The first paragraph is the item's text, further blocks become its children.
+    fn parse_list_item<'a>(
+        events: &mut impl Iterator<Item = (Event<'a>, Range<usize>)>,
+        text: &str,
+    ) -> ListItem {
+        let mut item = ListItem::default();
+        // Text of a tight item, which has no paragraph event.
+        let mut inline: Option<Range<usize>> = None;
+        // Nesting of inline elements, e.g. emphasis.
+        let mut depth = 0;
+
+        while let Some((event, range)) = events.next() {
+            match event {
+                Event::End(TagEnd::Item) if depth == 0 => break,
+                Event::Start(Tag::List(start)) if depth == 0 => {
+                    item.children.push(Self::parse_list(events, text, start))
+                }
+                Event::Start(Tag::Paragraph) if depth == 0 => {
+                    Self::skip_block(events);
+                    let paragraph = Self::dedent(text, range);
+                    if item.text.is_empty() && inline.is_none() && item.children.is_empty() {
+                        item.text = paragraph;
+                    } else {
+                        item.children.push(Block::Paragraph(paragraph));
+                    }
+                }
+                // Other blocks, e.g. code: kept as written.
+                Event::Start(tag) if depth == 0 && Self::is_block(&tag) => {
+                    Self::skip_block(events);
+                    item.children
+                        .push(Block::Paragraph(Self::dedent(text, range)));
+                }
+                // Inline element: its range covers its content.
+                Event::Start(_) => {
+                    if depth == 0 {
+                        Self::extend(&mut inline, range);
+                    }
+                    depth += 1;
+                }
+                Event::End(_) => depth -= 1,
+                // Text, code, line breaks, ...
+                _ if depth == 0 => Self::extend(&mut inline, range),
+                _ => {}
+            }
+        }
+
+        if let Some(range) = inline {
+            item.text = Self::dedent(text, range);
+        }
+        item
+    }
+
+    /// Skip events up to and including the end of the current block.
+    fn skip_block<'a>(events: &mut impl Iterator<Item = (Event<'a>, Range<usize>)>) {
+        let mut depth = 1;
+        for (event, _) in events.by_ref() {
+            match event {
+                Event::Start(_) => depth += 1,
+                Event::End(_) => {
+                    depth -= 1;
+                    if depth == 0 {
+                        break;
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// Returns true if the tag starts a block, not an inline element.
+    fn is_block(tag: &Tag) -> bool {
+        matches!(
+            tag,
+            Tag::Paragraph
+                | Tag::Heading { .. }
+                | Tag::BlockQuote(_)
+                | Tag::CodeBlock(_)
+                | Tag::HtmlBlock
+                | Tag::List(_)
+                | Tag::Table(_)
+                | Tag::FootnoteDefinition(_)
+        )
+    }
+
+    fn extend(range: &mut Option<Range<usize>>, other: Range<usize>) {
+        *range = Some(match range.take() {
+            Some(range) => range.start.min(other.start)..range.end.max(other.end),
+            None => other,
+        });
+    }
+
+    /// Source of `range` without trailing white space,
+    /// with the indentation of continuation lines removed (e.g. inside a list item).
+    fn dedent(text: &str, range: Range<usize>) -> String {
+        let line_start = text[..range.start].rfind('\n').map_or(0, |i| i + 1);
+        let indent = range.start - line_start;
+        text[range]
+            .trim_end()
+            .lines()
+            .enumerate()
+            .map(|(i, line)| match i {
+                0 => line,
+                _ => {
+                    let spaces = line.len() - line.trim_start_matches(' ').len();
+                    &line[spaces.min(indent)..]
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     /// 0-based line index of a byte position.

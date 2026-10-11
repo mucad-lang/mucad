@@ -6,6 +6,7 @@
 mod block;
 mod code_block;
 mod error;
+mod list;
 mod markdown;
 mod mdbook;
 mod section;
@@ -14,6 +15,7 @@ pub mod table_builder;
 pub use block::Block;
 pub use code_block::{CodeBlock, CodeBlockHeader};
 pub use error::ParseError;
+pub use list::{ListItem, OrderedList, UnorderedList};
 pub use markdown::{Markdown, MarkdownError};
 pub use mdbook::{MdBook, MdBookError, MdBookSummary, MdBookSummaryEntry, MdbookConfig};
 pub use section::Section;
