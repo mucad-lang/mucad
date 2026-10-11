@@ -114,6 +114,15 @@ pub type CompilationResult<T, I> = Result<(T, IssueList<I>), IssueList<I>>;
 #[cfg(feature = "io")]
 pub trait WriteToFile: std::fmt::Display {
     /// Writes the `Display` output to a file at the specified path.
+    fn write_to_file(&self, path: impl AsRef<std::path::Path>) -> std::io::Result<()>;
+}
+
+/// Default implementation for all types that implement display.
+#[cfg(feature = "io")]
+impl<T> WriteToFile for T
+where
+    T: std::fmt::Display,
+{
     fn write_to_file(&self, path: impl AsRef<std::path::Path>) -> std::io::Result<()> {
         use std::io::Write;
 
