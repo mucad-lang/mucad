@@ -3,25 +3,12 @@
 
 //! Generate markdown for symbols.
 
-use microcad_lang_markdown::{Block, ListItem, Markdown, Section, UnorderedList};
+use microcad_lang_markdown::{Block, ListItem, Markdown, Section};
 use microcad_lang_resolve::{SymbolDef, SymbolNodeExt, SymbolNodeRef, library::symbol};
 
 /// Trait to fetch markdown from a symbol definition.
 pub(crate) trait ToMd {
     fn to_md(&self) -> Markdown;
-}
-
-/// A section with a heading and content.
-pub(crate) fn section(
-    level: i64,
-    heading: impl Into<String>,
-    content: impl IntoIterator<Item = Block>,
-) -> Section {
-    Section {
-        heading: heading.into(),
-        level,
-        content: content.into_iter().collect(),
-    }
 }
 
 /// Documentation text as written, if there is any.
@@ -31,16 +18,6 @@ pub(crate) fn doc_block(doc: Option<&str>) -> Option<Block> {
         .map(|doc| Block::Paragraph(doc.to_string()))
 }
 
-/// A section with a bullet list, if there are any items.
-pub(crate) fn list_section(
-    level: i64,
-    heading: &str,
-    items: impl IntoIterator<Item = ListItem>,
-) -> Option<Section> {
-    let list = UnorderedList::new(items);
-    (!list.0.is_empty()).then(|| section(level, heading, [Block::UnorderedList(list)]))
-}
-
 impl ToMd for symbol::ParameterList {
     fn to_md(&self) -> Markdown {
         if self.is_empty() {
@@ -48,9 +25,9 @@ impl ToMd for symbol::ParameterList {
         }
 
         let mut md = Markdown::default();
-        md.add_section(section(1, "Parameters", []));
+        md.add_section(Section::new(1, "Parameters", []));
         self.iter().for_each(|param| {
-            md.add_section(section(
+            md.add_section(Section::new(
                 2,
                 param.id.to_string(),
                 doc_block(Some(&param.attr.doc.content)),
@@ -101,7 +78,7 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
         let mut md = Markdown::default();
 
         if let Some(id) = self.name() {
-            md.add_section(section(
+            md.add_section(Section::new(
                 1,
                 id.to_string(),
                 doc_block(self.doc().map(String::as_str)),
@@ -134,7 +111,7 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
         ];
         lists.into_iter().for_each(|(heading, symbols)| {
             if let Some(section) =
-                list_section(2, heading, symbols.into_iter().filter_map(list_item))
+                Section::list(2, heading, symbols.into_iter().filter_map(list_item))
             {
                 md.add_section(section);
             }
@@ -145,7 +122,7 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
             matches!(symbol.def(), SymbolDef::Function(_))
         });
         if !functions.is_empty() {
-            md.add_section(section(2, "Functions", []));
+            md.add_section(Section::new(2, "Functions", []));
             functions
                 .iter()
                 .for_each(|function| md.nest(function.to_md(), 2));
@@ -160,7 +137,7 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
                     .map(|value| ListItem::new(format!("`{id}` = `{value}`"))),
                 _ => None,
             });
-        if let Some(section) = list_section(2, "Constants", constants) {
+        if let Some(section) = Section::list(2, "Constants", constants) {
             md.add_section(section);
         }
 
@@ -173,7 +150,7 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
                 }
                 _ => None,
             });
-        if let Some(section) = list_section(2, "Aliases", aliases) {
+        if let Some(section) = Section::list(2, "Aliases", aliases) {
             md.add_section(section);
         }
 

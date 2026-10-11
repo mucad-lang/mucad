@@ -3,7 +3,7 @@
 
 //! Markdown section
 
-use crate::Block;
+use crate::{Block, ListItem, UnorderedList};
 
 /// A markdown section with heading and block elements.
 #[derive(Debug, Clone, Default)]
@@ -17,6 +17,29 @@ pub struct Section {
 }
 
 impl Section {
+    /// A section with a heading and content.
+    pub fn new(
+        level: i64,
+        heading: impl Into<String>,
+        content: impl IntoIterator<Item = Block>,
+    ) -> Self {
+        Self {
+            heading: heading.into(),
+            level,
+            content: content.into_iter().collect(),
+        }
+    }
+
+    /// Create a new list section, if the list is not empty.
+    pub fn list(
+        level: i64,
+        heading: impl Into<String>,
+        items: impl IntoIterator<Item = ListItem>,
+    ) -> Option<Self> {
+        let list = UnorderedList::new(items);
+        (!list.0.is_empty()).then(|| Self::new(level, heading, [Block::UnorderedList(list)]))
+    }
+
     /// A section with `n` levels deeper.
     pub fn nested(&self, n: i64) -> Section {
         Section {

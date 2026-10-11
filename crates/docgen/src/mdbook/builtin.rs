@@ -10,20 +10,13 @@ use microcad_builtin::{
     BuiltinPrimitive,
 };
 use microcad_lang_markdown::{
-    Block, ListItem, Markdown, MdBook, MdBookConfig, MdBookSummary, MdBookSummaryEntry,
+    Block, ListItem, Markdown, MdBook, MdBookConfig, MdBookSummary, MdBookSummaryEntry, Section,
 };
 
 use crate::{
     BuiltinLibraryDocGenerator, GenerateDoc,
-    mdbook::to_md::{ToMd, doc_block, list_section, section},
+    mdbook::to_md::{ToMd, doc_block},
 };
-
-/// A page with a top-level heading.
-fn page(heading: impl Into<String>, content: impl IntoIterator<Item = Block>) -> Markdown {
-    let mut md = Markdown::default();
-    md.add_section(section(1, heading, content));
-    md
-}
 
 /// A link with a summary: `[name](path): summary`.
 fn link_item(name: &str, path: &str, summary: &str) -> ListItem {
@@ -41,7 +34,7 @@ impl ToMd for BuiltinConstant {
             name = self.info.name,
             value = self.value()
         ));
-        page(
+        Markdown::page(
             self.info.item_name(),
             std::iter::once(value).chain(doc_block(self.info.doc)),
         )
@@ -58,7 +51,7 @@ impl ToMd for BuiltinFunction {
             ))
             .collect(),
         );
-        page(
+        Markdown::page(
             format!("Function {}", self.info.item_name()),
             std::iter::once(signature).chain(doc_block(self.info.doc)),
         )
@@ -67,13 +60,13 @@ impl ToMd for BuiltinFunction {
 
 impl ToMd for BuiltinPrimitive {
     fn to_md(&self) -> Markdown {
-        page(self.info.name, doc_block(self.info.doc))
+        Markdown::page(self.info.name, doc_block(self.info.doc))
     }
 }
 
 impl ToMd for BuiltinOperation {
     fn to_md(&self) -> Markdown {
-        page(self.info.name, doc_block(self.info.doc))
+        Markdown::page(self.info.name, doc_block(self.info.doc))
     }
 }
 
@@ -91,7 +84,7 @@ impl ToMd for BuiltinItem {
 
 impl ToMd for BuiltinModule {
     fn to_md(&self) -> Markdown {
-        let mut md = page(self.info.name, doc_block(self.info.doc));
+        let mut md = Markdown::page(self.info.name, doc_block(self.info.doc));
 
         /// Link to the page of an item in this module.
         fn item(info: &microcad_builtin::BuiltinInfo) -> ListItem {
@@ -100,10 +93,10 @@ impl ToMd for BuiltinModule {
         }
 
         [
-            list_section(2, "Constants", self.constants().map(|c| item(&c.info))),
-            list_section(2, "Functions", self.functions().map(|f| item(&f.info))),
-            list_section(2, "Primitives", self.primitives().map(|p| item(&p.info))),
-            list_section(2, "Operations", self.operations().map(|o| item(&o.info))),
+            Section::list(2, "Constants", self.constants().map(|c| item(&c.info))),
+            Section::list(2, "Functions", self.functions().map(|f| item(&f.info))),
+            Section::list(2, "Primitives", self.primitives().map(|p| item(&p.info))),
+            Section::list(2, "Operations", self.operations().map(|o| item(&o.info))),
         ]
         .into_iter()
         .flatten()
@@ -116,7 +109,7 @@ impl ToMd for BuiltinModule {
 impl<'builtins> BuiltinLibraryDocGenerator<'builtins> {
     /// The start page with a list of all modules.
     fn index(&self) -> Markdown {
-        let mut md = page(
+        let mut md = Markdown::page(
             "`__mu`: µcad Compiler built-in library",
             doc_block(Some(microcad_builtin::mu::__MU)),
         );
@@ -129,7 +122,7 @@ impl<'builtins> BuiltinLibraryDocGenerator<'builtins> {
                 module.info.doc_summary(),
             )
         });
-        if let Some(section) = list_section(2, "Modules", modules) {
+        if let Some(section) = Section::list(2, "Modules", modules) {
             md.add_section(section);
         }
 

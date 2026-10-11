@@ -27,8 +27,16 @@ pub enum MarkdownError {
 pub struct Markdown(Vec<Section>);
 
 impl Markdown {
+    /// A new markdown from a list of sections
     pub fn new(sections: Vec<Section>) -> Self {
         Self(sections)
+    }
+
+    /// A page with a top-level heading.
+    pub fn page(heading: impl Into<String>, content: impl IntoIterator<Item = Block>) -> Markdown {
+        let mut md = Markdown::default();
+        md.add_section(Section::new(1, heading, content));
+        md
     }
 }
 
