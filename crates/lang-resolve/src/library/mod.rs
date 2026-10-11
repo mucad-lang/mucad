@@ -65,12 +65,6 @@ impl Library {
         }
     }
 
-    pub fn add_std(&mut self) {
-        let info = microcad_std::StdLib::info();
-        let id = info.id();
-        self.dependencies.insert(info.name, id);
-    }
-
     pub fn name(&self) -> Option<&Name> {
         self.manifest
             .as_ref()

@@ -31,9 +31,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
     ///
     /// File modules are located relative to the source's path, if it has one.
     pub fn load_source(&mut self, source: Source) -> ResolveResult<()> {
-        if !self.lib().no_std() {
-            self.lib_mut().add_std();
-        }
+        self.add_implicit_dependencies();
 
         let root = self.lib().root;
         self.load_source_symbol(source, Some(root))?;
@@ -44,9 +42,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
 
     /// Load a single file as library.
     pub fn load_file(&mut self, file_mu: impl AsRef<std::path::Path>) -> ResolveResult<()> {
-        if !self.lib().no_std() {
-            self.lib_mut().add_std();
-        }
+        self.add_implicit_dependencies();
 
         let root = self.lib().root;
         self._load_source(&file_mu, Some(root))?;
@@ -63,9 +59,6 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         match Manifest::load(locate::mu_toml_path(lib_path)) {
             Ok(manifest) => {
                 log::debug!("Loaded manifest:\n{manifest}");
-                if !self.lib().no_std() {
-                    self.lib_mut().add_std();
-                }
 
                 if let Some(deps) = &manifest.dependencies {
                     for (name, dep) in deps.iter() {
@@ -93,6 +86,9 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                 self.push_err(ResolveError::new(err));
             }
         };
+        // After the manifest is set, which may opt out with `no_std`.
+        self.add_implicit_dependencies();
+
         self._load_source(&lib_mu, None)?;
         Ok(())
     }

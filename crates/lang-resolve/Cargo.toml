@@ -28,7 +28,6 @@ microcad-lang-base = { workspace = true }
 microcad-macros = { workspace = true }
 microcad-lang-lower = { workspace = true }
 microcad-lang-types = { workspace = true }
-microcad-std = { workspace = true }
 
 # Dependent on parse feature
 microcad-lang-parse = { workspace = true, optional = true }

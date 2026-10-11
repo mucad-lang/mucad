@@ -8,7 +8,6 @@ use microcad_lang_base::{HashId, SrcRef, SrcReferrer, element::Case};
 use microcad_lang_lower::LowerError;
 use microcad_lang_parse::ParseError;
 use microcad_lang_types::Type;
-use microcad_std::StdLibError;
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -30,9 +29,6 @@ pub enum ResolveErrorKind {
 
     #[error("{0}")]
     Manifest(#[from] ManifestError),
-
-    #[error("{0}")]
-    StdLib(#[from] StdLibError),
 
     #[error("Wrong case")]
     #[diagnostic(severity = "warning")]

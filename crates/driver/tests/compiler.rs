@@ -23,9 +23,25 @@ fn display(model: &mu::ModelTree) -> String {
     model.to_string_with_ctx(&mu::builtin::BuiltinLibrary::new())
 }
 
+/// A compiler without standard library, independent of any installation.
+fn compiler() -> Compiler {
+    Compiler::from_config(&mu::DriverConfig {
+        no_std: true,
+        ..Default::default()
+    })
+}
+
+/// A compiler with the standard library of this repository (relative to `crates/driver`).
+fn std_compiler() -> Compiler {
+    Compiler::from_config(&mu::DriverConfig {
+        search_paths: vec!["../std/lib".into()],
+        ..Default::default()
+    })
+}
+
 #[test]
 fn compile_source() {
-    let mut compiler = Compiler::new();
+    let mut compiler = compiler();
     let (model, diags) = compiler.compile(mu::Source::from(DISC)).expect("A model");
 
     assert!(!diags.has_errors(), "{diags:?}");
@@ -34,7 +50,7 @@ fn compile_source() {
 
 #[test]
 fn compile_unresolved_symbol() {
-    let mut compiler = Compiler::new();
+    let mut compiler = compiler();
     let (_model, diags) = compiler
         .compile(mu::Source::from("Unknown(radius = 4mm);"))
         .expect("A model, despite errors");
@@ -45,10 +61,22 @@ fn compile_unresolved_symbol() {
 /// A compiler can be used again, the main library of the previous run is replaced.
 #[test]
 fn compile_twice() {
-    let mut compiler = Compiler::new();
+    let mut compiler = compiler();
     let (first, _) = compiler.compile(mu::Source::from(DISC)).expect("A model");
     let (second, diags) = compiler.compile(mu::Source::from(DISC)).expect("A model");
 
     assert!(!diags.has_errors(), "{diags:?}");
     assert_eq!(display(&first), display(&second));
+}
+
+/// A source using the standard library.
+#[test]
+fn compile_with_std() {
+    let mut compiler = std_compiler();
+    let (model, diags) = compiler
+        .compile(mu::Source::from("std::geo2d::Circle(radius = 4mm);"))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    insta::assert_snapshot!("compile_with_std", display(&model));
 }

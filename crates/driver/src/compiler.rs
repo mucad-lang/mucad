@@ -5,7 +5,8 @@
 
 pub use crate::prelude as mu;
 
-use microcad_lang_base::Issue;
+use microcad_lang_base::{Issue, PushIssue};
+use microcad_std::{StdLib, StdLibError};
 
 /// Result of the compiler: the output bundled with the diagnostics of all stages run so far.
 ///
@@ -54,12 +55,27 @@ impl<T> CompileResultExt<T> for CompileResult<T> {
 
 pub struct Compiler {
     resolve_context: mu::ResolveContext,
+    /// Do not load the standard library.
+    no_std: bool,
+    /// Paths to search for the standard library.
+    search_paths: Vec<std::path::PathBuf>,
+    /// The standard library is loaded once per compiler.
+    std_loaded: bool,
 }
 
 impl Compiler {
+    /// A compiler with the default configuration, which loads the standard library.
     pub fn new() -> Compiler {
+        Self::from_config(&mu::DriverConfig::default())
+    }
+
+    /// A compiler with the library settings of a driver config.
+    pub fn from_config(config: &mu::DriverConfig) -> Compiler {
         Self {
             resolve_context: mu::ResolveContext::new(),
+            no_std: config.no_std,
+            search_paths: config.search_paths.clone(),
+            std_loaded: false,
         }
     }
 
@@ -67,8 +83,11 @@ impl Compiler {
     ///
     /// Parsing and lowering happen while resolving, because resolving loads further source files.
     pub fn compile(&mut self, source: impl Into<mu::Source>) -> CompileResult<mu::ModelTree> {
-        mu::resolve::resolve_source(source, &mut self.resolve_context)
-            .into_compile_result()
+        self.load_std()
+            .then(|()| {
+                mu::resolve::resolve_source(source, &mut self.resolve_context)
+                    .into_compile_result()
+            })
             .then(|lib| {
                 let lib_cache = self.resolve_context.lib_cache();
                 let lib_id = lib_cache.write_unwrap().insert_root(lib);
@@ -78,5 +97,53 @@ impl Compiler {
                     .build();
                 mu::eval::eval(eval_context).into_compile_result()
             })
+    }
+
+    /// Load the standard library once and make it an implicit dependency of every library.
+    fn load_std(&mut self) -> CompileResult<()> {
+        if self.no_std || self.std_loaded {
+            return Ok(((), mu::Diagnostics::default()));
+        }
+
+        let path = match self.std_path() {
+            Ok(path) => path,
+            Err(err) => {
+                let mut issues = mu::base::IssueList::<mu::resolve::ResolveIssue>::new();
+                issues.push_err(err);
+                return Err(issues.into_diagnostics());
+            }
+        };
+
+        self.resolve_context
+            .load_external_library(&path)
+            .into_compile_result()
+            .then(|lib_id| {
+                self.resolve_context
+                    .add_implicit_dependency(StdLib::info().name, lib_id);
+                self.std_loaded = true;
+                Ok(((), mu::Diagnostics::default()))
+            })
+    }
+
+    /// Find the standard library in the search paths, or install it into its default path.
+    ///
+    /// A search path contains either an installed `std-<version>` folder
+    /// or a `std` folder (e.g. `crates/std/lib` in the µcad repository).
+    fn std_path(&self) -> Result<std::path::PathBuf, mu::resolve::ResolveError> {
+        let info = StdLib::info();
+        let found = self
+            .search_paths
+            .iter()
+            .cloned()
+            .chain(std::iter::once(microcad_std::global_library_search_path()))
+            .flat_map(|path| [path.join(info.path()), path.join(info.name.as_str())])
+            .find(|path| path.join(mu::resolve::Manifest::MU_TOML).is_file());
+        if let Some(path) = found {
+            return Ok(path);
+        }
+
+        let path = StdLib::default_path();
+        StdLib::install(&path).map_err(|StdLibError::InstallError(err)| err)?;
+        Ok(path)
     }
 }

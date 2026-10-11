@@ -73,6 +73,16 @@ impl<'ctx, 'lib> ResolveLibraryContext<'ctx, 'lib> {
     pub fn to_issues(self) -> IssueList<ResolveIssue> {
         self.issues
     }
+
+    /// Add the implicit dependencies of the context (e.g. `std`) to the library,
+    /// unless its manifest says `no_std`.
+    pub(crate) fn add_implicit_dependencies(&mut self) {
+        if self.lib.no_std() {
+            return;
+        }
+        let dependencies = self.ctx.implicit_dependencies().clone();
+        self.lib.dependencies.extend(dependencies);
+    }
 }
 
 impl<'ctx, 'lib> PushIssue<ResolveIssue> for ResolveLibraryContext<'ctx, 'lib> {

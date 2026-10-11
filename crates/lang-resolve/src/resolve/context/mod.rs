@@ -7,7 +7,9 @@ mod loader;
 
 pub use cache::{LibraryCache, SourceCache};
 pub use lib_ctx::ResolveLibraryContext;
-use microcad_lang_base::{HashId, IssueResult, LibraryId, PushIssue, SharedMut};
+use std::collections::BTreeMap;
+
+use microcad_lang_base::{HashId, IssueResult, LibraryId, Name, PushIssue, SharedMut};
 use microcad_lang_lower::Ir;
 
 use crate::{Library, ResolveIssue};
@@ -17,6 +19,8 @@ pub struct ResolveContext {
     _lib_search_paths: Vec<std::path::PathBuf>,
     lib_cache: SharedMut<LibraryCache>,
     src_cache: SharedMut<SourceCache>,
+    /// Libraries in the cache that every resolved library depends on, e.g. `std`.
+    implicit_dependencies: BTreeMap<Name, LibraryId>,
 }
 
 /// Builder methods.
@@ -51,6 +55,11 @@ impl ResolveContext {
     pub fn lib_cache(&self) -> SharedMut<LibraryCache> {
         self.lib_cache.clone()
     }
+
+    /// Libraries every resolved library depends on, unless its manifest says `no_std`.
+    pub fn implicit_dependencies(&self) -> &BTreeMap<Name, LibraryId> {
+        &self.implicit_dependencies
+    }
 }
 
 /// Library loading
@@ -73,6 +82,11 @@ impl ResolveContext {
                 Err(issues)
             }
         }
+    }
+
+    /// Make a library in the cache an implicit dependency of every resolved library, e.g. `std`.
+    pub fn add_implicit_dependency(&mut self, name: impl Into<Name>, lib_id: LibraryId) {
+        self.implicit_dependencies.insert(name.into(), lib_id);
     }
 }
 
@@ -123,6 +137,7 @@ impl ResolveContextBuilder {
     pub fn build(self) -> ResolveContext {
         ResolveContext {
             _lib_search_paths: self.lib_search_paths,
+            implicit_dependencies: BTreeMap::new(),
             lib_cache: self.lib_cache.unwrap_or_default(),
             src_cache: self.src_cache.unwrap_or_default(),
         }
