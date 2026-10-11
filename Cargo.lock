@@ -5858,7 +5858,9 @@ dependencies = [
  "insta",
  "microcad-lang-base",
  "miette",
+ "pulldown-cmark",
  "thiserror 2.0.20",
+ "toml_edit 0.25.13+spec-1.1.0",
 ]
 
 [[package]]
@@ -10969,6 +10971,9 @@ dependencies = [
  "clap",
  "env_logger",
  "glob",
+ "microcad-builtin",
+ "microcad-docgen",
+ "microcad-lang-base",
  "regex",
  "walkdir",
 ]
