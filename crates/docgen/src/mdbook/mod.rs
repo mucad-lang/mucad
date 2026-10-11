@@ -3,38 +3,21 @@
 
 //! Generate a markdown book from a symbol tree.
 
-mod config;
-mod summary;
+mod builtin;
+mod to_md;
 
-use std::{error::Error, io::Write};
+use std::error::Error;
 
-use microcad_lang_markdown::WriteToFile;
+use microcad_lang_markdown::{MdBook, MdBookConfig, MdBookSummary, MdBookSummaryEntry};
 use microcad_lang_resolve::{SymbolDef, SymbolNodeExt, SymbolNodeRef};
 
-use crate::{DocGen, md::ToMd};
-pub use summary::{Summary, SummaryEntry};
+use crate::{GenerateDoc, LibraryDocGenerator, mdbook::to_md::ToMd};
 
-pub use config::Config;
-
-/// Mdbook generator.
-///
-/// Read mdbook documentation: https://rust-lang.github.io/mdBook/
-pub struct MdBook {
-    /// Output path.
-    pub path: std::path::PathBuf,
-}
-
-impl MdBook {
-    pub fn new(path: impl AsRef<std::path::Path>) -> Self {
-        Self {
-            path: path.as_ref().to_path_buf(),
-        }
-    }
-
-    /// Return the path for a symbol.
+impl<'lib> LibraryDocGenerator<'lib> {
+    /// Return the path for a symbol, relative to the source folder of the book.
     ///
     /// For example `std::geo2d::Circle` returns `geo2d/Circle.md`.
-    fn symbol_path<'a>(symbol: SymbolNodeRef<'a>) -> std::path::PathBuf {
+    fn symbol_path(symbol: SymbolNodeRef<'_>) -> std::path::PathBuf {
         let path: std::path::PathBuf = symbol
             .abs_path()
             .iter()
@@ -43,133 +26,93 @@ impl MdBook {
             .collect();
         match symbol.def {
             SymbolDef::SourceFile(..) | SymbolDef::InlineModule(..) => path.join("README.md"),
-            _ => {
-                let mut path = path.clone();
-                path.set_extension("md");
-                path
-            }
+            _ => path.with_extension("md"),
         }
     }
 
-    fn _generate_summary<'a>(
-        &self,
-        writer: &mut impl std::fmt::Write,
-        symbol: SymbolNodeRef<'a>,
-        depth: usize,
-    ) -> std::fmt::Result {
-        fn entry(
-            writer: &mut impl std::fmt::Write,
-            id: impl std::fmt::Display,
-            path: impl AsRef<std::path::Path>,
-            depth: usize,
-        ) -> std::fmt::Result {
-            writeln!(
-                writer,
-                "{:indent$}- [`{id}`]({path})",
-                "",
-                indent = 2 * depth,
-                path = path.as_ref().display()
-            )
-        }
-
-        fn recurse<'a>(
-            self_: &MdBook,
-            writer: &mut impl std::fmt::Write,
-            symbols: impl IntoIterator<Item = SymbolNodeRef<'a>>,
-            depth: usize,
-        ) -> std::fmt::Result {
-            symbols
-                .into_iter()
-                .try_for_each(|symbol| self_._generate_summary(writer, symbol, depth))
-        }
-
-        let path = Self::symbol_path(symbol);
-
-        if let Some(id) = symbol.name() {
-            entry(writer, id, path, depth)?;
-            let depth = depth + 1;
-
-            let children: Vec<_> = symbol
-                .children()
-                .filter(|symbol| symbol.is_public())
-                .collect();
-
-            let modules: Vec<_> = children
-                .iter()
-                .filter(|symbol| {
-                    matches!(
-                        symbol.def(),
-                        SymbolDef::SourceFile(..) | SymbolDef::InlineModule(..)
-                    )
-                })
-                .cloned()
-                .collect();
-
-            if !modules.is_empty() {
-                recurse(self, writer, modules, depth)?;
-            }
-
-            // All workbenches including are in separate file.
-            let workbenches: Vec<_> = children
-                .iter()
-                .filter(|symbol| matches!(symbol.def(), SymbolDef::Workbench(_)))
-                .cloned()
-                .collect();
-
-            if !workbenches.is_empty() {
-                recurse(self, writer, workbenches, depth)?;
-            }
-        }
-
-        Ok(())
+    /// Returns true if the symbol has its own page.
+    fn has_page(symbol: &SymbolNodeRef<'_>) -> bool {
+        matches!(
+            symbol.def(),
+            SymbolDef::SourceFile(_) | SymbolDef::InlineModule(_) | SymbolDef::Workbench(_)
+        )
     }
 
-    fn generate_summary<'a>(
-        &self,
-        writer: &mut impl std::fmt::Write,
-        symbol: SymbolNodeRef<'a>,
-    ) -> std::fmt::Result {
-        writeln!(writer, "# Summary")?;
-        writeln!(writer)?;
-        self._generate_summary(writer, symbol, 0)
+    /// Top-level symbols with a page, e.g. the main source file module.
+    ///
+    /// The library root itself is an unnamed symbol without a page.
+    fn top_level(&self) -> Vec<SymbolNodeRef<'lib>> {
+        self.lib.root().children().filter(Self::has_page).collect()
     }
 
-    fn write_symbols<'a>(&self, symbol: SymbolNodeRef<'a>) -> Result<(), Box<dyn Error>> {
-        Ok(symbol
-            .descendants()
-            .try_for_each(|symbol| {
-                let path = &self.path.join("src").join(Self::symbol_path(symbol));
-                match symbol.def() {
-                    SymbolDef::SourceFile(_)
-                    | SymbolDef::InlineModule(_)
-                    | SymbolDef::Function(_)
-                    | SymbolDef::Workbench(_) => symbol.to_md().write_to_file(path),
-                    _ => Ok(()),
-                }
+    /// Title of the library: its name from the manifest or the name of its main source file.
+    fn title(&self) -> String {
+        self.lib
+            .name()
+            .map(|name| name.to_string())
+            .or_else(|| {
+                self.top_level()
+                    .into_iter()
+                    .find_map(|symbol| symbol.name().map(|id| id.to_string()))
             })
-            .map_err(Box::new)?)
+            .unwrap_or_else(|| "Library".to_string())
     }
 
-    fn write_summary<'a>(&self, symbol: SymbolNodeRef<'a>) -> std::io::Result<()> {
-        // 1. Create the SUMMARY.md file
-        let mut file = std::fs::File::create(self.path.join("src").join("SUMMARY.md"))?;
+    /// Summary entries of a symbol and its public modules and workbenches.
+    fn summary_entries(
+        symbol: SymbolNodeRef<'_>,
+        name: String,
+        level: usize,
+        entries: &mut Vec<MdBookSummaryEntry>,
+    ) {
+        entries.push(MdBookSummaryEntry::new(
+            level,
+            name,
+            Self::symbol_path(symbol),
+        ));
 
-        // 2. We use a String as a buffer because generate_summary requires std::fmt::Write
-        let mut buffer = String::new();
+        let children: Vec<_> = symbol
+            .children()
+            .filter(|child| child.is_public() && Self::has_page(child))
+            .collect();
 
-        // 3. Call generate_summary. We map the fmt::Error to an io::Error.
+        // Modules first, then workbenches.
+        let (modules, workbenches): (Vec<_>, Vec<_>) = children
+            .into_iter()
+            .partition(|child| !matches!(child.def(), SymbolDef::Workbench(_)));
 
-        self.generate_summary(&mut buffer, symbol)
-            .map_err(std::io::Error::other)?;
-        file.write_all(buffer.as_bytes())?;
-        Ok(())
+        modules.into_iter().chain(workbenches).for_each(|child| {
+            if let Some(id) = child.name() {
+                Self::summary_entries(child, id.to_string(), level + 1, entries)
+            }
+        });
+    }
+
+    fn summary(&self) -> MdBookSummary {
+        let mut entries = Vec::new();
+        self.top_level().into_iter().for_each(|symbol| {
+            if let Some(id) = symbol.name() {
+                Self::summary_entries(symbol, id.to_string(), 0, &mut entries)
+            }
+        });
+        MdBookSummary::from_iter(entries)
     }
 }
 
-impl DocGen for MdBook {
-    fn doc_gen<'a>(&self, symbol: SymbolNodeRef<'a>) -> Result<(), Box<dyn Error>> {
-        Config.write_to_file(self.path.join("book.toml"))?;
-        self.write_summary(symbol)?;
-        self.write_symbols(symbol)
+impl<'lib> GenerateDoc<MdBook> for LibraryDocGenerator<'lib> {
+    fn generate_doc(&self) -> Result<MdBook, Box<dyn Error>> {
+        let mut mdbook = MdBook::new(MdBookConfig::default());
+        mdbook.config.set_title(self.title());
+
+        // Functions are documented inline in their module's page.
+        self.lib
+            .root()
+            .descendants()
+            .filter(Self::has_page)
+            .for_each(|symbol| mdbook.add_md(Self::symbol_path(symbol), symbol.to_md()));
+
+        mdbook.add_md("SUMMARY.md", self.summary());
+
+        Ok(mdbook)
     }
 }

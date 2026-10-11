@@ -4,8 +4,7 @@
 //! Documentation generator for µcad built-ins.
 
 use clap::Parser;
-use microcad_docgen as docgen;
-use miette::IntoDiagnostic;
+use microcad_docgen::{self as docgen, GenerateDoc};
 
 /// µcad built-in doc generater CLI
 #[derive(Parser)]
@@ -17,7 +16,8 @@ pub struct BuiltinCli {
 
 fn main() -> miette::Result<()> {
     let cli = BuiltinCli::parse();
-    docgen::BuiltinMdbook::new()
-        .write(cli.output)
-        .into_diagnostic()
+    let builtins = microcad_builtin::BuiltinRegistry::new();
+    docgen::BuiltinMdbookGenerator::new(&builtins)
+        .write_doc(cli.output)
+        .map_err(|err| miette::miette!("{err}"))
 }
