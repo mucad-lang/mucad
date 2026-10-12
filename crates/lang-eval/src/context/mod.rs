@@ -96,10 +96,23 @@ impl EvalContext {
         let Some(lib) = self.library(&lib_id) else {
             return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
         };
-        SymbolNodeRef::new(id, &lib.arena)
-            .get()
-            .def
-            .call(args, self)
+        self.with_library(lib_id, |context| {
+            SymbolNodeRef::new(id, &lib.arena)
+                .get()
+                .def
+                .call(args, context)
+        })
+    }
+
+    /// Run `f` with `lib_id` as current library.
+    ///
+    /// Symbols of a library (e.g. `SymbolId::Item`) refer to that library's tree,
+    /// so it becomes the current library while one of its symbols is evaluated.
+    fn with_library<T>(&mut self, lib_id: LibraryId, f: impl FnOnce(&mut Self) -> T) -> T {
+        let previous = self.lib_id.replace(lib_id);
+        let result = f(self);
+        self.lib_id = previous;
+        result
     }
 
     /// Call the workbench or function `id` in library `lib_id`.
@@ -126,7 +139,9 @@ impl EvalContext {
         let Some(lib) = self.library(&lib_id) else {
             return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
         };
-        SymbolNodeRef::new(id, &lib.arena).get().eval(self)
+        self.with_library(lib_id, |context| {
+            SymbolNodeRef::new(id, &lib.arena).get().eval(context)
+        })
     }
 }
 
