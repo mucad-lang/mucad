@@ -164,7 +164,6 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
             let lib = self.lib_ctx.lib_cache().read_unwrap().get(dep);
             match lib {
                 Some(lib) => {
-                    let lib = lib.read_unwrap();
                     paths.extend(lib.look_up(lib.root, unresolved_path).map(|id| {
                         symbol::Path::Resolved(SymbolId::External(ExternalId {
                             lib_id: lib.id(),

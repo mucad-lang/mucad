@@ -1,14 +1,14 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{GetSourceByHash, HashId, HashMap, LibraryId, SharedMut, Source};
+use microcad_lang_base::{GetSourceByHash, HashId, HashMap, LibraryId, Shared, Source};
 
 use crate::{Library, ResolveErrorKind, ResolveResult, SourceUnit};
 
 #[derive(Debug, Default)]
 pub struct LibraryCache {
     /// Global lookup for all loaded/compiled libraries
-    libraries: HashMap<LibraryId, SharedMut<Library>>,
+    libraries: HashMap<LibraryId, Shared<Library>>,
 }
 
 impl LibraryCache {
@@ -20,7 +20,7 @@ impl LibraryCache {
             return Err(ResolveErrorKind::LibraryWithoutManifest.into());
         }
         let id = library.id();
-        self.libraries.insert(id, SharedMut::from(library));
+        self.libraries.insert(id, Shared::from(library));
         Ok(id)
     }
 
@@ -29,11 +29,11 @@ impl LibraryCache {
     /// The main library does not need a manifest, e.g. if it is a single source file.
     pub fn insert_root(&mut self, library: Library) -> LibraryId {
         self.libraries
-            .insert(LibraryId::ROOT, SharedMut::from(library));
+            .insert(LibraryId::ROOT, Shared::from(library));
         LibraryId::ROOT
     }
 
-    pub fn get(&self, id: &LibraryId) -> Option<SharedMut<Library>> {
+    pub fn get(&self, id: &LibraryId) -> Option<Shared<Library>> {
         self.libraries.get(id).cloned()
     }
 }

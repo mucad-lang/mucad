@@ -56,8 +56,8 @@ impl EvalContext {
     }
 
     /// A library by its ID.
-    pub fn library(&self, lib_id: &LibraryId) -> Option<SharedMut<Library>> {
-        self.lib_cache.read_unwrap().get(lib_id)
+    pub fn library(&self, lib_id: &LibraryId) -> Option<Shared<Library>> {
+        self.lib_cache.with_read(|lib_cache| lib_cache.get(lib_id))
     }
 }
 
@@ -71,7 +71,6 @@ impl EvalContext {
         let Some(lib) = self.library(&lib_id) else {
             return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
         };
-        let lib = lib.read_unwrap();
         let root = lib.root();
 
         // A single source file is loaded as child of an empty library root.
@@ -97,7 +96,6 @@ impl EvalContext {
         let Some(lib) = self.library(&lib_id) else {
             return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
         };
-        let lib = lib.read_unwrap();
         SymbolNodeRef::new(id, &lib.arena)
             .get()
             .def
@@ -128,7 +126,6 @@ impl EvalContext {
         let Some(lib) = self.library(&lib_id) else {
             return self.catch(EvalErrorKind::LibraryNotLoaded { lib_id });
         };
-        let lib = lib.read_unwrap();
         SymbolNodeRef::new(id, &lib.arena).get().eval(self)
     }
 }
