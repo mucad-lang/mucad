@@ -27,6 +27,7 @@ impl BuiltinConstant {
     }
 }
 
+/// A built-in function.
 #[derive(Debug, Clone)]
 #[debug("{}", info)]
 pub struct BuiltinFunction {
@@ -39,6 +40,11 @@ impl BuiltinFunction {
     /// Construct a new BuiltinFunction
     pub const fn new(info: BuiltinInfo, ty: BuiltinFn<FunctionType>, f: BuiltinEvalFn) -> Self {
         Self { info, ty, f }
+    }
+
+    /// Check if function is impure.
+    pub fn is_impure(&self) -> bool {
+        self.ty().is_impure
     }
 
     /// Get the function type

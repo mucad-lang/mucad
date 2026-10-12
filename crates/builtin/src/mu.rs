@@ -315,7 +315,7 @@ pub mod debug {
 
     use super::*;
 
-    #[builtin_fn(debug::assert(cond: Bool, message: String))]
+    #[builtin_fn(impure debug::assert(cond: Bool, message: String))]
     pub fn assert(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let cond = args.get_cond()?;
         let message: String = args.try_get("message")?;
@@ -329,7 +329,7 @@ pub mod debug {
         }
     }
 
-    #[builtin_fn(debug::expect(cond: Bool, message: String))]
+    #[builtin_fn(impure debug::expect(cond: Bool, message: String))]
     pub fn expect(args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let cond = args.get_cond()?;
         let message: String = args.try_get("message")?;
@@ -339,27 +339,27 @@ pub mod debug {
         Ok(Value::None)
     }
 
-    #[builtin_fn(debug::panic(message: String))]
+    #[builtin_fn(impure debug::panic(message: String))]
     pub fn panic(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let message: String = args.try_get("message")?;
         Err(BuiltinError::Panic(message))
     }
 
-    #[builtin_fn(debug::error(message: String))]
+    #[builtin_fn(impure debug::error(message: String))]
     pub fn error(args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let message: String = args.try_get("message")?;
         ctx.push_err(BuiltinError::Custom(message));
         Ok(Value::None)
     }
 
-    #[builtin_fn(debug::warning(message: String))]
+    #[builtin_fn(impure debug::warning(message: String))]
     pub fn warning(args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let message: String = args.try_get("message")?;
         ctx.push_warn(BuiltinWarning::Custom(message));
         Ok(Value::None)
     }
 
-    #[builtin_fn(debug::info(message: String))]
+    #[builtin_fn(impure debug::info(message: String))]
     pub fn info(args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let message: String = args.try_get("message")?;
         ctx.push_info(BuiltinAdvice::Custom(message));
@@ -367,7 +367,7 @@ pub mod debug {
     }
 
     /// Print all variables
-    #[builtin_fn(debug::print(*))]
+    #[builtin_fn(impure debug::print(*))]
     pub fn print(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         println!(
             "{}",
