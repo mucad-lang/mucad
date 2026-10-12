@@ -150,23 +150,41 @@ pub struct FunctionType {
     /// Optional return value.
     /// If this value is None, the callable is not expected to return anything.
     pub return_ty: Option<Box<Type>>,
+
+    /// The `is_impure` flag tells if this function has side effects.
+    ///
+    /// This is used for functions like `print` and `assert`, so that are not optimized away.
+    pub is_impure: bool,
 }
 
+/// Builder functions.
 impl FunctionType {
+    /// Create a new function type with a signature and return type.
     pub fn new(call_ty: impl Into<CallSignature>, return_ty: Option<Type>) -> Self {
         Self {
             call_ty: call_ty.into(),
             return_ty: return_ty.map(Box::new),
+            is_impure: false,
         }
     }
 
+    /// Create a variadic function type with optional return type.
     pub fn variadic(return_ty: Option<Type>) -> Self {
         Self {
             call_ty: CallSignature::variadic(),
             return_ty: return_ty.map(Box::new),
+            is_impure: false,
         }
     }
 
+    /// Mark this function as impure.
+    pub fn impure(mut self) -> Self {
+        self.is_impure = true;
+        self
+    }
+}
+
+impl FunctionType {
     pub fn is_variadic(&self) -> bool {
         self.call_ty.is_variadic()
     }
