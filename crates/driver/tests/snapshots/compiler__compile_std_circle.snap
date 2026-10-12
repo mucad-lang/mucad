@@ -1,0 +1,23 @@
+---
+source: crates/driver/tests/compiler.rs
+expression: display(&model)
+---
+Group
+├── Workpiece(sketch)
+│   │   - center [in]: (x: Length, y: Length) = (x = 0mm, y = 0mm)
+│   │   - radius [in]: Length = 4mm
+│   └── Builtin(Translate(0mm, 0mm, 0mm))
+│       │   - x: Length = 0mm
+│       │   - y: Length = 0mm
+│       │   - z: Length = 0mm
+│       └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│               - radius [in]: Length = 4mm
+└── Workpiece(sketch)
+    │   - center [in]: (x: Length, y: Length) = (x = 1mm, y = 2mm)
+    │   - radius [in]: Length = 4mm
+    └── Builtin(Translate(1mm, 2mm, 0mm))
+        │   - x: Length = 1mm
+        │   - y: Length = 2mm
+        │   - z: Length = 0mm
+        └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+                - radius [in]: Length = 4mm

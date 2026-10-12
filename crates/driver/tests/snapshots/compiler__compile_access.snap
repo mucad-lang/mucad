@@ -1,0 +1,12 @@
+---
+source: crates/driver/tests/compiler.rs
+expression: display(&model)
+---
+Group
+│   - p: (x: Length, y: Length) = (x = 1mm, y = 2mm)
+│   - ps: [(x: Length, y: Length)] = [(x = 1mm, y = 2mm), (x = 1mm, y = 2mm)]
+│   - r: [Length] = [1mm, 2mm, 3mm]
+├── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│       - radius [in]: Length = 2mm
+└── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+        - radius [in]: Length = 3mm

@@ -230,3 +230,40 @@ fn compile_std_assert_fails() {
         "{diags:?}"
     );
 }
+
+/// `std::geo2d::Circle` with its building plan and with its `init`.
+#[test]
+fn compile_std_circle() {
+    let mut compiler = std_compiler();
+    let (model, diags) = compiler
+        .compile(mu::Source::from(
+            r#"
+            std::geo2d::Circle(radius = 4mm);
+            std::geo2d::Circle(diameter = 8mm, center = (x = 1mm, y = 2mm));
+            "#,
+        ))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    insta::assert_snapshot!("compile_std_circle", display(&model));
+}
+
+/// Built-in calls created while lowering (member access, lists, ranges) with identifiers.
+#[test]
+fn compile_access() {
+    let mut compiler = compiler();
+    let (model, diags) = compiler
+        .compile(mu::Source::from(
+            r#"
+            p = (x = 1mm, y = 2mm);
+            ps = [p, p];
+            r = [1..3]mm;
+            __mu::geo2d::Circle(radius = ps[1].y);
+            __mu::geo2d::Circle(radius = r[2]);
+            "#,
+        ))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    insta::assert_snapshot!("compile_access", display(&model));
+}
