@@ -18,12 +18,15 @@ pub mod base {
 
 pub use base::{
     Artifact, ArtifactKind, Diagnostic, Diagnostics, HashId, HashMap, HashSet, Hashed, Identifier,
-    IssueResult, Refer, Source, SourceKind, SourceLocation, SrcRef, StageResult, TextEdit, Url,
+    IssueResult, MICROCAD_EXTENSION, MICROCAD_EXTENSIONS, MICROCAD_VERSION, Refer, Source,
+    SourceKind, SourceLocation, SrcRef, StageResult, TextEdit, Url,
 };
 
 pub mod builtin {
     pub use microcad_builtin::*;
 }
+
+pub use builtin::BuiltinLibrary;
 
 pub mod parse {
     pub use microcad_lang_parse::*;
@@ -55,6 +58,10 @@ pub mod types {
 
 pub use types::{ModelTree, Value};
 
+pub mod docgen {
+    pub use microcad_docgen::*;
+}
+
 pub use crate::Compiler;
 
 pub use crate::config::DriverConfig;
@@ -77,8 +84,11 @@ pub use crate::commands::{
 };
 
 pub mod traits {
-    pub use super::base::{Identifiable, SrcReferrer, ToHash};
-    pub use super::core::{CalcBounds2D, CalcBounds3D};
+    pub use super::{
+        base::{Identifiable, SrcReferrer, ToHash},
+        core::{CalcBounds2D, CalcBounds3D},
+        docgen::GenerateDoc,
+    };
 
     pub use super::commands::{
         Compile, Format, GetCode, PrintDiagnostics, SetCode, Sync, compile::Eval, compile::Lower,

@@ -31,14 +31,6 @@ fn compiler() -> Compiler {
     })
 }
 
-/// A compiler with the standard library of this repository (relative to `crates/driver`).
-fn std_compiler() -> Compiler {
-    Compiler::from_config(&mu::DriverConfig {
-        search_paths: vec!["../std/lib".into()],
-        ..Default::default()
-    })
-}
-
 #[test]
 fn compile_source() {
     let mut compiler = compiler();
@@ -156,6 +148,16 @@ fn compile_twice() {
 }
 
 /*
+
+
+/// A compiler with the standard library of this repository (relative to `crates/driver`).
+fn std_compiler() -> Compiler {
+    Compiler::from_config(&mu::DriverConfig {
+        search_paths: vec!["../std/lib".into()],
+        ..Default::default()
+    })
+}
+
 /// A source using the standard library.
 #[test]
 fn compile_with_std() {
