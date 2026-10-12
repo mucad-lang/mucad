@@ -3,6 +3,6 @@ source: crates/lang-eval/tests/workbench.rs
 expression: model.to_string_with_ctx(&context)
 ---
 Group
-|   - a: Length = 32mm
+│   - a: Length = 32mm
 └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
         - radius [in]: Length = 32mm

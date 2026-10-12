@@ -164,7 +164,7 @@ impl<'a, T> NodeRef<'a, T> {
             }
 
             if indent_count > 0 && count > 0 {
-                let pipes = "|   ".repeat(indent_count);
+                let pipes = "│   ".repeat(indent_count);
                 writeln!(f, "{continuation_prefix}{pipes}{remainder}")?;
             } else {
                 writeln!(f, "{continuation_prefix}{line}")?;
