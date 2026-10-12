@@ -1,0 +1,6 @@
+# A library which refers to itself by its name.
+
+[library]
+name = "selfref"
+version = "0.1.0"
+no_std = true

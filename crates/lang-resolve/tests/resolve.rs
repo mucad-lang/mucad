@@ -37,6 +37,20 @@ fn resolve_single_identifier() {
     assert!(!issues.has_errors(), "{issues:?}");
 }
 
+/// A library appears in its own tree under its name and can refer to itself, despite `no_std`.
+#[test]
+fn resolve_self_reference() {
+    let mut ctx = ResolveContext::new();
+    let (lib, issues) = microcad_lang_resolve::resolve("tests/test_cases/self_reference", &mut ctx)
+        .expect("No fatal error");
+
+    assert!(!issues.has_errors(), "{issues:?}");
+    assert!(
+        lib.look_up(lib.root, &path("::selfref::geo::Shape"))
+            .is_some()
+    );
+}
+
 /// A file with an unknown built-in is still loaded and the built-in is reported once.
 #[test]
 fn resolve_unknown_builtin() {

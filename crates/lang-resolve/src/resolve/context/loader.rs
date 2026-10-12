@@ -3,7 +3,9 @@
 
 //! Load a library
 
-use microcad_lang_base::{HashId, PushIssue, Source, ToCompactString, tree};
+use microcad_lang_base::{
+    HashId, Identifier, PushIssue, Source, ToCompactString, element::Visibility, tree,
+};
 use microcad_lang_lower::ir;
 
 use crate::{
@@ -89,7 +91,15 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         // After the manifest is set, which may opt out with `no_std`.
         self.add_implicit_dependencies();
 
-        self._load_source(&lib_mu, None)?;
+        // The library appears in its own tree under its name, e.g. `std`, so it can refer to
+        // itself with `std::geo2d::Circle` or `::std::geo2d::Circle`.
+        let root = self.lib().root;
+        let id = self._load_source(&lib_mu, Some(root))?;
+        if let Some(name) = self.lib().name().cloned() {
+            let meta = &mut self.arena_mut()[id].get_mut().meta;
+            meta.name = Some(Identifier::from(name.as_str()));
+            meta.vis = Visibility::Public;
+        }
         Ok(())
     }
 

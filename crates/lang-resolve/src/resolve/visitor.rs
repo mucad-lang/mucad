@@ -164,7 +164,9 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
             let lib = self.lib_ctx.lib_cache().read_unwrap().get(dep);
             match lib {
                 Some(lib) => {
-                    paths.extend(lib.look_up(lib.root, unresolved_path).map(|id| {
+                    // The library appears in its own tree under its name, so only `mu` is removed.
+                    let path = unresolved_path.without_mu_prefix();
+                    paths.extend(lib.look_up(lib.root, &path).map(|id| {
                         symbol::Path::Resolved(SymbolId::External(ExternalId {
                             lib_id: lib.id(),
                             id,
