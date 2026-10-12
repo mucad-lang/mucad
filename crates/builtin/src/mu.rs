@@ -712,6 +712,23 @@ pub mod geo2d {
     }
 }
 
+/// Built-in 3D primitives
+#[builtin_mod]
+pub mod geo3d {
+    use microcad_lang_types::Length;
+    use microcad_macros::builtin_primitive;
+
+    use super::*;
+
+    /// A sphere with a radius.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry3D)]
+    pub struct Sphere {
+        /// Radius of the sphere.
+        pub radius: Length,
+    }
+}
+
 /// Built-in Operations
 #[builtin_mod]
 pub mod ops {

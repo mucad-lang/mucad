@@ -51,31 +51,35 @@ impl Ty for WorkbenchKind {
 #[non_exhaustive]
 #[derive(Debug, Display, Clone, Hash, PartialEq, Serialize, Deserialize)]
 pub enum BuiltinWorkpiece {
-    /// A parametric 2D primitive.
-    Primitive(BuiltinId),
+    /// A parametric primitive with its output type (2D or 3D).
+    #[display("{_0}")]
+    Primitive(BuiltinId, ModelType),
     /// An affine transformation.
     AffineTransform(Box<AffineTransform>),
     /// Boolean operation
     BooleanOp(BooleanOp),
-    /// A built-in operation, e.g. `extrude`.
-    Operation(BuiltinId),
+    /// A built-in operation with its output type, e.g. `extrude`.
+    ///
+    /// The output type is `NotDetermined` if it depends on the input, e.g. for `hull`.
+    #[display("{_0}")]
+    Operation(BuiltinId, ModelType),
 }
 
 impl BuiltinWorkpiece {
     fn output_type(&self) -> ModelType {
         match self {
-            BuiltinWorkpiece::Primitive(_) => ModelType::Geometry2D,
-            BuiltinWorkpiece::AffineTransform(_)
-            | BuiltinWorkpiece::BooleanOp(_)
-            | BuiltinWorkpiece::Operation(_) => ModelType::NotDetermined,
+            BuiltinWorkpiece::Primitive(_, output_type)
+            | BuiltinWorkpiece::Operation(_, output_type) => *output_type,
+            BuiltinWorkpiece::AffineTransform(_) | BuiltinWorkpiece::BooleanOp(_) => {
+                ModelType::NotDetermined
+            }
         }
     }
 
     pub fn builtin_id(&self) -> Option<BuiltinId> {
         match self {
-            BuiltinWorkpiece::Primitive(builtin_id) | BuiltinWorkpiece::Operation(builtin_id) => {
-                Some(*builtin_id)
-            }
+            BuiltinWorkpiece::Primitive(builtin_id, _)
+            | BuiltinWorkpiece::Operation(builtin_id, _) => Some(*builtin_id),
             _ => None,
         }
     }
@@ -87,10 +91,10 @@ where
 {
     fn fmt_with_ctx(&self, f: &mut std::fmt::Formatter<'_>, ctx: &Ctx) -> std::fmt::Result {
         match self {
-            BuiltinWorkpiece::Primitive(builtin_id) => builtin_id.fmt_with_ctx(f, ctx),
+            BuiltinWorkpiece::Primitive(builtin_id, _) => builtin_id.fmt_with_ctx(f, ctx),
             BuiltinWorkpiece::AffineTransform(affine_transform) => write!(f, "{affine_transform}"),
             BuiltinWorkpiece::BooleanOp(boolean_op) => write!(f, "{boolean_op}"),
-            BuiltinWorkpiece::Operation(builtin_id) => builtin_id.fmt_with_ctx(f, ctx),
+            BuiltinWorkpiece::Operation(builtin_id, _) => builtin_id.fmt_with_ctx(f, ctx),
         }
     }
 }

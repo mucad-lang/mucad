@@ -82,6 +82,13 @@ fn builtin_op_struct(attr: TokenStream, input_struct: ItemStruct) -> TokenStream
         Err(err) => return err.to_compile_error().into(),
     };
 
+    // An output type `Any` depends on the input (e.g. `hull`), it is deduced from the children.
+    let element_output_type = if output_type == "Any" {
+        quote::format_ident!("NotDetermined")
+    } else {
+        output_type.clone()
+    };
+
     let fn_name = helpers::ident_snake(struct_name);
     let static_name = helpers::ident_upper(&fn_name);
     let doc_comment = helpers::attr_fetch_doc(&input_struct.attrs);
@@ -107,7 +114,8 @@ fn builtin_op_struct(attr: TokenStream, input_struct: ItemStruct) -> TokenStream
         impl crate::BuiltinConstruct for #struct_name {
             fn element() -> microcad_lang_types::model::Element {
                 microcad_lang_types::model::BuiltinWorkpiece::Operation(
-                    <Self as crate::Builtin>::ITEM.id()
+                    <Self as crate::Builtin>::ITEM.id(),
+                    microcad_lang_types::ModelType::#element_output_type,
                 ).into()
             }
 

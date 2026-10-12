@@ -1,0 +1,7 @@
+---
+source: crates/driver/tests/compiler.rs
+expression: display(&model)
+---
+Group
+└── Builtin(__mu::geo3d::Sphere[0x958808b500cc0390])
+        - radius [in]: Length = 10mm

@@ -78,7 +78,8 @@ pub(crate) fn builtin_primitive_impl(attr: TokenStream, item: TokenStream) -> To
         impl crate::BuiltinConstruct for #struct_name {
             fn element() -> microcad_lang_types::model::Element {
                 microcad_lang_types::model::BuiltinWorkpiece::Primitive(
-                    <Self as crate::Builtin>::ITEM.id()
+                    <Self as crate::Builtin>::ITEM.id(),
+                    microcad_lang_types::ModelType::#model_type,
                 ).into()
             }
 

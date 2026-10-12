@@ -104,6 +104,46 @@ fn compile_geo2d() {
     insta::assert_snapshot!("compile_geo2d", display(&model));
 }
 
+/// Output type of the first model in a compiled source.
+fn output_type(model: &mu::ModelTree) -> mu::types::ModelType {
+    use mu::types::model::NodeExt;
+    model.root().deduce_output_type()
+}
+
+/// Built-in primitives of `__mu::geo3d`.
+#[test]
+fn compile_geo3d() {
+    let mut compiler = compiler();
+    let (model, diags) = compiler
+        .compile(mu::Source::from("__mu::geo3d::Sphere(radius = 10mm);"))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    assert_eq!(output_type(&model), mu::types::ModelType::Geometry3D);
+    insta::assert_snapshot!("compile_geo3d", display(&model));
+}
+
+/// Like `std::geo3d::Torus` and `std::geo3d::Cylinder`: 3D models made of 2D primitives.
+#[test]
+fn compile_geo3d_from_2d() {
+    let mut compiler = compiler();
+    for source in [
+        // Torus(major_radius = 45mm, minor_radius = 5mm)
+        "__mu::geo2d::Circle(radius = 5mm).__mu::ops::translate(x = 45mm, y = 0mm, z = 0mm).__mu::ops::revolve(angle = 360°);",
+        // Cylinder(radius = 10mm, height = 20mm)
+        "__mu::geo2d::Circle(radius = 10mm).__mu::ops::extrude(height = 20mm, scale_x = 1.0, scale_y = 1.0, twist = 0°).__mu::ops::translate(x = 0mm, y = 0mm, z = -10mm);",
+    ] {
+        let (model, diags) = compiler.compile(mu::Source::from(source)).expect("A model");
+
+        assert!(!diags.has_errors(), "{diags:?}");
+        assert_eq!(
+            output_type(&model),
+            mu::types::ModelType::Geometry3D,
+            "{source}"
+        );
+    }
+}
+
 /// A compiler can be used again, the main library of the previous run is replaced.
 #[test]
 fn compile_twice() {

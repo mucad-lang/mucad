@@ -96,7 +96,12 @@ impl<Expr: DesugarExpr> Desugar<ast::UnaryOperation> for ir::Call<Expr> {
                 ast::UnaryOperator::Not => __mu!(core::not),
             }
             .into(),
-            args: ir::ArgumentList::from_iter([Expr::desugar(&node.rhs, context)?]),
+            // Named like the operands of binary operations, the built-ins take `rhs`.
+            args: ir::ArgumentList::from_iter([ir::Argument::Named {
+                name: Identifier::no_ref("rhs"),
+                expr: Expr::desugar(&node.rhs, context)?,
+                src_ref: context.span_to_src_ref(&node.rhs.span()),
+            }]),
             src_ref: context.span_to_src_ref(&node.span),
         })
     }

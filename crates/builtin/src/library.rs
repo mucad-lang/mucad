@@ -34,6 +34,7 @@ impl BuiltinLibrary {
             &mu::STRING,
             &mu::COLOR,
             &mu::GEO2D,
+            &mu::GEO3D,
             &mu::OPS,
         ]
         .iter()
