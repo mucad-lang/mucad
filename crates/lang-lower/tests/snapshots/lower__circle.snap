@@ -10,7 +10,7 @@ expression: "ir.to_ron().expect(\"No error\")"
     ),
     payload: (
         input_hash: "0xa18f78da53e23991",
-        output_hash: "0xfe362f9b81df123d",
+        output_hash: "0xccad832258739cf6",
         tree: (
             root: (
                 index1: 1,
@@ -244,21 +244,9 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                         value: "center",
                                                         src_ref: "None",
                                                     )),
-                                                    expression: Value((
-                                                        value: Tuple((
-                                                            positional: [],
-                                                            named: [
-                                                                (((
-                                                                    value: "x",
-                                                                    src_ref: "6:45 @ 0x6fea70d2e98e16db (192..193)",
-                                                                )), Quantity("0mm")),
-                                                                (((
-                                                                    value: "y",
-                                                                    src_ref: "6:56 @ 0x6fea70d2e98e16db (203..204)",
-                                                                )), Quantity("0mm")),
-                                                            ],
-                                                        )),
-                                                        src_ref: "None",
+                                                    expression: Path(HumanReadable(
+                                                        name: "center",
+                                                        id: Local("center"),
                                                     )),
                                                     src_ref: "None",
                                                 ),
@@ -444,10 +432,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             args: (
                                                                 src_ref: "None",
                                                                 args: [
-                                                                    AutoNamed(
+                                                                    Named(
                                                                         name: ((
-                                                                            value: "center",
-                                                                            src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
+                                                                            value: "lhs",
+                                                                            src_ref: "None",
                                                                         )),
                                                                         expr: Path(Unresolved((
                                                                             is_absolute: false,
@@ -459,11 +447,19 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                             ],
                                                                             src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
                                                                         ))),
+                                                                        src_ref: "None",
                                                                     ),
-                                                                    Unnamed(Value((
-                                                                        value: String("x"),
-                                                                        src_ref: "12:42 @ 0x6fea70d2e98e16db (392..393)",
-                                                                    ))),
+                                                                    Named(
+                                                                        name: ((
+                                                                            value: "name",
+                                                                            src_ref: "None",
+                                                                        )),
+                                                                        expr: Value((
+                                                                            value: String("x"),
+                                                                            src_ref: "12:42 @ 0x6fea70d2e98e16db (392..393)",
+                                                                        )),
+                                                                        src_ref: "None",
+                                                                    ),
                                                                 ],
                                                             ),
                                                             src_ref: "12:35 @ 0x6fea70d2e98e16db (385..393)",
@@ -483,10 +479,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             args: (
                                                                 src_ref: "None",
                                                                 args: [
-                                                                    AutoNamed(
+                                                                    Named(
                                                                         name: ((
-                                                                            value: "center",
-                                                                            src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
+                                                                            value: "lhs",
+                                                                            src_ref: "None",
                                                                         )),
                                                                         expr: Path(Unresolved((
                                                                             is_absolute: false,
@@ -498,11 +494,19 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                             ],
                                                                             src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
                                                                         ))),
+                                                                        src_ref: "None",
                                                                     ),
-                                                                    Unnamed(Value((
-                                                                        value: String("y"),
-                                                                        src_ref: "12:56 @ 0x6fea70d2e98e16db (406..407)",
-                                                                    ))),
+                                                                    Named(
+                                                                        name: ((
+                                                                            value: "name",
+                                                                            src_ref: "None",
+                                                                        )),
+                                                                        expr: Value((
+                                                                            value: String("y"),
+                                                                            src_ref: "12:56 @ 0x6fea70d2e98e16db (406..407)",
+                                                                        )),
+                                                                        src_ref: "None",
+                                                                    ),
                                                                 ],
                                                             ),
                                                             src_ref: "12:49 @ 0x6fea70d2e98e16db (399..407)",
