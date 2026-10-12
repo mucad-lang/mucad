@@ -17,7 +17,7 @@ pub sketch Circle(radius: Length, center = (x = 0.0mm, y = 0.0mm)) {
 
 /// A frame with a thickness.
 pub sketch Frame(width: Length, height: Length, thickness: Length) {
-    std::debug::assert(thickness > 0.0mm, "Thickness must be a positive number (thickness = {thickness})");
+    std::assert(thickness > 0.0mm, "Thickness must be a positive number (thickness = {thickness})");
     Rect(width, height) - Rect(width = width - 2*thickness, height = height - 2*thickness);
 }
 
@@ -58,7 +58,7 @@ pub sketch Line(p0: Vec2, p1: Vec2) {
 
 /// A regular convex polygon with `n` corners.
 pub sketch Ngon(n: Integer, radius: Length) {
-    std::debug::assert(n > 2, "N must be at least 3.");
+    std::assert(n > 2, "N must be at least 3.");
     __mu::geo2d::Ngon(n, radius);
 }
 

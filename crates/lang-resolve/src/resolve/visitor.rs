@@ -4,13 +4,40 @@
 //! Resolve locals.
 
 use crate::{
-    ResolveErrorKind, ResolveLibraryContext, SymbolNodeRef,
+    Library, ResolveErrorKind, ResolveLibraryContext, SymbolNodeRef,
     library::{Symbol, SymbolArena, SymbolNodeId, symbol, visitor},
     resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
 use microcad_lang_base::{
-    ExternalId, Identifier, PushIssue, SingleIdentifier, SymbolId, ToCompactString,
+    ExternalId, Identifier, LibraryId, PushIssue, SingleIdentifier, SymbolId, ToCompactString,
 };
+
+/// The symbol a looked up node stands for.
+///
+/// An alias (`pub use __mu::debug::assert;`) stands for its target, aliases of aliases are followed.
+/// Symbols of an external library (`lib_id`) become [`SymbolId::External`].
+fn symbol_target(lib: &Library, node_id: SymbolNodeId, lib_id: Option<LibraryId>) -> SymbolId {
+    let in_lib = |id| match lib_id {
+        Some(lib_id) => SymbolId::External(ExternalId { lib_id, id }),
+        None => SymbolId::Item(id),
+    };
+
+    // Limit the depth to stop at cyclic aliases.
+    let mut node_id = node_id;
+    for _ in 0..16 {
+        let symbol::SymbolDef::Alias(alias) = &SymbolNodeRef::new(node_id, &lib.arena).get().def
+        else {
+            break;
+        };
+        match alias.path.symbol_id() {
+            Some(SymbolId::Item(target)) => node_id = *target,
+            Some(target) => return target.clone(),
+            // Alias not resolved yet.
+            None => break,
+        }
+    }
+    in_lib(node_id)
+}
 
 pub struct ResolveVisitor<'a, 'lib, 'ctx> {
     stack: ResolveStack,
@@ -153,7 +180,11 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
         if let Some(symbol_node_id) = self.stack.symbol_node_id()
             && let Some(node_id) = self.lib_ctx.lib().look_up(symbol_node_id, unresolved_path)
         {
-            paths.push(symbol::Path::Resolved(SymbolId::Item(node_id)));
+            paths.push(symbol::Path::Resolved(symbol_target(
+                self.lib_ctx.lib(),
+                node_id,
+                None,
+            )));
         }
 
         // Look up external libraries.
@@ -166,12 +197,11 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
                 Some(lib) => {
                     // The library appears in its own tree under its name, so only `mu` is removed.
                     let path = unresolved_path.without_mu_prefix();
-                    paths.extend(lib.look_up(lib.root, &path).map(|id| {
-                        symbol::Path::Resolved(SymbolId::External(ExternalId {
-                            lib_id: lib.id(),
-                            id,
-                        }))
-                    }));
+                    paths.extend(
+                        lib.look_up(lib.root, &path).map(|id| {
+                            symbol::Path::Resolved(symbol_target(&lib, id, Some(lib.id())))
+                        }),
+                    );
                 }
                 None => self.lib_ctx.push_err(ResolveErrorKind::LibraryNotLoaded {
                     name: external_name.to_string(),

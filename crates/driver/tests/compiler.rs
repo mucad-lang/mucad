@@ -34,7 +34,7 @@ fn compiler() -> Compiler {
 #[test]
 fn compile_source() {
     let mut compiler = compiler();
-    let (model, diags) = compiler.compile(mu::Source::from(DISC)).expect("A model");
+    let (model, diags) = compiler.compile(DISC).expect("A model");
 
     assert!(!diags.has_errors(), "{diags:?}");
     insta::assert_snapshot!("compile_source", display(&model));
@@ -44,7 +44,7 @@ fn compile_source() {
 fn compile_unresolved_symbol() {
     let mut compiler = compiler();
     let (_model, diags) = compiler
-        .compile(mu::Source::from("Unknown(radius = 4mm);"))
+        .compile("Unknown(radius = 4mm);")
         .expect("A model, despite errors");
 
     assert!(diags.has_errors(), "{diags:?}");
@@ -55,7 +55,7 @@ fn compile_unresolved_symbol() {
 fn compile_ops() {
     let mut compiler = compiler();
     let (model, diags) = compiler
-        .compile(mu::Source::from(
+        .compile(
             r#"
             __mu::geo2d::Circle(radius = 1mm).__mu::ops::scale(x = 2.0, y = 3.0, z = 1.0);
             __mu::geo2d::Circle(radius = 1mm).__mu::ops::orient(x = 0.0, y = 1.0, z = 0.0);
@@ -63,7 +63,7 @@ fn compile_ops() {
             __mu::geo2d::Circle(radius = 1mm).__mu::ops::buffer(distance = 0.5mm);
             __mu::geo2d::Circle(radius = 1mm).__mu::ops::revolve(angle = 360°);
             "#,
-        ))
+        )
         .expect("A model");
 
     assert!(!diags.has_errors(), "{diags:?}");
@@ -75,7 +75,7 @@ fn compile_ops() {
 fn compile_geo2d() {
     let mut compiler = compiler();
     let (model, diags) = compiler
-        .compile(mu::Source::from(
+        .compile(
             r#"
             __mu::geo2d::Ngon(n = 6, radius = 10mm);
             __mu::geo2d::Sector(radius = 10mm, start = 0°, end = 90°);
@@ -89,7 +89,7 @@ fn compile_geo2d() {
             __mu::geo2d::SinusoidalGearProfile(module = 1mm, teeth = 12, roundness = 0.5, stretch = 0.5);
             __mu::geo2d::Text(height = 5mm, text = "µcad", font_file = "");
             "#,
-        ))
+        )
         .expect("A model");
 
     assert!(!diags.has_errors(), "{diags:?}");
@@ -107,7 +107,7 @@ fn output_type(model: &mu::ModelTree) -> mu::types::ModelType {
 fn compile_geo3d() {
     let mut compiler = compiler();
     let (model, diags) = compiler
-        .compile(mu::Source::from("__mu::geo3d::Sphere(radius = 10mm);"))
+        .compile("__mu::geo3d::Sphere(radius = 10mm);")
         .expect("A model");
 
     assert!(!diags.has_errors(), "{diags:?}");
@@ -125,7 +125,7 @@ fn compile_geo3d_from_2d() {
         // Cylinder(radius = 10mm, height = 20mm)
         "__mu::geo2d::Circle(radius = 10mm).__mu::ops::extrude(height = 20mm, scale_x = 1.0, scale_y = 1.0, twist = 0°).__mu::ops::translate(x = 0mm, y = 0mm, z = -10mm);",
     ] {
-        let (model, diags) = compiler.compile(mu::Source::from(source)).expect("A model");
+        let (model, diags) = compiler.compile(source).expect("A model");
 
         assert!(!diags.has_errors(), "{diags:?}");
         assert_eq!(
@@ -140,8 +140,8 @@ fn compile_geo3d_from_2d() {
 #[test]
 fn compile_twice() {
     let mut compiler = compiler();
-    let (first, _) = compiler.compile(mu::Source::from(DISC)).expect("A model");
-    let (second, diags) = compiler.compile(mu::Source::from(DISC)).expect("A model");
+    let (first, _) = compiler.compile(DISC).expect("A model");
+    let (second, diags) = compiler.compile(DISC).expect("A model");
 
     assert!(!diags.has_errors(), "{diags:?}");
     assert_eq!(display(&first), display(&second));
@@ -184,15 +184,49 @@ fn fixture_std_compiler() -> Compiler {
 fn compile_with_std_fixture() {
     let mut compiler = fixture_std_compiler();
     let (model, diags) = compiler
-        .compile(mu::Source::from(
+        .compile(
             r#"
             std::geo2d::Circle(radius = 4mm);
             mu::std::geo2d::Circle(radius = 5mm);
             std::geo3d::Cylinder(radius = 6mm, height = 2mm);
             "#,
-        ))
+        )
         .expect("A model");
 
     assert!(!diags.has_errors(), "{diags:?}");
     insta::assert_snapshot!("compile_with_std_fixture", display(&model));
+}
+
+/// A compiler with the standard library of this repository (relative to `crates/driver`).
+fn std_compiler() -> Compiler {
+    Compiler::from_config(&mu::DriverConfig {
+        search_paths: vec!["../std/lib".into()],
+        ..Default::default()
+    })
+}
+
+/// `std::assert` re-exports the built-in `__mu::debug::assert`: a holding condition.
+#[test]
+fn compile_std_assert() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile(r#"std::assert(1 < 2, "One is less than two");"#)
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+}
+
+/// `std::assert` with a failing condition reports its message.
+#[test]
+fn compile_std_assert_fails() {
+    let mut compiler = std_compiler();
+    let diags = match compiler.compile(r#"std::assert(2 < 1, "Two is not less than one");"#) {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+
+    assert!(diags.has_errors(), "{diags:?}");
+    assert!(
+        format!("{diags:?}").contains("Assertion failed: Two is not less than one"),
+        "{diags:?}"
+    );
 }

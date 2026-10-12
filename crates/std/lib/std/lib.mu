@@ -5,6 +5,9 @@ pub mod geo2d;
 pub mod geo3d;
 pub mod ops;
 
+// Check a condition and stop with an error message if it does not hold.
+pub use __mu::debug::assert;
+
 /*
 pub use __mu::math;
 pub use __mu::print;
