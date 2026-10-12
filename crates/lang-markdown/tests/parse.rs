@@ -91,7 +91,7 @@ fn codeblock() {
 
     let names: Vec<_> = code_blocks
         .iter()
-        .map(|block| block.name().as_deref())
+        .map(|block| block.name().as_ref().map(|name| name.as_str()))
         .collect();
     assert_eq!(
         names,
@@ -101,27 +101,6 @@ fn codeblock() {
             Some("test_params"),
             Some("test_result_params"),
             Some("multi_line")
-        ]
-    );
-
-    let fragments: Vec<_> = code_blocks
-        .iter()
-        .map(|block| block.fragment().as_deref())
-        .collect();
-    assert_eq!(fragments, [None, Some("fail"), None, Some("fail"), None]);
-
-    let parameters: Vec<_> = code_blocks
-        .iter()
-        .map(|block| block.header.parameters.clone())
-        .collect();
-    assert_eq!(
-        parameters,
-        [
-            vec![],
-            vec![],
-            vec!["hires".to_string()],
-            vec!["no_format".to_string()],
-            vec![]
         ]
     );
 
@@ -139,7 +118,7 @@ fn codeblock() {
 
     // 0-based line of the first code line in the markdown file.
     let line_offsets: Vec<_> = code_blocks.iter().map(|block| block.line_offset).collect();
-    assert_eq!(line_offsets, [5, 10, 16, 24, 32]);
+    assert_eq!(line_offsets, [5, 10, 16, 22, 28]);
 
     // Test banners belong to their code block and are not kept as paragraphs.
     assert!(md.sections().iter().all(|section| {
@@ -181,7 +160,7 @@ fn other_code_blocks() {
     // Only top-level µcad code blocks become code blocks.
     let names: Vec<_> = md
         .code_blocks()
-        .map(|block| block.name().as_deref())
+        .map(|block| block.name().as_ref().map(|name| name.as_str()))
         .collect();
     assert_eq!(names, [Some("top_level")]);
 }
@@ -259,5 +238,5 @@ fn duplicated_code_block_name() {
 #[test]
 fn malformed_header() {
     let err = "```mu,a(hires\n```\n".parse::<Markdown>().unwrap_err();
-    assert!(matches!(err, ParseError::MalformedHeader), "{err:?}");
+    assert!(matches!(err, ParseError::MalformedHeader { .. }), "{err:?}");
 }

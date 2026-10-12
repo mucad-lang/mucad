@@ -3,17 +3,21 @@
 
 //! A markdown code block.
 
-use microcad_lang_base::{Source, SourceLocation, Url};
+use microcad_lang_base::{HashMap, Identifier, Source, SourceLocation, Url};
+
+use crate::ParseError;
 
 /// A code block header.
+///
+/// It has the following format: `mu,testname?param1=test&param2=foo&result`
 #[derive(Debug, Clone, PartialEq)]
 pub struct CodeBlockHeader {
-    /// Name of the code block.
-    pub name: Option<String>,
-    /// An optional fragment, e.g. to be used for test results: `#fragment`
-    pub fragment: Option<String>,
-    /// Parameters of the code block inside `()`
-    pub parameters: Vec<String>,
+    /// Code block language (e.g. `mu`)
+    pub lang: Option<String>,
+    /// Name of the code block, after comma.
+    pub name: Option<Identifier>,
+    /// Parameters
+    pub query: HashMap<Identifier, Option<String>>,
 }
 
 /// A code block header with, e.g.: `µcad#ok(hires)`
@@ -38,72 +42,115 @@ impl CodeBlockHeader {
         microcad_lang_base::MICROCAD_EXTENSIONS.contains(&language)
     }
 }
-
-/// Parse the info string of a fenced code block, e.g. `µcad,name#fragment(param1,param2)`.
 impl std::str::FromStr for CodeBlockHeader {
-    type Err = crate::ParseError;
+    type Err = ParseError;
 
-    fn from_str(info: &str) -> Result<Self, Self::Err> {
-        let info = info.trim();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
+        if s.is_empty() {
+            return Err(ParseError::MalformedHeader {
+                input: s.to_string(),
+            });
+        }
 
-        // 1. Locate structural delimiters
-        let hash_pos = info.find('#');
-        let paren_pos = info.find('(');
+        let mut lang = None;
+        let mut fragment = None;
+        let mut query = HashMap::default();
 
-        // 2. Parse name (`µcad,my_name`)
-        let name_end = hash_pos.or(paren_pos).unwrap_or(info.len());
-        let name_part = info[..name_end].trim();
-        let name = name_part
-            .find(',')
-            .map(|comma_idx| name_part[comma_idx + 1..].trim().to_string());
-
-        // 3. Parse fragment (`#ok`, `#fail`, etc.)
-        let fragment = hash_pos.map(|start| {
-            let end = paren_pos.unwrap_or(info.len());
-            info[start + 1..end].trim().to_string()
-        });
-
-        // 4. Parse parameters (`(hires, lowres)`)
-        let parameters = match paren_pos {
-            Some(start) => {
-                let end = info.find(')').ok_or(crate::ParseError::MalformedHeader)?;
-                info[start + 1..end]
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect()
-            }
-            None => Vec::new(),
+        // 1. Separate language from the fragment part at '#'
+        let (lang_part, rest) = match s.split_once(',') {
+            Some((l, r)) => (l, Some(r)),
+            None => (s, None),
         };
 
-        Ok(Self {
-            name,
-            fragment,
-            parameters,
+        let lang_trimmed = lang_part.trim();
+        if !lang_trimmed.is_empty() {
+            lang = Some(lang_trimmed.to_string());
+        }
+
+        let Some(rest) = rest else {
+            return Ok(CodeBlockHeader {
+                lang,
+                name: fragment,
+                query,
+            });
+        };
+
+        // 2. Separate test name from query parameters at '?' inside the fragment
+        let (name_part, query_part) = match rest.split_once('?') {
+            Some((n, q)) => (Some(n), Some(q)),
+            None => (Some(rest), None),
+        };
+
+        if let Some(name_str) = name_part {
+            let name_trimmed = name_str.trim();
+            fragment = Some(Identifier::from_str(name_trimmed).map_err(|_| {
+                ParseError::MalformedHeader {
+                    input: s.to_string(),
+                }
+            })?);
+        }
+
+        let Some(query_str) = query_part else {
+            return Ok(CodeBlockHeader {
+                lang,
+                name: fragment,
+                query,
+            });
+        };
+
+        // 3. Parse query-style parameters and flags separated by '&'
+        for param_str in query_str.split('&') {
+            let param_str = param_str.trim();
+            if param_str.is_empty() {
+                continue;
+            }
+
+            if let Some((key, val)) = param_str.split_once('=') {
+                let id = Identifier::from_str(key.trim())
+                    .map_err(|err| ParseError::InvalidParameter { param: err })?;
+                let val = val.trim().to_string();
+                query.insert(id, Some(val));
+            } else {
+                // Treat items without '=' as boolean flags (value = None)
+                let id = Identifier::from_str(param_str)
+                    .map_err(|err| ParseError::InvalidParameter { param: err })?;
+                query.insert(id, None);
+            }
+        }
+
+        Ok(CodeBlockHeader {
+            lang,
+            name: fragment,
+            query,
         })
     }
 }
-
 impl std::fmt::Display for CodeBlockHeader {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(name) = &self.name {
-            writeln!(f, "{}\n", Self::test_banner_string(name))?
+        if let Some(lang) = &self.lang {
+            write!(f, "{lang}")?;
+        }
+        if let Some(fragment) = &self.name {
+            write!(f, ",{fragment}")?;
         }
 
-        write!(f, "```{ext}", ext = microcad_lang_base::MICROCAD_EXTENSION)?;
-        if let Some(name) = &self.name {
-            write!(f, ",{name}")?
-        }
+        if !self.query.is_empty() {
+            // Sort keys deterministically for clean output serialization
+            let mut sorted_params: Vec<_> = self.query.iter().collect();
+            sorted_params.sort_unstable_by_key(|(k, _)| *k);
 
-        match &self.fragment {
-            None => {}
-            Some(fragment) => {
-                write!(f, "#{fragment}")?;
+            // Use a shifting separator to avoid manual index tracking
+            let mut sep = '?';
+            for (key, val) in sorted_params {
+                match val {
+                    Some(v) => write!(f, "{sep}{key}={v}")?,
+                    None => write!(f, "{sep}{key}")?,
+                }
+                sep = '&';
             }
-        };
-        if !self.parameters.is_empty() {
-            write!(f, "({})", self.parameters.join(","))?;
         }
+
         Ok(())
     }
 }
@@ -123,13 +170,8 @@ impl CodeBlock {
     /// Return the name of this code block.
     ///
     /// Must be unique within a markdown file.
-    pub fn name(&self) -> &Option<String> {
+    pub fn name(&self) -> &Option<Identifier> {
         &self.header.name
-    }
-
-    /// Return test result.
-    pub fn fragment(&self) -> &Option<String> {
-        &self.header.fragment
     }
 
     pub fn code(&self) -> &str {
@@ -140,12 +182,15 @@ impl CodeBlock {
     ///
     /// A code block can be formatted if there is no `no_format` parameter given.
     pub fn can_format(&self) -> bool {
-        !self.header.parameters.contains(&String::from("no_format"))
+        !self
+            .header
+            .query
+            .contains_key(&Identifier::from("no_format"))
     }
 
     /// Get source for a code block
     pub fn source(&self, mut url: Url) -> Source {
-        url.set_fragment(self.header.name.as_deref());
+        url.set_fragment(self.header.name.as_ref().map(|name| name.as_str()));
         Source::new(
             SourceLocation::new(url).with_line_offset(self.line_offset as u32),
             self.code.clone(),
@@ -155,7 +200,7 @@ impl CodeBlock {
 
 impl std::fmt::Display for CodeBlock {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{}", self.header)?;
+        writeln!(f, "```{}", self.header)?;
         if !self.code.is_empty() {
             writeln!(f, "{}", self.code)?;
         }

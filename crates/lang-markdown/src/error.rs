@@ -3,6 +3,7 @@
 
 //! Markdown parse errors.
 
+use microcad_lang_base::Identifier;
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -13,12 +14,19 @@ pub enum ParseError {
     #[diagnostic(help("Everything up to the end of the file is read as code."))]
     UnclosedCodeBlock { line: usize },
 
-    #[error("Malformed header")]
-    MalformedHeader,
+    #[error("Malformed code block header: `{input}`")]
+    #[diagnostic(help("Expected format: lang#name?param1=val1&flag"))]
+    MalformedHeader { input: String },
+
+    #[error("Invalid parameter format: `{param}`")]
+    #[diagnostic(help(
+        "Parameters should be key-value pairs (`key=value`) or boolean flags (`flag`)."
+    ))]
+    InvalidParameter { param: String },
 
     #[error("Invalid test result: {0}")]
     InvalidTestResult(String),
 
     #[error("Duplicated code block name: {0}")]
-    DuplicatedCodeBlockName(String),
+    DuplicatedCodeBlockName(Identifier),
 }
