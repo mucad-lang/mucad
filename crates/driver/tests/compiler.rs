@@ -78,6 +78,32 @@ fn compile_ops() {
     insta::assert_snapshot!("compile_ops", display(&model));
 }
 
+/// Built-in primitives of `__mu::geo2d`.
+#[test]
+fn compile_geo2d() {
+    let mut compiler = compiler();
+    let (model, diags) = compiler
+        .compile(mu::Source::from(
+            r#"
+            __mu::geo2d::Ngon(n = 6, radius = 10mm);
+            __mu::geo2d::Sector(radius = 10mm, start = 0°, end = 90°);
+            __mu::geo2d::RoundedRect(
+                width = 20mm, height = 10mm, x = 0mm, y = 0mm,
+                radius_bottom_left = 1mm, radius_bottom_right = 1mm,
+                radius_top_left = 2mm, radius_top_right = 2mm,
+            );
+            __mu::geo2d::Line(x0 = 0.0, y0 = 0.0, x1 = 10.0, y1 = 5.0);
+            __mu::geo2d::InvoluteGearProfile(module = 1mm, teeth = 12, pressure_angle = 20°);
+            __mu::geo2d::SinusoidalGearProfile(module = 1mm, teeth = 12, roundness = 0.5, stretch = 0.5);
+            __mu::geo2d::Text(height = 5mm, text = "µcad", font_file = "");
+            "#,
+        ))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    insta::assert_snapshot!("compile_geo2d", display(&model));
+}
+
 /// A compiler can be used again, the main library of the previous run is replaced.
 #[test]
 fn compile_twice() {

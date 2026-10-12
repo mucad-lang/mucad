@@ -44,8 +44,17 @@ fn test_cube() -> std::io::Result<()> {
 
     assert_stl_snapshot("test_cube", |writer| {
         let rect = rect(Rect::new((0., 0.), (10., 10.0)));
-        let extrude = mu::ops::extrude(arguments!(self = rect, height = Value::mm(10.0)), &mut ctx)
-            .expect("No error");
+        let extrude = mu::ops::extrude(
+            arguments!(
+                self = rect,
+                height = Value::mm(10.0),
+                scale_x = Value::from(1.0),
+                scale_y = Value::from(1.0),
+                twist = Value::deg(0.0)
+            ),
+            &mut ctx,
+        )
+        .expect("No error");
         let geometry = Renderer::new().render(&extrude).expect("No render errors");
 
         geometry.write_ascii_stl(writer)?;
@@ -78,8 +87,17 @@ fn stl_export() -> std::io::Result<()> {
     group.append(translate);
 
     let diff = mu::ops::difference(arguments!(self = group), &mut ctx).expect("No error");
-    let extrude = mu::ops::extrude(arguments!(self = diff, height = Value::mm(3.0)), &mut ctx)
-        .expect("No error");
+    let extrude = mu::ops::extrude(
+        arguments!(
+            self = diff,
+            height = Value::mm(3.0),
+            scale_x = Value::from(1.0),
+            scale_y = Value::from(1.0),
+            twist = Value::deg(0.0)
+        ),
+        &mut ctx,
+    )
+    .expect("No error");
 
     // Test write ASCII STL
     StlExporter::default()

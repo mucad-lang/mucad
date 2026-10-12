@@ -36,12 +36,16 @@ fn builtin_mdbook() {
         .md_files
         .get(Path::new("geo2d/README.md"))
         .expect("A module page");
+    let [Block::UnorderedList(UnorderedList(primitives))] = geo2d.sections()[1].content.as_slice()
+    else {
+        panic!("A list of primitives");
+    };
     assert_eq!(
-        geo2d.sections()[1].content,
-        [Block::UnorderedList(UnorderedList::new([
+        primitives[..2],
+        [
             ListItem::new("[`Circle`](Circle.md): A circle with a radius."),
             ListItem::new("[`Rect`](Rect.md): A rectangle."),
-        ]))]
+        ]
     );
 
     assert!(

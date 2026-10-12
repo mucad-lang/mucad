@@ -588,7 +588,7 @@ pub mod color {
 /// Built-in 2D primitives
 #[builtin_mod]
 pub mod geo2d {
-    use microcad_lang_types::Length;
+    use microcad_lang_types::{Angle, Integer, Length, Scalar};
     use microcad_macros::builtin_primitive;
 
     use super::*;
@@ -613,6 +613,102 @@ pub mod geo2d {
         pub x: Length,
         /// Y position (bottom side) of the rectangle.
         pub y: Length,
+    }
+
+    /// A regular convex polygon with `n` corners.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
+    pub struct Ngon {
+        /// Number of corners.
+        pub n: Integer,
+        /// Radius of the circumscribed circle.
+        pub radius: Length,
+    }
+
+    /// A circle sector (a pie shape) between a start and an end angle.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
+    pub struct Sector {
+        /// Radius of the circle.
+        pub radius: Length,
+        /// Start angle.
+        pub start: Angle,
+        /// End angle.
+        pub end: Angle,
+    }
+
+    /// A rectangle with rounded corners.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
+    pub struct RoundedRect {
+        /// Width of the rectangle.
+        pub width: Length,
+        /// Height of the rectangle.
+        pub height: Length,
+        /// X position (left side) of the rectangle.
+        pub x: Length,
+        /// Y position (bottom side) of the rectangle.
+        pub y: Length,
+        /// Radius of the bottom left corner.
+        pub radius_bottom_left: Length,
+        /// Radius of the bottom right corner.
+        pub radius_bottom_right: Length,
+        /// Radius of the top left corner.
+        pub radius_top_left: Length,
+        /// Radius of the top right corner.
+        pub radius_top_right: Length,
+    }
+
+    /// A line between two points.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
+    pub struct Line {
+        /// X coordinate of the start point (in mm).
+        pub x0: Scalar,
+        /// Y coordinate of the start point (in mm).
+        pub y0: Scalar,
+        /// X coordinate of the end point (in mm).
+        pub x1: Scalar,
+        /// Y coordinate of the end point (in mm).
+        pub y1: Scalar,
+    }
+
+    /// The profile of an involute gear.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
+    pub struct InvoluteGearProfile {
+        /// Module of the gear (pitch diameter / number of teeth).
+        pub module: Length,
+        /// Number of teeth.
+        pub teeth: Integer,
+        /// Pressure angle.
+        pub pressure_angle: Angle,
+    }
+
+    /// The profile of a gear with sinusoidal teeth.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
+    pub struct SinusoidalGearProfile {
+        /// Module of the gear (pitch diameter / number of teeth).
+        pub module: Length,
+        /// Number of teeth.
+        pub teeth: Integer,
+        /// Roundness of the teeth (`0.0..1.0`).
+        pub roundness: Scalar,
+        /// Stretch of the teeth (`0.0..1.0`).
+        pub stretch: Scalar,
+    }
+
+    /// A text with a height.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
+    pub struct Text {
+        /// Height of the text.
+        pub height: Length,
+        /// The text.
+        pub text: String,
+        /// Font file (`*.ttf` or `*.otf`), a built-in font if empty.
+        pub font_file: String,
     }
 }
 

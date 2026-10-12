@@ -1,0 +1,39 @@
+---
+source: crates/driver/tests/compiler.rs
+expression: display(&model)
+---
+Group
+├── Builtin(__mu::geo2d::Ngon[0x3a43aeb6e7500c62])
+│       - n [in]: Integer = 6
+│       - radius [in]: Length = 10mm
+├── Builtin(__mu::geo2d::Sector[0xce0d2fad1f5a6e72])
+│       - end [in]: Angle = 90°
+│       - radius [in]: Length = 10mm
+│       - start [in]: Angle = 0°
+├── Builtin(__mu::geo2d::RoundedRect[0x1c5811ce9a210cb])
+│       - height [in]: Length = 10mm
+│       - radius_bottom_left [in]: Length = 1mm
+│       - radius_bottom_right [in]: Length = 1mm
+│       - radius_top_left [in]: Length = 2mm
+│       - radius_top_right [in]: Length = 2mm
+│       - width [in]: Length = 20mm
+│       - x [in]: Length = 0mm
+│       - y [in]: Length = 0mm
+├── Builtin(__mu::geo2d::Line[0xac8da3aa059e19aa])
+│       - x0 [in]: Scalar = 0
+│       - x1 [in]: Scalar = 10
+│       - y0 [in]: Scalar = 0
+│       - y1 [in]: Scalar = 5
+├── Builtin(__mu::geo2d::InvoluteGearProfile[0x7bcb95d94b1b9570])
+│       - module [in]: Length = 1mm
+│       - pressure_angle [in]: Angle = 20°
+│       - teeth [in]: Integer = 12
+├── Builtin(__mu::geo2d::SinusoidalGearProfile[0xc3e83730a2cab2f5])
+│       - module [in]: Length = 1mm
+│       - roundness [in]: Scalar = 0.5
+│       - stretch [in]: Scalar = 0.5
+│       - teeth [in]: Integer = 12
+└── Builtin(__mu::geo2d::Text[0xf22633df43390467])
+        - font_file [in]: String = 
+        - height [in]: Length = 5mm
+        - text [in]: String = µcad
