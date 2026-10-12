@@ -17,18 +17,29 @@ struct BuiltinFnSig {
     /// E:g. `add`
     name: Ident,
     is_variadic: bool,
+    is_impure: bool,
     params: Vec<BuiltinParam>,
     return_type: Option<BuiltinType>,
 }
 
+syn::custom_keyword!(impure);
+
 impl Parse for BuiltinFnSig {
     fn parse(input: ParseStream) -> Result<Self> {
-        // 1. Parse `mod_name::name`
+        // Check if the keyword `impure` exists.
+        let is_impure = if input.peek(impure) {
+            let _: Ident = input.parse()?;
+            true
+        } else {
+            false
+        };
+
+        // 2. Parse `mod_name::name`
         let mod_name: Ident = input.parse()?;
         input.parse::<Token![::]>()?;
         let name: Ident = input.parse()?;
 
-        // 2. Parse parenthesized parameter list `(arg1: Type1, ...)`
+        // 3. Parse parenthesized parameter list `(arg1: Type1, ...)`
         let content;
         syn::parenthesized!(content in input);
 
@@ -64,6 +75,7 @@ impl Parse for BuiltinFnSig {
             params,
             return_type,
             is_variadic,
+            is_impure,
         })
     }
 }
@@ -76,6 +88,7 @@ pub(crate) fn builtin_fn_impl(attr: TokenStream, item: TokenStream) -> TokenStre
         params,
         return_type,
         is_variadic,
+        is_impure,
     } = parse_macro_input!(attr as BuiltinFnSig);
 
     // Parse the annotated function
@@ -137,13 +150,19 @@ pub(crate) fn builtin_fn_impl(attr: TokenStream, item: TokenStream) -> TokenStre
 
     let doc_comment = helpers::attr_fetch_doc(&input_fn.attrs);
 
+    let fn_type = if is_impure {
+        quote! { microcad_lang_types::function_type!(#formatted_params #return_type).impure() }
+    } else {
+        quote! { microcad_lang_types::function_type!(#formatted_params #return_type) }
+    };
+
     quote! {
         #fn_with_doc
 
         pub static #static_name: BuiltinItem = builtin_item!(
             Function
             #doc_comment
-            #mod_name::#name(microcad_lang_types::function_type!(#formatted_params #return_type))
+            #mod_name::#name(#fn_type)
         );
     }
     .into()
