@@ -12,7 +12,7 @@ pub sketch Circle(radius: Length, center = (x = 0.0mm, y = 0.0mm)) {
     }
 
     __mu::geo2d::Circle(radius)
-        .__mu::ops::translate(x = center.x, y = center.y);
+        .__mu::ops::translate(x = center.x, y = center.y, z = 0mm);
 }
 
 /// A frame with a thickness.
