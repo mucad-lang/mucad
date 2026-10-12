@@ -88,8 +88,8 @@ where
         let range = Expr::from(ir::Call {
             path: __mu!(core::range).into(),
             args: ir::ArgumentList::from_iter([
-                Expr::desugar(&a.start.expr, context)?,
-                Expr::desugar(&a.end.expr, context)?,
+                ir::Argument::named("start", Expr::desugar(&a.start.expr, context)?),
+                ir::Argument::named("end", Expr::desugar(&a.end.expr, context)?),
             ]),
             src_ref: context.span_to_src_ref(&a.span),
         });
@@ -100,10 +100,13 @@ where
             Expr::from(ir::Call {
                 path: __mu!(core::mul).into(),
                 args: ir::ArgumentList::from_iter([
-                    range,
-                    Expr::from(ir::ConstantValue::from(
-                        (Value::from(Scalar::from_num(1.0)) * unit)?,
-                    )),
+                    ir::Argument::named("lhs", range),
+                    ir::Argument::named(
+                        "rhs",
+                        Expr::from(ir::ConstantValue::from(
+                            (Value::from(Scalar::from_num(1.0)) * unit)?,
+                        )),
+                    ),
                 ]),
                 src_ref: context.span_to_src_ref(&a.span),
             })
@@ -126,7 +129,7 @@ where
 
         let list = Expr::from(ir::Call {
             path: __mu!(core::list).into(),
-            args: ir::ArgumentList::from_iter(args),
+            args: ir::ArgumentList::from_iter(args.into_iter().map(ir::Argument::Unnamed)),
             src_ref: context.span_to_src_ref(&a.span),
         });
 
@@ -136,10 +139,13 @@ where
             Expr::from(ir::Call {
                 path: __mu!(core::mul).into(),
                 args: ir::ArgumentList::from_iter([
-                    list,
-                    Expr::from(ir::ConstantValue::from(
-                        (Value::from(Scalar::from_num(1.0)) * unit)?,
-                    )),
+                    ir::Argument::named("lhs", list),
+                    ir::Argument::named(
+                        "rhs",
+                        Expr::from(ir::ConstantValue::from(
+                            (Value::from(Scalar::from_num(1.0)) * unit)?,
+                        )),
+                    ),
                 ]),
                 src_ref: context.span_to_src_ref(&a.span),
             })

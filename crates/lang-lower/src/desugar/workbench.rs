@@ -92,32 +92,26 @@ impl ir::Init {
                 return;
             }
 
+            // An init parameter with the same name passes its value through.
+            // Its default value is applied by argument matching, if the argument is missing.
+            if init_parameters.get_by_name(&param.id).is_some() {
+                statements.push(ir::InitStatement::new(
+                    &param.id,
+                    ir::WorkbenchExpression::local(param.id.as_str()),
+                ));
+                return;
+            }
+
             match &param.default_value {
                 Some(default_value) => {
                     let expr: ir::WorkbenchExpression = default_value.clone().cast_into();
                     statements.push(ir::InitStatement::new(&param.id, expr));
                 }
-                None => {
-                    if let Some(init_param) = init_parameters.get_by_name(&param.id) {
-                        match &init_param.default_value {
-                            Some(default_value) => {
-                                let expr: ir::WorkbenchExpression =
-                                    default_value.clone().cast_into();
-                                statements.push(ir::InitStatement::new(&param.id, expr));
-                            }
-                            None => statements.push(ir::InitStatement::new(
-                                &param.id,
-                                ir::WorkbenchExpression::local(param.id.as_str()),
-                            )),
-                        }
-                    } else {
-                        context.push_err(LowerError::InputNotInitialized {
-                            name: param.id.clone(),
-                            src_ref: self.src_ref,
-                            param_src_ref: param.src_ref,
-                        });
-                    }
-                }
+                None => context.push_err(LowerError::InputNotInitialized {
+                    name: param.id.clone(),
+                    src_ref: self.src_ref,
+                    param_src_ref: param.src_ref,
+                }),
             }
         });
 
@@ -223,10 +217,13 @@ impl Desugar<ast::Expression> for ir::WorkbenchExpression {
                         Attribute(a) => Self::Call(ir::Call {
                             path: __mu!(core::attribute_access).into(),
                             args: ir::ArgumentList::from_iter([
-                                lhs,
-                                Self::Value(
-                                    ir::ConstantValue::new(a.name.clone())
-                                        .with_src_ref(context.span_to_src_ref(&a.span)),
+                                ir::Argument::named("lhs", lhs),
+                                ir::Argument::named(
+                                    "name",
+                                    Self::Value(
+                                        ir::ConstantValue::new(a.name.clone())
+                                            .with_src_ref(context.span_to_src_ref(&a.span)),
+                                    ),
                                 ),
                             ]),
                             src_ref,
@@ -234,10 +231,13 @@ impl Desugar<ast::Expression> for ir::WorkbenchExpression {
                         Tuple(t) => Self::Call(ir::Call {
                             path: __mu!(core::member_access).into(),
                             args: ir::ArgumentList::from_iter([
-                                lhs,
-                                Self::Value(
-                                    ir::ConstantValue::new(t.name.clone())
-                                        .with_src_ref(context.span_to_src_ref(&t.span)),
+                                ir::Argument::named("lhs", lhs),
+                                ir::Argument::named(
+                                    "name",
+                                    Self::Value(
+                                        ir::ConstantValue::new(t.name.clone())
+                                            .with_src_ref(context.span_to_src_ref(&t.span)),
+                                    ),
                                 ),
                             ]),
                             src_ref,
@@ -251,8 +251,8 @@ impl Desugar<ast::Expression> for ir::WorkbenchExpression {
                         ListElement(e) => Self::Call(ir::Call {
                             path: __mu!(core::list_access).into(),
                             args: ir::ArgumentList::from_iter([
-                                lhs,
-                                Self::desugar(e.as_ref(), context)?,
+                                ir::Argument::named("lhs", lhs),
+                                ir::Argument::named("index", Self::desugar(e.as_ref(), context)?),
                             ]),
                             src_ref,
                         }),

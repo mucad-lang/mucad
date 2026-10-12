@@ -113,10 +113,13 @@ impl Desugar<ast::Expression> for ir::FunctionExpression {
                         Tuple(t) => Self::Call(ir::Call {
                             path: __mu!(core::member_access).into(),
                             args: ir::ArgumentList::from_iter([
-                                lhs,
-                                Self::Value(
-                                    ir::ConstantValue::new(t.name.clone())
-                                        .with_src_ref(context.span_to_src_ref(&t.span)),
+                                ir::Argument::named("lhs", lhs),
+                                ir::Argument::named(
+                                    "name",
+                                    Self::Value(
+                                        ir::ConstantValue::new(t.name.clone())
+                                            .with_src_ref(context.span_to_src_ref(&t.span)),
+                                    ),
                                 ),
                             ]),
                             src_ref,
@@ -130,8 +133,8 @@ impl Desugar<ast::Expression> for ir::FunctionExpression {
                         ListElement(e) => Self::Call(ir::Call {
                             path: __mu!(core::list_access).into(),
                             args: ir::ArgumentList::from_iter([
-                                lhs,
-                                Self::desugar(e.as_ref(), context)?,
+                                ir::Argument::named("lhs", lhs),
+                                ir::Argument::named("index", Self::desugar(e.as_ref(), context)?),
                             ]),
                             src_ref,
                         }),

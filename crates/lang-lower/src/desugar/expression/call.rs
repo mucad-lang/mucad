@@ -169,7 +169,11 @@ pub fn lower_spec(
 
     Ok(ir::Call {
         path: __mu!(core::format_spec).into(),
-        args: ir::ArgumentList::from_iter([expr, width, precision]),
+        args: ir::ArgumentList::from_iter([
+            ir::Argument::named("expr", expr),
+            ir::Argument::named("width", width),
+            ir::Argument::named("precision", precision),
+        ]),
         src_ref: context.span_to_src_ref(&spec.span),
     })
 }
