@@ -10972,9 +10972,7 @@ dependencies = [
  "clap",
  "env_logger",
  "glob",
- "microcad-builtin",
- "microcad-docgen",
- "microcad-lang-base",
+ "microcad-driver",
  "regex",
  "walkdir",
 ]
