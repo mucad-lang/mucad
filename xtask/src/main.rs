@@ -4,8 +4,11 @@
 use std::error::Error;
 
 use clap::{Parser, Subcommand};
-use microcad_docgen::GenerateDoc;
-use microcad_lang_base::{MICROCAD_EXTENSION, MICROCAD_EXTENSIONS};
+
+use microcad_driver::prelude as mu;
+
+use mu::traits::GenerateDoc;
+use mu::{MICROCAD_EXTENSION, MICROCAD_EXTENSIONS};
 
 use crate::update_copyright::CopyrightUpdater;
 
@@ -25,10 +28,14 @@ enum Commands {
     UpdateCopyright,
 
     /// Generate documentation for builtins
-    BuiltinDocGen { path: Option<std::path::PathBuf> },
+    DocgenBuiltin {
+        output_path: Option<std::path::PathBuf>,
+    },
 
     /// Generate documentation for standard library
-    StdDocGen { path: Option<std::path::PathBuf> },
+    DocgenStd {
+        output_path: Option<std::path::PathBuf>,
+    },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -46,12 +53,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .update()?;
             Ok(())
         }
-        Commands::BuiltinDocGen { path } => {
-            let builtins = microcad_builtin::BuiltinLibrary::new();
-            microcad_docgen::BuiltinLibraryDocGenerator::new(&builtins)
+        Commands::DocgenBuiltin { output_path: path } => {
+            let builtins = mu::BuiltinLibrary::new();
+            mu::docgen::BuiltinLibraryDocGenerator::new(&builtins)
                 .write_doc(path.unwrap_or(std::path::PathBuf::from("target/docs/builtin")))
         }
-        Commands::StdDocGen { .. } => {
+        Commands::DocgenStd { .. } => {
             todo!()
         }
     }
