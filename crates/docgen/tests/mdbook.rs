@@ -85,17 +85,20 @@ fn library_mdbook() {
     let summary = md_file(&mdbook, "SUMMARY.md");
     assert_eq!(
         summary,
-        "# Summary\n\n\
-         - [`doc_lib`](README.md)\n  \
-           - [`sub`](sub/README.md)\n    \
-             - [`Plate`](sub/Plate.md)\n  \
-           - [`Disc`](Disc.md)\n  \
-           - [`Raise`](Raise.md)\n"
+        r#"# Summary
+
+- [`Library`]()
+  - [`doc_lib`](README.md)
+    - [`sub`](sub/README.md)
+      - [`Plate`](sub/Plate.md)
+    - [`Disc`](Disc.md)
+    - [`Raise`](Raise.md)
+"#
     );
 
     let readme = md_file(&mdbook, "README.md");
     assert!(
-        readme.contains("## Sub-modules\n\n- [`sub`](./sub/README.md): A sub module.\n"),
+        readme.contains("## Sub-modules\n\n- [`sub`](./sub): A sub module.\n"),
         "{readme}"
     );
     assert!(
