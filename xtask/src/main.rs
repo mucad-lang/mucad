@@ -53,13 +53,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .update()?;
             Ok(())
         }
-        Commands::DocgenBuiltin { output_path: path } => {
-            let builtins = mu::BuiltinLibrary::new();
-            mu::docgen::BuiltinLibraryDocGenerator::new(&builtins)
-                .write_doc(path.unwrap_or(std::path::PathBuf::from("target/docs/builtin")))
+        Commands::DocgenBuiltin { output_path } => {
+            let builtin_lib = mu::BuiltinLibrary::new();
+            mu::docgen::BuiltinLibraryDocGenerator::new(&builtin_lib)
+                .write_doc(output_path.unwrap_or(std::path::PathBuf::from("target/docs/builtin")))
         }
-        Commands::DocgenStd { .. } => {
-            todo!()
+        Commands::DocgenStd { output_path } => {
+            let std_lib = mu::stdlib::load("crates/std/lib/std");
+            mu::docgen::LibraryDocGenerator::new(&std_lib)
+                .write_doc(output_path.unwrap_or(std::path::PathBuf::from("target/docs/std")))
         }
     }
 }
