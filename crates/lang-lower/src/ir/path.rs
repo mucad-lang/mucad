@@ -47,6 +47,19 @@ impl UnresolvedPath {
             None
         }
     }
+
+    /// The path without a leading `mu`, which marks external libraries:
+    /// `mu::std::geo2d::Circle` → `std::geo2d::Circle`.
+    pub fn without_mu_prefix(&self) -> UnresolvedPath {
+        match self.parts.first() {
+            Some(part) if !self.is_absolute && part.as_str() == "mu" => UnresolvedPath {
+                is_absolute: false,
+                parts: self.parts[1..].into(),
+                src_ref: self.src_ref,
+            },
+            _ => self.clone(),
+        }
+    }
 }
 
 impl SingleIdentifier for UnresolvedPath {
