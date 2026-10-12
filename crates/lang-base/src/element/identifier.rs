@@ -186,6 +186,19 @@ impl<'a> From<&'a Identifier> for &'a str {
     }
 }
 
+impl std::str::FromStr for Identifier {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let identifier = Identifier::no_ref(s);
+        if identifier.is_valid() {
+            Ok(identifier)
+        } else {
+            Err(s.to_string())
+        }
+    }
+}
+
 impl std::fmt::Display for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if self.is_empty() {
