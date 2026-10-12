@@ -50,7 +50,9 @@ impl<'a, 'source> Fold<'a, 'source> {
         let builtin_fn = match &call.path.symbol_id() {
             Some(microcad_lang_base::SymbolId::Builtin(builtin_id)) => {
                 match self.context.builtins.get(*builtin_id) {
-                    Some(BuiltinItem::Function(builtin_fn)) => builtin_fn,
+                    Some(BuiltinItem::Function(builtin_fn)) if !builtin_fn.is_impure() => {
+                        builtin_fn
+                    }
                     _ => return None,
                 }
             }
