@@ -137,6 +137,7 @@ impl Compiler {
             .chain(std::iter::once(microcad_std::global_library_search_path()))
             .flat_map(|path| [path.join(info.path()), path.join(info.name.as_str())])
             .find(|path| path.join(mu::resolve::Manifest::MU_TOML).is_file());
+
         if let Some(path) = found {
             return Ok(path);
         }
