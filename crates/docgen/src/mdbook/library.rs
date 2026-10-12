@@ -38,7 +38,7 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
             let id = symbol.name()?;
             let filename = match symbol.def {
                 SymbolDef::InlineModule(_) | SymbolDef::SourceFile(_) => {
-                    format!("./{id}/README.md")
+                    format!("./{id}")
                 }
                 _ => format!("./{id}.md"),
             };
@@ -175,23 +175,11 @@ impl<'lib> LibraryDocGenerator<'lib> {
         )
     }
 
-    /// Top-level symbols with a page, e.g. the main source file module.
-    ///
-    /// The library root itself is an unnamed symbol without a page.
-    fn top_level(&self) -> Vec<SymbolNodeRef<'lib>> {
-        self.lib.root().children().filter(Self::has_page).collect()
-    }
-
     /// Title of the library: its name from the manifest or the name of its main source file.
     fn title(&self) -> String {
         self.lib
             .name()
             .map(|name| name.to_string())
-            .or_else(|| {
-                self.top_level()
-                    .into_iter()
-                    .find_map(|symbol| symbol.name().map(|id| id.to_string()))
-            })
             .unwrap_or_else(|| "Library".to_string())
     }
 
@@ -227,11 +215,7 @@ impl<'lib> LibraryDocGenerator<'lib> {
 
     fn summary(&self) -> md::MdBookSummary {
         let mut entries = Vec::new();
-        self.top_level().into_iter().for_each(|symbol| {
-            if let Some(id) = symbol.name() {
-                Self::summary_entries(symbol, id.to_string(), 0, &mut entries)
-            }
-        });
+        Self::summary_entries(self.lib.root(), self.title(), 0, &mut entries);
         md::MdBookSummary::from_iter(entries)
     }
 }
