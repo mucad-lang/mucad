@@ -1,0 +1,28 @@
+---
+source: crates/driver/tests/compiler.rs
+expression: display(&model)
+---
+Group
+├── Builtin(Scale((2, 3, 1)))
+│   |   - x: Scalar = 2
+│   |   - y: Scalar = 3
+│   |   - z: Scalar = 1
+│   └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│           - radius [in]: Length = 1mm
+├── Builtin(RotateMatrix(Matrix3 [[1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]]))
+│   |   - x: Scalar = 0
+│   |   - y: Scalar = 1
+│   |   - z: Scalar = 0
+│   └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│           - radius [in]: Length = 1mm
+├── Builtin(__mu::ops::hull[0x3f5bb515253bb364])
+│   └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│           - radius [in]: Length = 1mm
+├── Builtin(__mu::ops::buffer[0xbfbac96d7488cad9])
+│   |   - distance: Length = 0.5mm
+│   └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│           - radius [in]: Length = 1mm
+└── Builtin(__mu::ops::revolve[0x33b1ed118f77c13a])
+    |   - angle: Angle = 360°
+    └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+            - radius [in]: Length = 1mm

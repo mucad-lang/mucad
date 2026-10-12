@@ -85,8 +85,7 @@ impl Compiler {
     pub fn compile(&mut self, source: impl Into<mu::Source>) -> CompileResult<mu::ModelTree> {
         self.load_std()
             .then(|()| {
-                mu::resolve::resolve_source(source, &mut self.resolve_context)
-                    .into_compile_result()
+                mu::resolve::resolve_source(source, &mut self.resolve_context).into_compile_result()
             })
             .then(|lib| {
                 let lib_cache = self.resolve_context.lib_cache();

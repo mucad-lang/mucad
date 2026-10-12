@@ -7,6 +7,9 @@ Group
     |   - height [in]: Length = 2mm
     └── Builtin(__mu::ops::extrude[0x9a631419a5cbe800])
         |   - height: Length = 2mm
+        |   - scale_x: Scalar = 1
+        |   - scale_y: Scalar = 1
+        |   - twist: Angle = 0°
         └── Workpiece(sketch)
             |   - radius [in]: Length = 4mm
             └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])

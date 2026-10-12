@@ -50,7 +50,13 @@ fn render_extrude() {
     let mut ctx = BuiltinEvalContext::default();
 
     let extrude = mu::ops::extrude(
-        arguments!(self = circle(42.0), height = Value::mm(23.0)),
+        arguments!(
+            self = circle(42.0),
+            height = Value::mm(23.0),
+            scale_x = 1.0,
+            scale_y = 1.0,
+            twist = Value::deg(0.0)
+        ),
         &mut ctx,
     )
     .expect("No error");

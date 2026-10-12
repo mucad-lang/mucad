@@ -619,7 +619,9 @@ pub mod geo2d {
 /// Built-in Operations
 #[builtin_mod]
 pub mod ops {
-    use microcad_lang_types::{Length, Mat3, ModelTree, math::AffineTransform};
+    use microcad_lang_types::{
+        Angle, Integer, Length, Mat3, ModelTree, Scalar, Vec3, math::AffineTransform,
+    };
     use microcad_macros::{builtin_op, builtin_transform};
 
     use super::*;
@@ -663,10 +665,8 @@ pub mod ops {
 
     /// Rotate a model by a rotation matrix.
     #[builtin_transform]
-    pub fn rotate(
-        args: Arguments,
-        ctx: &mut BuiltinEvalContext,
-    ) -> Result<ModelTree, BuiltinError>;
+    pub fn rotate(args: Arguments, ctx: &mut BuiltinEvalContext)
+    -> Result<ModelTree, BuiltinError>;
 
     /// Subtract all following child models from the first one.
     #[builtin_op(Any -> Any)]
@@ -684,6 +684,12 @@ pub mod ops {
     pub struct Extrude {
         /// Height in mm.
         pub height: Length,
+        /// Scale of the top in X direction.
+        pub scale_x: Scalar,
+        /// Scale of the top in Y direction.
+        pub scale_y: Scalar,
+        /// Twist angle of the top.
+        pub twist: Angle,
     }
 
     /// Linear extrusion of a 2D model.
@@ -692,6 +698,242 @@ pub mod ops {
         args: Arguments,
         ctx: &mut BuiltinEvalContext,
     ) -> Result<ModelTree, BuiltinError>;
+
+    /// Scale a model.
+    #[builtin_transform]
+    pub struct Scale {
+        /// Scale factor in X direction.
+        pub x: Scalar,
+        /// Scale factor in Y direction.
+        pub y: Scalar,
+        /// Scale factor in Z direction.
+        pub z: Scalar,
+    }
+
+    impl From<Scale> for AffineTransform {
+        fn from(Scale { x, y, z }: Scale) -> Self {
+            AffineTransform::Scale(Vec3::new(x, y, z))
+        }
+    }
+
+    /// Scale a model by `x`, `y` and `z`.
+    #[builtin_transform]
+    pub fn scale(args: Arguments, ctx: &mut BuiltinEvalContext) -> Result<ModelTree, BuiltinError>;
+
+    /// Orient a model, so that its Z axis points towards a vector.
+    #[builtin_transform]
+    pub struct Orient {
+        /// X component of the vector.
+        pub x: Scalar,
+        /// Y component of the vector.
+        pub y: Scalar,
+        /// Z component of the vector.
+        pub z: Scalar,
+    }
+
+    impl From<Orient> for AffineTransform {
+        fn from(Orient { x, y, z }: Orient) -> Self {
+            AffineTransform::RotateMatrix {
+                m: microcad_lang_types::math::orient_to_z(Vec3::new(x, y, z)),
+            }
+        }
+    }
+
+    /// Orient a model, so that its Z axis points towards the vector `(x, y, z)`.
+    #[builtin_transform]
+    pub fn orient(args: Arguments, ctx: &mut BuiltinEvalContext)
+    -> Result<ModelTree, BuiltinError>;
+
+    /// Union of all child models.
+    #[builtin_op(Any -> Any)]
+    pub struct Union;
+
+    /// Union of all child models.
+    #[builtin_op]
+    pub fn union(args: Arguments, ctx: &mut BuiltinEvalContext) -> Result<ModelTree, BuiltinError>;
+
+    /// Subtract all following child models from the first one.
+    #[builtin_op(Any -> Any)]
+    pub struct Subtract;
+
+    /// Subtract all following child models from the first one.
+    #[builtin_op]
+    pub fn subtract(
+        args: Arguments,
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
+
+    /// Intersection of all child models.
+    #[builtin_op(Any -> Any)]
+    pub struct Intersect;
+
+    /// Intersection of all child models.
+    #[builtin_op]
+    pub fn intersect(
+        args: Arguments,
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
+
+    /// Combine each child model with each other child model.
+    #[builtin_op(Any -> Any)]
+    pub struct Multiply;
+
+    /// Combine each child model with each other child model.
+    #[builtin_op]
+    pub fn multiply(
+        args: Arguments,
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
+
+    /// Mirror a model at a plane (3D) or line (2D), keeping the original.
+    #[builtin_op(Any -> Any)]
+    pub struct Mirror {
+        /// X position of a point on the mirror plane.
+        pub x: Length,
+        /// Y position of a point on the mirror plane.
+        pub y: Length,
+        /// Z position of a point on the mirror plane.
+        pub z: Length,
+        /// X component of the plane's normal.
+        pub nx: Scalar,
+        /// Y component of the plane's normal.
+        pub ny: Scalar,
+        /// Z component of the plane's normal.
+        pub nz: Scalar,
+    }
+
+    /// Mirror a model at a plane (3D) or line (2D), keeping the original.
+    #[builtin_op]
+    pub fn mirror(args: Arguments, ctx: &mut BuiltinEvalContext)
+    -> Result<ModelTree, BuiltinError>;
+
+    /// Reflect a model at a plane (3D) or line (2D).
+    #[builtin_op(Any -> Any)]
+    pub struct Reflect {
+        /// X position of a point on the reflection plane.
+        pub x: Length,
+        /// Y position of a point on the reflection plane.
+        pub y: Length,
+        /// Z position of a point on the reflection plane.
+        pub z: Length,
+        /// X component of the plane's normal.
+        pub nx: Scalar,
+        /// Y component of the plane's normal.
+        pub ny: Scalar,
+        /// Z component of the plane's normal.
+        pub nz: Scalar,
+    }
+
+    /// Reflect a model at a plane (3D) or line (2D).
+    #[builtin_op]
+    pub fn reflect(
+        args: Arguments,
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
+
+    /// Revolve a 2D model around the Y axis.
+    #[builtin_op(Geometry2D -> Geometry3D)]
+    pub struct Revolve {
+        /// Revolve angle.
+        pub angle: Angle,
+    }
+
+    /// Revolve a 2D model around the Y axis.
+    #[builtin_op]
+    pub fn revolve(
+        args: Arguments,
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
+
+    /// Create a spiral from a 2D model.
+    #[builtin_op(Geometry2D -> Geometry3D)]
+    pub struct Spiralize {
+        /// Height of the spiral.
+        pub height: Length,
+        /// Inner radius of the spiral.
+        pub inner_radius: Length,
+        /// Outer radius of the spiral.
+        pub outer_radius: Length,
+        /// Angle of the spiral.
+        pub angle: Angle,
+    }
+
+    /// Create a spiral from a 2D model.
+    #[builtin_op]
+    pub fn spiralize(
+        args: Arguments,
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
+
+    /// Move a model to the origin.
+    #[builtin_op(Any -> Any)]
+    pub struct Center;
+
+    /// Move a model to the origin.
+    #[builtin_op]
+    pub fn center(args: Arguments, ctx: &mut BuiltinEvalContext)
+    -> Result<ModelTree, BuiltinError>;
+
+    /// Align a collection of models along a direction with spacing.
+    #[builtin_op(Any -> Any)]
+    pub struct Align {
+        /// X component of the direction.
+        pub x: Scalar,
+        /// Y component of the direction.
+        pub y: Scalar,
+        /// Z component of the direction.
+        pub z: Scalar,
+        /// Spacing between the models.
+        pub spacing: Length,
+    }
+
+    /// Align a collection of models along a direction with spacing.
+    #[builtin_op]
+    pub fn align(args: Arguments, ctx: &mut BuiltinEvalContext) -> Result<ModelTree, BuiltinError>;
+
+    /// Distribute models in a rectangular grid.
+    #[builtin_op(Any -> Any)]
+    pub struct DistributeGrid {
+        /// X position of the grid.
+        pub x: Length,
+        /// Y position of the grid.
+        pub y: Length,
+        /// Width of the grid.
+        pub width: Length,
+        /// Height of the grid.
+        pub height: Length,
+        /// Number of rows.
+        pub rows: Integer,
+        /// Number of columns.
+        pub columns: Integer,
+    }
+
+    /// Distribute models in a rectangular grid.
+    #[builtin_op]
+    pub fn distribute_grid(
+        args: Arguments,
+        ctx: &mut BuiltinEvalContext,
+    ) -> Result<ModelTree, BuiltinError>;
+
+    /// Convex hull of a model.
+    #[builtin_op(Any -> Any)]
+    pub struct Hull;
+
+    /// Convex hull of a model.
+    #[builtin_op]
+    pub fn hull(args: Arguments, ctx: &mut BuiltinEvalContext) -> Result<ModelTree, BuiltinError>;
+
+    /// Offset the boundary of a 2D model by a distance.
+    #[builtin_op(Geometry2D -> Geometry2D)]
+    pub struct Buffer {
+        /// Offset distance, negative values shrink the model.
+        pub distance: Length,
+    }
+
+    /// Offset the boundary of a 2D model by a distance.
+    #[builtin_op]
+    pub fn buffer(args: Arguments, ctx: &mut BuiltinEvalContext)
+    -> Result<ModelTree, BuiltinError>;
 }
 
 pub static __MU: &str = include_inner_docs!("src/mu.rs");

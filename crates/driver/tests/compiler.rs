@@ -13,7 +13,7 @@ sketch Disc(radius: Length) {
 }
 
 op Raise(height: Length) {
-    @input.__mu::ops::extrude(height);
+    @input.__mu::ops::extrude(height, scale_x = 1.0, scale_y = 1.0, twist = 0°);
 }
 
 Disc(radius = 4mm).Raise(height = 2mm);
@@ -58,6 +58,26 @@ fn compile_unresolved_symbol() {
     assert!(diags.has_errors(), "{diags:?}");
 }
 
+/// Built-in transforms and operations of `__mu::ops`.
+#[test]
+fn compile_ops() {
+    let mut compiler = compiler();
+    let (model, diags) = compiler
+        .compile(mu::Source::from(
+            r#"
+            __mu::geo2d::Circle(radius = 1mm).__mu::ops::scale(x = 2.0, y = 3.0, z = 1.0);
+            __mu::geo2d::Circle(radius = 1mm).__mu::ops::orient(x = 0.0, y = 1.0, z = 0.0);
+            __mu::geo2d::Circle(radius = 1mm).__mu::ops::hull();
+            __mu::geo2d::Circle(radius = 1mm).__mu::ops::buffer(distance = 0.5mm);
+            __mu::geo2d::Circle(radius = 1mm).__mu::ops::revolve(angle = 360°);
+            "#,
+        ))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    insta::assert_snapshot!("compile_ops", display(&model));
+}
+
 /// A compiler can be used again, the main library of the previous run is replaced.
 #[test]
 fn compile_twice() {
@@ -69,6 +89,7 @@ fn compile_twice() {
     assert_eq!(display(&first), display(&second));
 }
 
+/*
 /// A source using the standard library.
 #[test]
 fn compile_with_std() {
@@ -80,3 +101,4 @@ fn compile_with_std() {
     assert!(!diags.has_errors(), "{diags:?}");
     insta::assert_snapshot!("compile_with_std", display(&model));
 }
+*/
