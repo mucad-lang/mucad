@@ -1,0 +1,10 @@
+# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# A minimal standard library for tests, using only existing built-ins.
+
+[library]
+name = "std"
+description = "Minimal µcad standard library for tests"
+version = "0.6.0"
+no_std = true # Do not load standard library

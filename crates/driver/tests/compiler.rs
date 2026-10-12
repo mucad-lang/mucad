@@ -170,3 +170,29 @@ fn compile_with_std() {
     insta::assert_snapshot!("compile_with_std", display(&model));
 }
 */
+
+/// A compiler with the minimal standard library in `tests/data/lib/std`.
+fn fixture_std_compiler() -> Compiler {
+    Compiler::from_config(&mu::DriverConfig {
+        search_paths: vec!["tests/data/lib".into()],
+        ..Default::default()
+    })
+}
+
+/// External library symbols: `std::…`, `mu::std::…`, and std referring to itself.
+#[test]
+fn compile_with_std_fixture() {
+    let mut compiler = fixture_std_compiler();
+    let (model, diags) = compiler
+        .compile(mu::Source::from(
+            r#"
+            std::geo2d::Circle(radius = 4mm);
+            mu::std::geo2d::Circle(radius = 5mm);
+            std::geo3d::Cylinder(radius = 6mm, height = 2mm);
+            "#,
+        ))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    insta::assert_snapshot!("compile_with_std_fixture", display(&model));
+}
