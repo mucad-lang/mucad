@@ -9,7 +9,7 @@ use miette::Diagnostic as MietteDiagnostic;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{IssueResult, Diagnostics, Issue, IssueList, LanguageVersion, ToDiagnostics};
+use crate::{Diagnostics, Issue, IssueList, IssueResult, LanguageVersion, ToDiagnostics};
 
 #[derive(Debug, Error, MietteDiagnostic)]
 pub enum ArtifactError {
@@ -51,6 +51,17 @@ pub enum ArtifactKind {
     Library,
     /// Model tree
     ModelTree,
+}
+
+impl ArtifactKind {
+    pub fn ext(&self) -> &'static str {
+        match self {
+            ArtifactKind::Ast => "ast",
+            ArtifactKind::Ir => "ir",
+            ArtifactKind::Library => "lib",
+            ArtifactKind::ModelTree => "model",
+        }
+    }
 }
 
 #[repr(C)]
@@ -105,7 +116,7 @@ impl<T> Envelope<T> {
 }
 
 /// Trait to define a compilation artifact.
-pub trait Artifact: Sized {
+pub trait Artifact: Sized + Serialize {
     fn kind() -> ArtifactKind;
 
     /// Return the source hash of this artifact
@@ -131,18 +142,12 @@ pub trait Artifact: Sized {
     }
 
     /// Convert the artifact into binary
-    fn to_binary(&self) -> Result<Vec<u8>, ArtifactError>
-    where
-        Self: Serialize,
-    {
+    fn to_binary(&self) -> Result<Vec<u8>, ArtifactError> {
         Ok(postcard::to_allocvec(&self.envelope())?)
     }
 
     /// Convert the artifact into a Rusty Object Notation
-    fn to_ron(&self) -> Result<String, ArtifactError>
-    where
-        Self: Serialize,
-    {
+    fn to_ron(&self) -> Result<String, ArtifactError> {
         // Configure indentation, spacing, and multi-line breaks
         let config = ron::ser::PrettyConfig::default()
             .indentor("    ".to_string()) // Beautiful 4-space indent
@@ -161,13 +166,10 @@ pub trait Artifact: Sized {
     }
 
     #[cfg(feature = "io")]
-    fn emit(&self, path: impl AsRef<std::path::Path>) -> miette::Result<()>
-    where
-        Self: Serialize,
-    {
+    fn emit(&self, path: impl AsRef<std::path::Path>) -> miette::Result<()> {
         use miette::IntoDiagnostic;
         let mut path = path.as_ref().to_path_buf();
-        path.add_extension(Self::kind().to_string().to_lowercase());
+        path.add_extension(Self::kind().ext());
         std::fs::write(path, self.to_ron()?).into_diagnostic()
     }
 }

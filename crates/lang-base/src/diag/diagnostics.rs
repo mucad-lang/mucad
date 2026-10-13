@@ -141,8 +141,7 @@ impl Diagnostics {
         source_by_hash: &impl GetSourceByHash,
         options: &DiagRenderOptions,
     ) -> std::fmt::Result {
-        self.diagnostics
-            .iter()
+        self.iter()
             .try_for_each(|diag| diag.render(f, source_by_hash, options))
     }
 

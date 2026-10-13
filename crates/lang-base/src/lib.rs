@@ -74,10 +74,10 @@ impl SourceCode for Source {
     }
 }
 
-/// Trait that can fetch for a file by it's hash value.
+/// Trait that can fetch a source by its hash value.
 pub trait GetSourceByHash {
-    /// Get a source string by it's hash value.
-    fn get_source_by_hash(&'_ self, hash: HashId) -> Option<&Source>;
+    /// Get a source by its hash value.
+    fn get_source_by_hash(&self, hash: HashId) -> Option<&Source>;
 }
 
 /// Check if the element only includes one identifier

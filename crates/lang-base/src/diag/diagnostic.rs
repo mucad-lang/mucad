@@ -15,29 +15,37 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
+    pub fn render_source(
+        &self,
+        mut f: &mut dyn std::fmt::Write,
+        source: &Source,
+        options: &DiagRenderOptions,
+    ) -> std::fmt::Result {
+        let handler = miette::GraphicalReportHandler::new_themed(options.theme());
+        handler.render_report(
+            &mut f,
+            &DiagnosticWrapper {
+                diagnostic: self,
+                source,
+            },
+        )
+    }
+
     /// Pretty print the diagnostic.
     pub fn render(
         &self,
-        mut f: &mut dyn std::fmt::Write,
+        f: &mut dyn std::fmt::Write,
         source_by_hash: &impl GetSourceByHash,
         options: &DiagRenderOptions,
     ) -> std::fmt::Result {
         let src_ref = self.src_ref;
-        let hash = src_ref.source_hash();
-
         match src_ref.is_none() {
             true => writeln!(f, "{}", self.report)?,
             false => {
+                let hash = src_ref.source_hash();
                 if let Some(source) = source_by_hash.get_source_by_hash(hash) {
-                    let handler = miette::GraphicalReportHandler::new_themed(options.theme());
-                    handler.render_report(
-                        &mut f,
-                        &DiagnosticWrapper {
-                            diagnostic: self,
-                            source,
-                        },
-                    )?
-                };
+                    self.render_source(f, source, options)?;
+                }
             }
         }
 
