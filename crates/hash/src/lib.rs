@@ -131,6 +131,12 @@ pub struct Hashed<T: std::hash::Hash> {
     hash: HashId,
 }
 
+impl<T: std::hash::Hash + PartialEq> PartialEq for Hashed<T> {
+    fn eq(&self, other: &Self) -> bool {
+        &self.inner == &other.inner
+    }
+}
+
 impl<T: std::hash::Hash> Hashed<T> {
     /// Create a new wrapper with hashed.
     pub fn new(inner: T) -> Self {
