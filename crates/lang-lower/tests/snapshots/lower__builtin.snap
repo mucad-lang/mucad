@@ -38,7 +38,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                     src_ref: "None",
                                 ))),
                                 vis: Public,
-                                src_ref: "0:1 @ 0x854d12f674b9e225 (0..191)",
+                                src_ref: "0:1 @ 0x5e8df52688de8af8 (0..191)",
                                 keyword_src_ref: "None",
                             ),
                             def: Source((
@@ -51,10 +51,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                             name: None,
                                             layer: None,
                                         ),
-                                        src_ref: "5:1 @ 0x854d12f674b9e225 (97..138)",
+                                        src_ref: "5:1 @ 0x5e8df52688de8af8 (97..138)",
                                         name: Some(((
                                             value: "a",
-                                            src_ref: "5:1 @ 0x854d12f674b9e225 (97..98)",
+                                            src_ref: "5:1 @ 0x5e8df52688de8af8 (97..98)",
                                         ))),
                                         ty: (
                                             ty: Any,
@@ -73,10 +73,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                             name: None,
                                             layer: None,
                                         ),
-                                        src_ref: "6:1 @ 0x854d12f674b9e225 (153..166)",
+                                        src_ref: "6:1 @ 0x5e8df52688de8af8 (153..166)",
                                         name: Some(((
                                             value: "b",
-                                            src_ref: "6:1 @ 0x854d12f674b9e225 (153..154)",
+                                            src_ref: "6:1 @ 0x5e8df52688de8af8 (153..154)",
                                         ))),
                                         ty: (
                                             ty: Any,
@@ -91,7 +91,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                             )),
                             doc: (
                                 content: "",
-                                src_ref: "0:1 @ 0x854d12f674b9e225 (0..191)",
+                                src_ref: "0:1 @ 0x5e8df52688de8af8 (0..191)",
                             ),
                             ver: (
                                 introduced: None,
@@ -116,11 +116,11 @@ expression: "ir.to_ron().expect(\"No error\")"
                             meta: (
                                 name: Some(((
                                     value: "sub",
-                                    src_ref: "0:17 @ 0x854d12f674b9e225 (16..19)",
+                                    src_ref: "0:17 @ 0x5e8df52688de8af8 (16..19)",
                                 ))),
                                 vis: Private,
-                                src_ref: "0:1 @ 0x854d12f674b9e225 (0..19)",
-                                keyword_src_ref: "0:1 @ 0x854d12f674b9e225 (0..3)",
+                                src_ref: "0:1 @ 0x5e8df52688de8af8 (0..19)",
+                                keyword_src_ref: "0:1 @ 0x5e8df52688de8af8 (0..3)",
                             ),
                             def: Alias((
                                 path: HumanReadable(
@@ -155,11 +155,11 @@ expression: "ir.to_ron().expect(\"No error\")"
                             meta: (
                                 name: Some(((
                                     value: "multiply",
-                                    src_ref: "1:24 @ 0x854d12f674b9e225 (44..52)",
+                                    src_ref: "1:24 @ 0x5e8df52688de8af8 (44..52)",
                                 ))),
                                 vis: Private,
-                                src_ref: "1:1 @ 0x854d12f674b9e225 (21..52)",
-                                keyword_src_ref: "1:1 @ 0x854d12f674b9e225 (21..24)",
+                                src_ref: "1:1 @ 0x5e8df52688de8af8 (21..52)",
+                                keyword_src_ref: "1:1 @ 0x5e8df52688de8af8 (21..24)",
                             ),
                             def: Alias((
                                 path: HumanReadable(

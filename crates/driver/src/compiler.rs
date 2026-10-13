@@ -170,21 +170,13 @@ impl Compiler {
         f: &mut dyn std::fmt::Write,
         diagnostics: &Diagnostics,
     ) -> std::fmt::Result {
-        diagnostics.iter().try_for_each(|diag| {
-            let hash_id = diag.src_ref.source_hash();
-            match self
-                .resolve_context
-                .source_cache()
-                .with_read(|source_cache| {
-                    source_cache
-                        .get(hash_id)
-                        .map(|source_unit| source_unit.source())
-                        .cloned()
-                }) {
-                Some(source) => diag.render_source(f, &source, &DiagRenderOptions::default()),
-                None => Ok(()),
-            }
-        })
+        self.resolve_context
+            .source_cache()
+            .with_read(|source_cache| {
+                diagnostics.iter().try_for_each(|diag| {
+                    diag.render(f, source_cache, &DiagRenderOptions::default())
+                })
+            })
     }
 
     pub fn render_diag_to_string(&self, diagnostics: &Diagnostics) -> String {

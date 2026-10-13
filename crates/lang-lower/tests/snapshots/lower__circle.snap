@@ -38,7 +38,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                     src_ref: "None",
                                 ))),
                                 vis: Public,
-                                src_ref: "0:1 @ 0x6fea70d2e98e16db (0..423)",
+                                src_ref: "0:1 @ 0xa5eb23e1ba0633ef (0..423)",
                                 keyword_src_ref: "None",
                             ),
                             def: Source((
@@ -46,7 +46,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                             )),
                             doc: (
                                 content: "",
-                                src_ref: "0:1 @ 0x6fea70d2e98e16db (0..423)",
+                                src_ref: "0:1 @ 0xa5eb23e1ba0633ef (0..423)",
                             ),
                             ver: (
                                 introduced: None,
@@ -68,11 +68,11 @@ expression: "ir.to_ron().expect(\"No error\")"
                             meta: (
                                 name: Some(((
                                     value: "Circle",
-                                    src_ref: "6:12 @ 0x6fea70d2e98e16db (159..165)",
+                                    src_ref: "6:12 @ 0xa5eb23e1ba0633ef (159..165)",
                                 ))),
                                 vis: Public,
-                                src_ref: "1:1 @ 0x6fea70d2e98e16db (1..423)",
-                                keyword_src_ref: "6:5 @ 0x6fea70d2e98e16db (152..158)",
+                                src_ref: "1:1 @ 0xa5eb23e1ba0633ef (1..423)",
+                                keyword_src_ref: "6:5 @ 0xa5eb23e1ba0633ef (152..158)",
                             ),
                             def: Workbench((
                                 signature: (
@@ -83,30 +83,30 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                 attr: (
                                                     doc: (
                                                         content: "",
-                                                        src_ref: "6:19 @ 0x6fea70d2e98e16db (166..166)",
+                                                        src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..166)",
                                                     ),
                                                 ),
                                                 id: ((
                                                     value: "radius",
-                                                    src_ref: "6:19 @ 0x6fea70d2e98e16db (166..172)",
+                                                    src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..172)",
                                                 )),
                                                 ty: (
                                                     ty: Quantity(Length),
-                                                    src_ref: "6:27 @ 0x6fea70d2e98e16db (174..180)",
+                                                    src_ref: "6:27 @ 0xa5eb23e1ba0633ef (174..180)",
                                                 ),
                                                 default_value: None,
-                                                src_ref: "6:19 @ 0x6fea70d2e98e16db (166..180)",
+                                                src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..180)",
                                             ),
                                             (
                                                 attr: (
                                                     doc: (
                                                         content: "",
-                                                        src_ref: "6:35 @ 0x6fea70d2e98e16db (182..182)",
+                                                        src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..182)",
                                                     ),
                                                 ),
                                                 id: ((
                                                     value: "center",
-                                                    src_ref: "6:35 @ 0x6fea70d2e98e16db (182..188)",
+                                                    src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..188)",
                                                 )),
                                                 ty: (
                                                     ty: Any,
@@ -118,20 +118,20 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                         named: [
                                                             (((
                                                                 value: "x",
-                                                                src_ref: "6:45 @ 0x6fea70d2e98e16db (192..193)",
+                                                                src_ref: "6:45 @ 0xa5eb23e1ba0633ef (192..193)",
                                                             )), Quantity("0mm")),
                                                             (((
                                                                 value: "y",
-                                                                src_ref: "6:56 @ 0x6fea70d2e98e16db (203..204)",
+                                                                src_ref: "6:56 @ 0xa5eb23e1ba0633ef (203..204)",
                                                             )), Quantity("0mm")),
                                                         ],
                                                     )),
                                                     src_ref: "None",
                                                 ))),
-                                                src_ref: "6:34 @ 0x6fea70d2e98e16db (181..213)",
+                                                src_ref: "6:34 @ 0xa5eb23e1ba0633ef (181..213)",
                                             ),
                                         ],
-                                        src_ref: "6:19 @ 0x6fea70d2e98e16db (166..213)",
+                                        src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..213)",
                                     ),
                                     inits: [
                                         (
@@ -141,30 +141,30 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                         attr: (
                                                             doc: (
                                                                 content: "",
-                                                                src_ref: "7:10 @ 0x6fea70d2e98e16db (226..226)",
+                                                                src_ref: "7:10 @ 0xa5eb23e1ba0633ef (226..226)",
                                                             ),
                                                         ),
                                                         id: ((
                                                             value: "diameter",
-                                                            src_ref: "7:10 @ 0x6fea70d2e98e16db (226..234)",
+                                                            src_ref: "7:10 @ 0xa5eb23e1ba0633ef (226..234)",
                                                         )),
                                                         ty: (
                                                             ty: Quantity(Length),
-                                                            src_ref: "7:20 @ 0x6fea70d2e98e16db (236..242)",
+                                                            src_ref: "7:20 @ 0xa5eb23e1ba0633ef (236..242)",
                                                         ),
                                                         default_value: None,
-                                                        src_ref: "7:10 @ 0x6fea70d2e98e16db (226..242)",
+                                                        src_ref: "7:10 @ 0xa5eb23e1ba0633ef (226..242)",
                                                     ),
                                                     (
                                                         attr: (
                                                             doc: (
                                                                 content: "",
-                                                                src_ref: "7:28 @ 0x6fea70d2e98e16db (244..244)",
+                                                                src_ref: "7:28 @ 0xa5eb23e1ba0633ef (244..244)",
                                                             ),
                                                         ),
                                                         id: ((
                                                             value: "center",
-                                                            src_ref: "7:28 @ 0x6fea70d2e98e16db (244..250)",
+                                                            src_ref: "7:28 @ 0xa5eb23e1ba0633ef (244..250)",
                                                         )),
                                                         ty: (
                                                             ty: Any,
@@ -176,26 +176,26 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                 named: [
                                                                     (((
                                                                         value: "x",
-                                                                        src_ref: "7:38 @ 0x6fea70d2e98e16db (254..255)",
+                                                                        src_ref: "7:38 @ 0xa5eb23e1ba0633ef (254..255)",
                                                                     )), Quantity("0mm")),
                                                                     (((
                                                                         value: "y",
-                                                                        src_ref: "7:49 @ 0x6fea70d2e98e16db (265..266)",
+                                                                        src_ref: "7:49 @ 0xa5eb23e1ba0633ef (265..266)",
                                                                     )), Quantity("0mm")),
                                                                 ],
                                                             )),
                                                             src_ref: "None",
                                                         ))),
-                                                        src_ref: "7:27 @ 0x6fea70d2e98e16db (243..275)",
+                                                        src_ref: "7:27 @ 0xa5eb23e1ba0633ef (243..275)",
                                                     ),
                                                 ],
-                                                src_ref: "7:10 @ 0x6fea70d2e98e16db (226..275)",
+                                                src_ref: "7:10 @ 0xa5eb23e1ba0633ef (226..275)",
                                             ),
                                             statements: [
                                                 (
                                                     name: ((
                                                         value: "radius",
-                                                        src_ref: "8:9 @ 0x6fea70d2e98e16db (287..293)",
+                                                        src_ref: "8:9 @ 0xa5eb23e1ba0633ef (287..293)",
                                                     )),
                                                     expression: Call((
                                                         path: HumanReadable(
@@ -215,12 +215,12 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                         parts: [
                                                                             ((
                                                                                 value: "diameter",
-                                                                                src_ref: "8:18 @ 0x6fea70d2e98e16db (296..304)",
+                                                                                src_ref: "8:18 @ 0xa5eb23e1ba0633ef (296..304)",
                                                                             )),
                                                                         ],
-                                                                        src_ref: "8:18 @ 0x6fea70d2e98e16db (296..305)",
+                                                                        src_ref: "8:18 @ 0xa5eb23e1ba0633ef (296..305)",
                                                                     ))),
-                                                                    src_ref: "8:18 @ 0x6fea70d2e98e16db (296..305)",
+                                                                    src_ref: "8:18 @ 0xa5eb23e1ba0633ef (296..305)",
                                                                 ),
                                                                 Named(
                                                                     name: ((
@@ -229,15 +229,15 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                     )),
                                                                     expr: Value((
                                                                         value: Quantity("2"),
-                                                                        src_ref: "8:29 @ 0x6fea70d2e98e16db (307..310)",
+                                                                        src_ref: "8:29 @ 0xa5eb23e1ba0633ef (307..310)",
                                                                     )),
-                                                                    src_ref: "8:29 @ 0x6fea70d2e98e16db (307..310)",
+                                                                    src_ref: "8:29 @ 0xa5eb23e1ba0633ef (307..310)",
                                                                 ),
                                                             ],
                                                         ),
-                                                        src_ref: "8:18 @ 0x6fea70d2e98e16db (296..310)",
+                                                        src_ref: "8:18 @ 0xa5eb23e1ba0633ef (296..310)",
                                                     )),
-                                                    src_ref: "8:9 @ 0x6fea70d2e98e16db (287..310)",
+                                                    src_ref: "8:9 @ 0xa5eb23e1ba0633ef (287..310)",
                                                 ),
                                                 (
                                                     name: ((
@@ -251,18 +251,18 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                     src_ref: "None",
                                                 ),
                                             ],
-                                            keyword_ref: "7:5 @ 0x6fea70d2e98e16db (221..225)",
+                                            keyword_ref: "7:5 @ 0xa5eb23e1ba0633ef (221..225)",
                                             attr: (
                                                 doc: (
                                                     content: "",
-                                                    src_ref: "7:5 @ 0x6fea70d2e98e16db (221..221)",
+                                                    src_ref: "7:5 @ 0xa5eb23e1ba0633ef (221..221)",
                                                 ),
                                                 ver: (
                                                     introduced: None,
                                                     stability: Stable,
                                                 ),
                                             ),
-                                            src_ref: "7:5 @ 0x6fea70d2e98e16db (221..323)",
+                                            src_ref: "7:5 @ 0xa5eb23e1ba0633ef (221..323)",
                                         ),
                                         (
                                             parameters: (
@@ -271,30 +271,30 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                         attr: (
                                                             doc: (
                                                                 content: "",
-                                                                src_ref: "6:19 @ 0x6fea70d2e98e16db (166..166)",
+                                                                src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..166)",
                                                             ),
                                                         ),
                                                         id: ((
                                                             value: "radius",
-                                                            src_ref: "6:19 @ 0x6fea70d2e98e16db (166..172)",
+                                                            src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..172)",
                                                         )),
                                                         ty: (
                                                             ty: Quantity(Length),
-                                                            src_ref: "6:27 @ 0x6fea70d2e98e16db (174..180)",
+                                                            src_ref: "6:27 @ 0xa5eb23e1ba0633ef (174..180)",
                                                         ),
                                                         default_value: None,
-                                                        src_ref: "6:19 @ 0x6fea70d2e98e16db (166..180)",
+                                                        src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..180)",
                                                     ),
                                                     (
                                                         attr: (
                                                             doc: (
                                                                 content: "",
-                                                                src_ref: "6:35 @ 0x6fea70d2e98e16db (182..182)",
+                                                                src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..182)",
                                                             ),
                                                         ),
                                                         id: ((
                                                             value: "center",
-                                                            src_ref: "6:35 @ 0x6fea70d2e98e16db (182..188)",
+                                                            src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..188)",
                                                         )),
                                                         ty: (
                                                             ty: Any,
@@ -306,20 +306,20 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                 named: [
                                                                     (((
                                                                         value: "x",
-                                                                        src_ref: "6:45 @ 0x6fea70d2e98e16db (192..193)",
+                                                                        src_ref: "6:45 @ 0xa5eb23e1ba0633ef (192..193)",
                                                                     )), Quantity("0mm")),
                                                                     (((
                                                                         value: "y",
-                                                                        src_ref: "6:56 @ 0x6fea70d2e98e16db (203..204)",
+                                                                        src_ref: "6:56 @ 0xa5eb23e1ba0633ef (203..204)",
                                                                     )), Quantity("0mm")),
                                                                 ],
                                                             )),
                                                             src_ref: "None",
                                                         ))),
-                                                        src_ref: "6:34 @ 0x6fea70d2e98e16db (181..213)",
+                                                        src_ref: "6:34 @ 0xa5eb23e1ba0633ef (181..213)",
                                                     ),
                                                 ],
-                                                src_ref: "6:19 @ 0x6fea70d2e98e16db (166..213)",
+                                                src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..213)",
                                             ),
                                             statements: [
                                                 (
@@ -368,7 +368,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                             name: None,
                                             layer: None,
                                         ),
-                                        src_ref: "11:5 @ 0x6fea70d2e98e16db (323..419)",
+                                        src_ref: "11:5 @ 0xa5eb23e1ba0633ef (323..419)",
                                         visibility: Public,
                                         keyword_src_ref: "None",
                                         name: None,
@@ -382,7 +382,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                 id: Builtin(("0xbdbd29f374bc5c03")),
                                             ),
                                             args: (
-                                                src_ref: "12:31 @ 0x6fea70d2e98e16db (381..418)",
+                                                src_ref: "12:31 @ 0xa5eb23e1ba0633ef (381..418)",
                                                 args: [
                                                     Named(
                                                         name: ((
@@ -395,34 +395,34 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                 id: Builtin(("0x1801bf438d8b094")),
                                                             ),
                                                             args: (
-                                                                src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
+                                                                src_ref: "11:25 @ 0xa5eb23e1ba0633ef (343..349)",
                                                                 args: [
                                                                     AutoNamed(
                                                                         name: ((
                                                                             value: "radius",
-                                                                            src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
+                                                                            src_ref: "11:25 @ 0xa5eb23e1ba0633ef (343..349)",
                                                                         )),
                                                                         expr: Path(Unresolved((
                                                                             is_absolute: false,
                                                                             parts: [
                                                                                 ((
                                                                                     value: "radius",
-                                                                                    src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
+                                                                                    src_ref: "11:25 @ 0xa5eb23e1ba0633ef (343..349)",
                                                                                 )),
                                                                             ],
-                                                                            src_ref: "11:25 @ 0x6fea70d2e98e16db (343..349)",
+                                                                            src_ref: "11:25 @ 0xa5eb23e1ba0633ef (343..349)",
                                                                         ))),
                                                                     ),
                                                                 ],
                                                             ),
-                                                            src_ref: "11:5 @ 0x6fea70d2e98e16db (323..359)",
+                                                            src_ref: "11:5 @ 0xa5eb23e1ba0633ef (323..359)",
                                                         )),
                                                         src_ref: "None",
                                                     ),
                                                     Named(
                                                         name: ((
                                                             value: "x",
-                                                            src_ref: "12:31 @ 0x6fea70d2e98e16db (381..382)",
+                                                            src_ref: "12:31 @ 0xa5eb23e1ba0633ef (381..382)",
                                                         )),
                                                         expr: Call((
                                                             path: HumanReadable(
@@ -442,10 +442,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                             parts: [
                                                                                 ((
                                                                                     value: "center",
-                                                                                    src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
+                                                                                    src_ref: "12:35 @ 0xa5eb23e1ba0633ef (385..391)",
                                                                                 )),
                                                                             ],
-                                                                            src_ref: "12:35 @ 0x6fea70d2e98e16db (385..391)",
+                                                                            src_ref: "12:35 @ 0xa5eb23e1ba0633ef (385..391)",
                                                                         ))),
                                                                         src_ref: "None",
                                                                     ),
@@ -456,20 +456,20 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                         )),
                                                                         expr: Value((
                                                                             value: String("x"),
-                                                                            src_ref: "12:42 @ 0x6fea70d2e98e16db (392..393)",
+                                                                            src_ref: "12:42 @ 0xa5eb23e1ba0633ef (392..393)",
                                                                         )),
                                                                         src_ref: "None",
                                                                     ),
                                                                 ],
                                                             ),
-                                                            src_ref: "12:35 @ 0x6fea70d2e98e16db (385..393)",
+                                                            src_ref: "12:35 @ 0xa5eb23e1ba0633ef (385..393)",
                                                         )),
-                                                        src_ref: "12:31 @ 0x6fea70d2e98e16db (381..393)",
+                                                        src_ref: "12:31 @ 0xa5eb23e1ba0633ef (381..393)",
                                                     ),
                                                     Named(
                                                         name: ((
                                                             value: "y",
-                                                            src_ref: "12:45 @ 0x6fea70d2e98e16db (395..396)",
+                                                            src_ref: "12:45 @ 0xa5eb23e1ba0633ef (395..396)",
                                                         )),
                                                         expr: Call((
                                                             path: HumanReadable(
@@ -489,10 +489,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                             parts: [
                                                                                 ((
                                                                                     value: "center",
-                                                                                    src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
+                                                                                    src_ref: "12:49 @ 0xa5eb23e1ba0633ef (399..405)",
                                                                                 )),
                                                                             ],
-                                                                            src_ref: "12:49 @ 0x6fea70d2e98e16db (399..405)",
+                                                                            src_ref: "12:49 @ 0xa5eb23e1ba0633ef (399..405)",
                                                                         ))),
                                                                         src_ref: "None",
                                                                     ),
@@ -503,37 +503,37 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                         )),
                                                                         expr: Value((
                                                                             value: String("y"),
-                                                                            src_ref: "12:56 @ 0x6fea70d2e98e16db (406..407)",
+                                                                            src_ref: "12:56 @ 0xa5eb23e1ba0633ef (406..407)",
                                                                         )),
                                                                         src_ref: "None",
                                                                     ),
                                                                 ],
                                                             ),
-                                                            src_ref: "12:49 @ 0x6fea70d2e98e16db (399..407)",
+                                                            src_ref: "12:49 @ 0xa5eb23e1ba0633ef (399..407)",
                                                         )),
-                                                        src_ref: "12:45 @ 0x6fea70d2e98e16db (395..407)",
+                                                        src_ref: "12:45 @ 0xa5eb23e1ba0633ef (395..407)",
                                                     ),
                                                     Named(
                                                         name: ((
                                                             value: "z",
-                                                            src_ref: "12:59 @ 0x6fea70d2e98e16db (409..410)",
+                                                            src_ref: "12:59 @ 0xa5eb23e1ba0633ef (409..410)",
                                                         )),
                                                         expr: Value((
                                                             value: Quantity("0mm"),
-                                                            src_ref: "12:63 @ 0x6fea70d2e98e16db (413..418)",
+                                                            src_ref: "12:63 @ 0xa5eb23e1ba0633ef (413..418)",
                                                         )),
-                                                        src_ref: "12:59 @ 0x6fea70d2e98e16db (409..418)",
+                                                        src_ref: "12:59 @ 0xa5eb23e1ba0633ef (409..418)",
                                                     ),
                                                 ],
                                             ),
-                                            src_ref: "11:5 @ 0x6fea70d2e98e16db (323..419)",
+                                            src_ref: "11:5 @ 0xa5eb23e1ba0633ef (323..419)",
                                         )),
                                     ),
                                 ],
                             )),
                             doc: (
                                 content: "Circle definition with an offset.\n\nExamples:\n* With radius `r`: `Circle(r = 10.0mm);`\n* With diameter `d`: `Circle(d = 5.0mm);`",
-                                src_ref: "1:1 @ 0x6fea70d2e98e16db (1..148)",
+                                src_ref: "1:1 @ 0xa5eb23e1ba0633ef (1..148)",
                             ),
                             ver: (
                                 introduced: None,

@@ -18,24 +18,23 @@ impl RunCommand<()> for Check {
         let mut compiler = mu::Compiler::new();
         let source = mu::Source::load(&self.input).into_diagnostic()?;
 
-        match compiler.compile(source) {
-            Ok((_, issues)) => {
-                if issues.is_empty() {
-                    eprintln!("✅ File '{}' is valid.", self.input);
-                } else {
-                    eprintln!(
-                        "⚠️ File '{}' is valid, but has issues:\n{}",
-                        self.input,
-                        compiler.render_diag_to_string(&issues)
-                    );
-                }
+        // A model compiled with recovered errors is not valid either.
+        let issues = match compiler.compile(source) {
+            Ok((_, issues)) if !issues.has_errors() => issues,
+            Ok((_, issues)) | Err(issues) => {
+                eprintln!("{}", compiler.render_diag_to_string(&issues));
+                miette::bail!("File '{}' has errors.", self.input);
             }
-            Err(issues) => {
-                eprintln!(
-                    "⚠️ File has issues:\n{}",
-                    compiler.render_diag_to_string(&issues)
-                );
-            }
+        };
+
+        if issues.is_empty() {
+            eprintln!("✅ File '{}' is valid.", self.input);
+        } else {
+            eprintln!(
+                "⚠️ File '{}' is valid, but has warnings:\n{}",
+                self.input,
+                compiler.render_diag_to_string(&issues)
+            );
         }
 
         Ok(())

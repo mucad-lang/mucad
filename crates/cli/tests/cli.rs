@@ -67,29 +67,22 @@ fn check_unresolved() {
         .arg("check")
         .arg(&input)
         .assert()
-        .stderr(predicate::str::contains("has issues"));
+        .failure()
+        .stderr(predicate::str::contains("Unresolved symbol: Unknown"))
+        .stderr(predicate::str::contains("has errors"));
 }
 
 #[test]
-#[ignore = "diagnostics are rendered empty: their source hash is not found in the source cache"]
-fn check_unresolved_reports_symbol() {
+fn check_parse_error() {
     let dir = tempfile::tempdir().expect("temp dir");
-    let input = source_file(&dir, "unresolved.mu", UNRESOLVED);
+    let input = source_file(&dir, "parse_error.mu", PARSE_ERROR);
 
     microcad()
         .arg("check")
         .arg(&input)
         .assert()
-        .stderr(predicate::str::contains("Unresolved symbol: Unknown"));
-}
-
-#[test]
-#[ignore = "check exits successfully even if the file has errors"]
-fn check_errors_fail() {
-    let dir = tempfile::tempdir().expect("temp dir");
-    let input = source_file(&dir, "parse_error.mu", PARSE_ERROR);
-
-    microcad().arg("check").arg(&input).assert().failure();
+        .failure()
+        .stderr(predicate::str::contains("Unclosed function arguments"));
 }
 
 #[test]

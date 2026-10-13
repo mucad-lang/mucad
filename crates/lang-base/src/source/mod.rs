@@ -195,7 +195,12 @@ impl<'a> From<&'a str> for Source {
 
 impl SpanToSrcRef for &Source {
     fn span_to_src_ref(&self, span: &crate::Span) -> SrcRef {
-        self.line_index.src_ref(self.code.as_str(), span)
+        // Refer to the source by `hash_id`, which source caches use as key.
+        SrcRef::new(
+            span,
+            self.line_index.line_col(self.code(), span.start),
+            self.hash_id(),
+        )
     }
 }
 

@@ -38,18 +38,26 @@ impl Diagnostic {
         source_by_hash: &impl GetSourceByHash,
         options: &DiagRenderOptions,
     ) -> std::fmt::Result {
-        let src_ref = self.src_ref;
-        match src_ref.is_none() {
-            true => writeln!(f, "{}", self.report)?,
-            false => {
-                let hash = src_ref.source_hash();
-                if let Some(source) = source_by_hash.get_source_by_hash(hash) {
-                    self.render_source(f, source, options)?;
-                }
-            }
-        }
+        let source = match self.src_ref.is_none() {
+            true => None,
+            false => source_by_hash.get_source_by_hash(self.src_ref.source_hash()),
+        };
 
-        Ok(())
+        match source {
+            Some(source) => self.render_source(f, source, options),
+            // Render the report without source code rather than dropping it.
+            None => self.render_report(f, options),
+        }
+    }
+
+    /// Pretty print the diagnostic without source code.
+    pub fn render_report(
+        &self,
+        mut f: &mut dyn std::fmt::Write,
+        options: &DiagRenderOptions,
+    ) -> std::fmt::Result {
+        let handler = miette::GraphicalReportHandler::new_themed(options.theme());
+        handler.render_report(&mut f, self.report.as_ref())
     }
 
     /// Render the diagnostics to a string, see `pretty_print` for more information
