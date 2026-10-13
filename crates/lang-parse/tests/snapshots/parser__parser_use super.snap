@@ -1,0 +1,90 @@
+---
+source: crates/lang-parse/tests/parser.rs
+expression: output
+---
+(
+    header: (
+        magic: (38, 109, 117, 59),
+        version: ("0.6.0"),
+        kind: Ast,
+    ),
+    payload: (
+        input_hash: "0x259d9f056369632f",
+        output_hash: "0x285060050867c5c9",
+        tree: (
+            span: (
+                start: 0,
+                end: 25,
+            ),
+            statements: (
+                span: (
+                    start: 0,
+                    end: 25,
+                ),
+                extras: (
+                    leading: ([]),
+                    trailing: ([]),
+                ),
+                statements: [
+                    (Use((
+                        span: (
+                            start: 0,
+                            end: 24,
+                        ),
+                        attr: ([]),
+                        keyword_span: (
+                            start: 0,
+                            end: 3,
+                        ),
+                        extras: (
+                            leading: ([]),
+                            trailing: ([]),
+                        ),
+                        vis: None,
+                        name: (
+                            span: (
+                                start: 4,
+                                end: 24,
+                            ),
+                            prefix: None,
+                            extras: (
+                                leading: ([]),
+                                trailing: ([]),
+                            ),
+                            parts: [
+                                Identifier((
+                                    span: (
+                                        start: 4,
+                                        end: 9,
+                                    ),
+                                    name: "super",
+                                )),
+                                Identifier((
+                                    span: (
+                                        start: 11,
+                                        end: 16,
+                                    ),
+                                    name: "super",
+                                )),
+                                Identifier((
+                                    span: (
+                                        start: 18,
+                                        end: 21,
+                                    ),
+                                    name: "foo",
+                                )),
+                                Glob((
+                                    start: 23,
+                                    end: 24,
+                                )),
+                            ],
+                        ),
+                        use_as: None,
+                    )), ([])),
+                ],
+                tail: None,
+            ),
+        ),
+    ),
+)
+---

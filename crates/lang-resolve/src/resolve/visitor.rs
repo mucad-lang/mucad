@@ -3,13 +3,17 @@
 
 //! Resolve locals.
 
+use std::cell::RefCell;
+
 use crate::{
     Library, LookUp, ResolveErrorKind, ResolveLibraryContext, SymbolNodeRef,
     library::{Symbol, SymbolArena, SymbolNodeId, symbol, visitor},
+    resolve::context::LibraryCache,
     resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
 use microcad_lang_base::{
-    ExternalId, Identifier, LibraryId, PushIssue, SingleIdentifier, SymbolId, ToCompactString,
+    ExternalId, HashSet, Identifier, LibraryId, PushIssue, SharedMut, SingleIdentifier, SymbolId,
+    ToCompactString,
 };
 
 /// The symbol a looked up node stands for.
@@ -37,6 +41,50 @@ fn symbol_target(lib: &Library, node_id: SymbolNodeId, lib_id: Option<LibraryId>
         }
     }
     in_lib(node_id)
+}
+
+/// The symbol of a look up result in `lib`, see [`symbol_target`].
+fn found_symbol(lib: &Library, found: LookUp, lib_id: Option<LibraryId>) -> SymbolId {
+    match found {
+        LookUp::Local(node_id) => symbol_target(lib, node_id, lib_id),
+        LookUp::External(symbol_id) => symbol_id,
+    }
+}
+
+/// Looks up symbols inside modules of other libraries in the library cache.
+///
+/// Glob imports of these modules are followed into further libraries, e.g. a module of
+/// library `a` which re-exports a module of library `b` with `pub use b::geo::*;`.
+struct ExternalResolver {
+    lib_cache: SharedMut<LibraryCache>,
+    /// The modules being searched, to stop at libraries which import each other.
+    searching: RefCell<HashSet<ExternalId>>,
+}
+
+impl ExternalResolver {
+    fn new(lib_cache: SharedMut<LibraryCache>) -> Self {
+        Self {
+            lib_cache,
+            searching: Default::default(),
+        }
+    }
+
+    fn look_up(&self, module: &ExternalId, parts: &[Identifier]) -> Option<SymbolId> {
+        if !self.searching.borrow_mut().insert(module.clone()) {
+            return None;
+        }
+
+        let lib = self.lib_cache.read_unwrap().get(&module.lib_id);
+        let found = lib.and_then(|lib| {
+            lib.look_up_in_module(module.id, parts, &|module, parts| {
+                self.look_up(module, parts)
+            })
+            .map(|found| found_symbol(&lib, found, Some(module.lib_id)))
+        });
+
+        self.searching.borrow_mut().remove(module);
+        found
+    }
 }
 
 pub struct ResolveVisitor<'a, 'lib, 'ctx> {
@@ -183,27 +231,16 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
 
         let mut paths = Vec::new();
 
+        let externals = ExternalResolver::new(self.lib_ctx.lib_cache());
+        let external = |module: &ExternalId, parts: &[Identifier]| externals.look_up(module, parts);
+
         // Look up in current library being resolved, including glob imports of other libraries.
         if let Some(symbol_node_id) = self.stack.symbol_node_id() {
-            let lib_cache = self.lib_ctx.lib_cache();
-            let external = |module: &ExternalId, parts: &[Identifier]| {
-                let lib = lib_cache.read_unwrap().get(&module.lib_id)?;
-                let id = lib.look_up_in_module(module.id, parts)?;
-                Some(symbol_target(&lib, id, Some(module.lib_id)))
-            };
-            match self
-                .lib_ctx
-                .lib()
-                .look_up_symbol(symbol_node_id, unresolved_path, &external)
-            {
-                Some(LookUp::Local(node_id)) => paths.push(symbol::Path::Resolved(symbol_target(
-                    self.lib_ctx.lib(),
-                    node_id,
-                    None,
-                ))),
-                Some(LookUp::External(symbol_id)) => paths.push(symbol::Path::Resolved(symbol_id)),
-                None => (),
-            }
+            let lib = self.lib_ctx.lib();
+            paths.extend(
+                lib.look_up_symbol(symbol_node_id, unresolved_path, &external)
+                    .map(|found| symbol::Path::Resolved(found_symbol(lib, found, None))),
+            );
         }
 
         // Look up external libraries.
@@ -216,11 +253,9 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
                 Some(lib) => {
                     // The library appears in its own tree under its name, so only `mu` is removed.
                     let path = unresolved_path.without_mu_prefix();
-                    paths.extend(
-                        lib.look_up(lib.root, &path).map(|id| {
-                            symbol::Path::Resolved(symbol_target(&lib, id, Some(lib.id())))
-                        }),
-                    );
+                    paths.extend(lib.look_up_symbol(lib.root, &path, &external).map(|found| {
+                        symbol::Path::Resolved(found_symbol(&lib, found, Some(lib.id())))
+                    }));
                 }
                 None => self.lib_ctx.push_err(ResolveErrorKind::LibraryNotLoaded {
                     name: external_name.to_string(),

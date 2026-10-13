@@ -1,0 +1,12 @@
+---
+source: crates/lang-parse/tests/parser.rs
+expression: output
+---
+
+---
+  x 'super' is a keyword and can't be used as an identifier
+   ,-[/:1:1]
+ 1 | super = 1;
+   : ^^|^^
+   :   `-- 'super' is a keyword and can't be used as an identifier
+   `----

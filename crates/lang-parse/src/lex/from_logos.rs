@@ -60,6 +60,9 @@ fn map_token(token: Spanned<LogosToken>) -> impl Iterator<Item = Spanned<Token>>
         }
         LogosToken::KeywordProp => Either::Left(once(Spanned::new(token.span, Token::KeywordProp))),
         LogosToken::KeywordInit => Either::Left(once(Spanned::new(token.span, Token::KeywordInit))),
+        LogosToken::KeywordSuper => {
+            Either::Left(once(Spanned::new(token.span, Token::KeywordSuper)))
+        }
         LogosToken::KeywordPlugin => {
             Either::Left(once(Spanned::new(token.span, Token::KeywordPlugin)))
         }

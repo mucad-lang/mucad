@@ -168,7 +168,8 @@ fn parser<'tokens>()
             Token::KeywordPub |
             Token::KeywordConst |
             Token::KeywordProp |
-            Token::KeywordInit
+            Token::KeywordInit |
+            Token::KeywordSuper
         ) => token.kind(),
     }
     .boxed();
@@ -265,16 +266,36 @@ fn parser<'tokens>()
     .labelled("identifier")
     .boxed();
 
+    // `super` is a keyword, which is only allowed as leading parts of a path,
+    // e.g. `super::super::geo::Circle`. It becomes a part named `super`.
+    let super_parts = just(Token::KeywordSuper)
+        .map_with(|token, e| ast::Identifier {
+            span: e.span(),
+            name: token.kind().into(),
+        })
+        .then_ignore(just(Token::SigilDoubleColon))
+        .repeated()
+        .collect::<Vec<_>>()
+        .boxed();
+
     let symbol_path = select_ref! {
         Token::SigilDoubleColon = e => e.span()
     }
     .or_not()
     .then(
-        identifier_parser
+        super_parts
             .clone()
-            .separated_by(just(Token::SigilDoubleColon))
-            .at_least(1)
-            .collect::<Vec<_>>(),
+            .then(
+                identifier_parser
+                    .clone()
+                    .separated_by(just(Token::SigilDoubleColon))
+                    .at_least(1)
+                    .collect::<Vec<_>>(),
+            )
+            .map(|(mut parts, identifiers)| {
+                parts.extend(identifiers);
+                parts
+            }),
     )
     .with_extras()
     .map_with(|((prefix, parts), extras), e| ast::SymbolPath {
@@ -887,10 +908,23 @@ fn parser<'tokens>()
         }
         .or_not()
         .then(
-            use_part
-                .separated_by(just(Token::SigilDoubleColon))
-                .at_least(1)
-                .collect::<Vec<_>>(),
+            super_parts
+                .clone()
+                .then(
+                    use_part
+                        .separated_by(just(Token::SigilDoubleColon))
+                        .at_least(1)
+                        .collect::<Vec<_>>(),
+                )
+                .map(|(supers, mut parts)| {
+                    parts.splice(
+                        0..0,
+                        supers
+                            .into_iter()
+                            .map(ast::def::UseStatementPart::Identifier),
+                    );
+                    parts
+                }),
         )
         .with_extras()
         .map_with(|((prefix, parts), extras), e| ast::def::UseName {

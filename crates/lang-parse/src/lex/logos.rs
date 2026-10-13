@@ -51,6 +51,8 @@ pub enum LogosToken<'a> {
     KeywordProp,
     #[token("init")]
     KeywordInit,
+    #[token("super")]
+    KeywordSuper,
     #[token("__plugin")]
     KeywordPlugin,
     #[token("assembly")]

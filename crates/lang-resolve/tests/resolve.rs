@@ -210,3 +210,89 @@ fn resolve_glob_private_no_reexport() {
         "{issues:?}"
     );
 }
+
+/// `super::` refers to the parent module, also repeated and in `use` statements.
+#[test]
+fn resolve_super() {
+    let mut ctx = ResolveContext::new();
+    let (_lib, issues) = microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(
+            r#"
+            const R = 1mm;
+
+            pub mod a {
+                pub use super::b::*;
+
+                pub mod inner {
+                    pub sketch Disc() {
+                        __mu::geo2d::Circle(radius = super::super::R);
+                    }
+                }
+
+                pub sketch Uses() {
+                    __mu::geo2d::Circle(radius = super::R + C);
+                }
+            }
+
+            pub mod b {
+                pub const C = 1mm;
+            }
+
+            use a::*;
+            __mu::geo2d::Circle(radius = C);
+            "#,
+        ),
+        &mut ctx,
+    )
+    .expect("No fatal error");
+
+    assert!(!issues.has_errors(), "{issues:?}");
+}
+
+/// `super::` beyond the root of a library cannot be resolved.
+#[test]
+fn resolve_super_beyond_root() {
+    let mut ctx = ResolveContext::new();
+    let (_lib, issues) = microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(
+            "const R = 1mm;\n__mu::geo2d::Circle(radius = super::super::R);\n",
+        ),
+        &mut ctx,
+    )
+    .expect("No fatal error");
+
+    assert!(
+        issues
+            .iter()
+            .any(|issue| issue.to_string() == "Unresolved symbol: super::super::R"),
+        "{issues:?}"
+    );
+}
+
+/// A glob import of a module, which re-exports a module of a third library.
+#[test]
+fn resolve_glob_chain() {
+    let mut ctx = ResolveContext::new();
+    // `chain_outer` loads `chain_inner` as dependency.
+    let (lib_id, issues) = ctx
+        .load_external_library("tests/test_cases/chain_outer")
+        .expect("A library");
+    assert!(!issues.has_errors(), "{issues:?}");
+    ctx.add_implicit_dependency("chain_outer", lib_id);
+
+    let (_lib, issues) = microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(
+            r#"
+            use chain_outer::geo::*;
+
+            Shape();
+            __mu::geo2d::Circle(radius = R);
+            chain_outer::geo::Shape();
+            "#,
+        ),
+        &mut ctx,
+    )
+    .expect("No fatal error");
+
+    assert!(!issues.has_errors(), "{issues:?}");
+}

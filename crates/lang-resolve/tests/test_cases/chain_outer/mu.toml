@@ -1,0 +1,9 @@
+# A library, which re-exports symbols of `chain_inner`.
+
+[library]
+name = "chain_outer"
+version = "0.1.0"
+no_std = true
+
+[dependencies]
+chain_inner = { path = "../chain_inner" }

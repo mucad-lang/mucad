@@ -78,17 +78,16 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         log::debug!("Loading library from {lib_mu:?}");
 
         // Load manifest and load library
-        match Manifest::load(locate::mu_toml_path(lib_path)) {
+        match Manifest::load(locate::mu_toml_path(&lib_path)) {
             Ok(manifest) => {
                 log::debug!("Loaded manifest:\n{manifest}");
 
                 if let Some(deps) = &manifest.dependencies {
                     for (name, dep) in deps.iter() {
                         // A failed dependency is recorded, its symbols remain unresolved.
-                        match self
-                            .ctx_mut()
-                            .load_external_library(dep.path.as_ref().unwrap())
-                        {
+                        // Dependency paths are relative to the library.
+                        let dep_path = lib_path.as_ref().join(dep.path.as_ref().unwrap());
+                        match self.ctx_mut().load_external_library(dep_path) {
                             Ok((lib_id, issues)) => {
                                 self.append_issues(issues);
                                 self.lib_mut()

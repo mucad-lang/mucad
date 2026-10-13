@@ -1,0 +1,6 @@
+# A library, which is re-exported by `chain_outer`.
+
+[library]
+name = "chain_inner"
+version = "0.1.0"
+no_std = true

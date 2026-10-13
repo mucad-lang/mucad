@@ -48,6 +48,8 @@ pub enum Token<'a> {
     KeywordProp,
     /// The `init` keyword
     KeywordInit,
+    /// The `super` keyword
+    KeywordSuper,
     /// The `__plugin` keyword
     KeywordPlugin,
     /// The `assembly` keyword
@@ -211,6 +213,7 @@ impl Token<'_> {
             Token::KeywordConst => Token::KeywordConst,
             Token::KeywordProp => Token::KeywordProp,
             Token::KeywordInit => Token::KeywordInit,
+            Token::KeywordSuper => Token::KeywordSuper,
             Token::KeywordAssembly => Token::KeywordAssembly,
             Token::KeywordPlugin => Token::KeywordPlugin,
             Token::KeywordMaterial => Token::KeywordMaterial,
@@ -290,6 +293,7 @@ impl Token<'_> {
             Token::KeywordConst => "const",
             Token::KeywordProp => "prop",
             Token::KeywordInit => "init",
+            Token::KeywordSuper => "super",
             Token::KeywordPlugin => "__plugin",
             Token::KeywordAssembly => "assembly",
             Token::KeywordMaterial => "material",

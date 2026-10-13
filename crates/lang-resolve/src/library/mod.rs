@@ -20,6 +20,9 @@ use serde::{Deserialize, Serialize};
 
 pub use symbol::*;
 
+/// The leading path part, which refers to the parent module, e.g. `super::geo::Circle`.
+const SUPER: &str = "super";
+
 /// Looks up path parts inside a module of another library.
 pub type ExternalLookUp<'a> = dyn Fn(&ExternalId, &[Identifier]) -> Option<SymbolId> + 'a;
 
@@ -148,6 +151,28 @@ impl Library {
         external: &ExternalLookUp,
         visited_wildcards: &mut HashSet<SymbolNodeId>,
     ) -> Option<LookUp> {
+        // 0. Path starting with `super::`: start from the parent of the current module.
+        if path.parts.first().is_some_and(|part| part == SUPER) {
+            if path.is_absolute {
+                return None;
+            }
+            let mut module = self.module_of(starting_node);
+            let mut parts = &path.parts[..];
+            while let Some((part, rest)) = parts.split_first()
+                && part == SUPER
+            {
+                module = self.module_of(module.parent(&self.arena)?);
+                parts = rest;
+            }
+            return self.look_up_downwards(
+                module,
+                parts,
+                starting_node,
+                external,
+                visited_wildcards,
+            );
+        }
+
         // 1. Absolute Path: start directly from library root
         if path.is_absolute {
             return self.look_up_downwards(
@@ -292,21 +317,32 @@ impl Library {
     }
 
     /// Look up public path parts inside a module of this library, e.g. for a wildcard import.
+    ///
+    /// `external` looks up symbols, which the module imports from other libraries.
     pub fn look_up_in_module(
         &self,
         module: SymbolNodeId,
         parts: &[Identifier],
-    ) -> Option<SymbolNodeId> {
+        external: &ExternalLookUp,
+    ) -> Option<LookUp> {
         // From the root, only public symbols inside the module are visible.
-        match self.look_up_downwards(
-            module,
-            parts,
-            self.root,
-            &|_, _| None,
-            &mut HashSet::default(),
-        )? {
-            LookUp::Local(id) => Some(id),
-            LookUp::External(_) => None,
+        self.look_up_downwards(module, parts, self.root, external, &mut HashSet::default())
+    }
+
+    /// The module (root, inline module or source file) which contains `node` or is `node`.
+    fn module_of(&self, mut node: SymbolNodeId) -> SymbolNodeId {
+        loop {
+            let def = &SymbolNodeRef::new(node, &self.arena).get().def;
+            if matches!(
+                def,
+                SymbolDef::Root(_) | SymbolDef::InlineModule(_) | SymbolDef::SourceFile(_)
+            ) {
+                return node;
+            }
+            match node.parent(&self.arena) {
+                Some(parent) => node = parent,
+                None => return node,
+            }
         }
     }
 

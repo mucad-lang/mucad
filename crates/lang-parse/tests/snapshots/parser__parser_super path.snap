@@ -1,0 +1,99 @@
+---
+source: crates/lang-parse/tests/parser.rs
+expression: output
+---
+(
+    header: (
+        magic: (38, 109, 117, 59),
+        version: ("0.6.0"),
+        kind: Ast,
+    ),
+    payload: (
+        input_hash: "0x11a8184e6fe30b3b",
+        output_hash: "0x8d9d5b155497272f",
+        tree: (
+            span: (
+                start: 0,
+                end: 17,
+            ),
+            statements: (
+                span: (
+                    start: 0,
+                    end: 17,
+                ),
+                extras: (
+                    leading: ([]),
+                    trailing: ([]),
+                ),
+                statements: [],
+                tail: Some((
+                    span: (
+                        start: 0,
+                        end: 17,
+                    ),
+                    extras: (
+                        leading: ([]),
+                        trailing: ([]),
+                    ),
+                    attr: ([]),
+                    expr: Call((
+                        span: (
+                            start: 0,
+                            end: 17,
+                        ),
+                        extras: (
+                            leading: ([]),
+                            trailing: ([]),
+                        ),
+                        path: (
+                            span: (
+                                start: 0,
+                                end: 15,
+                            ),
+                            extras: (
+                                leading: ([]),
+                                trailing: ([]),
+                            ),
+                            prefix: None,
+                            parts: [
+                                (
+                                    span: (
+                                        start: 0,
+                                        end: 5,
+                                    ),
+                                    name: "super",
+                                ),
+                                (
+                                    span: (
+                                        start: 7,
+                                        end: 10,
+                                    ),
+                                    name: "foo",
+                                ),
+                                (
+                                    span: (
+                                        start: 12,
+                                        end: 15,
+                                    ),
+                                    name: "bar",
+                                ),
+                            ],
+                        ),
+                        arguments: (
+                            span: (
+                                start: 16,
+                                end: 16,
+                            ),
+                            extras: (
+                                leading: ([]),
+                                trailing: ([]),
+                            ),
+                            arguments: [],
+                        ),
+                    )),
+                )),
+            ),
+        ),
+    ),
+)
+---
