@@ -50,15 +50,15 @@ pub struct Compile {
     input: String,
 
     /// Emit AST (optionally specify a custom path)
-    #[arg(long, default_value = "none", default_missing_value = "auto")]
+    #[arg(long, num_args = 0..=1, default_value = "none", default_missing_value = "auto")]
     pub emit_ast: EmitTarget,
 
     /// Emit IR (optionally specify a custom path)
-    #[arg(long, default_value = "none", default_missing_value = "auto")]
+    #[arg(long, num_args = 0..=1, default_value = "none", default_missing_value = "auto")]
     pub emit_ir: EmitTarget,
 
     /// Emit Model Tree (optionally specify a custom path)
-    #[arg(long, default_value = "none", default_missing_value = "auto")]
+    #[arg(long, num_args = 0..=1, default_value = "none", default_missing_value = "auto")]
     pub emit_model: EmitTarget,
 }
 

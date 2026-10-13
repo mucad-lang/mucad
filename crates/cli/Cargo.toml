@@ -41,3 +41,8 @@ missing_docs = "warn"
 
 [lints.clippy]
 unwrap_used = "warn"
+
+[dev-dependencies]
+assert_cmd = "2.2.2"
+predicates = "3.1.4"
+tempfile = "3.27.0"

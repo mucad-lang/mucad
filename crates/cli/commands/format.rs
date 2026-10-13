@@ -9,7 +9,7 @@ use crate::{Cli, commands::RunCommand};
 #[derive(clap::Parser)]
 
 pub struct Format {
-    /// Input µcad file if not set, we read from stdin.
+    /// Input µcad file. If not set, we read from stdin and write to stdout.
     pub input: Option<String>,
 }
 
@@ -27,7 +27,10 @@ impl RunCommand<()> for Format {
             Ok(mu::Formatted {
                 source, formatted, ..
             }) => {
-                if formatted {
+                if self.input.is_none() {
+                    // A source from stdin has no file to sync to.
+                    print!("{}", source.code());
+                } else if formatted {
                     source.sync().into_diagnostic()?;
                     eprintln!("Formatted document.");
                 } else {
