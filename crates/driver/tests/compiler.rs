@@ -267,3 +267,48 @@ fn compile_access() {
     assert!(!diags.has_errors(), "{diags:?}");
     insta::assert_snapshot!("compile_access", display(&model));
 }
+
+/// Boolean operators on models, a chain of equal operators is flattened.
+#[test]
+fn compile_boolean_ops() {
+    let mut compiler = compiler();
+    let (model, diags) = compiler
+        .compile(mu::Source::from(
+            r#"
+            __mu::geo2d::Circle(radius = 3mm) - __mu::geo2d::Circle(radius = 2mm) - __mu::geo2d::Circle(radius = 1mm);
+            __mu::geo2d::Circle(radius = 2mm) | __mu::geo2d::Circle(radius = 1mm);
+            __mu::geo2d::Circle(radius = 2mm) & __mu::geo2d::Circle(radius = 1mm);
+            "#,
+        ))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    insta::assert_snapshot!("compile_boolean_ops", display(&model));
+}
+
+/// The boolean operations of `__mu::ops` build the same models as the boolean operators.
+#[test]
+fn compile_boolean_op_calls() {
+    let compile = |code: &str| {
+        let (model, diags) = compiler().compile(mu::Source::from(code)).expect("A model");
+        assert!(!diags.has_errors(), "{diags:?}");
+        display(&model)
+    };
+
+    let a = "__mu::geo2d::Circle(radius = 3mm)";
+    let b = "__mu::geo2d::Circle(radius = 2mm)";
+    let c = "__mu::geo2d::Circle(radius = 1mm)";
+
+    assert_eq!(
+        compile(&format!("{{ {a}; {b}; {c}; }}.__mu::ops::subtract();")),
+        compile(&format!("{a} - {b} - {c};"))
+    );
+    assert_eq!(
+        compile(&format!("{{ {a}; {b}; }}.__mu::ops::union();")),
+        compile(&format!("{a} | {b};"))
+    );
+    assert_eq!(
+        compile(&format!("{{ {a}; {b}; }}.__mu::ops::intersect();")),
+        compile(&format!("{a} & {b};"))
+    );
+}

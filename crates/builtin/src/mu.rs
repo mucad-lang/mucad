@@ -734,8 +734,9 @@ pub mod geo3d {
 pub mod ops {
     use microcad_lang_types::{
         Angle, Integer, Length, Mat3, ModelTree, Scalar, Vec3, math::AffineTransform,
+        model::BooleanOp,
     };
-    use microcad_macros::{builtin_op, builtin_transform};
+    use microcad_macros::{builtin_boolean_op, builtin_op, builtin_transform};
 
     use super::*;
 
@@ -858,30 +859,48 @@ pub mod ops {
     -> Result<ModelTree, BuiltinError>;
 
     /// Union of all child models.
-    #[builtin_op(Any -> Any)]
+    #[builtin_boolean_op]
     pub struct Union;
 
+    impl From<Union> for BooleanOp {
+        fn from(_: Union) -> Self {
+            BooleanOp::Union
+        }
+    }
+
     /// Union of all child models.
-    #[builtin_op]
+    #[builtin_boolean_op]
     pub fn union(args: Arguments, ctx: &mut BuiltinEvalContext) -> Result<ModelTree, BuiltinError>;
 
     /// Subtract all following child models from the first one.
-    #[builtin_op(Any -> Any)]
+    #[builtin_boolean_op]
     pub struct Subtract;
 
+    impl From<Subtract> for BooleanOp {
+        fn from(_: Subtract) -> Self {
+            BooleanOp::Difference
+        }
+    }
+
     /// Subtract all following child models from the first one.
-    #[builtin_op]
+    #[builtin_boolean_op]
     pub fn subtract(
         args: Arguments,
         ctx: &mut BuiltinEvalContext,
     ) -> Result<ModelTree, BuiltinError>;
 
     /// Intersection of all child models.
-    #[builtin_op(Any -> Any)]
+    #[builtin_boolean_op]
     pub struct Intersect;
 
+    impl From<Intersect> for BooleanOp {
+        fn from(_: Intersect) -> Self {
+            BooleanOp::Intersect
+        }
+    }
+
     /// Intersection of all child models.
-    #[builtin_op]
+    #[builtin_boolean_op]
     pub fn intersect(
         args: Arguments,
         ctx: &mut BuiltinEvalContext,

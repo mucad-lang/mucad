@@ -150,6 +150,12 @@ impl From<AffineTransform> for Model {
     }
 }
 
+impl From<BooleanOp> for Model {
+    fn from(op: BooleanOp) -> Self {
+        Self::new(Element::BuiltinWorkpiece(BuiltinWorkpiece::BooleanOp(op)))
+    }
+}
+
 impl<Ctx: LookUpName> DisplayWithCtx<Ctx> for Model {
     fn fmt_with_ctx(&self, f: &mut std::fmt::Formatter<'_>, ctx: &Ctx) -> std::fmt::Result {
         if let Some(name) = &self.name {

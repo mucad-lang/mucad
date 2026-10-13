@@ -75,6 +75,19 @@ fn check_glob_import() {
         .stderr(predicate::str::contains("is valid."));
 }
 
+/// The example of the CLI crate.
+#[test]
+fn check_example() {
+    let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/hello.mu");
+
+    microcad()
+        .arg("check")
+        .arg(&example)
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("is valid."));
+}
+
 #[test]
 fn check_unresolved() {
     let dir = tempfile::tempdir().expect("temp dir");

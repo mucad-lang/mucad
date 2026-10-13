@@ -5,7 +5,17 @@
 
 use microcad_lang_base::element::BinaryOperator;
 
-use crate::{List, Quantity, QuantityType, Scalar, Ty, Type, Unit, Value, ValueError, ValueResult};
+use crate::{
+    List, ModelTree, Quantity, QuantityType, Scalar, Ty, Type, Unit, Value, ValueError,
+    ValueResult, model::BooleanOp,
+};
+
+/// Combine two models with a boolean operation, see [`ModelTree::apply_boolean_op`].
+fn boolean_op(lhs: std::rc::Rc<ModelTree>, op: BooleanOp, rhs: std::rc::Rc<ModelTree>) -> Value {
+    std::rc::Rc::unwrap_or_clone(lhs)
+        .apply_boolean_op(op, std::rc::Rc::unwrap_or_clone(rhs))
+        .into()
+}
 
 impl Value {
     pub fn cmp(&self, op: BinaryOperator, rhs: &Self) -> ValueResult {
@@ -156,6 +166,9 @@ impl std::ops::Sub for Value {
             } // TODO This could be optimized via applying `not` in-place
 
             // Boolean difference operator for models
+            (Value::Model(lhs), Value::Model(rhs)) => {
+                Ok(boolean_op(lhs, BooleanOp::Difference, rhs))
+            }
             (lhs, rhs) => Err(ValueError::InvalidOperator(format!("{lhs} - {rhs}"))),
         }
     }
@@ -236,6 +249,8 @@ impl std::ops::BitOr for Value {
     fn bitor(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Value::Bool(lhs), Value::Bool(rhs)) => Ok(Value::Bool(lhs | rhs)),
+            // Boolean union operator for models
+            (Value::Model(lhs), Value::Model(rhs)) => Ok(boolean_op(lhs, BooleanOp::Union, rhs)),
             (lhs, rhs) => Err(ValueError::InvalidOperator(format!("{lhs} | {rhs}"))),
         }
     }
@@ -248,6 +263,10 @@ impl std::ops::BitAnd for Value {
     fn bitand(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Value::Bool(lhs), Value::Bool(rhs)) => Ok(Value::Bool(lhs & rhs)),
+            // Boolean intersection operator for models
+            (Value::Model(lhs), Value::Model(rhs)) => {
+                Ok(boolean_op(lhs, BooleanOp::Intersect, rhs))
+            }
             (lhs, rhs) => Err(ValueError::InvalidOperator(format!("{lhs} & {rhs}"))),
         }
     }

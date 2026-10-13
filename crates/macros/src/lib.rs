@@ -4,6 +4,7 @@
 extern crate proc_macro;
 
 mod __mu;
+mod builtin_boolean_op;
 mod builtin_constant;
 mod builtin_fn;
 mod builtin_mod;
@@ -89,6 +90,22 @@ pub fn builtin_op(attr: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn builtin_transform(attr: TokenStream, item: TokenStream) -> TokenStream {
     builtin_transform::builtin_transform_impl(attr, item)
+}
+
+/// Declare a built-in boolean operation with a struct and a bodyless function.
+///
+/// On a struct, `#[builtin_boolean_op]` has no arguments and the struct must implement
+/// `Into<BooleanOp>`. Implements `Builtin` and `BuiltinOperationCall` for the struct
+/// and generates a static, e.g. `pub static SUBTRACT: &BuiltinItem = Subtract::ITEM;`.
+///
+/// On a function, `#[builtin_boolean_op]` has no arguments. The function is named after the
+/// struct in snake case (e.g. `Subtract` -> `subtract`) and its generated body calls
+/// `BuiltinOperationCall::call`.
+///
+/// Must be used inside a `#[builtin_mod]` module, which provides the module name.
+#[proc_macro_attribute]
+pub fn builtin_boolean_op(attr: TokenStream, item: TokenStream) -> TokenStream {
+    builtin_boolean_op::builtin_boolean_op_impl(attr, item)
 }
 
 /// Declare a struct as built-in primitive.

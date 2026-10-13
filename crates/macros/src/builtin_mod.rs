@@ -6,7 +6,12 @@
 use crate::prelude::*;
 
 /// Attribute macros on structs which need the module name.
-const BUILTIN_STRUCT_ATTRS: [&str; 3] = ["builtin_primitive", "builtin_op", "builtin_transform"];
+const BUILTIN_STRUCT_ATTRS: [&str; 4] = [
+    "builtin_primitive",
+    "builtin_op",
+    "builtin_transform",
+    "builtin_boolean_op",
+];
 
 pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
     let mut item_mod = parse_macro_input!(item as ItemMod);
@@ -37,7 +42,7 @@ pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
                 let tokens = &list.tokens;
                 list.tokens = quote! { #tokens, mod = #mod_name };
             }
-            // `#[builtin_transform]` without arguments.
+            // `#[builtin_transform]` or `#[builtin_boolean_op]` without arguments.
             meta @ syn::Meta::Path(_) => {
                 let path = meta.path().clone();
                 *meta = syn::parse_quote! { #path(mod = #mod_name) };
@@ -71,10 +76,12 @@ pub(crate) fn builtin_mod_impl(item: TokenStream) -> TokenStream {
                 let ident = helpers::ident_upper(ident);
                 Some(quote! { #mod_name::#ident })
             }
-            // Operation and transform statics are references, too, named after their function.
+            // Operation, transform and boolean operation statics are references, too,
+            // named after their function.
             syn::Item::Struct(ItemStruct { attrs, ident, .. })
                 if helpers::attr_exists(attrs, "builtin_op")
-                    || helpers::attr_exists(attrs, "builtin_transform") =>
+                    || helpers::attr_exists(attrs, "builtin_transform")
+                    || helpers::attr_exists(attrs, "builtin_boolean_op") =>
             {
                 let ident = helpers::ident_upper(&helpers::ident_snake(ident));
                 Some(quote! { #mod_name::#ident })

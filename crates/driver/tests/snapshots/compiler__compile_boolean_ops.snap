@@ -1,0 +1,25 @@
+---
+source: crates/driver/tests/compiler.rs
+expression: display(&model)
+---
+Group
+├── Builtin(Difference)
+│   └── Group
+│       ├── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│       │       - radius [in]: Length = 3mm
+│       ├── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│       │       - radius [in]: Length = 2mm
+│       └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│               - radius [in]: Length = 1mm
+├── Builtin(Union)
+│   └── Group
+│       ├── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│       │       - radius [in]: Length = 2mm
+│       └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+│               - radius [in]: Length = 1mm
+└── Builtin(Intersect)
+    └── Group
+        ├── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+        │       - radius [in]: Length = 2mm
+        └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+                - radius [in]: Length = 1mm
