@@ -135,6 +135,20 @@ impl SourceUnit {
         }
     }
 
+    pub fn ast(&self) -> Option<&Ast> {
+        match self {
+            SourceUnit::Parsed { ast, .. } | SourceUnit::Lowered { ast, .. } => ast.artifact(),
+            _ => None,
+        }
+    }
+
+    pub fn into_ast(self) -> Option<Ast> {
+        match self {
+            SourceUnit::Parsed { ast, .. } | SourceUnit::Lowered { ast, .. } => ast.into_artifact(),
+            _ => None,
+        }
+    }
+
     pub fn ir(&self) -> Option<&Ir> {
         match self {
             Self::Lowered { ir, .. } => ir.artifact(),

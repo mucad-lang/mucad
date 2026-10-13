@@ -7,9 +7,10 @@ mod loader;
 
 pub use cache::{LibraryCache, SourceCache};
 pub use lib_ctx::ResolveLibraryContext;
+use microcad_lang_parse::Ast;
 use std::collections::BTreeMap;
 
-use microcad_lang_base::{HashId, IssueResult, LibraryId, Name, PushIssue, SharedMut};
+use microcad_lang_base::{Artifact, HashId, IssueResult, LibraryId, Name, PushIssue, SharedMut};
 use microcad_lang_lower::Ir;
 
 use crate::{Library, ResolveIssue};
@@ -38,12 +39,43 @@ impl ResolveContext {
 
 /// Accessors
 impl ResolveContext {
+    /// Execute a closure with a reference to the AST, if present.
+    pub fn with_ast<F, R>(&self, id: HashId, f: F) -> Option<R>
+    where
+        F: FnOnce(&Ast) -> R,
+    {
+        self.src_cache
+            .with_read(|src_cache| src_cache.get(id).and_then(|unit| unit.ast().map(f)))
+    }
+
+    /// Execute a closure with a reference to the IR, if present.
+    pub fn with_ir<F, R>(&self, id: HashId, f: F) -> Option<R>
+    where
+        F: FnOnce(&Ir) -> R,
+    {
+        self.src_cache
+            .with_read(|src_cache| src_cache.get(id).and_then(|unit| unit.ir().map(f)))
+    }
+
     /// Get intermediate representation by hash id.
     pub fn get_ir(&self, id: HashId) -> Option<Ir> {
-        self.src_cache
-            .read_unwrap()
-            .get(id)
-            .and_then(|source_unit| source_unit.ir().cloned())
+        self.src_cache.with_read(|src_cache| {
+            src_cache
+                .get(id)
+                .and_then(|source_unit| source_unit.ir().cloned())
+        })
+    }
+
+    pub fn emit_ast(&self, id: HashId, path: impl AsRef<std::path::Path>) -> miette::Result<()> {
+        self.with_ast(id, |ast| ast.emit(path))
+            .transpose()?
+            .ok_or_else(|| miette::miette!("No AST to emit"))
+    }
+
+    pub fn emit_ir(&self, id: HashId, path: impl AsRef<std::path::Path>) -> miette::Result<()> {
+        self.with_ir(id, |ir| ir.emit(path))
+            .transpose()?
+            .ok_or_else(|| miette::miette!("No IR to emit"))
     }
 
     /// Source cache
