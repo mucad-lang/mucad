@@ -5,7 +5,7 @@
 
 pub use crate::prelude as mu;
 
-use microcad_lang_base::{Issue, PushIssue};
+use microcad_lang_base::{DiagRenderOptions, Diagnostics, Issue, PushIssue};
 use microcad_std::{StdLib, StdLibError};
 
 /// Result of the compiler: the output bundled with the diagnostics of all stages run so far.
@@ -78,7 +78,9 @@ impl Compiler {
             std_loaded: false,
         }
     }
+}
 
+impl Compiler {
     /// Compile a source into a model tree.
     ///
     /// Parsing and lowering happen while resolving, because resolving loads further source files.
@@ -89,13 +91,29 @@ impl Compiler {
             })
             .then(|lib| {
                 let lib_cache = self.resolve_context.lib_cache();
-                let lib_id = lib_cache.write_unwrap().insert_root(lib);
+                let lib_id = lib_cache.with_write(|lib_cache| lib_cache.insert_root(lib));
                 let eval_context = mu::EvalContext::builder()
                     .with_lib_cache(lib_cache)
                     .with_lib_id(lib_id)
                     .build();
                 mu::eval::eval(eval_context).into_compile_result()
             })
+    }
+
+    /// Execute a closure with a reference to the AST, if present.
+    pub fn with_ast<F, R>(&self, id: mu::HashId, f: F) -> Option<R>
+    where
+        F: FnOnce(&mu::Ast) -> R,
+    {
+        self.resolve_context.with_ast(id, f)
+    }
+
+    /// Execute a closure with a reference to the IR, if present.
+    pub fn with_ir<F, R>(&self, id: mu::HashId, f: F) -> Option<R>
+    where
+        F: FnOnce(&mu::Ir) -> R,
+    {
+        self.resolve_context.with_ir(id, f)
     }
 
     /// Load the standard library once and make it an implicit dependency of every library.
@@ -145,5 +163,34 @@ impl Compiler {
         let path = StdLib::default_path();
         StdLib::install(&path).map_err(|StdLibError::InstallError(err)| err)?;
         Ok(path)
+    }
+
+    pub fn render_diag(
+        &self,
+        f: &mut dyn std::fmt::Write,
+        diagnostics: &Diagnostics,
+    ) -> std::fmt::Result {
+        diagnostics.iter().try_for_each(|diag| {
+            let hash_id = diag.src_ref.source_hash();
+            match self
+                .resolve_context
+                .source_cache()
+                .with_read(|source_cache| {
+                    source_cache
+                        .get(hash_id)
+                        .map(|source_unit| source_unit.source())
+                        .cloned()
+                }) {
+                Some(source) => diag.render_source(f, &source, &DiagRenderOptions::default()),
+                None => Ok(()),
+            }
+        })
+    }
+
+    pub fn render_diag_to_string(&self, diagnostics: &Diagnostics) -> String {
+        let mut buff = String::new();
+        self.render_diag(&mut buff, diagnostics)
+            .expect("format to string can't fail");
+        buff
     }
 }
