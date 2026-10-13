@@ -238,51 +238,50 @@ impl<'a> Search<'a> {
 
     /// Look up a path from `from_scope`.
     fn path(&mut self, path: &UnresolvedPath) -> Option<LookUp> {
-        // `super::` parts start from the parent of the current module.
-        if path.parts.first().is_some_and(|part| part == SUPER) {
-            if path.is_absolute {
-                return None;
-            }
-            let mut module = self.lib.module_of(self.from_scope);
-            let mut parts = &path.parts[..];
-            while let Some((part, rest)) = parts.split_first()
-                && part == SUPER
-            {
-                module = self.lib.module_of(module.parent(&self.lib.arena)?);
-                parts = rest;
-            }
-            return self.downwards(module, parts);
-        }
+        let lib = self.lib;
+        let parts = &path.parts[..];
+        let supers = parts.iter().take_while(|part| *part == SUPER).count();
 
-        // An absolute path starts from the library root.
-        if path.is_absolute {
-            return self.downwards(self.lib.root, &path.parts);
-        }
-
-        // A relative path starts with a symbol in the scope or one of its parent scopes.
-        let mut scope = Some(self.from_scope);
-        while let Some(scope_id) = scope {
-            match self.in_scope(scope_id, &path.parts) {
-                Some(LookUp::Local(id)) => return self.downwards(id, &path.parts[1..]),
-                // An external symbol has been looked up with all parts.
-                Some(found) => return Some(found),
-                None => scope = scope_id.parent(&self.lib.arena),
+        match (path.is_absolute, supers) {
+            // An absolute path starts from the library root, `::super` does not exist.
+            (true, 0) => self.downwards(lib.root, parts),
+            (true, _) => None,
+            // A relative path starts with a symbol in the scope or one of its parent scopes.
+            (false, 0) => {
+                let found =
+                    std::iter::successors(Some(self.from_scope), |scope| scope.parent(&lib.arena))
+                        .find_map(|scope| self.in_scope(scope, parts))?;
+                self.descend(found, &parts[1..])
+            }
+            // `super::` parts start from the parent of the current module.
+            (false, _) => {
+                let module = (0..supers)
+                    .try_fold(lib.module_of(self.from_scope), |module, _| {
+                        Some(lib.module_of(module.parent(&lib.arena)?))
+                    })?;
+                self.downwards(module, &parts[supers..])
             }
         }
-        None
     }
 
     /// Look up `parts` one by one, starting inside `start`.
     fn downwards(&mut self, start: SymbolNodeId, parts: &[Identifier]) -> Option<LookUp> {
-        let mut curr = start;
-        for i in 0..parts.len() {
-            match self.in_scope(curr, &parts[i..])? {
-                LookUp::Local(id) => curr = id,
-                // An external symbol has been looked up with the remaining parts.
-                found => return Some(found),
+        match parts {
+            [] => Some(LookUp::Local(start)),
+            [_, rest @ ..] => {
+                let found = self.in_scope(start, parts)?;
+                self.descend(found, rest)
             }
         }
-        Some(LookUp::Local(curr))
+    }
+
+    /// Look up the `rest` of a path inside a `found` symbol.
+    fn descend(&mut self, found: LookUp, rest: &[Identifier]) -> Option<LookUp> {
+        match found {
+            LookUp::Local(id) => self.downwards(id, rest),
+            // A symbol of another library has been looked up with all parts.
+            LookUp::External(_) => Some(found),
+        }
     }
 
     /// Look up the first of `parts` in `scope`: a child or a symbol imported by a wildcard.
@@ -291,15 +290,15 @@ impl<'a> Search<'a> {
         let scope = SymbolNodeRef::new(scope, &self.lib.arena);
 
         // Children shadow imported symbols.
-        if let Some(child) = scope.find_symbol_node(name)
-            && self.lib.is_visible(child.id, self.from_scope)
-        {
-            return Some(LookUp::Local(child.id));
-        }
-
         scope
-            .children()
-            .find_map(|child| self.in_wildcard(scope.id, child, parts))
+            .find_symbol_node(name)
+            .filter(|child| self.lib.is_visible(child.id, self.from_scope))
+            .map(|child| LookUp::Local(child.id))
+            .or_else(|| {
+                scope
+                    .children()
+                    .find_map(|child| self.in_wildcard(scope.id, child, parts))
+            })
     }
 
     /// Look up the first of `parts` in the module imported by `node`, if it is a wildcard.
@@ -316,6 +315,7 @@ impl<'a> Search<'a> {
         let SymbolDef::Wildcard(wildcard) = &node.get().def else {
             return None;
         };
+        // Each wildcard is searched once, to stop at cyclic imports.
         if !self.lib.is_visible(node.id, self.from_scope) || !self.visited_wildcards.insert(node.id)
         {
             return None;
@@ -327,16 +327,19 @@ impl<'a> Search<'a> {
                 (self.external)(module, parts).map(LookUp::External)
             }
             // Not resolved yet, e.g. while resolving the wildcard itself.
-            Path::Unresolved(path) => {
-                let from_scope = std::mem::replace(&mut self.from_scope, scope);
-                let module = self.path(path);
-                self.from_scope = from_scope;
-                match module? {
-                    LookUp::Local(module) => self.in_scope(module, parts),
-                    LookUp::External(_) => None,
-                }
-            }
+            Path::Unresolved(path) => match self.with_scope(scope, |search| search.path(path))? {
+                LookUp::Local(module) => self.in_scope(module, parts),
+                LookUp::External(_) => None,
+            },
             _ => None,
         }
+    }
+
+    /// Run `f` with a look up from `scope` instead of `from_scope`.
+    fn with_scope<T>(&mut self, scope: SymbolNodeId, f: impl FnOnce(&mut Self) -> T) -> T {
+        let from_scope = std::mem::replace(&mut self.from_scope, scope);
+        let result = f(self);
+        self.from_scope = from_scope;
+        result
     }
 }
