@@ -154,6 +154,11 @@ impl Diagnostics {
         self.render(&mut buffer, source_by_hash, options)?;
         Ok(buffer)
     }
+
+    /// Return `true` if `IssueList` is empty.
+    pub fn is_empty(&self) -> bool {
+        self.diagnostics.is_empty()
+    }
 }
 
 impl<I: Issue> From<IssueList<I>> for Diagnostics {
