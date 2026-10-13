@@ -3,11 +3,10 @@
 
 //! µcad driver is a high-level API to be integrated in LSP, CLI or Viewer.
 
-pub mod commands;
 mod compiler;
 mod config;
+mod formatter;
 
-pub mod document;
 pub mod prelude;
 //mod session;
 mod watcher;
@@ -17,6 +16,7 @@ use microcad_lang_parse::ParseIssue;
 use microcad_lang_types::Value;
 
 pub use compiler::Compiler;
+pub use formatter::Formatter;
 
 /// We use [`miette::Result`] throught-out this crate.
 pub type Result<T = ()> = miette::Result<T>;
@@ -30,15 +30,6 @@ pub fn report(s: &str) -> Report {
 }
 
 pub use config::DriverConfig;
-
-#[derive(Debug, Clone, derive_more::Deref)]
-pub struct Cached<T>(pub std::rc::Rc<T>);
-
-impl<T> Cached<T> {
-    pub fn new(item: T) -> Self {
-        Self(std::rc::Rc::new(item))
-    }
-}
 
 /// Parse a value from a string containing a literal.
 pub fn value_from_str(s: &str) -> Result<Value> {

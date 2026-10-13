@@ -15,7 +15,7 @@ use microcad_std::{StdLib, StdLibError};
 ///
 /// A single language stage returns an [`mu::IssueResult`] with typed issues instead,
 /// which is converted with [`IssueResultExt::into_compile_result`].
-type CompileResult<T> = Result<(T, mu::Diagnostics), mu::Diagnostics>;
+pub type CompileResult<T> = Result<(T, mu::Diagnostics), mu::Diagnostics>;
 
 /// Convert the typed issues of a language stage into diagnostics.
 pub trait IssueResultExt<T> {

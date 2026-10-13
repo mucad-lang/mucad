@@ -67,8 +67,6 @@ pub mod types {
 
 pub use types::{ModelTree, Value};
 
-pub use microcad_lang_format::format;
-
 // =========================================================================
 // --- Built-in and standard library & Documentation Generation ---
 // =========================================================================
@@ -108,21 +106,18 @@ pub mod docgen {
 // --- Driver Core, Configs & Commands ---
 // =========================================================================
 
-pub use crate::Compiler;
 pub use crate::config::DriverConfig;
-pub use crate::document::{Document, SourceFile};
-// pub use crate::session::Session;
 pub use crate::watcher::Watcher;
+pub use crate::{Compiler, compiler::CompileResult};
 
-pub use crate::{Cached, Report, Result, report};
+pub use crate::{Report, Result, report};
 
-pub use crate::commands;
-pub use crate::document;
+pub mod format {
+    pub use microcad_lang_format::*;
+}
 
-pub use crate::commands::{
-    CompileParameters, Format, FormatParameters, PrintDiagnosticsParameters, Sync, compile::Parse,
-    compile::ResolveParameters,
-};
+pub use crate::Formatter;
+pub use format::{FormatConfig, Formatted, format};
 
 // =========================================================================
 // --- Traits Namespace ---
@@ -136,10 +131,5 @@ pub mod traits {
         base::{Identifiable, SrcReferrer, ToHash},
         core::{CalcBounds2D, CalcBounds3D},
         docgen::GenerateDoc,
-    };
-
-    pub use super::commands::{
-        Compile, Format, GetCode, PrintDiagnostics, SetCode, Sync, compile::Eval, compile::Lower,
-        compile::Parse, compile::Resolve,
     };
 }
