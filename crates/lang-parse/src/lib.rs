@@ -26,7 +26,7 @@ mod parse;
 /// Contains the lexer (aka tokenizer).
 mod lex;
 
-use microcad_lang_base::{IssueResult, HashId};
+use microcad_lang_base::{HashId, IssueResult};
 use microcad_macros::Artifact;
 
 pub use lex::lex;
@@ -89,9 +89,7 @@ impl Parse for Ast {
 
 /// Parse a source into an abstract syntax tree.
 #[cfg(feature = "parser")]
-pub fn parse<'source>(
-    context: impl Into<ParseContext<'source>>,
-) -> IssueResult<Ast, ParseIssue> {
+pub fn parse<'source>(context: impl Into<ParseContext<'source>>) -> IssueResult<Ast, ParseIssue> {
     let context = context.into();
     match Ast::parse(&context) {
         Ok(ast) => Ok((ast, IssueList::default())), // FIXME: Right now, the parser can only return errors and no warnings
