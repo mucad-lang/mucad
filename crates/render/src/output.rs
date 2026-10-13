@@ -16,7 +16,7 @@ use microcad_hash::{HashId, ToHash, hash_id};
 use microcad_lang_types::{
     ModelNodeRef, ModelTree,
     math::IntoFloat,
-    model::{ModelNodeId, ModelType},
+    model::{ModelNodeId, ModelType, NodeExt},
 };
 
 use crate::{RenderAttributes, RenderResolution};
@@ -277,7 +277,8 @@ pub struct GeometryNodeData {
 impl GeometryNodeData {
     /// Create new render output for model.
     pub fn new<'tree>(model: ModelNodeRef<'tree>) -> Self {
-        let output_type = model.output_type();
+        // Groups and operations like `difference` take the output type of their children.
+        let output_type = model.deduce_output_type();
         let hash = hash_id!(model);
         let local_matrix = model.local_matrix().into_float();
 
