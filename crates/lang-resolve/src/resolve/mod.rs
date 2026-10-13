@@ -13,7 +13,7 @@ pub mod visitor;
 
 use microcad_lang_base::{IssueResult, PushIssue, Source};
 
-use crate::{Library, ResolveIssue, ResolveResult};
+use crate::{Library, ResolveIssue, ResolveResult, library::SymbolNodeId};
 
 pub use context::{LibraryCache, ResolveContext, ResolveLibraryContext, SourceCache};
 
@@ -38,7 +38,7 @@ pub fn resolve_source(
 /// Resolve a new library with `load`.
 fn resolve_with(
     ctx: &mut ResolveContext,
-    load: impl FnOnce(&mut ResolveLibraryContext) -> ResolveResult<()>,
+    load: impl FnOnce(&mut ResolveLibraryContext) -> ResolveResult<Option<SymbolNodeId>>,
 ) -> IssueResult<Library, ResolveIssue> {
     let mut lib = Library::new();
     let mut lib_ctx = ResolveLibraryContext::new(&mut lib, ctx);
@@ -46,7 +46,9 @@ fn resolve_with(
     let result = load(&mut lib_ctx);
     let mut issues = lib_ctx.to_issues();
     match result {
-        Ok(()) => Ok((lib, issues)),
+        Ok(Some(_)) => Ok((lib, issues)),
+        // The source could not be compiled, its issues are recorded.
+        Ok(None) => Err(issues),
         Err(err) => {
             issues.push_err(err);
             Err(issues)

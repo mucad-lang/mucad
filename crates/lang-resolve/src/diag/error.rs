@@ -18,10 +18,12 @@ pub enum ResolveErrorKind {
     #[error("IO Error: {0}")]
     IOError(#[from] std::io::Error),
 
-    #[error("{0}")]
+    #[error(transparent)]
+    #[diagnostic(transparent)]
     LowerError(#[from] LowerError),
 
-    #[error("{0}")]
+    #[error(transparent)]
+    #[diagnostic(transparent)]
     ParseError(#[from] ParseError),
 
     #[error("{0}")]
@@ -49,9 +51,6 @@ pub enum ResolveErrorKind {
     },
     #[error("No source with hash: {0}")]
     NoSourceWithHash(HashId),
-
-    #[error("Error compiling file: {}", path.display())]
-    CompileError { path: std::path::PathBuf },
 
     #[error("Library entry point found at {}", lib_mu.display())]
     NoLibraryEntryPoint { lib_mu: std::path::PathBuf },
@@ -170,6 +169,8 @@ impl SrcReferrer for ResolveError {
                 specified_src_ref, ..
             } => *specified_src_ref,
             UnresolvedPath { src_ref, .. } | AmbiguousPath { src_ref, .. } => *src_ref,
+            ParseError(err) => err.src_ref,
+            LowerError(err) => err.src_ref(),
             _ => SrcRef::none(),
         }
     }

@@ -107,8 +107,13 @@ impl ResolveContext {
         let result = lib_ctx.load(lib_path);
         let mut issues = lib_ctx.to_issues();
 
-        match result.and_then(|()| self.lib_cache.write_unwrap().insert(lib)) {
-            Ok(lib_id) => Ok((lib_id, issues)),
+        match result.and_then(|id| match id {
+            Some(_) => self.lib_cache.write_unwrap().insert(lib).map(Some),
+            None => Ok(None),
+        }) {
+            Ok(Some(lib_id)) => Ok((lib_id, issues)),
+            // The library could not be compiled, its issues are recorded.
+            Ok(None) => Err(issues),
             Err(err) => {
                 issues.push_err(err);
                 Err(issues)

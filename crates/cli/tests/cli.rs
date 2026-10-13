@@ -82,7 +82,10 @@ fn check_parse_error() {
         .arg(&input)
         .assert()
         .failure()
-        .stderr(predicate::str::contains("Unclosed function arguments"));
+        .stderr(predicate::str::contains("Unclosed function arguments"))
+        // The error is shown with its location in the source code.
+        .stderr(predicate::str::contains("parse_error.mu:1:32"))
+        .stderr(predicate::str::contains(PARSE_ERROR.trim_end()));
 }
 
 #[test]

@@ -94,8 +94,11 @@ impl SrcReferrer for Diagnostic {
     }
 }
 
+/// Renders the report of a diagnostic with source code.
+///
+/// Miette shows the location itself, so it is not repeated in the message.
 #[derive(Display, Debug)]
-#[display("{diagnostic}")]
+#[display("{}", diagnostic.report)]
 struct DiagnosticWrapper<'a> {
     diagnostic: &'a Diagnostic,
     source: &'a Source,
@@ -131,7 +134,7 @@ impl miette::Diagnostic for DiagnosticWrapper<'_> {
     fn labels(&self) -> Option<Box<dyn Iterator<Item = miette::LabeledSpan> + '_>> {
         self.diagnostic.labels().or_else(|| {
             let label = miette::LabeledSpan::new_with_span(
-                Some(self.diagnostic.to_string()),
+                Some(self.diagnostic.report.to_string()),
                 self.diagnostic.src_ref.span(),
             );
             Some(Box::new(std::iter::once(label)))

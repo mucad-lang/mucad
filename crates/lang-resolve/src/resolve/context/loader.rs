@@ -17,42 +17,62 @@ use crate::{
 
 impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
     /// Load a single file or a library
-    pub fn load(&mut self, path: impl AsRef<std::path::Path>) -> ResolveResult<()> {
+    ///
+    /// Returns `None` if the source could not be compiled. Its issues are recorded.
+    pub fn load(
+        &mut self,
+        path: impl AsRef<std::path::Path>,
+    ) -> ResolveResult<Option<SymbolNodeId>> {
         let path = path.as_ref();
-        if path.is_file() {
-            self.load_file(path)?;
+        let id = if path.is_file() {
+            self.load_file(path)?
         } else {
-            self.load_library(path)?;
+            self.load_library(path)?
         };
 
-        ResolveVisitor::new(self).visit();
-        Ok(())
+        if id.is_some() {
+            ResolveVisitor::new(self).visit();
+        }
+        Ok(id)
     }
 
     /// Load and resolve a source (e.g. an editor buffer) as library.
     ///
     /// File modules are located relative to the source's path, if it has one.
-    pub fn load_source(&mut self, source: Source) -> ResolveResult<()> {
+    ///
+    /// Returns `None` if the source could not be compiled. Its issues are recorded.
+    pub fn load_source(&mut self, source: Source) -> ResolveResult<Option<SymbolNodeId>> {
         self.add_implicit_dependencies();
 
         let root = self.lib().root;
-        self.load_source_symbol(source, Some(root))?;
+        let id = self.load_source_symbol(source, Some(root))?;
 
-        ResolveVisitor::new(self).visit();
-        Ok(())
+        if id.is_some() {
+            ResolveVisitor::new(self).visit();
+        }
+        Ok(id)
     }
 
     /// Load a single file as library.
-    pub fn load_file(&mut self, file_mu: impl AsRef<std::path::Path>) -> ResolveResult<()> {
+    ///
+    /// Returns `None` if the source could not be compiled. Its issues are recorded.
+    pub fn load_file(
+        &mut self,
+        file_mu: impl AsRef<std::path::Path>,
+    ) -> ResolveResult<Option<SymbolNodeId>> {
         self.add_implicit_dependencies();
 
         let root = self.lib().root;
-        self._load_source(&file_mu, Some(root))?;
-        Ok(())
+        self._load_source(&file_mu, Some(root))
     }
 
     /// Load a library from a directory containing a `mu.toml` file.
-    pub fn load_library(&mut self, lib_path: impl AsRef<std::path::Path>) -> ResolveResult<()> {
+    ///
+    /// Returns `None` if `lib.mu` could not be compiled. Its issues are recorded.
+    pub fn load_library(
+        &mut self,
+        lib_path: impl AsRef<std::path::Path>,
+    ) -> ResolveResult<Option<SymbolNodeId>> {
         // Locate `lib.mu` in directory
         let lib_mu = locate::lib_mu_path(&lib_path)?;
         log::debug!("Loading library from {lib_mu:?}");
@@ -94,13 +114,15 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         // The library appears in its own tree under its name, e.g. `std`, so it can refer to
         // itself with `std::geo2d::Circle` or `::std::geo2d::Circle`.
         let root = self.lib().root;
-        let id = self._load_source(&lib_mu, Some(root))?;
+        let Some(id) = self._load_source(&lib_mu, Some(root))? else {
+            return Ok(None);
+        };
         if let Some(name) = self.lib().name().cloned() {
             let meta = &mut self.arena_mut()[id].get_mut().meta;
             meta.name = Some(Identifier::from(name.as_str()));
             meta.vis = Visibility::Public;
         }
-        Ok(())
+        Ok(Some(id))
     }
 
     /// Parse and lower a source into the source cache and record its issues.
@@ -123,11 +145,13 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
     }
 
     /// Load a source file and its file modules into the symbol tree.
+    ///
+    /// Returns `None` if the source could not be compiled. Its issues are recorded.
     pub fn _load_source(
         &mut self,
         path: impl AsRef<std::path::Path>,
         parent_id: Option<SymbolNodeId>,
-    ) -> ResolveResult<SymbolNodeId> {
+    ) -> ResolveResult<Option<SymbolNodeId>> {
         let path = path.as_ref().to_path_buf();
         println!("Load source file  {path:?}");
         self.load_source_symbol(Source::load(&path)?, parent_id)
@@ -136,11 +160,12 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
     /// Load a source and its file modules into the symbol tree.
     ///
     /// If `parent_id` is `None`, the source becomes the root of the library.
+    /// Returns `None` if the source could not be compiled. Its issues are recorded.
     fn load_source_symbol(
         &mut self,
         source: Source,
         parent_id: Option<SymbolNodeId>,
-    ) -> ResolveResult<SymbolNodeId> {
+    ) -> ResolveResult<Option<SymbolNodeId>> {
         let path = source.path();
         let source_name = source.to_string();
         let id = self.insert_source(source);
@@ -185,7 +210,9 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                                 }
                             };
                             match loaded {
-                                Ok(id) => id,
+                                Ok(Some(id)) => id,
+                                // The issues of the file module have been recorded already.
+                                Ok(None) => self.arena_mut().new_node(Symbol::root(None)),
                                 Err(err) => {
                                     self.push_err(err);
                                     self.arena_mut().new_node(Symbol::root(None))
@@ -197,12 +224,10 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                     id.append(child_id, self.arena_mut());
                 }
 
-                Ok(id)
+                Ok(Some(id))
             }
-            None => Err(ResolveErrorKind::CompileError {
-                path: path.unwrap_or_default(),
-            }
-            .into()),
+            // The issues of the source have been recorded by `insert_source`.
+            None => Ok(None),
         }
     }
 }

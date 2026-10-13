@@ -4,3 +4,10 @@ expression: output
 ---
 
 ---
+  x unclosed string
+   ,-[/:1:5]
+ 1 | a = "unclosed string;
+   :     ^^^^^^^^|^^^^^^^
+   :             `-- unclosed string
+ 2 |     b = 1;
+   `----
