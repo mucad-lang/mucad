@@ -42,14 +42,6 @@ impl LineIndex {
             col: (col + 1) as u32,
         }
     }
-
-    pub fn src_ref(&self, code: Hashed<&str>, span: &Span) -> SrcRef {
-        SrcRef::new(
-            span,
-            self.line_col(code.inner_ref(), span.start),
-            code.hash(),
-        )
-    }
 }
 
 impl<'source> From<&'source Source> for LineIndex {
