@@ -28,8 +28,8 @@ pub mod base {
 
 pub use base::{
     Artifact, ArtifactKind, Diagnostic, Diagnostics, HashId, HashMap, HashSet, Hashed, Identifier,
-    IssueResult, MICROCAD_EXTENSION, MICROCAD_EXTENSIONS, MICROCAD_VERSION, Refer, Shared,
-    SharedMut, Source, SourceKind, SourceLocation, SrcRef, StageResult, TextEdit, Url,
+    IssueResult, MUCAD_EXTENSION, MUCAD_EXTENSIONS, MUCAD_VERSION, Refer, Shared, SharedMut,
+    Source, SourceKind, SourceLocation, SrcRef, StageResult, TextEdit, Url,
 };
 
 /// Symbols from `microcad_lang_parse`

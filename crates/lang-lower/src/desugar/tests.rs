@@ -8,7 +8,7 @@ use microcad_lang_base::Source;
 use microcad_lang_parse::parse;
 
 mod common {
-    use microcad_lang_base::MICROCAD_EXTENSION;
+    use microcad_lang_base::MUCAD_EXTENSION;
 
     use crate::Desugar;
 
@@ -21,7 +21,7 @@ mod common {
     }
 
     pub fn source_from_test_file(name: &str) -> Source {
-        Source::load(format!("tests/test_cases/{name}.{}", MICROCAD_EXTENSION)).expect("No error")
+        Source::load(format!("tests/test_cases/{name}.{}", MUCAD_EXTENSION)).expect("No error")
     }
 }
 

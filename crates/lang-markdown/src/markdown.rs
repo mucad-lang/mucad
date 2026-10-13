@@ -74,7 +74,7 @@ impl std::str::FromStr for Markdown {
                             });
                         }
                         Tag::CodeBlock(CodeBlockKind::Fenced(info))
-                            if CodeBlockHeader::is_microcad(&info) =>
+                            if CodeBlockHeader::is_mucad(&info) =>
                         {
                             // `CodeBlockHeader` writes the banner again from the block name.
                             banner = None;

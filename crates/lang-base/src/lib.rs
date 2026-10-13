@@ -28,10 +28,10 @@ pub use url::Url;
 pub use microcad_hash::{HashMap, HashSet, Hashed, Hasher, ToHash};
 
 /// List of valid µcad extensions.
-pub const MICROCAD_EXTENSIONS: &[&str] = &["mu", "µcad", "mcad", "ucad"];
+pub const MUCAD_EXTENSIONS: &[&str] = &["mu", "µcad", "mcad", "ucad"];
 
 /// Default extension for µcad files.
-pub const MICROCAD_EXTENSION: &str = "mu";
+pub const MUCAD_EXTENSION: &str = "mu";
 
 pub use artifact::{Artifact, ArtifactError, ArtifactHeader, ArtifactKind, StageResult};
 pub use diag::{
@@ -49,7 +49,7 @@ pub use shared::{Shared, SharedMut};
 pub use source::{Source, SourceKind, SourceLocation, SourceMap, TextEdit};
 pub use src_ref::{LineCol, LineIndex, Refer, Span, SpanToSrcRef, Spanned, SrcRef, SrcReferrer};
 pub use tree::{TreeDisplay, TreeState};
-pub use version::{LanguageVersion, MICROCAD_VERSION, Stability, Version, VersionAnnotation};
+pub use version::{LanguageVersion, MUCAD_VERSION, Stability, Version, VersionAnnotation};
 
 impl SourceCode for Source {
     fn read_span<'a>(

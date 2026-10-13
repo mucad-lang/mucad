@@ -8,7 +8,7 @@ use clap::{Parser, Subcommand};
 use microcad_driver::prelude as mu;
 
 use mu::traits::GenerateDoc;
-use mu::{MICROCAD_EXTENSION, MICROCAD_EXTENSIONS};
+use mu::{MUCAD_EXTENSION, MUCAD_EXTENSIONS};
 
 use crate::update_copyright::CopyrightUpdater;
 
@@ -44,11 +44,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     match cli.command {
         Commands::UpdateCopyright => {
             CopyrightUpdater::new(".")
-                .extensions(MICROCAD_EXTENSIONS, "//")
+                .extensions(MUCAD_EXTENSIONS, "//")
                 .extensions(&["rs", "slint", "wgsl"], "//")
                 .extension("toml", "#")
                 .exclude("target/*")
-                .exclude(format!("crates/*/tests/*.{MICROCAD_EXTENSION}"))
+                .exclude(format!("crates/*/tests/*.{MUCAD_EXTENSION}"))
                 .with_git_exclusions()
                 .update()?;
             Ok(())

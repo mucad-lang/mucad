@@ -43,7 +43,7 @@ pub fn mu_base_path(input_path: impl AsRef<std::path::Path>, name: &str) -> std:
             .replace('/', "_")
             .replace('.', "_")
             .replace('#', "_"),
-        ext = microcad_lang_base::MICROCAD_EXTENSION,
+        ext = microcad_lang_base::MUCAD_EXTENSION,
     )
     .into()
 }

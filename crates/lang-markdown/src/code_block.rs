@@ -33,13 +33,13 @@ impl CodeBlockHeader {
 
     /// Returns true if the info string of a fenced code block starts with a µcad language,
     /// e.g. `µcad,name#ok(hires)`.
-    pub(crate) fn is_microcad(info: &str) -> bool {
+    pub(crate) fn is_mucad(info: &str) -> bool {
         let language = info
             .split([',', '#', '('])
             .next()
             .unwrap_or_default()
             .trim();
-        microcad_lang_base::MICROCAD_EXTENSIONS.contains(&language)
+        microcad_lang_base::MUCAD_EXTENSIONS.contains(&language)
     }
 }
 impl std::str::FromStr for CodeBlockHeader {

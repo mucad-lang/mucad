@@ -45,7 +45,7 @@ impl DriverConfig {
         let content = std::fs::read_to_string(filename).into_diagnostic()?;
         let mut config: DriverConfig = toml::from_str(&content).into_diagnostic()?;
 
-        if !microcad_lang_base::MICROCAD_EXTENSIONS.contains(&config.default_extension.as_str()) {
+        if !microcad_lang_base::MUCAD_EXTENSIONS.contains(&config.default_extension.as_str()) {
             let fallback = DriverConfig::default().default_extension;
             log::warn!(
                 "`{}` is a valid µcad extension, switching to `{fallback}`.",

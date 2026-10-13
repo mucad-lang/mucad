@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{IssueResult, MICROCAD_EXTENSION, Source};
+use microcad_lang_base::{IssueResult, MUCAD_EXTENSION, Source};
 use microcad_lang_lower::{self as lower, Ir, LowerContext, LowerIssue, ir};
 use microcad_lang_parse as parse;
 
@@ -20,5 +20,5 @@ pub fn ir_from_source(source: &Source) -> IssueResult<Ir, LowerIssue> {
 
 #[allow(unused)]
 pub fn source_from_test_file(name: &str) -> Source {
-    Source::load(format!("tests/test_cases/{name}.{}", MICROCAD_EXTENSION)).expect("No error")
+    Source::load(format!("tests/test_cases/{name}.{}", MUCAD_EXTENSION)).expect("No error")
 }

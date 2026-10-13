@@ -3,7 +3,7 @@
 
 //! Function to locate microcad documents.
 
-use microcad_lang_base::{MICROCAD_EXTENSIONS, Url};
+use microcad_lang_base::{MUCAD_EXTENSIONS, Url};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -16,7 +16,7 @@ pub enum LocateError {
         code(microcad::locate::file_not_found),
         help(
             "Ensure the file exists or has a supported extension ({})",
-            MICROCAD_EXTENSIONS
+            MUCAD_EXTENSIONS
                 .iter()
                 .map(|ext| format!(".{ext}"))
                 .collect::<Vec<_>>()
@@ -48,11 +48,7 @@ pub fn is_microcad_file(path: impl AsRef<std::path::Path>) -> bool {
     path.is_file()
         && path
             .extension()
-            .map(|ext| {
-                MICROCAD_EXTENSIONS
-                    .iter()
-                    .any(|extension| *extension == ext)
-            })
+            .map(|ext| MUCAD_EXTENSIONS.iter().any(|extension| *extension == ext))
             .unwrap_or(false)
 }
 
@@ -75,7 +71,7 @@ pub fn resolved_path(path: impl AsRef<std::path::Path>) -> Result<std::path::Pat
     }
 
     // If not, try all supported extensions.
-    for ext in MICROCAD_EXTENSIONS {
+    for ext in MUCAD_EXTENSIONS {
         let mut with_ext = path.to_path_buf();
         with_ext.set_extension(ext);
         if with_ext.exists() {
@@ -85,7 +81,7 @@ pub fn resolved_path(path: impl AsRef<std::path::Path>) -> Result<std::path::Pat
 
     // If the path is a directory, look for a `mod` file with any supported extension.
     if path.is_dir() {
-        for ext in MICROCAD_EXTENSIONS {
+        for ext in MUCAD_EXTENSIONS {
             let mut mod_path = path.to_path_buf();
             mod_path.push(format!("mod.{ext}"));
             if mod_path.exists() {
@@ -116,7 +112,7 @@ pub fn file_module_path(
 /// The entry point library path from a directory, usually `lib.mu`.
 pub fn lib_mu_path(path: impl AsRef<std::path::Path>) -> Result<std::path::PathBuf, LocateError> {
     let path = path.as_ref().to_path_buf();
-    for ext in MICROCAD_EXTENSIONS {
+    for ext in MUCAD_EXTENSIONS {
         let path = path.join(format!("lib.{ext}"));
         if path.exists() {
             return Ok(path);

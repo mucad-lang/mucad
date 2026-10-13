@@ -5,7 +5,7 @@ use derive_more::Display;
 use serde::{Deserialize, Serialize};
 
 /// The version string from cargo.
-pub const MICROCAD_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub const MUCAD_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub use semver::Version;
 
@@ -19,7 +19,7 @@ pub struct LanguageVersion(Version);
 impl LanguageVersion {
     /// The current µcad language version
     pub fn current() -> Self {
-        Self(Version::parse(MICROCAD_VERSION).expect("A valid cargo package version"))
+        Self(Version::parse(MUCAD_VERSION).expect("A valid cargo package version"))
     }
 
     /// Checks if a version string is compatible with the current µcad compiler
@@ -27,7 +27,7 @@ impl LanguageVersion {
         use semver::VersionReq;
 
         // Use caret requirements: ^0.1.0 allows 0.1.x but not 0.2.0
-        let req = VersionReq::parse(&format!("^{}", MICROCAD_VERSION)).unwrap();
+        let req = VersionReq::parse(&format!("^{}", MUCAD_VERSION)).unwrap();
 
         req.matches(&self.0)
     }
