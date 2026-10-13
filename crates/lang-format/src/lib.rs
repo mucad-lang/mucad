@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{IssueResult, Diagnostics, Source};
+use microcad_lang_base::{Diagnostics, IssueList, IssueResult, Source};
 use microcad_lang_parse::{Ast, ParseIssue, ast, parse};
 
 mod expression;
@@ -129,15 +129,29 @@ pub fn format_ast(ast: &Ast, config: &FormatConfig) -> String {
     ast.format(config).to_string().trim().to_string()
 }
 
+/// A formatted source and AST.
+pub struct Formatted {
+    pub source: Source,
+    pub ast: Ast,
+    pub formatted: bool,
+    pub issues: IssueList<ParseIssue>,
+}
+
 /// Format an AST into a new AST and a new Source
 pub fn format(
-    source: &Source,
+    source: impl Into<Source>,
     config: &FormatConfig,
-) -> IssueResult<(Ast, Source), ParseIssue> {
-    let (ast, _) = parse(source)?;
+) -> Result<Formatted, IssueList<ParseIssue>> {
+    let original_source = source.into();
+    let (ast, _) = parse(&original_source)?;
     let code = format_ast(&ast, config);
-    let source = Source::new(source.location.clone(), code);
-    parse(&source).map(|(ast, diag)| ((ast, source), diag))
+    let source = Source::new(original_source.location.clone(), code);
+    parse(&source).map(|(ast, issues)| Formatted {
+        formatted: &source != &original_source,
+        ast,
+        source,
+        issues,
+    })
 }
 
 /// High-level API to format a &str containing µcad source code.

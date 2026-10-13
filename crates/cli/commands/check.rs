@@ -1,6 +1,8 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use miette::IntoDiagnostic;
+
 use crate::{Cli, commands::RunCommand};
 
 /// Check a µcad file for errors but do not render or export anything.
@@ -11,19 +13,28 @@ pub struct Check {
 }
 
 impl RunCommand<()> for Check {
-    fn run(&self, cli: &Cli) -> miette::Result<()> {
+    fn run(&self, _cli: &Cli) -> miette::Result<()> {
         use microcad_driver::prelude as mu;
-        use mu::traits::*;
+        let mut compiler = mu::Compiler::new();
+        let source = mu::Source::load(&self.input).into_diagnostic()?;
 
-        let mut document = mu::Document::open(&self.input)?;
-
-        match document.compile(cli.compile_parameters()) {
-            Ok(_) => {
-                eprintln!("✅ File is valid: {}", self.input);
+        match compiler.compile(source) {
+            Ok((_, issues)) => {
+                if issues.is_empty() {
+                    eprintln!("✅ File '{}' is valid.", self.input);
+                } else {
+                    eprintln!(
+                        "⚠️ File '{}' is valid, but has issues:\n{}",
+                        self.input,
+                        compiler.render_diag_to_string(&issues)
+                    );
+                }
             }
-            Err(err) => {
-                eprintln!("⚠️ File has issues:\n{err}");
-                cli.print_diagnostics(&document);
+            Err(issues) => {
+                eprintln!(
+                    "⚠️ File has issues:\n{}",
+                    compiler.render_diag_to_string(&issues)
+                );
             }
         }
 

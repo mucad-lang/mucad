@@ -1,6 +1,8 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use miette::IntoDiagnostic;
+
 use crate::{Cli, commands::RunCommand};
 
 /// Format a µcad file.
@@ -12,40 +14,35 @@ pub struct Format {
 }
 
 impl RunCommand<()> for Format {
-    fn run(&self, cli: &Cli) -> miette::Result<()> {
+    fn run(&self, _cli: &Cli) -> miette::Result<()> {
         use microcad_driver::prelude as mu;
-        use mu::traits::Format;
-        let params = mu::FormatParameters::default();
+        let formatter = mu::Formatter::new();
 
-        match &self.input {
-            Some(input) => {
-                let mut document = mu::Document::open(input)?;
+        let source = match &self.input {
+            Some(input) => mu::Source::load(&input).into_diagnostic()?,
+            None => mu::Source::stdin().into_diagnostic()?,
+        };
 
-                /*
-                match document.parse().and(document.format(&params)) {
-                    Ok(true) => {
-                        document.sync()?;
-                        eprintln!("Formatted document.");
-                    }
-                    Ok(false) => {
-                        eprintln!("Document has been already formatted.");
-                    }
-                    Err(_) => {
-                        cli.print_diagnostics(&document);
-                    }
+        match formatter.format(source.clone()) {
+            Ok(mu::Formatted {
+                source, formatted, ..
+            }) => {
+                if formatted {
+                    source.sync().into_diagnostic()?;
+                    eprintln!("Formatted document.");
+                } else {
+                    eprintln!("Document has been already formatted.");
                 }
-                */
-                todo!();
-
-                Ok(())
             }
-            None => match mu::document::Stdin.format(&params).map(|_| ()) {
-                Ok(_) => Ok(()),
-                Err(err) => {
-                    eprintln!("{err}");
-                    Ok(())
-                }
-            },
+            Err(err) => {
+                eprintln!(
+                    "Parse error:\n{}",
+                    err.render_to_string(&source, &Default::default())
+                        .into_diagnostic()?
+                );
+            }
         }
+
+        Ok(())
     }
 }
