@@ -24,7 +24,7 @@ pub use resolve::{
 pub mod library;
 
 pub use library::{
-    Library, Manifest, ManifestError,
+    ExternalLookUp, Library, LookUp, Manifest, ManifestError,
     symbol::{SymbolDef, SymbolId, SymbolNode, SymbolNodeExt, SymbolNodeMut, SymbolNodeRef},
 };
 

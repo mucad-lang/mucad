@@ -59,6 +59,23 @@ fn check_valid() {
 }
 
 #[test]
+fn check_glob_import() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = source_file(
+        &dir,
+        "glob.mu",
+        "use std::geo2d::*;\nCircle(radius = 1mm);\n",
+    );
+
+    microcad()
+        .arg("check")
+        .arg(&input)
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("is valid."));
+}
+
+#[test]
 fn check_unresolved() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "unresolved.mu", UNRESOLVED);

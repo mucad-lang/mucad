@@ -4,7 +4,7 @@
 //! Resolve locals.
 
 use crate::{
-    Library, ResolveErrorKind, ResolveLibraryContext, SymbolNodeRef,
+    Library, LookUp, ResolveErrorKind, ResolveLibraryContext, SymbolNodeRef,
     library::{Symbol, SymbolArena, SymbolNodeId, symbol, visitor},
     resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
@@ -70,12 +70,19 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
 
     pub fn visit(&mut self) {
         use crate::library::visitor::VisitorMut;
-        self.transform(|visitor, id, symbol| {
-            visitor.scope(SymbolFrame::new(id), |visitor| {
-                visitor.visit_meta(&mut symbol.meta);
-                visitor.visit_def(&mut symbol.def);
-            })
-        });
+
+        // Wildcard imports first, because looking up other paths searches the imported modules.
+        let is_wildcard = |symbol: &Symbol| matches!(symbol.def, symbol::SymbolDef::Wildcard(_));
+        for wildcards in [true, false] {
+            self.transform(|visitor, id, symbol| {
+                if is_wildcard(symbol) == wildcards {
+                    visitor.scope(SymbolFrame::new(id), |visitor| {
+                        visitor.visit_meta(&mut symbol.meta);
+                        visitor.visit_def(&mut symbol.def);
+                    })
+                }
+            });
+        }
     }
 
     pub fn scope<T>(
@@ -176,15 +183,27 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
 
         let mut paths = Vec::new();
 
-        // Look up in current library being resolved.
-        if let Some(symbol_node_id) = self.stack.symbol_node_id()
-            && let Some(node_id) = self.lib_ctx.lib().look_up(symbol_node_id, unresolved_path)
-        {
-            paths.push(symbol::Path::Resolved(symbol_target(
-                self.lib_ctx.lib(),
-                node_id,
-                None,
-            )));
+        // Look up in current library being resolved, including glob imports of other libraries.
+        if let Some(symbol_node_id) = self.stack.symbol_node_id() {
+            let lib_cache = self.lib_ctx.lib_cache();
+            let external = |module: &ExternalId, parts: &[Identifier]| {
+                let lib = lib_cache.read_unwrap().get(&module.lib_id)?;
+                let id = lib.look_up_in_module(module.id, parts)?;
+                Some(symbol_target(&lib, id, Some(module.lib_id)))
+            };
+            match self
+                .lib_ctx
+                .lib()
+                .look_up_symbol(symbol_node_id, unresolved_path, &external)
+            {
+                Some(LookUp::Local(node_id)) => paths.push(symbol::Path::Resolved(symbol_target(
+                    self.lib_ctx.lib(),
+                    node_id,
+                    None,
+                ))),
+                Some(LookUp::External(symbol_id)) => paths.push(symbol::Path::Resolved(symbol_id)),
+                None => (),
+            }
         }
 
         // Look up external libraries.

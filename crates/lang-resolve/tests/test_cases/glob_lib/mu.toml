@@ -1,0 +1,6 @@
+# A library imported by glob from another library.
+
+[library]
+name = "globlib"
+version = "0.1.0"
+no_std = true
