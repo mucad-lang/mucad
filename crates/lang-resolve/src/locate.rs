@@ -119,8 +119,6 @@ pub fn lib_mu_path(path: impl AsRef<std::path::Path>) -> Result<std::path::PathB
         }
     }
 
-    println!("{:?}", std::env::current_dir().unwrap());
-
     Err(LocateError::FileNotFound { path })
 }
 

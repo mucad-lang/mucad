@@ -65,7 +65,6 @@ impl Manifest {
     // Load a `mu.toml` inside a path.
     pub fn load(path: impl AsRef<std::path::Path>) -> Result<Self, ManifestError> {
         let manifest_path = path.as_ref();
-        println!("{manifest_path:?}");
         if !manifest_path.exists() || !manifest_path.is_file() {
             return Err(ManifestError::NotFound {
                 path: std::path::PathBuf::from(path.as_ref()),

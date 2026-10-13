@@ -153,7 +153,6 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         parent_id: Option<SymbolNodeId>,
     ) -> ResolveResult<Option<SymbolNodeId>> {
         let path = path.as_ref().to_path_buf();
-        println!("Load source file  {path:?}");
         self.load_source_symbol(Source::load(&path)?, parent_id)
     }
 
