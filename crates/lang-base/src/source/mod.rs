@@ -153,14 +153,37 @@ impl Source {
 
 #[cfg(feature = "io")]
 impl Source {
+    /// Load a Source from a file.
     pub fn load(path: impl AsRef<std::path::Path>) -> Result<Self, std::io::Error> {
         let path = path.as_ref().to_path_buf();
         let code = std::fs::read_to_string(&path)?;
         Ok(Self::new(SourceLocation::new(path), code))
     }
 
+    /// Load a Source from a stdin.
+    pub fn stdin() -> Result<Self, std::io::Error> {
+        let mut full_buffer = String::new();
+        use std::io::Read;
+        // Read all contents from stdin until EOF is reached
+        std::io::stdin().read_to_string(&mut full_buffer)?;
+
+        Ok(Source::new(SourceKind::Stdin, full_buffer))
+    }
+
+    /// Save a source to file.
     pub fn save(&self, path: impl AsRef<std::path::Path>) -> Result<(), std::io::Error> {
         std::fs::write(path, self.code().as_bytes())
+    }
+
+    /// Sync a source.
+    pub fn sync(&self) -> Result<(), std::io::Error> {
+        match self.path() {
+            Some(path) => self.save(path),
+            None => Err(std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "Cannot sync a source without a file path",
+            )),
+        }
     }
 }
 
