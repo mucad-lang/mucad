@@ -193,6 +193,9 @@ impl Library {
     /// Search a scope for a child named like the first part of `parts`,
     /// falling back to wildcard imports in that scope.
     ///
+    /// Wildcards are visible like other symbols, so a module imported by a wildcard
+    /// re-exports only the symbols of its public wildcards (`pub use a::*;`).
+    ///
     /// Returns `Some(None)` if nothing has been found, `None` if `parts` is empty.
     /// A symbol found in another library is looked up with all `parts` already.
     fn find_child_or_wildcard(
@@ -218,6 +221,9 @@ impl Library {
             let SymbolDef::Wildcard(wildcard) = &child.get().def else {
                 continue;
             };
+            if !self.is_visible(child.id, from_scope) {
+                continue;
+            }
 
             // Prevent cyclic wildcard loops
             if !visited_wildcards.insert(child.id) {
@@ -244,12 +250,15 @@ impl Library {
                 _ => continue,
             };
 
-            // Search for `name` directly inside the target module
-            let target_ref = SymbolNodeRef::new(target_module_id, &self.arena);
-            if let Some(imported_node) = target_ref.find_symbol_node(name)
-                && self.is_visible(imported_node.id, from_scope)
-            {
-                return Some(Some(LookUp::Local(imported_node.id)));
+            // Search for `name` inside the target module, including its re-exports.
+            if let Some(found) = self.find_child_or_wildcard(
+                target_module_id,
+                parts,
+                from_scope,
+                external,
+                visited_wildcards,
+            )? {
+                return Some(Some(found));
             }
         }
 

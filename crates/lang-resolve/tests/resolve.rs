@@ -155,3 +155,58 @@ fn resolve_glob_external_private() {
         "{issues:?}"
     );
 }
+
+/// A public glob import re-exports the symbols of a module (`pub use b::*;`).
+#[test]
+fn resolve_glob_reexport() {
+    let mut ctx = ResolveContext::new();
+    let (_lib, issues) = microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(
+            r#"
+            pub mod a {
+                pub use b::*;
+            }
+            pub mod b {
+                pub const C = 1mm;
+            }
+
+            use a::*;
+            __mu::geo2d::Circle(radius = C);
+            "#,
+        ),
+        &mut ctx,
+    )
+    .expect("No fatal error");
+
+    assert!(!issues.has_errors(), "{issues:?}");
+}
+
+/// A private glob import does not re-export the symbols of a module.
+#[test]
+fn resolve_glob_private_no_reexport() {
+    let mut ctx = ResolveContext::new();
+    let (_lib, issues) = microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(
+            r#"
+            pub mod a {
+                use b::*;
+            }
+            pub mod b {
+                pub const C = 1mm;
+            }
+
+            use a::*;
+            __mu::geo2d::Circle(radius = C);
+            "#,
+        ),
+        &mut ctx,
+    )
+    .expect("No fatal error");
+
+    assert!(
+        issues
+            .iter()
+            .any(|issue| issue.to_string() == "Unresolved symbol: C"),
+        "{issues:?}"
+    );
+}
