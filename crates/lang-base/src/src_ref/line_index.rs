@@ -7,7 +7,7 @@ use serde::Serialize;
 use crate::{LineCol, Source, Span, SrcRef};
 
 /// An index to retrieve the offsets in a line in O(log(n)).
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct LineIndex {
     /// Offset (bytes) the beginning of each line, zero-based
     line_offsets: Vec<u32>,

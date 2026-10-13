@@ -17,7 +17,7 @@ pub use map::SourceMap;
 /// A [`Source`] is a textual input for the compiler.
 //////
 /// Additionally, a unique hash of the source code computed.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Source {
     /// The source location
     pub location: SourceLocation,
