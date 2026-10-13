@@ -140,180 +140,7 @@ impl Library {
         path: &UnresolvedPath,
         external: &ExternalLookUp,
     ) -> Option<LookUp> {
-        let mut visited_wildcards = HashSet::default();
-        self.look_up_internal(starting_node, path, external, &mut visited_wildcards)
-    }
-
-    fn look_up_internal(
-        &self,
-        starting_node: SymbolNodeId,
-        path: &UnresolvedPath,
-        external: &ExternalLookUp,
-        visited_wildcards: &mut HashSet<SymbolNodeId>,
-    ) -> Option<LookUp> {
-        // 0. Path starting with `super::`: start from the parent of the current module.
-        if path.parts.first().is_some_and(|part| part == SUPER) {
-            if path.is_absolute {
-                return None;
-            }
-            let mut module = self.module_of(starting_node);
-            let mut parts = &path.parts[..];
-            while let Some((part, rest)) = parts.split_first()
-                && part == SUPER
-            {
-                module = self.module_of(module.parent(&self.arena)?);
-                parts = rest;
-            }
-            return self.look_up_downwards(
-                module,
-                parts,
-                starting_node,
-                external,
-                visited_wildcards,
-            );
-        }
-
-        // 1. Absolute Path: start directly from library root
-        if path.is_absolute {
-            return self.look_up_downwards(
-                self.root,
-                &path.parts,
-                starting_node,
-                external,
-                visited_wildcards,
-            );
-        }
-
-        // 2. Relative Path: Bubble UP through parent lexical scopes
-        let mut curr_scope = Some(starting_node);
-        while let Some(scope_id) = curr_scope {
-            match self.find_child_or_wildcard(
-                scope_id,
-                &path.parts,
-                starting_node,
-                external,
-                visited_wildcards,
-            )? {
-                Some(LookUp::Local(matched_node)) => {
-                    return self.look_up_downwards(
-                        matched_node,
-                        &path.parts[1..],
-                        starting_node,
-                        external,
-                        visited_wildcards,
-                    );
-                }
-                // An external symbol has been looked up with all parts.
-                Some(found) => return Some(found),
-                None => (),
-            }
-
-            // Move up to parent scope
-            curr_scope = scope_id.parent(&self.arena);
-        }
-
-        None
-    }
-
-    /// Search a scope for a child named like the first part of `parts`,
-    /// falling back to wildcard imports in that scope.
-    ///
-    /// Wildcards are visible like other symbols, so a module imported by a wildcard
-    /// re-exports only the symbols of its public wildcards (`pub use a::*;`).
-    ///
-    /// Returns `Some(None)` if nothing has been found, `None` if `parts` is empty.
-    /// A symbol found in another library is looked up with all `parts` already.
-    fn find_child_or_wildcard(
-        &self,
-        scope_id: SymbolNodeId,
-        parts: &[Identifier],
-        from_scope: SymbolNodeId,
-        external: &ExternalLookUp,
-        visited_wildcards: &mut HashSet<SymbolNodeId>,
-    ) -> Option<Option<LookUp>> {
-        let name = parts.first()?;
-
-        // Step A: Check direct named child
-        let scope = SymbolNodeRef::new(scope_id, &self.arena);
-        if let Some(child) = scope.find_symbol_node(name)
-            && self.is_visible(child.id, from_scope)
-        {
-            return Some(Some(LookUp::Local(child.id)));
-        }
-
-        // Step B: Search inside wildcard imports declared in `scope_id`
-        for child in scope.children() {
-            let SymbolDef::Wildcard(wildcard) = &child.get().def else {
-                continue;
-            };
-            if !self.is_visible(child.id, from_scope) {
-                continue;
-            }
-
-            // Prevent cyclic wildcard loops
-            if !visited_wildcards.insert(child.id) {
-                continue;
-            }
-
-            // The module the wildcard `a::path::*` imports from.
-            let target_module_id = match &wildcard.path {
-                // Not resolved yet, e.g. while resolving the wildcard itself.
-                Path::Unresolved(unresolved_path) => match self.look_up_internal(
-                    scope_id,
-                    unresolved_path,
-                    external,
-                    visited_wildcards,
-                ) {
-                    Some(LookUp::Local(id)) => id,
-                    _ => continue,
-                },
-                Path::Resolved(SymbolId::Item(id)) => *id,
-                Path::Resolved(SymbolId::External(module)) => match external(module, parts) {
-                    Some(symbol_id) => return Some(Some(LookUp::External(symbol_id))),
-                    None => continue,
-                },
-                _ => continue,
-            };
-
-            // Search for `name` inside the target module, including its re-exports.
-            if let Some(found) = self.find_child_or_wildcard(
-                target_module_id,
-                parts,
-                from_scope,
-                external,
-                visited_wildcards,
-            )? {
-                return Some(Some(found));
-            }
-        }
-
-        Some(None)
-    }
-
-    /// Traverse downwards through child symbols, evaluating wildcards at each step.
-    fn look_up_downwards(
-        &self,
-        start: SymbolNodeId,
-        parts: &[Identifier],
-        from_scope: SymbolNodeId,
-        external: &ExternalLookUp,
-        visited_wildcards: &mut HashSet<SymbolNodeId>,
-    ) -> Option<LookUp> {
-        let mut curr = start;
-        for (i, _) in parts.iter().enumerate() {
-            match self.find_child_or_wildcard(
-                curr,
-                &parts[i..],
-                from_scope,
-                external,
-                visited_wildcards,
-            )?? {
-                LookUp::Local(id) => curr = id,
-                // An external symbol has been looked up with the remaining parts.
-                found => return Some(found),
-            }
-        }
-        Some(LookUp::Local(curr))
+        Search::new(self, starting_node, external).path(path)
     }
 
     /// Look up public path parts inside a module of this library, e.g. for a wildcard import.
@@ -326,7 +153,7 @@ impl Library {
         external: &ExternalLookUp,
     ) -> Option<LookUp> {
         // From the root, only public symbols inside the module are visible.
-        self.look_up_downwards(module, parts, self.root, external, &mut HashSet::default())
+        Search::new(self, self.root, external).downwards(module, parts)
     }
 
     /// The module (root, inline module or source file) which contains `node` or is `node`.
@@ -385,5 +212,131 @@ impl Library {
 impl Default for Library {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// A symbol look up in a library.
+struct Search<'a> {
+    lib: &'a Library,
+    /// The scope the look up starts from, which determines the visible symbols.
+    from_scope: SymbolNodeId,
+    /// Looks up path parts inside a module of another library.
+    external: &'a ExternalLookUp<'a>,
+    /// Wildcards searched already, to stop at cyclic wildcard imports.
+    visited_wildcards: HashSet<SymbolNodeId>,
+}
+
+impl<'a> Search<'a> {
+    fn new(lib: &'a Library, from_scope: SymbolNodeId, external: &'a ExternalLookUp<'a>) -> Self {
+        Self {
+            lib,
+            from_scope,
+            external,
+            visited_wildcards: HashSet::default(),
+        }
+    }
+
+    /// Look up a path from `from_scope`.
+    fn path(&mut self, path: &UnresolvedPath) -> Option<LookUp> {
+        // `super::` parts start from the parent of the current module.
+        if path.parts.first().is_some_and(|part| part == SUPER) {
+            if path.is_absolute {
+                return None;
+            }
+            let mut module = self.lib.module_of(self.from_scope);
+            let mut parts = &path.parts[..];
+            while let Some((part, rest)) = parts.split_first()
+                && part == SUPER
+            {
+                module = self.lib.module_of(module.parent(&self.lib.arena)?);
+                parts = rest;
+            }
+            return self.downwards(module, parts);
+        }
+
+        // An absolute path starts from the library root.
+        if path.is_absolute {
+            return self.downwards(self.lib.root, &path.parts);
+        }
+
+        // A relative path starts with a symbol in the scope or one of its parent scopes.
+        let mut scope = Some(self.from_scope);
+        while let Some(scope_id) = scope {
+            match self.in_scope(scope_id, &path.parts) {
+                Some(LookUp::Local(id)) => return self.downwards(id, &path.parts[1..]),
+                // An external symbol has been looked up with all parts.
+                Some(found) => return Some(found),
+                None => scope = scope_id.parent(&self.lib.arena),
+            }
+        }
+        None
+    }
+
+    /// Look up `parts` one by one, starting inside `start`.
+    fn downwards(&mut self, start: SymbolNodeId, parts: &[Identifier]) -> Option<LookUp> {
+        let mut curr = start;
+        for i in 0..parts.len() {
+            match self.in_scope(curr, &parts[i..])? {
+                LookUp::Local(id) => curr = id,
+                // An external symbol has been looked up with the remaining parts.
+                found => return Some(found),
+            }
+        }
+        Some(LookUp::Local(curr))
+    }
+
+    /// Look up the first of `parts` in `scope`: a child or a symbol imported by a wildcard.
+    fn in_scope(&mut self, scope: SymbolNodeId, parts: &[Identifier]) -> Option<LookUp> {
+        let name = parts.first()?;
+        let scope = SymbolNodeRef::new(scope, &self.lib.arena);
+
+        // Children shadow imported symbols.
+        if let Some(child) = scope.find_symbol_node(name)
+            && self.lib.is_visible(child.id, self.from_scope)
+        {
+            return Some(LookUp::Local(child.id));
+        }
+
+        scope
+            .children()
+            .find_map(|child| self.in_wildcard(scope.id, child, parts))
+    }
+
+    /// Look up the first of `parts` in the module imported by `node`, if it is a wildcard.
+    ///
+    /// Wildcards are visible like other symbols, so a module imported by a wildcard
+    /// re-exports only the symbols of its public wildcards (`pub use a::*;`).
+    /// A symbol of another library is looked up with all `parts`.
+    fn in_wildcard(
+        &mut self,
+        scope: SymbolNodeId,
+        node: SymbolNodeRef<'a>,
+        parts: &[Identifier],
+    ) -> Option<LookUp> {
+        let SymbolDef::Wildcard(wildcard) = &node.get().def else {
+            return None;
+        };
+        if !self.lib.is_visible(node.id, self.from_scope) || !self.visited_wildcards.insert(node.id)
+        {
+            return None;
+        }
+
+        match &wildcard.path {
+            Path::Resolved(SymbolId::Item(module)) => self.in_scope(*module, parts),
+            Path::Resolved(SymbolId::External(module)) => {
+                (self.external)(module, parts).map(LookUp::External)
+            }
+            // Not resolved yet, e.g. while resolving the wildcard itself.
+            Path::Unresolved(path) => {
+                let from_scope = std::mem::replace(&mut self.from_scope, scope);
+                let module = self.path(path);
+                self.from_scope = from_scope;
+                match module? {
+                    LookUp::Local(module) => self.in_scope(module, parts),
+                    LookUp::External(_) => None,
+                }
+            }
+            _ => None,
+        }
     }
 }
