@@ -1,3 +1,6 @@
+// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use microcad_driver::prelude as mu;
 
 use crate::doctest::{TestCase, TestResultList, TestStatus};

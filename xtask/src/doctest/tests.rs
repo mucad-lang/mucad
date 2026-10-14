@@ -1,3 +1,6 @@
+// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use super::*;
 
 fn test_case_from_header(header: &str) -> Result<Option<TestCase>, String> {
