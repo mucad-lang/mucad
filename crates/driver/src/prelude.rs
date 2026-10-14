@@ -102,6 +102,10 @@ pub mod docgen {
     pub use microcad_docgen::*;
 }
 
+pub mod md {
+    pub use microcad_lang_markdown::*;
+}
+
 // =========================================================================
 // --- Driver Core, Configs & Commands ---
 // =========================================================================
