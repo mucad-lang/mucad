@@ -105,9 +105,12 @@ fn stl_export() -> std::io::Result<()> {
         .expect("No error");
 
     // Test write Binary STL
-    StlExporter { binary: true }
-        .export_to_path(&extrude, &target_dir().join("rect_diff_binary.stl"))
-        .expect("No error");
+    StlExporter {
+        binary: true,
+        ..Default::default()
+    }
+    .export_to_path(&extrude, &target_dir().join("rect_diff_binary.stl"))
+    .expect("No error");
 
     Ok(())
 }

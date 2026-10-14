@@ -160,7 +160,9 @@ impl Export for SvgExporter {
         use crate::svg::*;
         let settings = SvgExporterSettings::default();
         let path = parameters.path.as_path();
-        let mut geometry = Renderer::new().render(model)?;
+        let mut geometry = Renderer::new()
+            .with_resolution(self.resolution.clone())
+            .render(model)?;
         let bounds = Bounds2D::from(geometry.bounds());
 
         if let Some(content_rect) = bounds.enlarge(2.0 * settings.padding_factor).rect() {

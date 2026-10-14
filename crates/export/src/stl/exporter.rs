@@ -17,6 +17,8 @@ use crate::{
 /// STL Exporter.
 #[derive(Debug, Default)]
 pub struct StlExporter {
+    /// The render resolution.
+    pub resolution: microcad_render::RenderResolution,
     /// If true, the STL will be written binary format.
     pub binary: bool,
 }
@@ -27,7 +29,9 @@ impl Export for StlExporter {
         model: &ModelTree,
         parameters: &ExporterParameters,
     ) -> Result<Value, ExportError> {
-        let geometry = Renderer::new().render(model)?;
+        let geometry = Renderer::new()
+            .with_resolution(self.resolution.clone())
+            .render(model)?;
         let f = std::fs::File::create(&parameters.path)?;
 
         if self.binary {
