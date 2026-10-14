@@ -128,19 +128,24 @@ pub trait PushIssue<I: Issue> {
 }
 
 impl<I: Issue> PushIssue<I> for IssueList<I> {
+    /// Push an issue and count it by its severity.
     fn push_issue(&mut self, issue: impl Into<I>) {
-        self.issues.push(issue.into());
+        let issue = issue.into();
+        match issue.severity() {
+            Severity::Error => self.err_count += 1,
+            Severity::Warning => self.warn_count += 1,
+            Severity::Advice => (),
+        }
+        self.issues.push(issue);
     }
 
     fn push_err(&mut self, err: impl Into<I::Err>) {
-        self.err_count += 1;
         // Convert input -> I::Err -> I
         let err_type: I::Err = err.into();
         self.push_issue(err_type);
     }
 
     fn push_warn(&mut self, warn: impl Into<I::Warn>) {
-        self.warn_count += 1;
         let warn_type: I::Warn = warn.into();
         self.push_issue(warn_type);
     }
