@@ -201,16 +201,20 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                             let loaded = match &path {
                                 Some(path) => locate::file_module_path(path, item.name())
                                     .map_err(ResolveError::from)
-                                    .and_then(|path| self._load_source(path, Some(id))),
+                                    .and_then(|path| {
+                                        Ok((self._load_source(&path, Some(id))?, path))
+                                    }),
                                 None => {
                                     Err(ResolveErrorKind::SourceHasNoPath(source_name.clone())
                                         .into())
                                 }
                             };
                             match loaded {
-                                Ok(Some(id)) => id,
+                                Ok((Some(id), _)) => id,
                                 // The issues of the file module have been recorded already.
-                                Ok(None) => self.arena_mut().new_node(Symbol::root(None)),
+                                Ok((None, path)) => self
+                                    .arena_mut()
+                                    .new_node(Symbol::failed_source_file(item, path)),
                                 Err(err) => {
                                     self.push_err(err);
                                     self.arena_mut().new_node(Symbol::root(None))

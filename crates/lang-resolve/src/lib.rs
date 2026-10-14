@@ -18,7 +18,8 @@ pub use diag::{
 };
 
 pub use resolve::{
-    LibraryCache, ResolveContext, ResolveLibraryContext, SourceCache, resolve, resolve_source,
+    LibraryCache, ResolveContext, ResolveLibraryContext, SourceCache, library_source_files,
+    resolve, resolve_source,
 };
 
 pub mod library;

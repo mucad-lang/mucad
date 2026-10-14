@@ -71,6 +71,11 @@ pub enum SourceFile {
         /// Source.
         source: Source,
     },
+    /// A source file with errors, which could not be compiled.
+    Failed {
+        /// Relative path from project root of the file module
+        path: std::path::PathBuf,
+    },
 }
 
 /// Symbol definition
@@ -117,6 +122,18 @@ impl Symbol {
             doc: item.doc.clone(),
             ver: item.ver.clone(),
             def: SymbolDef::SourceFile(SourceFile::Loaded { path, source }),
+        }
+    }
+}
+
+impl Symbol {
+    /// A file module with errors, declared by `item` (e.g. `mod geo;`).
+    pub(crate) fn failed_source_file(item: &ir::Item, path: std::path::PathBuf) -> Self {
+        Self {
+            meta: item.meta.clone(),
+            doc: item.doc.clone(),
+            ver: item.ver.clone(),
+            def: SymbolDef::SourceFile(SourceFile::Failed { path }),
         }
     }
 }

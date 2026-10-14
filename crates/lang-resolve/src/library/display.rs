@@ -82,6 +82,7 @@ impl DisplayOneLine for SourceFile {
         match self {
             SourceFile::NotLoaded => "NotLoaded".to_string(),
             SourceFile::Loaded { path, .. } => format!("Loaded({})", path.display()),
+            SourceFile::Failed { path } => format!("Failed({})", path.display()),
         }
     }
 }

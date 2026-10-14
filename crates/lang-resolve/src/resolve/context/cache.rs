@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{GetSourceByHash, HashId, HashMap, LibraryId, Shared, Source};
+use microcad_lang_base::{GetSourceByHash, HashId, HashMap, HashSet, LibraryId, Shared, Source};
 
 use crate::{Library, ResolveErrorKind, ResolveResult, SourceUnit};
 
@@ -35,6 +35,34 @@ impl LibraryCache {
 
     pub fn get(&self, id: &LibraryId) -> Option<Shared<Library>> {
         self.libraries.get(id).cloned()
+    }
+
+    /// All source files a library depends on: its own and those of its dependencies.
+    ///
+    /// Dependencies are followed transitively.
+    pub fn source_files(&self, id: &LibraryId) -> Vec<std::path::PathBuf> {
+        let mut visited = HashSet::default();
+        let mut files = Vec::new();
+        self.collect_source_files(id, &mut visited, &mut files);
+        files
+    }
+
+    fn collect_source_files(
+        &self,
+        id: &LibraryId,
+        visited: &mut HashSet<LibraryId>,
+        files: &mut Vec<std::path::PathBuf>,
+    ) {
+        if !visited.insert(*id) {
+            return;
+        }
+        let Some(lib) = self.get(id) else {
+            return;
+        };
+        files.extend(lib.source_files());
+        lib.dependencies
+            .values()
+            .for_each(|dep| self.collect_source_files(dep, visited, files));
     }
 }
 

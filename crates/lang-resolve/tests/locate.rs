@@ -78,3 +78,22 @@ fn test_file_scheme_input() {
 
     assert_eq!(result, file_url);
 }
+
+/// The root of a library is the directory with a `mu.toml` or the topmost source file.
+#[test]
+fn library_root() {
+    let root = |path: &str| locate::library_root(format!("tests/test_cases/{path}"));
+    let path = |path: &str| std::path::PathBuf::from(format!("tests/test_cases/{path}"));
+
+    // File modules of a single file.
+    assert_eq!(root("file_module/foo/bar.mu"), path("file_module.mu"));
+    assert_eq!(root("file_module/sub/mod.mu"), path("file_module.mu"));
+    assert_eq!(root("file_module.mu"), path("file_module.mu"));
+
+    // Source files of a library with a manifest.
+    assert_eq!(root("self_reference/geo.mu"), path("self_reference"));
+    assert_eq!(root("self_reference/lib.mu"), path("self_reference"));
+
+    // A single file is its own root.
+    assert_eq!(root("resolve.mu"), path("resolve.mu"));
+}

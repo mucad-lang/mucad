@@ -11,9 +11,9 @@ pub mod stack;
 mod type_check;
 pub mod visitor;
 
-use microcad_lang_base::{IssueResult, PushIssue, Source};
+use microcad_lang_base::{HashSet, IssueResult, PushIssue, Source};
 
-use crate::{Library, ResolveIssue, ResolveResult, library::SymbolNodeId};
+use crate::{Library, ResolveIssue, ResolveResult, library::SymbolNodeId, locate};
 
 pub use context::{LibraryCache, ResolveContext, ResolveLibraryContext, SourceCache};
 
@@ -23,6 +23,36 @@ pub fn resolve(
     ctx: &mut ResolveContext,
 ) -> IssueResult<Library, ResolveIssue> {
     resolve_with(ctx, |lib_ctx| lib_ctx.load(path))
+}
+
+/// All source files of the library, which contains the source file at `path`,
+/// including the source files of all its dependencies.
+///
+/// The library is found with [`locate::library_root`] and resolved, which loads its dependencies.
+/// Source files with errors are included.
+pub fn library_source_files(
+    path: impl AsRef<std::path::Path>,
+    ctx: &mut ResolveContext,
+) -> IssueResult<Vec<std::path::PathBuf>, ResolveIssue> {
+    let (lib, issues) = resolve(locate::library_root(path), ctx)?;
+
+    let lib_cache = ctx.lib_cache();
+    let lib_cache = lib_cache.read_unwrap();
+    let dependencies = lib
+        .dependencies
+        .values()
+        .flat_map(|dep| lib_cache.source_files(dep));
+
+    // Dependencies may share libraries.
+    let mut seen = HashSet::default();
+    let files = lib
+        .source_files()
+        .into_iter()
+        .chain(dependencies)
+        .filter(|path| seen.insert(path.clone()))
+        .collect();
+
+    Ok((files, issues))
 }
 
 /// Resolve a source, e.g. an editor buffer or stdin.

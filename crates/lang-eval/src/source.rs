@@ -59,6 +59,8 @@ impl Eval for symbol::SourceFile {
         match self {
             symbol::SourceFile::NotLoaded => context.catch(EvalErrorKind::SourceFileNotLoaded),
             symbol::SourceFile::Loaded { source, .. } => source.eval(context),
+            // Its errors have been reported while resolving.
+            symbol::SourceFile::Failed { .. } => Ok(Value::None),
         }
     }
 }

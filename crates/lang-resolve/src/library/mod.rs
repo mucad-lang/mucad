@@ -13,13 +13,14 @@ pub mod visitor;
 use std::collections::BTreeMap;
 
 pub use manifest::{Dependency, LibrarySection, Manifest, ManifestError};
-use microcad_lang_base::{ExternalId, HashSet, LibraryId, LibraryInfo, Name, Version};
+use microcad_lang_base::{ExternalId, LibraryId, LibraryInfo, Name, Version};
 use microcad_lang_lower::ir::UnresolvedPath;
 use microcad_macros::Artifact;
 pub use search::Search;
 use serde::{Deserialize, Serialize};
 
 pub use symbol::*;
+use visitor::Visitor;
 
 /// Looks up path parts inside a module of another library.
 pub type ExternalLookUp<'a> = dyn Fn(&ExternalId, &[Identifier]) -> Option<SymbolId> + 'a;
@@ -115,6 +116,45 @@ impl Library {
         self.root.append_value(symbol.into(), &mut self.arena)
     }
 
+    /// The paths of the source files loaded into this library, e.g. `lib.mu` and its file modules.
+    ///
+    /// Source files with errors are included, e.g. to watch them for changes.
+    pub fn source_files(&self) -> Vec<std::path::PathBuf> {
+        self.source_files_of(self.root)
+    }
+
+    /// The paths of the source files in the subtree of `node`, including `node` itself.
+    pub fn source_files_of(&self, node: SymbolNodeId) -> Vec<std::path::PathBuf> {
+        let mut files = SourceFiles::default();
+        node.descendants(&self.arena)
+            .for_each(|id| files.visit_node(SymbolNodeRef::new(id, &self.arena)));
+        files.0
+    }
+
+    /// The paths of the source files, which the source file at `path` loads as file modules.
+    ///
+    /// The path must be given as loaded, the result is empty if there is no such source file.
+    pub fn source_file_dependencies(
+        &self,
+        path: impl AsRef<std::path::Path>,
+    ) -> Vec<std::path::PathBuf> {
+        let path = path.as_ref();
+        let is_source_file = |id: &SymbolNodeId| {
+            let mut files = SourceFiles::default();
+            files.visit_node(SymbolNodeRef::new(*id, &self.arena));
+            files.0.iter().any(|file| file == path)
+        };
+
+        match self.root.descendants(&self.arena).find(is_source_file) {
+            Some(id) => self
+                .source_files_of(id)
+                .into_iter()
+                .filter(|file| file != path)
+                .collect(),
+            None => Vec::new(),
+        }
+    }
+
     /// Public entry point for symbol lookup.
     ///
     /// Symbols imported from other libraries are not found, see [`Library::look_up_symbol`].
@@ -204,6 +244,23 @@ impl Library {
                 None => return false,
             }
         }
+    }
+}
+
+/// Collects the paths of source files.
+#[derive(Default)]
+struct SourceFiles(Vec<std::path::PathBuf>);
+
+impl visitor::LeafVisitor for SourceFiles {}
+impl visitor::ConstantVisitor for SourceFiles {}
+impl visitor::WorkbenchExpressionVisitor for SourceFiles {}
+impl visitor::WorkbenchVisitor for SourceFiles {}
+impl visitor::FnVisitor for SourceFiles {}
+impl visitor::SourceVisitor for SourceFiles {}
+
+impl visitor::Visitor for SourceFiles {
+    fn visit_file_path(&mut self, path: &std::path::Path) {
+        self.0.push(path.to_path_buf());
     }
 }
 

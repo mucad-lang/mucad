@@ -44,6 +44,7 @@ pub trait Visitor: SourceVisitor + FnVisitor + WorkbenchVisitor + ConstantVisito
                 self.visit_file_path(path);
                 self.visit_source(source);
             }
+            symbol::SourceFile::Failed { path } => self.visit_file_path(path),
         }
     }
 
@@ -99,6 +100,7 @@ pub trait VisitorMut:
                 self.visit_file_path(path);
                 self.visit_source(source);
             }
+            symbol::SourceFile::Failed { path } => self.visit_file_path(path),
         }
     }
 

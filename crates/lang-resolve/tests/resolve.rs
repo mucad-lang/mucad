@@ -296,3 +296,125 @@ fn resolve_glob_chain() {
 
     assert!(!issues.has_errors(), "{issues:?}");
 }
+
+/// A library lists all loaded source files, also file modules with errors.
+#[test]
+fn resolve_source_files() {
+    let mut ctx = ResolveContext::new();
+    let (lib, _) = microcad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
+        .expect("No error");
+    let files = lib.source_files();
+    assert_eq!(files.len(), 4, "{files:?}");
+
+    let mut ctx = ResolveContext::new();
+    let (lib, issues) =
+        microcad_lang_resolve::resolve("tests/test_cases/broken_module.mu", &mut ctx)
+            .expect("No fatal error");
+    assert!(issues.has_errors(), "{issues:?}");
+    assert!(
+        lib.source_files()
+            .iter()
+            .any(|path| path.ends_with("broken_module/broken.mu")),
+        "{:?}",
+        lib.source_files()
+    );
+}
+
+/// The source files of a library include those of its dependencies.
+#[test]
+fn resolve_source_files_of_dependencies() {
+    let mut ctx = ResolveContext::new();
+    let (lib_id, issues) = ctx
+        .load_external_library("tests/test_cases/chain_outer")
+        .expect("A library");
+    assert!(!issues.has_errors(), "{issues:?}");
+
+    let files = ctx
+        .lib_cache()
+        .with_read(|lib_cache| lib_cache.source_files(&lib_id));
+    let ends_with = |file: &str| files.iter().any(|path| path.ends_with(file));
+    assert!(ends_with("chain_outer/lib.mu"), "{files:?}");
+    assert!(ends_with("chain_inner/lib.mu"), "{files:?}");
+}
+
+/// All source files of the library which contains a source file, with its dependencies.
+#[test]
+fn resolve_library_source_files() {
+    let ends_with =
+        |files: &[std::path::PathBuf], file: &str| files.iter().any(|path| path.ends_with(file));
+
+    // From a file module of a single file.
+    let mut ctx = ResolveContext::new();
+    let (files, _) = microcad_lang_resolve::library_source_files(
+        "tests/test_cases/file_module/foo/bar.mu",
+        &mut ctx,
+    )
+    .expect("Source files");
+    assert_eq!(files.len(), 4, "{files:?}");
+    assert!(ends_with(&files, "test_cases/file_module.mu"), "{files:?}");
+
+    // From a source file of a library with a dependency.
+    let mut ctx = ResolveContext::new();
+    let (files, _) = microcad_lang_resolve::library_source_files(
+        "tests/test_cases/chain_outer/lib.mu",
+        &mut ctx,
+    )
+    .expect("Source files");
+    assert!(ends_with(&files, "chain_outer/lib.mu"), "{files:?}");
+    assert!(ends_with(&files, "chain_inner/lib.mu"), "{files:?}");
+}
+
+/// The source files of a subtree and the file modules a source file loads.
+#[test]
+fn resolve_source_file_dependencies() {
+    let mut ctx = ResolveContext::new();
+    let (lib, _) = microcad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
+        .expect("No error");
+    let file = |name: &str| std::path::PathBuf::from(format!("tests/test_cases/{name}"));
+
+    // The subtree of module `foo` contains `foo.mu` and its file module `foo/bar.mu`.
+    let foo = lib
+        .look_up(lib.root, &path("::file_module::foo"))
+        .expect("Module foo");
+    assert_eq!(
+        lib.source_files_of(foo),
+        [file("file_module/foo.mu"), file("file_module/foo/bar.mu")]
+    );
+
+    assert_eq!(
+        lib.source_file_dependencies(file("file_module/foo.mu")),
+        [file("file_module/foo/bar.mu")]
+    );
+    assert_eq!(
+        lib.source_file_dependencies(file("file_module.mu")).len(),
+        3
+    );
+    assert!(
+        lib.source_file_dependencies(file("file_module/foo/bar.mu"))
+            .is_empty()
+    );
+    assert!(lib.source_file_dependencies(file("unknown.mu")).is_empty());
+}
+
+/// A file module with errors is a named `Failed` source file in the symbol tree.
+#[test]
+fn resolve_failed_source_file() {
+    let mut ctx = ResolveContext::new();
+    let (lib, _) = microcad_lang_resolve::resolve("tests/test_cases/broken_module.mu", &mut ctx)
+        .expect("No fatal error");
+
+    let broken = lib
+        .look_up(lib.root, &path("::broken_module::broken"))
+        .map(|id| SymbolNodeRef::new(id, &lib.arena))
+        .expect("Module broken");
+    assert!(
+        matches!(
+            broken.def,
+            microcad_lang_resolve::SymbolDef::SourceFile(
+                microcad_lang_resolve::library::symbol::SourceFile::Failed { .. }
+            )
+        ),
+        "{:?}",
+        broken.def
+    );
+}

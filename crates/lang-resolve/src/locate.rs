@@ -122,6 +122,44 @@ pub fn lib_mu_path(path: impl AsRef<std::path::Path>) -> Result<std::path::PathB
     Err(LocateError::FileNotFound { path })
 }
 
+/// The root of the library, which contains the source file at `path`.
+///
+/// This is either the directory of a library with a `mu.toml` file or the topmost source file,
+/// which loads `path` as file module (e.g. `main.mu` for `main/geo.mu`).
+/// A source file, which is not a file module of another one, is its own root.
+pub fn library_root(path: impl AsRef<std::path::Path>) -> std::path::PathBuf {
+    let mut file = path.as_ref().to_path_buf();
+    loop {
+        // The module path without extension, e.g. `main/geo` for `main/geo.mu`.
+        // A module in `geo/mod.mu` is the module `geo`.
+        let module = match file.file_stem() {
+            Some(stem) if stem == "mod" => file.parent().map(|dir| dir.to_path_buf()),
+            _ => Some(file.with_extension("")),
+        };
+        let Some(dir) = module.as_deref().and_then(|module| module.parent()) else {
+            return file;
+        };
+
+        if mu_toml_path(dir).is_file() {
+            return dir.to_path_buf();
+        }
+
+        // `dir/lib.mu` and `dir.mu` load their file modules from `dir`.
+        match lib_mu_path(dir)
+            .ok()
+            .filter(|lib_mu| *lib_mu != file)
+            .or_else(|| {
+                MUCAD_EXTENSIONS
+                    .iter()
+                    .map(|ext| dir.with_extension(ext))
+                    .find(|owner| owner.is_file())
+            }) {
+            Some(owner) => file = owner,
+            None => return file,
+        }
+    }
+}
+
 /// mu.toml path
 pub fn mu_toml_path(path: impl AsRef<std::path::Path>) -> std::path::PathBuf {
     let path = path.as_ref();
