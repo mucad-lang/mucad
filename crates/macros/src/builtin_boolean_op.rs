@@ -89,23 +89,24 @@ fn builtin_boolean_op_struct(attr: TokenStream, input_struct: ItemStruct) -> Tok
                 args: microcad_lang_types::Arguments,
                 _ctx: &mut crate::BuiltinEvalContext,
             ) -> Result<microcad_lang_types::ModelTree, crate::BuiltinError> {
-                let self_: std::rc::Rc<microcad_lang_types::ModelTree> = args.try_get("self")?;
-                let op = microcad_lang_types::model::BooleanOp::from(Self {
+                use microcad_lang_types::*;
+                let self_: std::rc::Rc<ModelTree> = args.try_get("self")?;
+                let op = model::BooleanOp::from(Self {
                     #(#field_names: args.try_get(stringify!(#field_names))?,)*
                 });
 
                 // The operands are the children of a group, like `ModelTree::apply_boolean_op` builds.
                 let mut operands = std::rc::Rc::unwrap_or_clone(self_);
                 if !matches!(operands.root().element, microcad_lang_types::model::Element::Group) {
-                    let mut group = microcad_lang_types::ModelTree::new(
-                        microcad_lang_types::model::Element::Group,
+                    let mut group = ModelTree::new(
+                        model::Element::Group,
                     );
                     group.append(operands);
                     operands = group;
                 }
 
                 let mut tree = microcad_lang_types::ModelTree::new(
-                    microcad_lang_types::Model::from(op).with_op_properties(args),
+                    Model::from(op).with_op_properties(args),
                 );
                 tree.append(operands);
                 Ok(tree)
