@@ -363,3 +363,21 @@ fn compile_std_alias_not_callable() {
     assert!(message.contains("cannot be called"), "{message}");
     assert!(!message.contains("0x"), "{message}");
 }
+
+/// `std::assert` without message, also with `std::list::all_equal` for more than two values.
+#[test]
+fn compile_std_assert_default_message() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile("std::assert(1 + 1 == 2);\nstd::assert(std::list::all_equal([2, 1 + 1, 4 - 2]));")
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+
+    let diags = match compiler.compile("std::assert(2 < 1);") {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+    assert!(
+        format!("{diags:?}").contains("Assertion failed: condition is false"),
+        "{diags:?}"
+    );
+}

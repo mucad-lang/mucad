@@ -6,7 +6,7 @@
 use derive_more::{Debug, From};
 
 use microcad_lang_base::{BuiltinId, BuiltinInfo};
-use microcad_lang_types::{Arguments, FunctionType, Model, ModelTree, Value};
+use microcad_lang_types::{Arguments, FunctionType, Model, ModelTree, Tuple, Value};
 
 use crate::{BuiltinEvalContext, BuiltinEvalFn, BuiltinFn, BuiltinResult};
 
@@ -33,13 +33,31 @@ impl BuiltinConstant {
 pub struct BuiltinFunction {
     pub info: BuiltinInfo,
     pub ty: BuiltinFn<FunctionType>,
+    /// Default values of parameters.
+    pub defaults: BuiltinFn<Tuple>,
     pub f: BuiltinEvalFn,
 }
 
 impl BuiltinFunction {
     /// Construct a new BuiltinFunction
     pub const fn new(info: BuiltinInfo, ty: BuiltinFn<FunctionType>, f: BuiltinEvalFn) -> Self {
-        Self { info, ty, f }
+        Self {
+            info,
+            ty,
+            defaults: Tuple::default,
+            f,
+        }
+    }
+
+    /// Default values of parameters, e.g. `|| tuple!(message = "Assertion failed")`.
+    pub const fn with_defaults(mut self, defaults: BuiltinFn<Tuple>) -> Self {
+        self.defaults = defaults;
+        self
+    }
+
+    /// Get the default values of parameters.
+    pub fn default_values(&self) -> Tuple {
+        (self.defaults)()
     }
 
     /// Check if function is impure.
@@ -237,6 +255,26 @@ macro_rules! builtin_item {
         ))
     };
 
+    // Syntax: builtin_item!(
+    //      Function
+    //      "Doc string"
+    //      mod::func(param1: type1, param2: type2, ...) -> return_type
+    //      defaults(param2 = value2)
+    // )
+    (
+        Function
+        $doc:literal
+        $mod_name:ident::$fn_name:ident ( $func_ty:expr ) defaults ( $( $param:ident = $value:expr ),* )
+    ) => {
+        $crate::BuiltinItem::Function(
+            $crate::BuiltinFunction::new(
+                $crate::builtin_info!($doc $mod_name::$fn_name),
+                || $func_ty,
+                $fn_name,
+            )
+            .with_defaults(|| microcad_lang_types::tuple!($( $param = $value ),*)),
+        )
+    };
     // Syntax: builtin_item!(
     //      Function
     //      "Doc string"

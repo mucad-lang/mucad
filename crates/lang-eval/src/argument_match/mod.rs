@@ -75,7 +75,10 @@ pub trait ArgumentMatch {
         struct MatchArg {
             id: Identifier,
             ty: Type,
+            /// The value of the argument or the default value.
             value: Option<Value>,
+            /// The argument has been given, its value is no default value.
+            given: bool,
         }
 
         // 2. Construct the named arguments first, do the type check later
@@ -85,6 +88,7 @@ pub trait ArgumentMatch {
                 id: id.clone(),
                 ty: ty.clone(),
                 value: default_values.get_field(id).cloned(),
+                given: false,
             })
             .collect();
 
@@ -98,6 +102,7 @@ pub trait ArgumentMatch {
                     .find(|match_arg| &match_arg.id == id)
                 {
                     match_arg.value = Some(arg.value.clone());
+                    match_arg.given = true;
                 } else {
                     unexpected_arguments.push(id.clone());
                 }
@@ -118,16 +123,18 @@ pub trait ArgumentMatch {
             .for_each(|arg| {
                 let ty = arg.value.ty();
                 // A parameter of exactly this type is preferred, e.g. to a parameter of type `Any`.
+                // Parameters with default values can be given positionally, too.
                 let position = matched_args
                     .iter()
-                    .position(|match_arg| match_arg.value.is_none() && match_arg.ty == ty)
+                    .position(|match_arg| !match_arg.given && match_arg.ty == ty)
                     .or_else(|| {
-                        matched_args.iter().position(|match_arg| {
-                            match_arg.value.is_none() && ty.matches(&match_arg.ty)
-                        })
+                        matched_args
+                            .iter()
+                            .position(|match_arg| !match_arg.given && ty.matches(&match_arg.ty))
                     });
                 if let Some(position) = position {
                     matched_args[position].value = Some(arg.value.clone());
+                    matched_args[position].given = true;
                 }
             });
 
@@ -279,6 +286,10 @@ impl ArgumentMatch for Function {
 impl ArgumentMatch for microcad_builtin::BuiltinFunction {
     fn call_signature(&self) -> CallSignature {
         self.ty().call_ty.clone()
+    }
+
+    fn default_values(&self) -> Tuple {
+        self.default_values()
     }
 }
 

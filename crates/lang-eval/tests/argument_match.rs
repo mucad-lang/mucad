@@ -115,3 +115,26 @@ fn argument_match_any() {
         arguments!(any = 1.0, length = Length::mm(2.0))
     );
 }
+
+/// A default value is used if the argument is missing, a positional argument overrides it.
+#[test]
+fn argument_match_default_positional() {
+    let dummy = ArgumentMatchDummy {
+        signature: call_signature!(cond: Type::Bool, message: Type::String),
+        default: tuple!(message = "default"),
+    };
+
+    let arguments: ArgumentValueList = [argument_value!(true)].into_iter().collect();
+    assert_eq!(
+        dummy.argument_match(&arguments).expect("A match"),
+        arguments!(cond = true, message = "default")
+    );
+
+    let arguments: ArgumentValueList = [argument_value!(true), argument_value!("given")]
+        .into_iter()
+        .collect();
+    assert_eq!(
+        dummy.argument_match(&arguments).expect("A match"),
+        arguments!(cond = true, message = "given")
+    );
+}

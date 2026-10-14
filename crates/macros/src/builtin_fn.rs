@@ -111,6 +111,15 @@ pub(crate) fn builtin_fn_impl(attr: TokenStream, item: TokenStream) -> TokenStre
     let static_name = helpers::ident_upper(fn_name);
 
     // Generate list of parameters from input tokens.
+    let defaults: Vec<_> = params
+        .iter()
+        .filter_map(BuiltinParam::default_tokens)
+        .collect();
+    let defaults = match defaults.is_empty() {
+        true => quote! {},
+        false => quote! { defaults(#(#defaults),*) },
+    };
+
     let formatted_params = if is_variadic {
         quote! { (*) }
     } else {
@@ -162,7 +171,7 @@ pub(crate) fn builtin_fn_impl(attr: TokenStream, item: TokenStream) -> TokenStre
         pub static #static_name: BuiltinItem = builtin_item!(
             Function
             #doc_comment
-            #mod_name::#name(#fn_type)
+            #mod_name::#name(#fn_type) #defaults
         );
     }
     .into()

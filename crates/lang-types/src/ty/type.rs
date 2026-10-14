@@ -116,6 +116,8 @@ impl Type {
             }
             // Invalid types never match
             (Type::Tuple(ty_s), Type::Tuple(ty_p)) => ty_s.matches_multiplicity(ty_p),
+            // Lists match by their element types, e.g. `[Integer]` matches `[Any]`.
+            (Type::List(ty_s), Type::List(ty_p)) => ty_s.matches(ty_p),
             (Type::Invalid, _) | (_, Type::Invalid) => false,
             (Type::Any, _) | (_, Type::Any) => true,
             _ => self == other,

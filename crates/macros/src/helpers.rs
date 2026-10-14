@@ -57,23 +57,22 @@ pub(crate) struct BuiltinParam {
     default: Option<syn::Expr>,
 }
 
+impl BuiltinParam {
+    /// The default value of the parameter, e.g. `message = "Assertion failed"`.
+    pub(crate) fn default_tokens(&self) -> Option<TokenStream2> {
+        let name = &self.name;
+        self.default
+            .as_ref()
+            .map(|default| quote! { #name = #default })
+    }
+}
+
+/// The parameter type, e.g. `message: String`, the default value is given separately.
 impl quote::ToTokens for BuiltinParam {
     fn to_tokens(&self, tokens: &mut TokenStream2) {
         let name = &self.name;
         let ty = &self.ty;
-        match &self.default {
-            Some(default) => {
-                quote! {
-                    #name: #ty = #default
-                }
-            }
-            None => {
-                quote! {
-                    #name: #ty
-                }
-            }
-        }
-        .to_tokens(tokens);
+        quote! { #name: #ty }.to_tokens(tokens);
     }
 }
 

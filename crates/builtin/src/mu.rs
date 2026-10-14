@@ -315,7 +315,7 @@ pub mod debug {
 
     use super::*;
 
-    #[builtin_fn(impure debug::assert(cond: Bool, message: String))]
+    #[builtin_fn(impure debug::assert(cond: Bool, message: String = "condition is false"))]
     pub fn assert(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let cond = args.get_cond()?;
         let message: String = args.try_get("message")?;
