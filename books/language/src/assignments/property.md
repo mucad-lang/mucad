@@ -21,7 +21,7 @@ std::debug::assert_eq([MySketch(5cm).diameter, 10cm])
 
 [![test](.test/prop_assignment_source.svg)](.test/prop_assignment_source.log)
 
-```mu,prop_assignment_source#fail
+```mu,prop_assignment_source?result=fail
 prop diameter = radius * 2; // error: not in source file
 ```
 
@@ -29,7 +29,7 @@ prop diameter = radius * 2; // error: not in source file
 
 [![test](.test/prop_assignment_fn.svg)](.test/prop_assignment_fn.log)
 
-```mu,prop_assignment_fn#fail
+```mu,prop_assignment_fn?result=fail
 fn f() {
     prop diameter = radius * 2; // error: not in functions
 }
@@ -41,7 +41,7 @@ f();
 
 [![test](.test/prop_assignment_init.svg)](.test/prop_assignment_init.log)
 
-```mu,prop_assignment_init#fail
+```mu,prop_assignment_init?result=fail
 sketch MySketch(radius: Length) {
     prop diameter = radius * 2; // error: not in initialization code
 
@@ -57,7 +57,7 @@ std::debug::assert_eq([MySketch(5cm).diameter, 10cm])
 
 [![test](.test/prop_assignment_initializer.svg)](.test/prop_assignment_initializer.log)
 
-```mu,prop_assignment_initializer#fail
+```mu,prop_assignment_initializer?result=fail
 sketch MySketch(radius: Length) {
     init() {
         radius = 1;

@@ -32,7 +32,7 @@ Trying to make them public with the keyword `pub` will result into an error:
 
 [![test](.test/workbench_pub.svg)](.test/workbench_pub.log)
 
-```mu,workbench_pub#fail
+```mu,workbench_pub?result=fail
 sketch PunchedDisk(radius: Length) {
     use std::geo2d::Circle;
 
@@ -50,7 +50,7 @@ You cannot create *workbench properties* in *function bodies*.
 
 [![test](.test/workbench_fn_prop.svg)](.test/workbench_fn_prop.log)
 
-```mu,workbench_fn_prop#fail
+```mu,workbench_fn_prop?result=fail
 sketch PunchedDisk(radius: Length) {
     use std::geo2d::Circle;
 
@@ -73,7 +73,7 @@ using the `prop` keyword.
 
 [![test](.test/workbench_init_prop.svg)](.test/workbench_init_prop.log)
 
-```mu,workbench_init_prop#fail
+```mu,workbench_init_prop?result=fail
 sketch PunchedDisk(radius: Length) {
     use std::geo2d::Circle;
 

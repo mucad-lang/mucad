@@ -26,7 +26,7 @@ mod k {
 
 [![test](.test/module_init.svg)](.test/module_init.log)
 
-```mu,module_init#fail
+```mu,module_init?result=fail
 mod k {
   init() { }  // error
 }
@@ -50,7 +50,7 @@ mod k {
 
 [![test](.test/module_return.svg)](.test/module_return.log)
 
-```mu,module_return#fail
+```mu,module_return?result=fail
 mod k {
   return 1;  // error
 }
@@ -58,7 +58,7 @@ mod k {
 
 [![test](.test/module_if.svg)](.test/module_if.log)
 
-```mu,module_if#fail
+```mu,module_if?result=fail
 mod k {
   if std::math::PI == 3 { __builtin::geo2d::Circle(radius=1); }  // error
 }
@@ -82,7 +82,7 @@ mod k {
 
 [![test](.test/module_assignment_var.svg)](.test/module_assignment_var.log)
 
-```mu,module_assignment_var#fail
+```mu,module_assignment_var?result=fail
 mod k {
   a = 1; // error
 }
@@ -90,7 +90,7 @@ mod k {
 
 [![test](.test/module_assignment_prop.svg)](.test/module_assignment_prop.log)
 
-```mu,module_assignment_prop#fail
+```mu,module_assignment_prop?result=fail
 mod k {
   prop a = 1;  // error
 }
@@ -98,7 +98,7 @@ mod k {
 
 [![test](.test/module_expression.svg)](.test/module_expression.log)
 
-```mu,module_expression#fail
+```mu,module_expression?result=fail
 mod k {
   1 + 2; // error
 }
@@ -106,7 +106,7 @@ mod k {
 
 [![test](.test/module_expression_model.svg)](.test/module_expression_model.log)
 
-```mu,module_expression_model#fail
+```mu,module_expression_model?result=fail
 mod k {
   __builtin::geo2d::Circle(radius=1mm); // error
 }

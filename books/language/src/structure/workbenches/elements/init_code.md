@@ -45,7 +45,7 @@ If there are no initializers, the initialization code is just part of the
 
 [![test](.test/init_code_no_building_plan.svg)](.test/init_code_no_building_plan.log)
 
-```mu,init_code_no_building_plan#todo
+```mu,init_code_no_building_plan?mode=todo
 sketch Wheel(radius: Length, thickness = 5mm) {
     use std::geo2d::Circle;
 

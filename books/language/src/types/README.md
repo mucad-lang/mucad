@@ -35,7 +35,7 @@ Hence, the following example will fail:
 
 [![test](.test/types_no_declaration.svg)](.test/types_no_declaration.log)
 
-```mu,types_no_declaration#ignore
+```mu,types_no_declaration?mode=todo
 x: Length;         // parse_error
 ```
 

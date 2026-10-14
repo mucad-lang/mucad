@@ -64,7 +64,7 @@ assert_eq([ f(4), 3 ]);
 
 [![test](.test/function_missing.svg)](.test/function_missing.log)
 
-```mu,function_missing#todo
+```mu,function_missing?mode=todo
 fn f(n: Scalar) { // error: not all paths return a value
     if n > 3 {
         n - 1

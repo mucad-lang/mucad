@@ -34,7 +34,7 @@ In the following example `punshed_disk` awaits a group of exactly two children.
 
 [![test](.test/input.svg)](.test/input.log)
 
-```mu,input#todo
+```mu,input?mode=todo
 // define operation which takes multiple items
 op punched_disk() {
     // check number of input models
@@ -60,7 +60,7 @@ Like other workbenches operations can have parameters too:
 
 [![test](.test/parameters.svg)](.test/parameters.log)
 
-```mu,parameters#todo
+```mu,parameters?mode=todo
 // define operation which takes multiple items
 op punch_disk(radius: Length) {
     if @input.count() == 1 {

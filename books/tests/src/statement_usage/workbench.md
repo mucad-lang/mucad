@@ -2,7 +2,7 @@
 
 [![test](.test/workbench_workbench.svg)](.test/workbench_workbench.log)
 
-```mu,workbench_workbench#fail
+```mu,workbench_workbench?result=fail
 sketch K() {
   sketch F() {} F(); // error
 } K();
@@ -10,7 +10,7 @@ sketch K() {
 
 [![test](.test/workbench_module.svg)](.test/workbench_module.log)
 
-```mu,workbench_module#fail
+```mu,workbench_module?result=fail
 sketch K() {
   mod m {} // error
 } K();
@@ -42,7 +42,7 @@ sketch K() {
 
 [![test](.test/workbench_pub_use.svg)](.test/workbench_pub_use.log)
 
-```mu,workbench_pub_use#fail
+```mu,workbench_pub_use?result=fail
 sketch K() {
   pub use std; // error
 } K();
@@ -50,7 +50,7 @@ sketch K() {
 
 [![test](.test/workbench_return.svg)](.test/workbench_return.log)
 
-```mu,workbench_return#fail
+```mu,workbench_return?result=fail
 sketch K() {
   return 1; // error
 } K();
@@ -66,7 +66,7 @@ sketch K() {
 
 [![test](.test/workbench_marker.svg)](.test/workbench_marker.log)
 
-```mu,workbench_marker#fail
+```mu,workbench_marker?result=fail
 sketch K() {
   @input; // error: Input marker is not allowed here.
 } K();
@@ -98,7 +98,7 @@ sketch K() {
 
 [![test](.test/workbench_assignment_pub.svg)](.test/workbench_assignment_pub.log)
 
-```mu,workbench_assignment_pub#fail
+```mu,workbench_assignment_pub?result=fail
 sketch K() {
   pub a = 1; // error
 } K();

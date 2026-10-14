@@ -2,7 +2,7 @@
 
 [![test](.test/body_workbench.svg)](.test/body_workbench.log)
 
-```mu,body_workbench#fail
+```mu,body_workbench?result=fail
 {
   sketch F() {} // error
 }
@@ -10,7 +10,7 @@
 
 [![test](.test/body_module.svg)](.test/body_module.log)
 
-```mu,body_module#fail
+```mu,body_module?result=fail
 {
   mod m {} // error
 }
@@ -18,7 +18,7 @@
 
 [![test](.test/body_function.svg)](.test/body_function.log)
 
-```mu,body_function#fail
+```mu,body_function?result=fail
 {
   fn f() {} f(); // error
 }
@@ -26,7 +26,7 @@
 
 [![test](.test/body_init.svg)](.test/body_init.log)
 
-```mu,body_init#fail
+```mu,body_init?result=fail
 {
   init() {} // error
 }
@@ -42,7 +42,7 @@
 
 [![test](.test/body_pub_use.svg)](.test/body_pub_use.log)
 
-```mu,body_pub_use#fail
+```mu,body_pub_use?result=fail
 {
   pub use std; // error
 }
@@ -50,7 +50,7 @@
 
 [![test](.test/body_return.svg)](.test/body_return.log)
 
-```mu,body_return#fail
+```mu,body_return?result=fail
 {
   return 1; // error
 }
@@ -74,7 +74,7 @@
 
 [![test](.test/body_assignment_const.svg)](.test/body_assignment_const.log)
 
-```mu,body_assignment_const#fail
+```mu,body_assignment_const?result=fail
 {
   const B = 1; // error
 }
@@ -82,7 +82,7 @@
 
 [![test](.test/body_assignment_pub.svg)](.test/body_assignment_pub.log)
 
-```mu,body_assignment_pub#fail
+```mu,body_assignment_pub?result=fail
 {
   pub p = 1; // error
 }
@@ -98,7 +98,7 @@
 
 [![test](.test/body_assignment_prop.svg)](.test/body_assignment_prop.log)
 
-```mu,body_assignment_prop#fail
+```mu,body_assignment_prop?result=fail
 {
   prop a = 1; // error
 }

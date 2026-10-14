@@ -2,7 +2,7 @@
 
 [![test](.test/auto_convert.svg)](.test/auto_convert.log)
 
-```mu,auto_convert#fail
+```mu,auto_convert?result=fail
 fn f( x: Scalar ) { _ = x; }
 f(x=1);
 f(x=[1]);

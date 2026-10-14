@@ -42,7 +42,7 @@ It's **not allowed** to use the `sketch`, `part`, `op`, `return` nor `mod` state
 
 [![test](.test/illegal_workbench_statement_sketch.svg)](.test/illegal_workbench_statement_sketch.log)
 
-```mu,illegal_workbench_statement_sketch#fail
+```mu,illegal_workbench_statement_sketch?result=fail
 sketch Wheel(radius: Length) {
     sketch A() {} // error
     part B() {} // error
@@ -52,7 +52,7 @@ sketch Wheel(radius: Length) {
 
 [![test](.test/illegal_workbench_statement_mod.svg)](.test/illegal_workbench_statement_mod.log)
 
-```mu,illegal_workbench_statement_mod#fail
+```mu,illegal_workbench_statement_mod?result=fail
 sketch Wheel(radius: Length) {
     mod m {} // error
 }
@@ -60,7 +60,7 @@ sketch Wheel(radius: Length) {
 
 [![test](.test/illegal_workbench_statement_return.svg)](.test/illegal_workbench_statement_return.log)
 
-```mu,illegal_workbench_statement_return#fail
+```mu,illegal_workbench_statement_return?result=fail
 sketch Wheel(radius: Length) {
     return; // error
 }

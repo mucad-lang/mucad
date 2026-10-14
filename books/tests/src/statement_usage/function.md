@@ -2,7 +2,7 @@
 
 [![test](.test/function_workbench.svg)](.test/function_workbench.log)
 
-```mu,function_workbench#fail
+```mu,function_workbench?result=fail
 fn f() {
   sketch S() {} // error
 } f();
@@ -10,7 +10,7 @@ fn f() {
 
 [![test](.test/function_module.svg)](.test/function_module.log)
 
-```mu,function_module#fail
+```mu,function_module?result=fail
 fn f() {
   mod m {} // error
 } f();
@@ -18,7 +18,7 @@ fn f() {
 
 [![test](.test/function_function.svg)](.test/function_function.log)
 
-```mu,function_function#fail
+```mu,function_function?result=fail
 fn f() {
   fn f() {} // error
 } f();
@@ -26,7 +26,7 @@ fn f() {
 
 [![test](.test/function_init.svg)](.test/function_init.log)
 
-```mu,function_init#fail
+```mu,function_init?result=fail
 fn f() {
   init() {} // error
 } f();
@@ -42,7 +42,7 @@ fn f() {
 
 [![test](.test/function_pub_use.svg)](.test/function_pub_use.log)
 
-```mu,function_pub_use#fail
+```mu,function_pub_use?result=fail
 fn f() {
   pub use std; // error
 } f();
@@ -66,7 +66,7 @@ fn f() {
 
 [![test](.test/function_assignment_const.svg)](.test/function_assignment_const.log)
 
-```mu,function_assignment_const#fail
+```mu,function_assignment_const?result=fail
 fn f() {
   const B = 1; // error
 } f();
@@ -74,7 +74,7 @@ fn f() {
 
 [![test](.test/function_assignment_pub.svg)](.test/function_assignment_pub.log)
 
-```mu,function_assignment_pub#fail
+```mu,function_assignment_pub?result=fail
 fn f() {
   pub p = 1; // error
 } f();
@@ -90,7 +90,7 @@ fn f() {
 
 [![test](.test/function_assignment_prop.svg)](.test/function_assignment_prop.log)
 
-```mu,function_assignment_prop#fail
+```mu,function_assignment_prop?result=fail
 fn f() {
   prop a = 1; // error
 } f();

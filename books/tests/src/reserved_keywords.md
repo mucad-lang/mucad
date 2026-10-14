@@ -2,7 +2,7 @@
 
 [![test](.test/reserved_keywords.svg)](.test/reserved_keywords.log)
 
-```mu,reserved_keywords#fail
+```mu,reserved_keywords?result=fail
 const assembly = 1; // error
 
 a = 1; // recovered 

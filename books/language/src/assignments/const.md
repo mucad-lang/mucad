@@ -62,7 +62,7 @@ Constants are always written in `UPPER_CASE`.
 
 [![test](.test/const_assignment_uppercase.svg)](.test/const_assignment_uppercase.log)
 
-```mu,const_assignment_uppercase#todo
+```mu,const_assignment_uppercase?mode=todo
 const A = 1; // ok
 const a = 1; // warning
 const MyValue = 1; // warning
@@ -75,7 +75,7 @@ A constant cannot be defined within the same module or workbench twice.
 
 [![test](.test/const_assignment_shadow.svg)](.test/const_assignment_shadow.log)
 
-```mu,const_assignment_shadow#fail
+```mu,const_assignment_shadow?result=fail
 mod module {
     const A = 5;
     const A = 1; // error: ambiguous identifier in this module
@@ -102,7 +102,7 @@ Constant assignments cannot be used in building code (the code below any initial
 
 [![test](.test/const_assignment_building_code.svg)](.test/const_assignment_building_code.log)
 
-```mu,const_assignment_building_code#todo
+```mu,const_assignment_building_code?mode=todo
 sketch MySketch() {
     init(_: Integer) {}
     const MY_CONST = 1; // error: not allowed in building code
@@ -125,7 +125,7 @@ They cannot be placed below non constant assignments within in a workbench.
 
 [![test](.test/const_assignment_workbench_code_wrong.svg)](.test/const_assignment_workbench_code_wrong.log)
 
-```mu,const_assignment_workbench_code_wrong#todo
+```mu,const_assignment_workbench_code_wrong?mode=todo
 sketch MySketch() {
     _i = 5; // any non const code
     const MY_CONST = 1; // error: const not allowed then
@@ -139,7 +139,7 @@ Constant assignments cannot be used in functions.
 
 [![test](.test/const_assignment_fn.svg)](.test/const_assignment_fn.log)
 
-```mu,const_assignment_fn#fail
+```mu,const_assignment_fn?result=fail
 fn f() {
     const MY_CONST = 1; // error: not allowed in functions
 }
@@ -160,7 +160,7 @@ Constant assignments cannot be used in initializers.
 
 [![test](.test/const_assignment_init.svg)](.test/const_assignment_init.log)
 
-```mu,const_assignment_init#fail
+```mu,const_assignment_init?result=fail
 sketch MySketch() {
     init(_: Integer) {
         const MY_CONST = 1; // error: not allowed in initializers

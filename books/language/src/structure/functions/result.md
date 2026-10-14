@@ -17,7 +17,7 @@ You may also use `if` to decide between different results.
 
 [![test](.test/function_conditional_result.svg)](.test/function_conditional_result.log)
 
-```mu,function_conditional_result#todo
+```mu,function_conditional_result?mode=todo
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         x * pow(x, n - 1)
@@ -36,7 +36,7 @@ Of course returning a value twice is not allowed.
 
 [![test](.test/return_twice.svg)](.test/return_twice.log)
 
-```mu,return_twice#todo
+```mu,return_twice?mode=todo
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         x * pow(x, n - 1)
@@ -57,7 +57,7 @@ statement.
 
 [![test](.test/function_return.svg)](.test/function_return.log)
 
-```mu,function_return#todo
+```mu,function_return?mode=todo
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         return x * pow(x, n - 1);

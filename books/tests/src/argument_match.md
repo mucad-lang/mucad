@@ -14,7 +14,7 @@ f( x_p=1m, y_p=2m );
 
 [![test](.test/argument_match_short_collision.svg)](.test/argument_match_short_collision.log)
 
-```mu,argument_match_short_collision#fail
+```mu,argument_match_short_collision?result=fail
 sketch S( width: Length ) {
     init( what: Length ) { width=what; }
 }
@@ -24,7 +24,7 @@ S(w=10cm); // error: short form cannot be used here because of ambiguity
 
 [![test](.test/argument_match_collision.svg)](.test/argument_match_collision.log)
 
-```mu,argument_match_collision#fail
+```mu,argument_match_collision?result=fail
 sketch S( width: Length ) {
     init( width: Length ) { width=width; }
 }
@@ -34,7 +34,7 @@ S(width=10cm); // error: short form cannot be used here because of ambiguity
 
 [![test](.test/argument_match_collision_init.svg)](.test/argument_match_collision_init.log)
 
-```mu,argument_match_collision_init#fail
+```mu,argument_match_collision_init?result=fail
 sketch S( width: Length, height: Length ) {
     init( size: Length ) { width=size; height=size; }
     init( size: Length ) { width=size; height=size; }

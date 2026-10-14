@@ -22,7 +22,7 @@ Using `pub` is not allowed within workbenches:
 
 [![test](.test/pub_assignment_workbench.svg)](.test/pub_assignment_workbench.log)
 
-```mu,pub_assignment_workbench#fail
+```mu,pub_assignment_workbench?result=fail
 sketch MySketch() {
     pub const TEXT = "Hello"; // error
     std::print(TEXT);
@@ -35,7 +35,7 @@ MySketch();
 
 [![test](.test/pub_assignment_fn.svg)](.test/pub_assignment_fn.log)
 
-```mu,pub_assignment_fn#fail
+```mu,pub_assignment_fn?result=fail
 fn f() {
     const MY_CONST = 1; // error: not allowed in functions
 }

@@ -20,7 +20,7 @@ fn f() {} f();
 
 [![test](.test/source_init.svg)](.test/source_init.log)
 
-```mu,source_init#fail
+```mu,source_init?result=fail
 init() {} // error
 ```
 
@@ -38,7 +38,7 @@ pub use std;
 
 [![test](.test/source_return.svg)](.test/source_return.log)
 
-```mu,source_return#fail
+```mu,source_return?result=fail
 return 1;  // error
 ```
 
@@ -68,7 +68,7 @@ a = 1;
 
 [![test](.test/source_assignment_prop.svg)](.test/source_assignment_prop.log)
 
-```mu,source_assignment_prop#fail
+```mu,source_assignment_prop?result=fail
 prop a = 1;  // error
 ```
 

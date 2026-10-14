@@ -66,7 +66,7 @@ Even when using them with models:
 
 [![test](.test/expression_model.svg)](.test/expression_model.log)
 
-```mu,expression_model#todo
+```mu,expression_model?mode=todo
 // Using logical operators between models too
 std::debug::assert_eq([std::geo2d::Circle(1cm) == std::geo2d::Circle(10mm), true]);
 ```

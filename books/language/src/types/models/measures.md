@@ -6,7 +6,7 @@ The following example calculates the area of a circle by using the *measure* `ar
 
 [![test](.test/measure.svg)](.test/measure.log)
 
-```mu,measure#todo
+```mu,measure?mode=todo
 // use measure area() on a circle
 __builtin::debug::assert_eq(
     [

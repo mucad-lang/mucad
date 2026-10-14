@@ -18,7 +18,7 @@ std::debug::assert(true, "You won't see this message");
 
 [![test](.test/verify_assert_fail.svg)](.test/verify_assert_fail.log)
 
-```mu,verify_assert_fail#fail
+```mu,verify_assert_fail?result=fail
 std::debug::assert(false, "this assertion fails"); // error
 ```
 
@@ -26,7 +26,7 @@ std::debug::assert(false, "this assertion fails"); // error
 
 [![test](.test/verify_error.svg)](.test/verify_error.log)
 
-```mu,verify_error#fail
+```mu,verify_error?result=fail
 std::log::error("this should not have happened"); // error
 ```
 

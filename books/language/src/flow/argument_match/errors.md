@@ -6,7 +6,7 @@ If you do not provide all parameters, you will get an error:
 
 [![test](.test/match_errors.svg)](.test/match_errors.log)
 
-```mu,match_errors#fail
+```mu,match_errors?result=fail
 fn f(x: Length, y: Length, z: Length) {}
 f(x = 1cm, z = 3cm); // error: y is missing here
 ```
@@ -17,7 +17,7 @@ When you provide all parameters but some are redundant, you will get a error too
 
 [![test](.test/match_warnings.svg)](.test/match_warnings.log)
 
-```mu,match_warnings#fail
+```mu,match_warnings?result=fail
 fn f(x: Length, y: Length, z: Length) {}
 f(x = 1cm, y = 2cm, v = 5cm, z = 3cm); // error: Unexpected argument v
 ```
@@ -29,7 +29,7 @@ will get an error.
 
 [![test](.test/match_ambiguous.svg)](.test/match_ambiguous.log)
 
-```mu,match_ambiguous#fail
+```mu,match_ambiguous?result=fail
 fn f(x: Length, y: Length, z: Length) {}
 f(x = 1cm, 5cm, 3cm); // error: Missing arguments y and z
 ```

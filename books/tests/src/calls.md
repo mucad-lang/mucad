@@ -2,7 +2,7 @@
 
 [![test](.test/call_same_parameter_name.svg)](.test/call_same_parameter_name.log)
 
-```mu,call_same_parameter_name#fail
+```mu,call_same_parameter_name?result=fail
 use std::geo2d::*;
 use std::ops::*;
 

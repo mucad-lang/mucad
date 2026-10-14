@@ -19,7 +19,7 @@ The order of the endpoints of a range is important.
 
 [![test](.test/range_expressions_bad_order.svg)](.test/range_expressions_bad_order.log)
 
-```mu,range_expressions_bad_order#fail
+```mu,range_expressions_bad_order?result=fail
 [6..1]; // error
 [2..-2]; // error
 ```
@@ -28,6 +28,6 @@ Only `Integer` can be used as endpoint.
 
 [![test](.test/range_expressions_bad_type.svg)](.test/range_expressions_bad_type.log)
 
-```mu,range_expressions_bad_type#fail
+```mu,range_expressions_bad_type?result=fail
 [1.0..2.0]; // parse_error
 ```
