@@ -87,6 +87,17 @@ impl std::fmt::Display for TestStatus {
 }
 
 impl TestStatus {
+    /// A description for the test log.
+    fn description(&self) -> &'static str {
+        match self {
+            TestStatus::Ok => "OK",
+            TestStatus::Todo => "TODO",
+            TestStatus::Fail => "FAILS",
+            TestStatus::FailOk => "FAILS AS EXPECTED",
+            TestStatus::OkFail => "OK BUT SHOULD FAIL",
+        }
+    }
+
     /// Returns `false` if the test failed unexpectedly or succeeded but is expected to fail.
     pub fn is_success(&self) -> bool {
         matches!(self, TestStatus::Ok | TestStatus::Todo | TestStatus::FailOk)
@@ -248,11 +259,81 @@ impl TestCase {
         }
     }
 
+    /// The name of the code block, with which the test name ends.
+    fn block_name(&self) -> &str {
+        self.name.rsplit("::").next().unwrap_or(&self.name)
+    }
+
     /// The markdown of the test banner, which links to the test result.
     pub fn banner(&self) -> String {
-        // The test name ends with the name of the code block.
-        let name = self.name.rsplit("::").next().unwrap_or(&self.name);
-        mu::md::CodeBlockHeader::test_banner_string(name)
+        mu::md::CodeBlockHeader::test_banner_string(self.block_name())
+    }
+
+    /// Write the files the banner links to into `.test` next to the markdown file:
+    /// an image for the test status and the test log.
+    ///
+    /// Does nothing if the source has no path, e.g. if it is not loaded from a markdown file.
+    pub fn write_result_files(&self, result: &TestResult) -> std::io::Result<()> {
+        let Some(md_file) = self.source.path() else {
+            return Ok(());
+        };
+        let dir = md_file
+            .parent()
+            .unwrap_or(std::path::Path::new(""))
+            .join(".test");
+        std::fs::create_dir_all(&dir)?;
+
+        // Link the image for the status, e.g. `xtask/images/ok.svg`.
+        let image = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("images")
+            .join(format!("{}.svg", result.result));
+        let banner = dir.join(format!("{}.svg", self.block_name()));
+        let _ = std::fs::remove_file(&banner);
+        std::fs::hard_link(&image, &banner)
+            .or_else(|_| std::fs::copy(&image, &banner).map(|_| ()))?;
+
+        std::fs::write(
+            dir.join(format!("{}.log", self.block_name())),
+            self.log(result),
+        )
+    }
+
+    /// The test log with the test parameters, the code, the output and the test result.
+    fn log(&self, result: &TestResult) -> String {
+        let line_offset = self.source.location.line_offset.unwrap_or_default() as usize;
+        let code = self
+            .source
+            .code()
+            .lines()
+            .enumerate()
+            .map(|(i, line)| format!("  {:>3}:   {line}\n", line_offset + i + 1))
+            .collect::<String>();
+        // The first line of the code, e.g. `intro.md:33`.
+        let source_file = match self.source.path() {
+            Some(path) => format!("{}:{}", path.display(), line_offset + 1),
+            None => self.source.location.to_string(),
+        };
+        let expected = match self.result {
+            ExpectedTestResult::Ok => "ok",
+            ExpectedTestResult::Fail => "fail",
+        };
+
+        format!(
+            "-- Test --\n\
+            {:>17}: {}\n\
+            {:>17}: {expected}\n\
+            {:>17}: {}\n\n\
+            -- Code --\n\n{code}\n\
+            -- Output --\n{}\n\
+            -- Test Result --\n{}\n",
+            "Test name",
+            self.name,
+            "Expected result",
+            "Source file",
+            source_file,
+            result.log_output.trim_end(),
+            result.result.description(),
+        )
     }
 
     fn test_result(&self, result: TestStatus, log_output: String) -> TestResult {
@@ -467,6 +548,9 @@ impl TestSuite {
                     }
                 };
                 eprintln!("test {} ... {}", result.name, result.result);
+                if let Err(err) = test_case.write_result_files(&result) {
+                    eprintln!("Cannot write the result files of {}: {err}", result.name);
+                }
                 result
             })
             .collect();
@@ -738,5 +822,42 @@ mod tests {
         assert!(suite.test_cases[0].source.path().is_some());
 
         assert!(TestSuite::set_banners(&mut mdbook).is_empty());
+    }
+
+    #[test]
+    fn write_result_files() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let md_file = dir.path().join("test.md");
+        let code_block = mu::md::CodeBlock {
+            header: "mu,circle?mode=compile"
+                .parse()
+                .expect("A code block header"),
+            code: CIRCLE.into(),
+            line_offset: 4,
+            path: Some(md_file.clone()),
+        };
+        let test_case = TestCase::from_code_block(std::path::Path::new("test.md"), &code_block)
+            .expect("Valid")
+            .expect("A test");
+
+        TestSuite {
+            name: None,
+            test_cases: vec![test_case],
+        }
+        .run(&no_std());
+
+        let banner = std::fs::read(dir.path().join(".test/circle.svg")).expect("A banner image");
+        let ok_image =
+            std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("images/ok.svg"))
+                .expect("The ok image");
+        assert_eq!(banner, ok_image);
+
+        let log = std::fs::read_to_string(dir.path().join(".test/circle.log")).expect("A log");
+        assert!(log.contains("Test name: test::circle"), "{log}");
+        assert!(log.contains("Expected result: ok"), "{log}");
+        assert!(log.contains("test.md:5"), "{log}");
+        assert!(log.contains(&format!("    5:   {CIRCLE}")), "{log}");
+        assert!(log.contains("-- Model --"), "{log}");
+        assert!(log.ends_with("-- Test Result --\nOK\n"), "{log}");
     }
 }
