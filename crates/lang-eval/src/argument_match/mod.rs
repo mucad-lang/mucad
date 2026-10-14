@@ -111,16 +111,25 @@ pub trait ArgumentMatch {
         }
 
         // 4. Try to find positional arguments by type
-        arguments.args.iter().for_each(|arg| {
-            if arg.id.is_none()
-                && let Some(ref mut match_arg) = matched_args
-                    .iter_mut()
-                    .filter(|match_arg| match_arg.value.is_none())
-                    .find(|match_arg| match_arg.ty == arg.value.ty())
-            {
-                match_arg.value = Some(arg.value.clone());
-            }
-        });
+        arguments
+            .args
+            .iter()
+            .filter(|arg| arg.id.is_none())
+            .for_each(|arg| {
+                let ty = arg.value.ty();
+                // A parameter of exactly this type is preferred, e.g. to a parameter of type `Any`.
+                let position = matched_args
+                    .iter()
+                    .position(|match_arg| match_arg.value.is_none() && match_arg.ty == ty)
+                    .or_else(|| {
+                        matched_args.iter().position(|match_arg| {
+                            match_arg.value.is_none() && ty.matches(&match_arg.ty)
+                        })
+                    });
+                if let Some(position) = position {
+                    matched_args[position].value = Some(arg.value.clone());
+                }
+            });
 
         let missing_arguments: Vec<_> = matched_args
             .iter()

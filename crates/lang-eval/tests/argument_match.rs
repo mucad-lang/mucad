@@ -88,3 +88,30 @@ fn multi_match_cartesian_product() {
     assert_eq!(result[4], arguments!(a = 2.0, b = 20.0));
     assert_eq!(result[5], arguments!(a = 2.0, b = 30.0));
 }
+
+/// A positional argument matches a parameter of type `Any`,
+/// but a parameter of exactly its type is preferred.
+#[test]
+fn argument_match_any() {
+    let dummy = ArgumentMatchDummy {
+        signature: call_signature!(x: Type::Any),
+        default: tuple!(),
+    };
+    let arguments: ArgumentValueList = [argument_value!(Length::mm(2.0))].into_iter().collect();
+    assert_eq!(
+        dummy.argument_match(&arguments).expect("A match"),
+        arguments!(x = Length::mm(2.0))
+    );
+
+    let dummy = ArgumentMatchDummy {
+        signature: call_signature!(any: Type::Any, length: Type::length()),
+        default: tuple!(),
+    };
+    let arguments: ArgumentValueList = [argument_value!(Length::mm(2.0)), argument_value!(1.0)]
+        .into_iter()
+        .collect();
+    assert_eq!(
+        dummy.argument_match(&arguments).expect("A match"),
+        arguments!(any = 1.0, length = Length::mm(2.0))
+    );
+}
