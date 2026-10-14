@@ -21,54 +21,30 @@ pub struct Watch {
 
 /// Run this command for a CLI.
 impl RunCommand for Watch {
-    fn run(&self, _cli: &Cli) -> miette::Result<()> {
-        todo!()
-        /*
+    fn run(&self, cli: &Cli) -> miette::Result<()> {
         use microcad_driver::prelude as mu;
-        use mu::traits::*;
 
         let mut watcher = mu::Watcher::new()?;
-        let render_cache = mu::RcMut::new(mu::RenderCache::new());
+        // The compiler keeps the standard library and unchanged sources between compilations.
+        let mut compiler = cli.compiler();
+        let exporter = cli.exporter(&self.resolution)?;
 
-        let compile_params = cli.compile_parameters();
-        let render_params = cli
-            .render_params(&self.resolution)?
-            .with_cache(render_cache.clone());
-
-        // Recompile whenever something relevant happens.
+        // Recompile and export whenever a source file changes.
         loop {
-            let export_params = mu::ExportParameters {
-                input_path: std::path::PathBuf::from(&self.input),
-                output_path: self.output.clone(),
-                config: cli.config.export.clone(),
-            };
-            let mut document = mu::Document::open(&self.input)?;
-            match document
-                .compile(compile_params.clone())
-                .and(document.render(render_params.clone()))
-                .and(document.export(export_params))
+            match cli
+                .compile(&mut compiler, &self.input)
+                .and_then(|model| exporter.export(&model, &self.input, self.output.as_deref()))
             {
-                Ok(exported_files) => {
-                    eprint!("{exported_files}");
-                }
-                Err(err) => {
-                    eprintln!("{err}");
-                    cli.print_diagnostics(&document);
-                }
+                Ok(path) => eprintln!("Exported '{}'.", path.display()),
+                Err(err) => eprintln!("{err:?}"),
             }
 
-            // Watch all dependencies of the most recent compilation.
-            watcher.update(vec![self.input.clone().into()])?;
-
-            // Remove unused cache items.
-            {
-                let mut cache = render_cache.borrow_mut();
-                cache.garbage_collection();
-            }
+            // Watch the input and the file modules of the most recent compilation.
+            let input = std::path::PathBuf::from(&self.input);
+            watcher.update(std::iter::once(input).chain(compiler.source_files()))?;
 
             // Wait until anything relevant happens.
             watcher.wait()?;
         }
-        */
     }
 }

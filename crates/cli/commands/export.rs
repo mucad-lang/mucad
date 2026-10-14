@@ -26,25 +26,10 @@ pub struct Export {
 
 impl RunCommand for Export {
     fn run(&self, cli: &Cli) -> miette::Result<()> {
-        use microcad_driver::prelude as mu;
-        use miette::IntoDiagnostic;
+        let mut compiler = cli.compiler();
+        let model = cli.compile(&mut compiler, &self.input)?;
 
-        let source = mu::Source::load(&self.input).into_diagnostic()?;
-        let mut compiler = mu::Compiler::from_config(&cli.config);
-
-        // Only a model without errors is exported.
-        let model = match compiler.compile(source) {
-            Ok((model, diag)) if !diag.has_errors() => {
-                eprint!("{}", compiler.render_diag_to_string(&diag));
-                model
-            }
-            Ok((_, diag)) | Err(diag) => {
-                eprintln!("{}", compiler.render_diag_to_string(&diag));
-                miette::bail!("File '{}' has errors, nothing exported.", self.input);
-            }
-        };
-
-        let exporter = mu::Exporter::new().with_config(cli.config.export.clone());
+        let exporter = cli.exporter(&self.resolution)?;
         if self.dry_run {
             let path = exporter.output_path(&model, &self.input, self.output.as_deref())?;
             eprintln!("Export target: {}", path.display());

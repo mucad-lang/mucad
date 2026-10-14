@@ -84,6 +84,42 @@ impl Cli {
         Ok(())
     }
 
+    /// A compiler with the library settings of the config.
+    pub(crate) fn compiler(&self) -> mu::Compiler {
+        mu::Compiler::from_config(&self.config)
+    }
+
+    /// An exporter with the export settings of the config and a `resolution`, e.g. `0.05mm`.
+    pub(crate) fn exporter(&self, resolution: &str) -> miette::Result<mu::Exporter> {
+        Ok(mu::Exporter::new()
+            .with_config(self.config.export.clone())
+            .with_resolution(microcad_driver::resolution_from_str(resolution)?))
+    }
+
+    /// Compile `input` and print the diagnostics.
+    ///
+    /// Only a model without errors is returned, e.g. to export it.
+    pub(crate) fn compile(
+        &self,
+        compiler: &mut mu::Compiler,
+        input: &str,
+    ) -> miette::Result<mu::ModelTree> {
+        use miette::IntoDiagnostic;
+
+        let source = mu::Source::load(input).into_diagnostic()?;
+
+        match compiler.compile(source) {
+            Ok((model, diag)) if !diag.has_errors() => {
+                eprint!("{}", compiler.render_diag_to_string(&diag));
+                Ok(model)
+            }
+            Ok((_, diag)) | Err(diag) => {
+                eprintln!("{}", compiler.render_diag_to_string(&diag));
+                miette::bail!("File '{input}' has errors.");
+            }
+        }
+    }
+
     pub(super) fn time_to_string(duration: &std::time::Duration) -> String {
         use num_format::{Locale, ToFormattedString};
         format!(

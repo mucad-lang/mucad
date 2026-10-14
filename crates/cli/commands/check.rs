@@ -13,9 +13,9 @@ pub struct Check {
 }
 
 impl RunCommand<()> for Check {
-    fn run(&self, _cli: &Cli) -> miette::Result<()> {
+    fn run(&self, cli: &Cli) -> miette::Result<()> {
         use microcad_driver::prelude as mu;
-        let mut compiler = mu::Compiler::new();
+        let mut compiler = cli.compiler();
         let source = mu::Source::load(&self.input).into_diagnostic()?;
 
         // A model compiled with recovered errors is not valid either.

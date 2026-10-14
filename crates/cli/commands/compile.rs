@@ -63,9 +63,9 @@ pub struct Compile {
 }
 
 impl RunCommand<()> for Compile {
-    fn run(&self, _cli: &Cli) -> mu::Result {
+    fn run(&self, cli: &Cli) -> mu::Result {
         let source = mu::Source::load(&self.input).into_diagnostic()?;
-        let mut compiler = mu::Compiler::new();
+        let mut compiler = cli.compiler();
 
         match compiler.compile(source.clone()) {
             Ok((model, diag)) => {

@@ -273,7 +273,7 @@ fn export_errors_exports_nothing() {
         .arg(&input)
         .assert()
         .failure()
-        .stderr(predicate::str::contains("nothing exported"));
+        .stderr(predicate::str::contains("has errors"));
 
     let files = std::fs::read_dir(dir.path()).expect("read dir").count();
     assert_eq!(files, 1, "only the source file is expected");
@@ -293,4 +293,25 @@ fn export_dry_run() {
         .stderr(predicate::str::contains("valid.svg"));
 
     assert!(!dir.path().join("valid.svg").exists());
+}
+
+#[test]
+fn export_resolution() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = source_file(&dir, "valid.mu", VALID);
+
+    microcad()
+        .arg("export")
+        .args(["--resolution", "0.05mm"])
+        .arg(&input)
+        .assert()
+        .success();
+
+    microcad()
+        .arg("export")
+        .args(["--resolution", "2"])
+        .arg(&input)
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Invalid resolution"));
 }
