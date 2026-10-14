@@ -328,3 +328,38 @@ fn compile_source_files() {
         "{files:?}"
     );
 }
+
+/// Aliases (`use`, `pub use`) can be called and evaluated, also from the standard library.
+#[test]
+fn compile_std_alias() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile(mu::Source::from(
+            r#"
+            use std::math::sqrt;
+
+            a = 2cm;
+            b = 5cm;
+            c = sqrt(a * a + b * b);
+            std::print("{c}");
+            x = std::math::PI;
+            "#,
+        ))
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+}
+
+/// Calling an alias of something which cannot be called reports its name.
+#[test]
+fn compile_std_alias_not_callable() {
+    let mut compiler = std_compiler();
+    let diags = match compiler.compile("use std::math::PI;\nPI();") {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+
+    let message = format!("{diags:?}");
+    assert!(diags.has_errors(), "{message}");
+    assert!(message.contains("cannot be called"), "{message}");
+    assert!(!message.contains("0x"), "{message}");
+}
