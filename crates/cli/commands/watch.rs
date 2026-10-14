@@ -14,8 +14,9 @@ pub struct Watch {
 
     /// The resolution of this export.
     ///
-    /// The resolution can changed relatively `200%` or to an absolute value `0.05mm`.
-    #[arg(short, long, default_value = "0.1mm")]
+    /// Either an absolute length, e.g. `0.05mm`, or relative to the default resolution of
+    /// 0.25mm, e.g. `200%` for a twice as fine resolution.
+    #[arg(short, long, default_value = "100%")]
     pub resolution: String,
 }
 
