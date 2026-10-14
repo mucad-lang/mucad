@@ -25,45 +25,34 @@ pub struct Export {
 }
 
 impl RunCommand for Export {
-    fn run(&self, _cli: &Cli) -> miette::Result<()> {
-        todo!()
-        /*
+    fn run(&self, cli: &Cli) -> miette::Result<()> {
         use microcad_driver::prelude as mu;
-        use mu::traits::*;
+        use miette::IntoDiagnostic;
 
-        let mut document = mu::Document::open(&self.input)?;
+        let source = mu::Source::load(&self.input).into_diagnostic()?;
+        let mut compiler = mu::Compiler::from_config(&cli.config);
 
-        let params = mu::ExportParameters {
-            input_path: std::path::PathBuf::from(&self.input),
-            output_path: self.output.clone(),
-            config: cli.config.export.clone(),
+        // Only a model without errors is exported.
+        let model = match compiler.compile(source) {
+            Ok((model, diag)) if !diag.has_errors() => {
+                eprint!("{}", compiler.render_diag_to_string(&diag));
+                model
+            }
+            Ok((_, diag)) | Err(diag) => {
+                eprintln!("{}", compiler.render_diag_to_string(&diag));
+                miette::bail!("File '{}' has errors, nothing exported.", self.input);
+            }
         };
 
-        match document
-            .compile(cli.compile_parameters())
-            .and(document.render(cli.render_params(&self.resolution)?))
-            .and(document.get_export_targets(params))
-        {
-            Ok(targets) => {
-                if self.dry_run {
-                    eprintln!("{targets}");
-                } else {
-                    match targets.export() {
-                        Ok(exported_files) => {
-                            eprint!("{exported_files}");
-                        }
-                        Err(err) => {
-                            eprintln!("{err}");
-                            cli.print_diagnostics(&document);
-                        }
-                    }
-                }
-            }
-            Err(_) => {
-                cli.print_diagnostics(&document);
-            }
+        let exporter = mu::Exporter::new().with_config(cli.config.export.clone());
+        if self.dry_run {
+            let path = exporter.output_path(&model, &self.input, self.output.as_deref())?;
+            eprintln!("Export target: {}", path.display());
+        } else {
+            let path = exporter.export(&model, &self.input, self.output.as_deref())?;
+            eprintln!("Exported '{}'.", path.display());
         }
+
         Ok(())
-        */
     }
 }

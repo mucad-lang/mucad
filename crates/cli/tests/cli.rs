@@ -247,3 +247,50 @@ fn format_parse_error_keeps_file() {
 
     assert_eq!(read(&input), PARSE_ERROR);
 }
+
+#[test]
+fn export_default_path() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = source_file(&dir, "valid.mu", VALID);
+
+    microcad()
+        .arg("export")
+        .arg(&input)
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("Exported"));
+
+    assert!(dir.path().join("valid.svg").is_file());
+}
+
+#[test]
+fn export_errors_exports_nothing() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = source_file(&dir, "unresolved.mu", UNRESOLVED);
+
+    microcad()
+        .arg("export")
+        .arg(&input)
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("nothing exported"));
+
+    let files = std::fs::read_dir(dir.path()).expect("read dir").count();
+    assert_eq!(files, 1, "only the source file is expected");
+}
+
+#[test]
+fn export_dry_run() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = source_file(&dir, "valid.mu", VALID);
+
+    microcad()
+        .arg("export")
+        .arg("--dry-run")
+        .arg(&input)
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("valid.svg"));
+
+    assert!(!dir.path().join("valid.svg").exists());
+}

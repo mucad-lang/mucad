@@ -25,8 +25,8 @@ impl RunCommand for Create {
         } else {
             std::fs::write(
                 path.clone(),
-                Hello::get("hello.µcad")
-                    .expect("embedded hello.µcad not found")
+                Hello::get("hello.mu")
+                    .expect("embedded hello.mu not found")
                     .data,
             )
             .into_diagnostic()?;
