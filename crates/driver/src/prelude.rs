@@ -119,6 +119,13 @@ pub mod format {
 pub use crate::Formatter;
 pub use format::{FormatConfig, Formatted, format};
 
+/// Symbols from `microcad_export`
+pub mod export {
+    pub use microcad_export::*;
+}
+
+pub use crate::{Exporter, config::ExportConfig};
+
 // =========================================================================
 // --- Traits Namespace ---
 // =========================================================================

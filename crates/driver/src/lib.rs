@@ -5,6 +5,7 @@
 
 mod compiler;
 mod config;
+mod exporter;
 mod formatter;
 
 pub mod prelude;
@@ -16,6 +17,7 @@ use microcad_lang_parse::ParseIssue;
 use microcad_lang_types::Value;
 
 pub use compiler::Compiler;
+pub use exporter::Exporter;
 pub use formatter::Formatter;
 
 /// We use [`miette::Result`] throught-out this crate.
