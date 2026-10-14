@@ -119,11 +119,17 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
     pub fn visit(&mut self) {
         use crate::library::visitor::VisitorMut;
 
-        // Wildcard imports first, because looking up other paths searches the imported modules.
-        let is_wildcard = |symbol: &Symbol| matches!(symbol.def, symbol::SymbolDef::Wildcard(_));
-        for wildcards in [true, false] {
+        // Imports first, because looking up other paths follows aliases
+        // and searches the modules imported by wildcards.
+        let is_import = |symbol: &Symbol| {
+            matches!(
+                symbol.def,
+                symbol::SymbolDef::Alias(_) | symbol::SymbolDef::Wildcard(_)
+            )
+        };
+        for imports in [true, false] {
             self.transform(|visitor, id, symbol| {
-                if is_wildcard(symbol) == wildcards {
+                if is_import(symbol) == imports {
                     visitor.scope(SymbolFrame::new(id), |visitor| {
                         visitor.visit_meta(&mut symbol.meta);
                         visitor.visit_def(&mut symbol.def);
