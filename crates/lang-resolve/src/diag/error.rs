@@ -77,6 +77,10 @@ pub enum ResolveErrorKind {
     #[error("Library `{name}` not loaded")]
     LibraryNotLoaded { name: String },
 
+    /// Libraries must not depend on each other.
+    #[error("Cyclic library dependency: {chain}")]
+    CyclicDependency { chain: String },
+
     /// Only libraries with a manifest can be used as dependency, because the manifest defines the library ID.
     #[error("Library has no manifest (`mu.toml`) and cannot be used as dependency")]
     LibraryWithoutManifest,

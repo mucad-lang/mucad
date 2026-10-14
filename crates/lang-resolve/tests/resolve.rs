@@ -418,3 +418,21 @@ fn resolve_failed_source_file() {
         broken.def
     );
 }
+
+/// Libraries, which depend on each other, are an error instead of being loaded endlessly.
+#[test]
+fn resolve_cyclic_dependency() {
+    let mut ctx = ResolveContext::new();
+    let issues = match ctx.load_external_library("tests/test_cases/cycle_a") {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+
+    assert!(issues.has_errors(), "{issues:?}");
+    assert!(
+        issues
+            .iter()
+            .any(|issue| issue.to_string()
+                == "Cyclic library dependency: cycle_a -> cycle_b -> cycle_a"),
+        "{issues:?}"
+    );
+}

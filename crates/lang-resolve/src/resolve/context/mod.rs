@@ -10,10 +10,12 @@ pub use lib_ctx::ResolveLibraryContext;
 use microcad_lang_parse::Ast;
 use std::collections::BTreeMap;
 
-use microcad_lang_base::{Artifact, HashId, IssueResult, LibraryId, Name, PushIssue, SharedMut};
+use microcad_lang_base::{
+    Artifact, HashId, IssueList, IssueResult, LibraryId, Name, PushIssue, SharedMut,
+};
 use microcad_lang_lower::Ir;
 
-use crate::{Library, ResolveIssue};
+use crate::{Library, ResolveErrorKind, ResolveIssue};
 
 #[derive(Debug, Default)]
 pub struct ResolveContext {
@@ -22,6 +24,8 @@ pub struct ResolveContext {
     src_cache: SharedMut<SourceCache>,
     /// Libraries in the cache that every resolved library depends on, e.g. `std`.
     implicit_dependencies: BTreeMap<Name, LibraryId>,
+    /// Paths of the external libraries being loaded, to detect cyclic dependencies.
+    loading: Vec<std::path::PathBuf>,
 }
 
 /// Builder methods.
@@ -98,9 +102,37 @@ impl ResolveContext {
 impl ResolveContext {
     /// Load and resolve an external library (a dependency) from a directory with a `mu.toml` file
     /// and insert it into the library cache.
+    ///
+    /// A library, which depends on itself through its dependencies, is an error.
     pub fn load_external_library(
         &mut self,
         lib_path: impl AsRef<std::path::Path>,
+    ) -> IssueResult<LibraryId, ResolveIssue> {
+        let lib_path = lib_path.as_ref();
+        let path = std::fs::canonicalize(lib_path).unwrap_or_else(|_| lib_path.to_path_buf());
+
+        if let Some(start) = self.loading.iter().position(|loading| *loading == path) {
+            let chain = self.loading[start..]
+                .iter()
+                .chain([&path])
+                .map(|path| path.file_name().unwrap_or_default().to_string_lossy())
+                .collect::<Vec<_>>()
+                .join(" -> ");
+            let mut issues = IssueList::new();
+            issues.push_err(ResolveErrorKind::CyclicDependency { chain });
+            return Err(issues);
+        }
+
+        self.loading.push(path);
+        let result = self.load_library_into_cache(lib_path);
+        self.loading.pop();
+        result
+    }
+
+    /// Load and resolve an external library and insert it into the library cache.
+    fn load_library_into_cache(
+        &mut self,
+        lib_path: &std::path::Path,
     ) -> IssueResult<LibraryId, ResolveIssue> {
         let mut lib = Library::new();
         let mut lib_ctx = ResolveLibraryContext::new(&mut lib, self);
@@ -177,6 +209,7 @@ impl ResolveContextBuilder {
             implicit_dependencies: BTreeMap::new(),
             lib_cache: self.lib_cache.unwrap_or_default(),
             src_cache: self.src_cache.unwrap_or_default(),
+            loading: Vec::new(),
         }
     }
 }

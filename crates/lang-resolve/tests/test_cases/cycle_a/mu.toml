@@ -1,0 +1,9 @@
+# A library, which depends on `cycle_b`, which depends on this library.
+
+[library]
+name = "cycle_a"
+version = "0.1.0"
+no_std = true
+
+[dependencies]
+cycle_b = { path = "../cycle_b" }
