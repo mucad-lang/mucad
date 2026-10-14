@@ -103,6 +103,12 @@ pub struct TestResult {
 /// Directory, into which tests export their models.
 const OUTPUT_DIR: &str = "target/doctest";
 
+/// Diagnostics are rendered without colors, because they appear in markdown.
+const LOG_OPTIONS: mu::base::DiagRenderOptions = mu::base::DiagRenderOptions {
+    color: false,
+    unicode: false,
+};
+
 /// A panic while running a test, e.g. a `todo!()` in the compiler.
 #[derive(Debug)]
 pub struct Panic(String);
@@ -256,7 +262,7 @@ impl TestCase {
             Ok((_, issues)) | Err(issues) => issues.into_diagnostics(),
         };
         let log = diags
-            .render_to_string(&&self.source, &Default::default())
+            .render_to_string(&&self.source, &LOG_OPTIONS)
             .unwrap_or_default();
         match diags.has_errors() {
             true => Err(log),
@@ -269,10 +275,13 @@ impl TestCase {
     /// Like in the CLI, a model with errors is a failure.
     fn compile(&self, compiler: &mut mu::Compiler) -> Result<(mu::ModelTree, String), String> {
         match compiler.compile(self.source.clone()) {
-            Ok((model, diags)) if !diags.has_errors() => {
-                Ok((model, compiler.render_diag_to_string(&diags)))
+            Ok((model, diags)) if !diags.has_errors() => Ok((
+                model,
+                compiler.render_diag_to_string_with(&diags, &LOG_OPTIONS),
+            )),
+            Ok((_, diags)) | Err(diags) => {
+                Err(compiler.render_diag_to_string_with(&diags, &LOG_OPTIONS))
             }
-            Ok((_, diags)) | Err(diags) => Err(compiler.render_diag_to_string(&diags)),
         }
     }
 
@@ -334,12 +343,54 @@ impl TestResultList {
             .join(", ")
     }
 
+    /// A page with the result of each test and the logs of the failed tests.
     pub fn to_md(&self) -> mu::md::Markdown {
-        let content: Vec<mu::md::Block> = todo!();
-        mu::md::Markdown::page(
+        use mu::md::{
+            Block, CodeBlock, CodeBlockHeader, Section,
+            table_builder::{Column, TableBuilder},
+        };
+
+        let summary = Block::Paragraph(format!(
+            "**{count}** tests have been run with µcad **{version}**: {summary}",
+            count = self.results.len(),
+            version = mu::MUCAD_VERSION,
+            summary = self.summary(),
+        ));
+        let table = TableBuilder::new()
+            .columns([Column::right("Result"), Column::left("Test")])
+            .rows(
+                self.results
+                    .iter()
+                    .map(|result| [result.result.to_string(), result.name.clone()]),
+            );
+
+        let mut md = mu::md::Markdown::page(
             self.name.clone().unwrap_or(String::from("Test result")),
-            content,
-        )
+            [summary, table.into()],
+        );
+
+        let failures: Vec<_> = self
+            .results
+            .iter()
+            .filter(|result| !result.result.is_success())
+            .collect();
+        if !failures.is_empty() {
+            md.add_section(Section::new(2, "Failures", []));
+            failures.into_iter().for_each(|result| {
+                let log = Block::CodeBlock(CodeBlock {
+                    header: CodeBlockHeader {
+                        lang: Some("text".into()),
+                        name: None,
+                        query: Default::default(),
+                    },
+                    code: result.log_output.trim_end().to_string(),
+                    line_offset: 0,
+                });
+                md.add_section(Section::new(3, &result.name, [log]));
+            });
+        }
+
+        md
     }
 }
 
@@ -599,5 +650,28 @@ mod tests {
             panic(|| panic!("formatted {}", 42)).to_string(),
             "Panic: formatted 42"
         );
+    }
+
+    #[test]
+    fn results_to_md() {
+        let results = TestSuite {
+            name: Some("Book".into()),
+            test_cases: vec![
+                test_case("mu,a?mode=compile", CIRCLE),
+                test_case("mu,b?mode=compile", "Unknown();"),
+            ],
+        }
+        .run(&no_std());
+        let md = results.to_md().to_string();
+
+        assert!(md.starts_with("# Book"), "{md}");
+        assert!(md.contains("**2** tests have been run"), "{md}");
+        assert!(md.contains("1 ok, 1 fail"), "{md}");
+        assert!(md.contains("| intro::basics::a |"), "{md}");
+        assert!(md.contains("## Failures"), "{md}");
+        assert!(md.contains("### intro::basics::b"), "{md}");
+        assert!(md.contains("Unresolved symbol: Unknown"), "{md}");
+        // Logs are written without colors.
+        assert!(!md.contains('\u{1b}'), "{md}");
     }
 }
