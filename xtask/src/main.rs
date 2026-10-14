@@ -1,18 +1,19 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::error::Error;
+mod doctest;
+mod update_copyright;
 
 use clap::{Parser, Subcommand};
+use std::error::Error;
 
 use microcad_driver::prelude as mu;
 
 use mu::traits::GenerateDoc;
 use mu::{MUCAD_EXTENSION, MUCAD_EXTENSIONS};
 
+use crate::doctest::TestSuite;
 use crate::update_copyright::CopyrightUpdater;
-
-mod update_copyright;
 
 #[derive(Parser)]
 #[command(name = "microcad-xtask")]
@@ -36,6 +37,9 @@ enum Commands {
     DocgenStd {
         output_path: Option<std::path::PathBuf>,
     },
+
+    /// Test an mdbook and update test results, if needed.
+    Doctest { mdbook_path: std::path::PathBuf },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -62,6 +66,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             let std_lib = mu::stdlib::load("crates/std/lib/std");
             mu::docgen::LibraryDocGenerator::new(&std_lib)
                 .write_doc(output_path.unwrap_or(std::path::PathBuf::from("target/docs/std")))
+        }
+        Commands::Doctest { mdbook_path } => {
+            let mdbook = mu::md::MdBook::load(mdbook_path)?;
+            println!("{}", TestSuite::from_mdbook(&mdbook)?.run());
+
+            Ok(())
         }
     }
 }
