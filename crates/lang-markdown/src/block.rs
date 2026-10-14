@@ -4,56 +4,38 @@
 use crate::{OrderedList, UnorderedList, code_block::CodeBlock};
 
 /// A block quote. Each line starts with `>`.
+///
+/// The lines are kept as written, e.g. `> text`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BlockQuote(Vec<String>);
 
-fn stripped_prefix<T: IntoIterator<Item = String>>(iter: T, prefix: &str) -> Vec<String> {
-    iter.into_iter()
-        .filter_map(|line| {
-            let trimmed = line.trim_start();
-            let rest = trimmed.strip_prefix(prefix)?;
-            Some(rest.strip_prefix(' ').unwrap_or(rest).to_string())
-        })
-        .collect()
-}
-
-impl BlockQuote {
-    const PREFIX: &'static str = ">";
-}
-
 impl std::fmt::Display for BlockQuote {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0
-            .iter()
-            .try_for_each(|line| writeln!(f, "{prefix} {line}", prefix = Self::PREFIX))
+        self.0.iter().try_for_each(|line| writeln!(f, "{line}"))
     }
 }
 
 impl FromIterator<String> for BlockQuote {
     fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
-        Self(stripped_prefix(iter, Self::PREFIX))
+        Self(iter.into_iter().collect())
     }
 }
 
 /// A table in markdown. Each line starts with `|`.
+///
+/// The lines are kept as written, e.g. `| a | b |`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Table(Vec<String>);
 
-impl Table {
-    const PREFIX: &'static str = "|";
-}
-
 impl std::fmt::Display for Table {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0
-            .iter()
-            .try_for_each(|line| writeln!(f, "{prefix} {line}", prefix = Self::PREFIX))
+        self.0.iter().try_for_each(|line| writeln!(f, "{line}"))
     }
 }
 
 impl FromIterator<String> for Table {
     fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
-        Self(stripped_prefix(iter, Self::PREFIX))
+        Self(iter.into_iter().collect())
     }
 }
 

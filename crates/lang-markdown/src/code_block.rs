@@ -3,7 +3,7 @@
 
 //! A markdown code block.
 
-use microcad_lang_base::{HashMap, Identifier, Source, SourceLocation, Url};
+use microcad_lang_base::{HashMap, Identifier, Source, SourceKind, SourceLocation};
 
 use crate::ParseError;
 
@@ -164,6 +164,8 @@ pub struct CodeBlock {
     pub code: String,
     /// Line offset inside markdown file.
     pub line_offset: usize,
+    /// Path of the markdown file, which contains this code block, if loaded from a file.
+    pub path: Option<std::path::PathBuf>,
 }
 
 impl CodeBlock {
@@ -188,13 +190,14 @@ impl CodeBlock {
             .contains_key(&Identifier::from("no_format"))
     }
 
-    /// Get source for a code block
-    pub fn source(&self, mut url: Url) -> Source {
-        url.set_fragment(self.header.name.as_ref().map(|name| name.as_str()));
-        Source::new(
-            SourceLocation::new(url).with_line_offset(self.line_offset as u32),
-            self.code.clone(),
-        )
+    /// The source of the code with its location in the markdown file.
+    pub fn source(&self) -> Source {
+        let location = match &self.path {
+            Some(path) => SourceLocation::new(SourceKind::Path(path.clone()))
+                .with_line_offset(self.line_offset as u32),
+            None => SourceLocation::new(SourceKind::Str),
+        };
+        Source::new(location, self.code.clone())
     }
 }
 

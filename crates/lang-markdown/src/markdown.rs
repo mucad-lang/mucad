@@ -76,8 +76,8 @@ impl std::str::FromStr for Markdown {
                         Tag::CodeBlock(CodeBlockKind::Fenced(info))
                             if CodeBlockHeader::is_mucad(&info) =>
                         {
-                            // `CodeBlockHeader` writes the banner again from the block name.
-                            banner = None;
+                            // A test banner right before the code block is kept as paragraph.
+                            md.flush_banner(&mut banner);
                             let header: CodeBlockHeader = info.parse()?;
                             if let Some(name) = &header.name
                                 && !code_block_names.insert(name.clone())
@@ -129,6 +129,7 @@ impl std::str::FromStr for Markdown {
                                 header,
                                 code,
                                 line_offset: line_index + 1,
+                                path: None,
                             }),
                         );
                     }
@@ -355,9 +356,48 @@ impl Markdown {
         crate::md!("{val}")
     }
 
+    /// Load a markdown file.
+    ///
+    /// The code blocks get the path, e.g. for the location of their source.
     pub fn load(path: impl AsRef<std::path::Path>) -> Result<Self, MarkdownError> {
+        let path = path.as_ref();
         let input = std::fs::read_to_string(path)?;
-        Markdown::from_str(&input).map_err(|err| err.into())
+        let mut md = Markdown::from_str(&input)?;
+        md.code_blocks_mut()
+            .for_each(|code_block| code_block.path = Some(path.to_path_buf()));
+        Ok(md)
+    }
+
+    /// Insert a test banner right before each code block, for which `banner` returns one.
+    ///
+    /// An existing test banner is overwritten.
+    /// Returns `true` if a banner has been inserted or changed.
+    pub fn set_test_banners(&mut self, banner: impl Fn(&CodeBlock) -> Option<String>) -> bool {
+        let mut changed = false;
+        for section in &mut self.0 {
+            let mut content = Vec::with_capacity(section.content.len());
+            for block in std::mem::take(&mut section.content) {
+                if let Block::CodeBlock(code_block) = &block
+                    && let Some(banner) = banner(code_block)
+                {
+                    match content.last() {
+                        Some(Block::Paragraph(text)) if *text == banner => (),
+                        Some(Block::Paragraph(text)) if CodeBlockHeader::is_test_banner(text) => {
+                            content.pop();
+                            content.push(Block::Paragraph(banner));
+                            changed = true;
+                        }
+                        _ => {
+                            content.push(Block::Paragraph(banner));
+                            changed = true;
+                        }
+                    }
+                }
+                content.push(block);
+            }
+            section.content = content;
+        }
+        changed
     }
 
     /// Add a new section.
