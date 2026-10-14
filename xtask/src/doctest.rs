@@ -86,6 +86,13 @@ impl std::fmt::Display for TestStatus {
     }
 }
 
+impl TestStatus {
+    /// Returns `false` if the test failed unexpectedly or succeeded but is expected to fail.
+    pub fn is_success(&self) -> bool {
+        matches!(self, TestStatus::Ok | TestStatus::Todo | TestStatus::FailOk)
+    }
+}
+
 #[derive(Debug)]
 pub struct TestResult {
     name: String,
@@ -264,6 +271,28 @@ pub struct TestResultList {
 }
 
 impl TestResultList {
+    /// Returns `true` if no test failed unexpectedly.
+    pub fn is_success(&self) -> bool {
+        self.results.iter().all(|result| result.result.is_success())
+    }
+
+    /// The number of tests per status, e.g. `12 ok, 2 fail_ok, 1 todo`.
+    pub fn summary(&self) -> String {
+        use TestStatus::*;
+        [Ok, FailOk, Todo, Fail, OkFail]
+            .into_iter()
+            .filter_map(|status| {
+                let count = self
+                    .results
+                    .iter()
+                    .filter(|result| result.result == status)
+                    .count();
+                (count > 0).then(|| format!("{count} {status}"))
+            })
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+
     pub fn to_md(&self) -> mu::md::Markdown {
         let content: Vec<mu::md::Block> = todo!();
         mu::md::Markdown::page(
@@ -284,27 +313,41 @@ impl TestSuite {
     ///
     /// Fails, if a code block has invalid test parameters.
     pub fn from_mdbook(mdbook: &mu::md::MdBook) -> Result<Self, String> {
+        let mut test_cases = mdbook
+            .code_blocks()
+            .filter_map(|(path, code_block)| {
+                TestCase::from_code_block(&path, code_block).transpose()
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        // The markdown files are unordered, sort for a stable output.
+        test_cases.sort_by(|a, b| a.name.cmp(&b.name));
+
         Ok(Self {
             name: mdbook.config.title().map(|title| title.to_string()),
-            test_cases: mdbook
-                .code_blocks()
-                .filter_map(|(path, code_block)| {
-                    TestCase::from_code_block(&path, code_block).transpose()
-                })
-                .collect::<Result<_, _>>()?,
+            test_cases,
         })
     }
 
-    pub fn run(&self) -> TestResultList {
-        let mut compiler = mu::Compiler::new();
-        TestResultList {
+    /// Run all tests with `compiler` and print the status of each test, like `cargo test`.
+    pub fn run(&self, compiler: &mut mu::Compiler) -> TestResultList {
+        eprintln!("running {} tests", self.test_cases.len());
+
+        let results = self
+            .test_cases
+            .iter()
+            .map(|test_case| {
+                let result = test_case.run(compiler);
+                eprintln!("test {} ... {}", result.name, result.result);
+                result
+            })
+            .collect();
+
+        let results = TestResultList {
             name: self.name.clone(),
-            results: self
-                .test_cases
-                .iter()
-                .map(|test_case| test_case.run(&mut compiler))
-                .collect(),
-        }
+            results,
+        };
+        eprintln!("\ntest result: {}", results.summary());
+        results
     }
 }
 
@@ -323,21 +366,28 @@ mod tests {
 
     const CIRCLE: &str = "__mu::geo2d::Circle(radius = 1mm);";
 
-    /// Run a test of `code` with a compiler without standard library.
-    fn run(header: &str, code: &str) -> TestResult {
+    fn test_case(header: &str, code: &str) -> TestCase {
         let code_block = mu::md::CodeBlock {
             header: header.parse().expect("A code block header"),
             code: code.into(),
             line_offset: 0,
         };
-        let mut compiler = mu::Compiler::from_config(&mu::DriverConfig {
-            no_std: true,
-            ..Default::default()
-        });
         TestCase::from_code_block(std::path::Path::new("intro/basics.md"), &code_block)
             .expect("Valid")
             .expect("A test")
-            .run(&mut compiler)
+    }
+
+    /// A compiler without standard library.
+    fn compiler() -> mu::Compiler {
+        mu::Compiler::from_config(&mu::DriverConfig {
+            no_std: true,
+            ..Default::default()
+        })
+    }
+
+    /// Run a test of `code` with a compiler without standard library.
+    fn run(header: &str, code: &str) -> TestResult {
+        test_case(header, code).run(&mut compiler())
     }
 
     #[test]
@@ -443,5 +493,30 @@ mod tests {
             run("mu,a?mode=compile&result=fail", CIRCLE).result,
             TestStatus::OkFail
         );
+    }
+
+    #[test]
+    fn run_suite() {
+        let suite = |test_cases| TestSuite {
+            name: None,
+            test_cases,
+        };
+
+        let results = suite(vec![
+            test_case("mu,a?mode=compile", CIRCLE),
+            test_case("mu,b?mode=compile&result=fail", "Unknown();"),
+            test_case("mu,c?mode=todo", ""),
+        ])
+        .run(&mut compiler());
+        assert!(results.is_success());
+        assert_eq!(results.summary(), "1 ok, 1 fail_ok, 1 todo");
+
+        let results = suite(vec![
+            test_case("mu,a?mode=compile", CIRCLE),
+            test_case("mu,b?mode=compile", "Unknown();"),
+        ])
+        .run(&mut compiler());
+        assert!(!results.is_success());
+        assert_eq!(results.summary(), "1 ok, 1 fail");
     }
 }
