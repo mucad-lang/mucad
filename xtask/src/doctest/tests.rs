@@ -133,6 +133,14 @@ fn run_modes() {
     assert!(svg.is_file());
 }
 
+/// An export test of code without geometry is only compiled and passes.
+#[test]
+fn run_export_without_geometry() {
+    let result = run("mu,a", "a = 2cm;\nb = a * 2;");
+    assert_eq!(result.result, TestStatus::Ok, "{}", result.log_output);
+    assert!(result.log_output.contains("No model to export."));
+}
+
 #[test]
 fn run_expected_result() {
     let parse_error = "__mu::geo2d::Circle(radius = 1mm;";
@@ -265,7 +273,7 @@ fn write_result_files() {
         name: None,
         test_cases: vec![test_case],
     }
-    .run(true, &no_std());
+    .run(false, &no_std());
 
     let banner = std::fs::read(dir.path().join(".test/circle.svg")).expect("A banner image");
     let ok_image =

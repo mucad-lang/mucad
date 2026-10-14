@@ -119,7 +119,18 @@ impl TestCase {
                 Ok(format!("{log}\n-- Model --\n{model}"))
             }
             TestMode::Export { resolution, path } => {
+                use mu::types::{ModelType, model::NodeExt};
+
                 let (model, log) = self.compile(compiler)?;
+
+                // Code without geometry (e.g. only values) is only compiled.
+                if !matches!(
+                    model.root().deduce_output_type(),
+                    ModelType::Geometry2D | ModelType::Geometry3D
+                ) {
+                    return Ok(format!("{log}\nNo model to export."));
+                }
+
                 match self.export(&model, resolution, path.as_deref()) {
                     Ok(path) => Ok(format!("{log}\nExported '{}'.", path.display())),
                     Err(err) => Err(format!("{log}\n{err:?}")),
