@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         Commands::Doctest { mdbook_path } => {
             let mdbook = mu::md::MdBook::load(mdbook_path)?;
-            let results = TestSuite::from_mdbook(&mdbook)?.run(&mut mu::Compiler::new());
+            let results = TestSuite::from_mdbook(&mdbook)?.run(&mu::DriverConfig::default());
 
             if !results.is_success() {
                 return Err(format!("Doctests failed: {}", results.summary()).into());

@@ -103,6 +103,31 @@ pub struct TestResult {
 /// Directory, into which tests export their models.
 const OUTPUT_DIR: &str = "target/doctest";
 
+/// A panic while running a test, e.g. a `todo!()` in the compiler.
+#[derive(Debug)]
+pub struct Panic(String);
+
+impl From<Box<dyn std::any::Any + Send>> for Panic {
+    fn from(payload: Box<dyn std::any::Any + Send>) -> Self {
+        // Panic messages are either a `String` or a `&str`.
+        match payload.downcast::<String>() {
+            Ok(message) => Self(*message),
+            Err(payload) => Self(
+                payload
+                    .downcast_ref::<&str>()
+                    .map(|message| message.to_string())
+                    .unwrap_or_default(),
+            ),
+        }
+    }
+}
+
+impl std::fmt::Display for Panic {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Panic: {}", self.0)
+    }
+}
+
 #[derive(Debug)]
 pub struct TestCase {
     name: String,
@@ -178,30 +203,43 @@ impl TestCase {
     }
 
     /// Run the test with `compiler` and compare the outcome with the expected result.
-    pub fn run(&self, compiler: &mut mu::Compiler) -> TestResult {
-        let (succeeded, log_output) = match &self.mode {
-            TestMode::Todo => return self.test_result(TestStatus::Todo, String::new()),
-            TestMode::Parse => self.parse(),
-            TestMode::Compile => match self.compile(compiler) {
-                Ok((model, log)) => (true, format!("{log}\n-- Model --\n{model}")),
-                Err(log) => (false, log),
-            },
-            TestMode::Export { resolution, path } => match self.compile(compiler) {
-                Ok((model, log)) => match self.export(&model, resolution, path.as_deref()) {
-                    Ok(path) => (true, format!("{log}\nExported '{}'.", path.display())),
-                    Err(err) => (false, format!("{log}\n{err:?}")),
-                },
-                Err(log) => (false, log),
-            },
-        };
+    ///
+    /// A panic, e.g. a `todo!()` in the compiler, is returned as error.
+    pub fn run(&self, compiler: &mut mu::Compiler) -> Result<TestResult, Panic> {
+        if let TestMode::Todo = self.mode {
+            return Ok(self.test_result(TestStatus::Todo, String::new()));
+        }
 
-        let status = match (succeeded, &self.result) {
-            (true, ExpectedTestResult::Ok) => TestStatus::Ok,
-            (false, ExpectedTestResult::Ok) => TestStatus::Fail,
-            (false, ExpectedTestResult::Fail) => TestStatus::FailOk,
-            (true, ExpectedTestResult::Fail) => TestStatus::OkFail,
+        let outcome =
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.execute(compiler)))?;
+
+        let status = match (&outcome, &self.result) {
+            (Ok(_), ExpectedTestResult::Ok) => TestStatus::Ok,
+            (Err(_), ExpectedTestResult::Ok) => TestStatus::Fail,
+            (Err(_), ExpectedTestResult::Fail) => TestStatus::FailOk,
+            (Ok(_), ExpectedTestResult::Fail) => TestStatus::OkFail,
         };
-        self.test_result(status, log_output)
+        let (Ok(log_output) | Err(log_output)) = outcome;
+        Ok(self.test_result(status, log_output))
+    }
+
+    /// Execute the test and return its log: `Ok` if it succeeded, `Err` if it failed.
+    fn execute(&self, compiler: &mut mu::Compiler) -> Result<String, String> {
+        match &self.mode {
+            TestMode::Todo => Ok(String::new()),
+            TestMode::Parse => self.parse(),
+            TestMode::Compile => {
+                let (model, log) = self.compile(compiler)?;
+                Ok(format!("{log}\n-- Model --\n{model}"))
+            }
+            TestMode::Export { resolution, path } => {
+                let (model, log) = self.compile(compiler)?;
+                match self.export(&model, resolution, path.as_deref()) {
+                    Ok(path) => Ok(format!("{log}\nExported '{}'.", path.display())),
+                    Err(err) => Err(format!("{log}\n{err:?}")),
+                }
+            }
+        }
     }
 
     fn test_result(&self, result: TestStatus, log_output: String) -> TestResult {
@@ -212,15 +250,18 @@ impl TestCase {
         }
     }
 
-    /// Parse the source and return if it succeeded and the diagnostics.
-    fn parse(&self) -> (bool, String) {
+    /// Parse the source and return the diagnostics.
+    fn parse(&self) -> Result<String, String> {
         let diags = match mu::parse(&self.source) {
             Ok((_, issues)) | Err(issues) => issues.into_diagnostics(),
         };
         let log = diags
             .render_to_string(&&self.source, &Default::default())
             .unwrap_or_default();
-        (!diags.has_errors(), log)
+        match diags.has_errors() {
+            true => Err(log),
+            false => Ok(log),
+        }
     }
 
     /// Compile the source and return the model and the diagnostics.
@@ -328,15 +369,25 @@ impl TestSuite {
         })
     }
 
-    /// Run all tests with `compiler` and print the status of each test, like `cargo test`.
-    pub fn run(&self, compiler: &mut mu::Compiler) -> TestResultList {
+    /// Run all tests with a compiler for `config` and print the status of each test,
+    /// like `cargo test`.
+    pub fn run(&self, config: &mu::DriverConfig) -> TestResultList {
+        let mut compiler = mu::Compiler::from_config(config);
         eprintln!("running {} tests", self.test_cases.len());
 
         let results = self
             .test_cases
             .iter()
             .map(|test_case| {
-                let result = test_case.run(compiler);
+                let result = match test_case.run(&mut compiler) {
+                    Ok(result) => result,
+                    // A panic fails the test, but not the test suite.
+                    Err(panic) => {
+                        // The compiler may be broken after a panic, e.g. by a poisoned lock.
+                        compiler = mu::Compiler::from_config(config);
+                        test_case.test_result(TestStatus::Fail, panic.to_string())
+                    }
+                };
                 eprintln!("test {} ... {}", result.name, result.result);
                 result
             })
@@ -346,6 +397,19 @@ impl TestSuite {
             name: self.name.clone(),
             results,
         };
+
+        // Like `cargo test`, show the output of the failed tests.
+        let failures = results
+            .results
+            .iter()
+            .filter(|result| !result.result.is_success());
+        for (i, result) in failures.enumerate() {
+            if i == 0 {
+                eprintln!("\nfailures:");
+            }
+            eprintln!("\n---- {} ----\n{}", result.name, result.log_output);
+        }
+
         eprintln!("\ntest result: {}", results.summary());
         results
     }
@@ -377,17 +441,24 @@ mod tests {
             .expect("A test")
     }
 
-    /// A compiler without standard library.
-    fn compiler() -> mu::Compiler {
-        mu::Compiler::from_config(&mu::DriverConfig {
+    /// A configuration without standard library.
+    fn no_std() -> mu::DriverConfig {
+        mu::DriverConfig {
             no_std: true,
             ..Default::default()
-        })
+        }
+    }
+
+    /// A compiler without standard library.
+    fn compiler() -> mu::Compiler {
+        mu::Compiler::from_config(&no_std())
     }
 
     /// Run a test of `code` with a compiler without standard library.
     fn run(header: &str, code: &str) -> TestResult {
-        test_case(header, code).run(&mut compiler())
+        test_case(header, code)
+            .run(&mut compiler())
+            .expect("No panic")
     }
 
     #[test]
@@ -507,7 +578,7 @@ mod tests {
             test_case("mu,b?mode=compile&result=fail", "Unknown();"),
             test_case("mu,c?mode=todo", ""),
         ])
-        .run(&mut compiler());
+        .run(&no_std());
         assert!(results.is_success());
         assert_eq!(results.summary(), "1 ok, 1 fail_ok, 1 todo");
 
@@ -515,8 +586,18 @@ mod tests {
             test_case("mu,a?mode=compile", CIRCLE),
             test_case("mu,b?mode=compile", "Unknown();"),
         ])
-        .run(&mut compiler());
+        .run(&no_std());
         assert!(!results.is_success());
         assert_eq!(results.summary(), "1 ok, 1 fail");
+    }
+
+    #[test]
+    fn panic_message() {
+        let panic = |f: fn()| Panic::from(std::panic::catch_unwind(f).expect_err("A panic"));
+        assert_eq!(panic(|| panic!("static")).to_string(), "Panic: static");
+        assert_eq!(
+            panic(|| panic!("formatted {}", 42)).to_string(),
+            "Panic: formatted 42"
+        );
     }
 }
