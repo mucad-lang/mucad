@@ -34,6 +34,7 @@ microcad-lang-base = { workspace = true }
 
 [dev-dependencies]
 insta = "1.45.0"
+tempfile = "3.27.0"
 
 [features]
 # Dependencies for md extractor

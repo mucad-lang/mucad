@@ -29,6 +29,12 @@ pub enum MdBookError {
     #[error("No mdbook in directory: {0}")]
     NoMdBookDirectory(std::path::PathBuf),
 
+    #[error("Error loading markdown file `{file}`: {err}")]
+    Load {
+        file: std::path::PathBuf,
+        err: MarkdownError,
+    },
+
     #[error("Error saving markdown file `{file}`: {err}")]
     Save {
         file: std::path::PathBuf,
@@ -89,13 +95,12 @@ impl MdBook {
         let md_files = md_files
             .iter()
             .map(|md_file| {
-                (
-                    md_file.clone(),
-                    Markdown::load(src_path.join(md_file))
-                        .unwrap_or_else(|_| panic!("No error: {}", md_file.display())),
-                )
+                let file = src_path.join(md_file);
+                Markdown::load(&file)
+                    .map(|md| (md_file.clone(), md))
+                    .map_err(|err| MdBookError::Load { file, err })
             })
-            .collect();
+            .collect::<Result<_, _>>()?;
 
         Ok(Self { config, md_files })
     }
