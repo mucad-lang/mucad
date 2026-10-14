@@ -7,7 +7,7 @@ use microcad_lang_types::{ModelTree, ModelType, Value};
 use microcad_render::Renderer;
 
 use crate::{
-    ExportError, Exporter, ExporterParameters, Writer,
+    Export, ExportError, ExporterParameters, Writer,
     stl::{
         BinaryStlWriter, WriteBinaryStl,
         ascii::{AsciiStlWriter, WriteAsciiStl},
@@ -21,7 +21,7 @@ pub struct StlExporter {
     pub binary: bool,
 }
 
-impl Exporter for StlExporter {
+impl Export for StlExporter {
     fn export(
         &self,
         model: &ModelTree,

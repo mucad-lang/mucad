@@ -86,7 +86,7 @@ impl From<&std::path::Path> for ExporterParameters {
 }
 
 /// An `Exporter` exports a `ModelTree`.
-pub trait Exporter {
+pub trait Export {
     /// The export function.
     fn export(
         &self,

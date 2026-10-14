@@ -7,7 +7,7 @@ use microcad_core::{Bounds2D, Color, Scalar};
 use microcad_lang_types::{ModelTree, ModelType, Value};
 use microcad_render::Renderer;
 
-use crate::{ExportError, Exporter, ExporterParameters, Writer};
+use crate::{Export, ExportError, ExporterParameters, Writer};
 
 /// SVG Exporter.
 #[derive(Debug, Default)]
@@ -151,7 +151,7 @@ impl SvgExporter {
     }
 }
 
-impl Exporter for SvgExporter {
+impl Export for SvgExporter {
     fn export(
         &self,
         model: &ModelTree,

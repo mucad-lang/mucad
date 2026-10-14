@@ -9,7 +9,7 @@ use geo::{Translate, coord};
 use microcad_builtin::{BuiltinEvalContext, mu};
 use microcad_core::*;
 use microcad_export::{
-    Exporter, Writer,
+    Export, Writer,
     svg::{
         Background, Canvas, CenteredText, EdgeLengthMeasure, Grid, RadiusMeasure, SizeMeasure,
         SvgExporter, SvgTagAttribute, SvgWriter, Theme, WriteSvg, WriteSvgMapped,

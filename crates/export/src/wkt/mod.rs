@@ -14,7 +14,7 @@ use microcad_render::{
 };
 use wkt::ToWkt;
 
-use crate::{ExportError, Exporter, ExporterParameters};
+use crate::{Export, ExportError, ExporterParameters};
 
 /// WKT Exporter.
 pub struct WktExporter;
@@ -99,7 +99,7 @@ impl WriteWkt for GeometryTree {
     }
 }
 
-impl Exporter for WktExporter {
+impl Export for WktExporter {
     fn export(
         &self,
         model: &ModelTree,

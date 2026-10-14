@@ -6,7 +6,7 @@
 use microcad_builtin::{BuiltinEvalContext, mu};
 use microcad_core::Rect;
 use microcad_export::{
-    Exporter, Writer,
+    Export, Writer,
     stl::{AsciiStlWriter, StlExporter, WriteAsciiStl},
 };
 use microcad_lang_types::{ModelTree, Value, arguments, model::Element};
