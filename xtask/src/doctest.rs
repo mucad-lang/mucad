@@ -223,7 +223,7 @@ impl TestSuite {
 mod tests {
     use super::*;
 
-    fn test_case(header: &str) -> Result<Option<TestCase>, String> {
+    fn test_case_from_header(header: &str) -> Result<Option<TestCase>, String> {
         let code_block = mu::md::CodeBlock {
             header: header.parse().expect("A code block header"),
             code: "__mu::geo2d::Circle(radius = 1mm);".into(),
@@ -234,7 +234,9 @@ mod tests {
 
     #[test]
     fn from_code_block_defaults() {
-        let test_case = test_case("mu,circle").expect("Valid").expect("A test");
+        let test_case = test_case_from_header("mu,circle")
+            .expect("Valid")
+            .expect("A test");
         assert_eq!(test_case.name, "intro::basics::circle");
         assert!(matches!(
             test_case.mode,
@@ -245,15 +247,16 @@ mod tests {
 
     #[test]
     fn from_code_block_parameters() {
-        let test_case = test_case("mu,circle?mode=parse&result=fail")
+        let test_case = test_case_from_header("mu,circle?mode=parse&result=fail")
             .expect("Valid")
             .expect("A test");
         assert!(matches!(test_case.mode, TestMode::Parse));
         assert!(matches!(test_case.result, ExpectedTestResult::Fail));
 
-        let test_case = test_case("mu,circle?mode=export&path=circle.svg&resolution=0.5mm")
-            .expect("Valid")
-            .expect("A test");
+        let test_case =
+            test_case_from_header("mu,circle?mode=export&path=circle.svg&resolution=0.5mm")
+                .expect("Valid")
+                .expect("A test");
         let TestMode::Export { resolution, path } = test_case.mode else {
             panic!("An export test");
         };
@@ -261,7 +264,9 @@ mod tests {
         assert_eq!(path, Some("circle.svg".into()));
 
         for (header, mode) in [("mu,a?mode=todo", "todo"), ("mu,a?mode=compile", "compile")] {
-            let test_case = test_case(header).expect("Valid").expect("A test");
+            let test_case = test_case_from_header(header)
+                .expect("Valid")
+                .expect("A test");
             assert!(
                 matches!(
                     (&test_case.mode, mode),
@@ -275,8 +280,12 @@ mod tests {
     #[test]
     fn from_code_block_no_test() {
         // Unnamed code blocks and other languages are no tests.
-        assert!(test_case("mu").expect("Valid").is_none());
-        assert!(test_case("rust,circle").expect("Valid").is_none());
+        assert!(test_case_from_header("mu").expect("Valid").is_none());
+        assert!(
+            test_case_from_header("rust,circle")
+                .expect("Valid")
+                .is_none()
+        );
     }
 
     #[test]
@@ -286,7 +295,7 @@ mod tests {
             "mu,circle?result=maybe",
             "mu,circle?resolution=fine",
         ] {
-            let err = test_case(header).err().expect(header);
+            let err = test_case_from_header(header).expect_err(header);
             assert!(err.contains("intro::basics::circle"), "{err}");
         }
     }
