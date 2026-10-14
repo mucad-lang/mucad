@@ -316,7 +316,7 @@ pub mod debug {
     use super::*;
 
     #[builtin_fn(impure debug::assert(cond: Bool, message: String = "condition is false"))]
-    pub fn assert(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
+    pub fn assert(args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let cond = args.get_cond()?;
         let message: String = args.try_get("message")?;
 
@@ -325,7 +325,10 @@ pub mod debug {
             Ok(Value::None)
         } else {
             // assertion failed: stop eval and return Err.
-            Err(BuiltinError::AssertionFailed(message))
+            Err(BuiltinError::AssertionFailed {
+                message,
+                src_ref: ctx.src_ref,
+            })
         }
     }
 
@@ -334,7 +337,8 @@ pub mod debug {
         let cond = args.get_cond()?;
         let message: String = args.try_get("message")?;
         if !cond {
-            ctx.push_err(BuiltinError::Expected(message));
+            let src_ref = ctx.src_ref;
+            ctx.push_err(BuiltinError::Expected { message, src_ref });
         }
         Ok(Value::None)
     }

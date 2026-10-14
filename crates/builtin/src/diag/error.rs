@@ -3,7 +3,7 @@
 
 //! µcad built-in errors.
 
-use microcad_lang_base::BuiltinId;
+use microcad_lang_base::{BuiltinId, SrcRef, SrcReferrer};
 use microcad_lang_types::{TypeError, ValueError};
 use miette::Diagnostic;
 use thiserror::Error;
@@ -26,8 +26,12 @@ pub enum BuiltinError {
     #[error("Builtin error in '{name}': {message}")]
     ExecutionFailed { name: String, message: String },
 
-    #[error("Assertion failed: {0}")]
-    AssertionFailed(String),
+    #[error("Assertion failed: {message}")]
+    AssertionFailed {
+        message: String,
+        /// The call of the assertion.
+        src_ref: SrcRef,
+    },
 
     #[error(
         "list index out of bounds: index is {index}, but list length is {len} (valid indices: 0..{len})"
@@ -37,8 +41,12 @@ pub enum BuiltinError {
     #[error("Evaluation aborted. Panic: {0}")]
     Panic(String),
 
-    #[error("Expected {0}")]
-    Expected(String),
+    #[error("Expected {message}")]
+    Expected {
+        message: String,
+        /// The call of the expectation.
+        src_ref: SrcRef,
+    },
 
     #[error("Property not found: {name}")]
     PropertyNotFound { name: String },
@@ -50,4 +58,14 @@ pub enum BuiltinError {
     #[error("{0}")]
     #[diagnostic(severity(Error))]
     Custom(String),
+}
+
+impl SrcReferrer for BuiltinError {
+    fn src_ref(&self) -> SrcRef {
+        match self {
+            BuiltinError::AssertionFailed { src_ref, .. }
+            | BuiltinError::Expected { src_ref, .. } => *src_ref,
+            _ => SrcRef::none(),
+        }
+    }
 }

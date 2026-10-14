@@ -70,9 +70,9 @@ impl BuiltinFunction {
         (self.ty)()
     }
 
-    /// Call the function with a default context.
-    pub fn call_isolated(&self, args: Arguments) -> BuiltinResult<Value> {
-        (self.f)(args, &mut BuiltinEvalContext::default())
+    /// Call the function with matched arguments.
+    pub fn call(&self, args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult<Value> {
+        (self.f)(args, ctx)
     }
 }
 

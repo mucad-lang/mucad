@@ -3,7 +3,7 @@
 
 //! Evaluation error
 
-use microcad_builtin::BuiltinError;
+use microcad_builtin::{BuiltinAdvice, BuiltinError, BuiltinIssue, BuiltinWarning};
 use microcad_lang_base::{
     Identifier, Issue, LibraryId, Name, SrcRef, SrcReferrer, ToCompactString,
 };
@@ -25,7 +25,7 @@ pub enum EvalErrorKind {
     ValueError(#[from] ValueError),
 
     /// Builtin error
-    #[error("Builtin error: {0}")]
+    #[error(transparent)]
     BuiltinError(#[from] BuiltinError),
 
     #[error("Argument match error: {err}")]
@@ -169,6 +169,7 @@ impl SrcReferrer for EvalErrorKind {
             EvalErrorKind::BuiltinConstantExpected { src_ref, .. } => *src_ref,
             EvalErrorKind::CannotCallOperationWithoutWorkpiece { src_ref, .. } => *src_ref,
             EvalErrorKind::InputNotAvailable { src_ref } => *src_ref,
+            EvalErrorKind::BuiltinError(err) => err.src_ref(),
             _ => SrcRef::none(),
         }
     }
@@ -246,11 +247,19 @@ impl SrcReferrer for EvalError {
 
 #[derive(Debug, Error, Diagnostic)]
 #[non_exhaustive]
-pub enum EvalWarning {}
+pub enum EvalWarning {
+    /// A warning of a built-in, e.g. `__mu::debug::print`.
+    #[error(transparent)]
+    Builtin(#[from] BuiltinWarning),
+}
 
 #[derive(Debug, Error, Diagnostic)]
 #[non_exhaustive]
-pub enum EvalInfo {}
+pub enum EvalInfo {
+    /// An info of a built-in.
+    #[error(transparent)]
+    Builtin(#[from] BuiltinAdvice),
+}
 
 #[derive(Debug, Error, Diagnostic)]
 pub enum EvalIssue {
@@ -268,6 +277,16 @@ pub enum EvalIssue {
     #[error(transparent)]
     #[diagnostic(severity(Advice), code(eval::info))]
     Info(#[from] EvalInfo),
+}
+
+impl From<BuiltinIssue> for EvalIssue {
+    fn from(issue: BuiltinIssue) -> Self {
+        match issue {
+            BuiltinIssue::Err(err) => EvalIssue::Err(err.into()),
+            BuiltinIssue::Warn(warn) => EvalIssue::Warn(warn.into()),
+            BuiltinIssue::Info(info) => EvalIssue::Info(info.into()),
+        }
+    }
 }
 
 impl Issue for EvalIssue {

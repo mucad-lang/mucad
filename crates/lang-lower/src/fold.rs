@@ -3,7 +3,7 @@
 
 //! Fold constant values.
 
-use microcad_builtin::BuiltinItem;
+use microcad_builtin::{BuiltinEvalContext, BuiltinItem};
 use microcad_lang_base::SymbolId;
 use microcad_lang_types::{Arguments, Value};
 
@@ -60,7 +60,9 @@ impl<'a, 'source> Fold<'a, 'source> {
         };
 
         match call.args.into_arguments() {
-            Some(arguments) => builtin_fn.call_isolated(arguments).ok(),
+            Some(arguments) => builtin_fn
+                .call(arguments, &mut BuiltinEvalContext::default())
+                .ok(),
             None => None,
         }
     }

@@ -1,9 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_builtin::{
-    BuiltinEvalContext, BuiltinFunction, BuiltinItem, BuiltinOperation, BuiltinPrimitive,
-};
+use microcad_builtin::{BuiltinFunction, BuiltinItem, BuiltinOperation, BuiltinPrimitive};
 use microcad_lang_base::PushIssue;
 use microcad_lang_types::{ArgumentValueList, ModelTree};
 
@@ -19,12 +17,11 @@ impl Callable for BuiltinPrimitive {
         let multi_args = self.argument_multi_match(args).map_err(|err| {
             EvalError::argument_match(context.current_symbol_src_ref(), self.info.item_name(), err)
         })?;
+        let src_ref = context.current_symbol_src_ref();
         let mut models = Vec::new();
         for args in multi_args {
-            models.push(ModelTree::from((self.f)(
-                args,
-                &mut BuiltinEvalContext::default(),
-            )?));
+            let model = context.with_builtin_context(src_ref, |ctx| (self.f)(args, ctx))?;
+            models.push(ModelTree::from(model));
         }
 
         Ok(ModelTree::to_multiplicity(models).into())
@@ -39,7 +36,7 @@ impl Callable for BuiltinFunction {
             .argument_match(args)
             .map_err(|err| EvalError::argument_match(src_ref, name, err))?;
 
-        Ok(self.call_isolated(args)?)
+        Ok(context.with_builtin_context(src_ref, |ctx| self.call(args, ctx))?)
     }
 }
 
@@ -52,7 +49,7 @@ impl Callable for BuiltinOperation {
             .map_err(|err| EvalError::argument_match(src_ref, name, err))?;
         let mut models = Vec::new();
         for args in multi_args {
-            models.push((self.f)(args, &mut BuiltinEvalContext::default())?);
+            models.push(context.with_builtin_context(src_ref, |ctx| (self.f)(args, ctx))?);
         }
 
         Ok(ModelTree::to_multiplicity(models).into())
@@ -62,7 +59,8 @@ impl Callable for BuiltinOperation {
 impl Callable for BuiltinItem {
     fn call(&self, args: &ArgumentValueList, context: &mut EvalContext) -> EvalResult {
         match self {
-            BuiltinItem::Function(f) => f.call(args, context),
+            // The inherent `BuiltinFunction::call` takes matched arguments.
+            BuiltinItem::Function(f) => Callable::call(f, args, context),
             BuiltinItem::Primitive(p) => p.call(args, context),
             BuiltinItem::Operation(op) => op.call(args, context),
             BuiltinItem::Constant(_) | BuiltinItem::Module(_) => {

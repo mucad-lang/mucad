@@ -147,14 +147,15 @@ impl Eval for symbol::workbench::WorkbenchCall {
             Some(symbol::SymbolId::Builtin(builtin_id)) => {
                 let args = self.args.eval(context)?;
                 let item = context.builtins().get(*builtin_id);
-                let src_ref = context.current_symbol_src_ref();
+                // Errors of the built-in refer to this call.
+                let src_ref = self.src_ref;
                 match item {
                     Some(item) => context.scope(BuiltinItemFrame::new(src_ref, item), |ctx| {
                         item.call(&args, ctx)
                     }),
                     None => context.catch(EvalErrorKind::BuiltinNotFound {
                         name: builtin_id.to_string_with_ctx(context),
-                        src_ref: context.current_symbol_src_ref(),
+                        src_ref,
                     }),
                 }
             }

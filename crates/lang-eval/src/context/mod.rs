@@ -9,8 +9,10 @@ use microcad_lang_resolve::{
 };
 pub use stack::*;
 
-use microcad_builtin::BuiltinLibrary;
-use microcad_lang_base::{IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut};
+use microcad_builtin::{BuiltinEvalContext, BuiltinLibrary};
+use microcad_lang_base::{
+    IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut, SrcRef,
+};
 use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
 use crate::{
@@ -197,6 +199,10 @@ impl ContextScope for EvalContext {
     fn current_symbol_name(&self) -> Option<String> {
         self.stack.current_symbol_name()
     }
+
+    fn current_symbol_src_ref(&self) -> SrcRef {
+        self.stack.current_symbol_src_ref()
+    }
 }
 
 impl StackRead for EvalContext {
@@ -228,6 +234,22 @@ impl StackWrite for EvalContext {
 impl ModelTreeBuilderMut for EvalContext {
     fn model_tree_builder_mut(&mut self) -> &mut microcad_lang_types::model::ModelTreeBuilder {
         self.top_mut().model_tree_builder_mut()
+    }
+}
+
+/// Built-in calls
+impl EvalContext {
+    /// Run `f` with a context for a built-in called at `src_ref`
+    /// and keep the issues the built-in reports.
+    pub(crate) fn with_builtin_context<T>(
+        &mut self,
+        src_ref: SrcRef,
+        f: impl FnOnce(&mut BuiltinEvalContext) -> T,
+    ) -> T {
+        let mut builtin_context = BuiltinEvalContext::from(src_ref);
+        let result = f(&mut builtin_context);
+        self.append_issues(builtin_context.issues);
+        result
     }
 }
 

@@ -367,9 +367,10 @@ impl ContextScope for Stack {
     }
 
     fn current_symbol_src_ref(&self) -> SrcRef {
+        // `SrcRef`s are always equal, so `is_some` checks for a source code reference.
         self.current_call_scope()
-            .find(|frame| frame.current_symbol_src_ref() != SrcRef::none())
             .map(|frame| frame.current_symbol_src_ref())
+            .find(|src_ref| src_ref.is_some())
             .unwrap_or_default()
     }
 }

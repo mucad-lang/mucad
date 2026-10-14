@@ -115,7 +115,9 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
                             EvalError::argument_match(self, f.info.item_name(), err)
                         })?;
 
-                        Ok(FlowSignal::Yield(f.call_isolated(args)?))
+                        let value =
+                            context.with_builtin_context(self.src_ref, |ctx| f.call(args, ctx))?;
+                        Ok(FlowSignal::Yield(value))
                     }
                     Some(_) => context.catch(EvalErrorKind::SymbolCannotBeCalled {
                         path: self.path.to_string(),

@@ -5,7 +5,7 @@
 
 mod diag;
 mod item;
-pub use diag::{BuiltinAdvice, BuiltinError, BuiltinIssue, BuiltinResult};
+pub use diag::{BuiltinAdvice, BuiltinError, BuiltinIssue, BuiltinResult, BuiltinWarning};
 
 pub use item::{
     BuiltinConstant, BuiltinFunction, BuiltinItem, BuiltinModule, BuiltinOperation,
@@ -15,7 +15,7 @@ pub use item::{
 mod library;
 pub mod mu;
 pub use library::BuiltinLibrary;
-use microcad_lang_base::{DisplayWithCtx, IssueList, PushIssue};
+use microcad_lang_base::{DisplayWithCtx, IssueList, PushIssue, SrcRef};
 
 use derive_more::Debug;
 use microcad_lang_types::{Arguments, Model, ModelTree, Value, model};
@@ -28,8 +28,21 @@ pub struct BuiltinEvalContext<'a> {
     /// Current function being evaluated.
     pub current_fn: Option<&'a BuiltinFunction>,
 
+    /// Source code reference of the call, e.g. for the location of errors.
+    pub src_ref: SrcRef,
+
     /// Diagnostics.
     pub issues: IssueList<BuiltinIssue>,
+}
+
+/// A context for a call at `src_ref`, e.g. errors refer to the call.
+impl From<SrcRef> for BuiltinEvalContext<'_> {
+    fn from(src_ref: SrcRef) -> Self {
+        Self {
+            src_ref,
+            ..Default::default()
+        }
+    }
 }
 
 impl<'a> PushIssue<BuiltinIssue> for BuiltinEvalContext<'a> {

@@ -358,10 +358,9 @@ fn compile_std_alias_not_callable() {
         Ok((_, diags)) | Err(diags) => diags,
     };
 
-    let message = format!("{diags:?}");
-    assert!(diags.has_errors(), "{message}");
-    assert!(message.contains("cannot be called"), "{message}");
-    assert!(!message.contains("0x"), "{message}");
+    assert!(diags.has_errors(), "{diags:?}");
+    let message = diags.iter().next().expect("An error").report.to_string();
+    assert_eq!(message, "Symbol `__mu::math::PI` cannot be called.");
 }
 
 /// `std::assert` without message, also with `std::list::all_equal` for more than two values.
@@ -380,4 +379,36 @@ fn compile_std_assert_default_message() {
         format!("{diags:?}").contains("Assertion failed: condition is false"),
         "{diags:?}"
     );
+}
+
+/// A failing assertion refers to its call in the source code.
+#[test]
+fn compile_std_assert_location() {
+    let mut compiler = std_compiler();
+    let diags = match compiler.compile("a = 2cm;\nstd::assert(a == 3cm);\n") {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+
+    let diag = diags.iter().next().expect("An assertion error");
+    assert!(diag.src_ref.is_some(), "{diag:?}");
+    // Lines are counted from zero.
+    assert_eq!(diag.src_ref.line(), Some(1), "{diag:?}");
+}
+
+/// Issues of built-ins (e.g. a failed `expect`) are reported, evaluation continues.
+#[test]
+fn compile_builtin_issues() {
+    let mut compiler = compiler();
+    let (model, diags) = compiler
+        .compile(
+            "__mu::debug::expect(cond = 1 > 2, message = \"one to be larger\");\n\
+            __mu::geo2d::Circle(radius = 1mm);",
+        )
+        .expect("A model, despite the failed expectation");
+
+    assert_eq!(diags.error_count(), 1, "{diags:?}");
+    let diag = diags.iter().next().expect("An error");
+    assert_eq!(diag.report.to_string(), "Expected one to be larger");
+    assert_eq!(diag.src_ref.line(), Some(0), "{diag:?}");
+    assert!(display(&model).contains("Circle"), "{}", display(&model));
 }
