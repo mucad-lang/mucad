@@ -181,18 +181,37 @@ impl Compiler {
         f: &mut dyn std::fmt::Write,
         diagnostics: &Diagnostics,
     ) -> std::fmt::Result {
+        self.render_diag_with(f, diagnostics, &DiagRenderOptions::default())
+    }
+
+    /// Render diagnostics with `options`, e.g. without colors for a log file.
+    pub fn render_diag_with(
+        &self,
+        f: &mut dyn std::fmt::Write,
+        diagnostics: &Diagnostics,
+        options: &DiagRenderOptions,
+    ) -> std::fmt::Result {
         self.resolve_context
             .source_cache()
             .with_read(|source_cache| {
-                diagnostics.iter().try_for_each(|diag| {
-                    diag.render(f, source_cache, &DiagRenderOptions::default())
-                })
+                diagnostics
+                    .iter()
+                    .try_for_each(|diag| diag.render(f, source_cache, options))
             })
     }
 
     pub fn render_diag_to_string(&self, diagnostics: &Diagnostics) -> String {
+        self.render_diag_to_string_with(diagnostics, &DiagRenderOptions::default())
+    }
+
+    /// Render diagnostics with `options` into a string, e.g. without colors for a log file.
+    pub fn render_diag_to_string_with(
+        &self,
+        diagnostics: &Diagnostics,
+        options: &DiagRenderOptions,
+    ) -> String {
         let mut buff = String::new();
-        self.render_diag(&mut buff, diagnostics)
+        self.render_diag_with(&mut buff, diagnostics, options)
             .expect("format to string can't fail");
         buff
     }
