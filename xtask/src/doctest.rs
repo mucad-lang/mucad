@@ -204,7 +204,7 @@ impl TestCase {
             name,
             mode,
             result,
-            source: mu::Source::from(code_block.code.as_str()),
+            source: code_block.source(),
         }))
     }
 
@@ -246,6 +246,13 @@ impl TestCase {
                 }
             }
         }
+    }
+
+    /// The markdown of the test banner, which links to the test result.
+    pub fn banner(&self) -> String {
+        // The test name ends with the name of the code block.
+        let name = self.name.rsplit("::").next().unwrap_or(&self.name);
+        mu::md::CodeBlockHeader::test_banner_string(name)
     }
 
     fn test_result(&self, result: TestStatus, log_output: String) -> TestResult {
@@ -385,6 +392,7 @@ impl TestResultList {
                     },
                     code: result.log_output.trim_end().to_string(),
                     line_offset: 0,
+                    path: None,
                 });
                 md.add_section(Section::new(3, &result.name, [log]));
             });
@@ -418,6 +426,25 @@ impl TestSuite {
             name: mdbook.config.title().map(|title| title.to_string()),
             test_cases,
         })
+    }
+
+    /// Insert or update the test banner of each test in the markdown files of `mdbook`.
+    ///
+    /// Returns the paths of the changed markdown files.
+    pub fn set_banners(mdbook: &mut mu::md::MdBook) -> Vec<std::path::PathBuf> {
+        mdbook
+            .md_files
+            .iter_mut()
+            .filter_map(|(path, md)| {
+                md.set_test_banners(|code_block| {
+                    TestCase::from_code_block(path, code_block)
+                        .ok()
+                        .flatten()
+                        .map(|test_case| test_case.banner())
+                })
+                .then(|| path.clone())
+            })
+            .collect()
     }
 
     /// Run all tests with a compiler for `config` and print the status of each test,
@@ -475,6 +502,7 @@ mod tests {
             header: header.parse().expect("A code block header"),
             code: "__mu::geo2d::Circle(radius = 1mm);".into(),
             line_offset: 0,
+            path: None,
         };
         TestCase::from_code_block(std::path::Path::new("intro/basics.md"), &code_block)
     }
@@ -486,6 +514,7 @@ mod tests {
             header: header.parse().expect("A code block header"),
             code: code.into(),
             line_offset: 0,
+            path: None,
         };
         TestCase::from_code_block(std::path::Path::new("intro/basics.md"), &code_block)
             .expect("Valid")
@@ -673,5 +702,41 @@ mod tests {
         assert!(md.contains("Unresolved symbol: Unknown"), "{md}");
         // Logs are written without colors.
         assert!(!md.contains('\u{1b}'), "{md}");
+    }
+
+    #[test]
+    fn banner() {
+        assert_eq!(
+            test_case("mu,circle", CIRCLE).banner(),
+            "[![test](.test/circle.svg)](.test/circle.log)"
+        );
+    }
+
+    #[test]
+    fn set_banners() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::write(dir.path().join("book.toml"), "[book]\ntitle = \"Test\"\n").expect("toml");
+        std::fs::create_dir(dir.path().join("src")).expect("src");
+        let md = "# Test\n\n```mu,circle\nCircle(r = 1mm);\n```\n\n```mu\nno test\n```\n";
+        std::fs::write(dir.path().join("src/test.md"), md).expect("test.md");
+        let mut mdbook = mu::md::MdBook::load(dir.path()).expect("A book");
+
+        // The banner is inserted before the test, not before the unnamed code block.
+        assert_eq!(
+            TestSuite::set_banners(&mut mdbook),
+            [std::path::PathBuf::from("test.md")]
+        );
+        let text = mdbook.md_files[std::path::Path::new("test.md")].to_string();
+        assert_eq!(text.matches("[![test]").count(), 1, "{text}");
+        assert!(
+            text.contains("[![test](.test/circle.svg)](.test/circle.log)\n\n```mu,circle"),
+            "{text}"
+        );
+
+        // The test sources have their location.
+        let suite = TestSuite::from_mdbook(&mdbook).expect("A test suite");
+        assert!(suite.test_cases[0].source.path().is_some());
+
+        assert!(TestSuite::set_banners(&mut mdbook).is_empty());
     }
 }

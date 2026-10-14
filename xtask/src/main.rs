@@ -68,8 +68,19 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .write_doc(output_path.unwrap_or(std::path::PathBuf::from("target/docs/std")))
         }
         Commands::Doctest { mdbook_path } => {
-            let mdbook = mu::md::MdBook::load(mdbook_path)?;
-            let results = TestSuite::from_mdbook(&mdbook)?.run(&mu::DriverConfig::default());
+            use mu::md::WriteToFile;
+
+            let mut mdbook = mu::md::MdBook::load(&mdbook_path)?;
+            let test_suite = TestSuite::from_mdbook(&mdbook)?;
+
+            // Only markdown files with new or changed test banners are written.
+            let src_path = mdbook_path.join(mdbook.config.src_path());
+            for md_file in TestSuite::set_banners(&mut mdbook) {
+                eprintln!("Updated test banners in {}", md_file.display());
+                mdbook.md_files[&md_file].write_to_file(src_path.join(&md_file))?;
+            }
+
+            let results = test_suite.run(&mu::DriverConfig::default());
             println!("{results}");
 
             if !results.is_success() {
