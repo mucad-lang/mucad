@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{Diagnostics, IssueList, IssueResult, Source};
+use microcad_lang_base::{Diagnostics, IssueList, Source};
 use microcad_lang_parse::{Ast, ParseIssue, ast, parse};
 
 mod expression;
