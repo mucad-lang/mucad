@@ -7,15 +7,14 @@ similarly to a key-value store.
 [![test](.test/named_tuple_access.svg)](.test/named_tuple_access.log)
 
 ```mu,named_tuple_access
-use std::debug::assert_eq;
 
 tuple = (width = 10cm, depth = 10cm, volume = 1l);
 
-assert_eq([tuple.width, 10cm]);
-assert_eq([tuple.depth, 10cm]);
-assert_eq([tuple.volume, 1l]);
+std::assert(tuple.width == 10cm);
+std::assert(tuple.depth == 10cm);
+std::assert(tuple.volume == 1l);
 
-assert_eq([tuple, (width = 10cm, depth = 10cm, volume = 1l)]);
+std::assert(tuple == (width = 10cm, depth = 10cm, volume = 1l));
 ```
 
 ## Partially Named Tuples
@@ -40,7 +39,7 @@ The order of values have no consequences for equality.
 
 ```mu,unnamed_tuple_order
 // these tuples are equal
-std::debug::assert_eq([(1l, 10cm, 10cm²), (10cm, 10cm², 1l)]);
+std::assert((1l, 10cm, 10cm²) == (10cm, 10cm², 1l));
 ```
 
 ## Arbitrary Units
@@ -51,7 +50,7 @@ Different units of values have no consequences for equality.
 
 ```mu,unnamed_tuple_units
 // these tuples are equal
-std::debug::assert_eq([(1000cm3, 100mm, 0.01m²), (10cm, 100cm², 1l)]);
+std::assert((1000cm3, 100mm, 0.01m²) == (10cm, 100cm², 1l));
 ```
 
 ## Ambiguous Elements

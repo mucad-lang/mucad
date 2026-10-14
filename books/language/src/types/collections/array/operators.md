@@ -14,17 +14,16 @@ Arrays support the following operators.
 [![test](.test/array_operations.svg)](.test/array_operations.log)
 
 ```mu,array_operations
-use std::debug::assert_eq;
 
-assert_eq([[1, 2] + 2, [3, 4]]);
-assert_eq([[1, 2] - 2, [-1, 0]]);
-assert_eq([[-1.0, 2.0] * 2.0, [-2.0, 4.0]]);
-assert_eq([[1.0, 2.0] / 2.0, [0.5, 1.0]]);
-assert_eq([-[-1.0, 1.0], [1.0, -1.0]]);
+std::assert([1, 2] + 2 == [3, 4]);
+std::assert([1, 2] - 2 == [-1, 0]);
+std::assert([-1.0, 2.0] * 2.0 == [-2.0, 4.0]);
+std::assert([1.0, 2.0] / 2.0 == [0.5, 1.0]);
+std::assert(-[-1.0, 1.0] == [1.0, -1.0]);
 ```
 
 [![test](.test/array_operator_not.svg)](.test/array_operator_not.log)
 
 ```mu,array_operator_not
-std::debug::assert_eq([![true, false], [false, true]]);
+std::assert(![true, false] == [false, true]);
 ```

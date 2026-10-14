@@ -25,13 +25,13 @@ mod my_module {
 
     // public workbench
     pub sketch MySketch(text: String) {
-        std::debug::assert_eq([TEXT, text]);
+        std::assert(TEXT == text);
     }
 }
 
 my_module::MySketch("Hello my_module");
-std::debug::assert_eq([my_module::f(), "Hello my_module"]);
-std::debug::assert_eq([TEXT, "Hello"]);
+std::assert(my_module::f() == "Hello my_module");
+std::assert(TEXT == "Hello");
 ```
 
 Additionally, constant assignments are permitted in the *init code* of a
@@ -92,7 +92,7 @@ mod module {
     }
 }
 
-std::debug::assert_eq([module::another_module::a(), 5]);
+std::assert(module::another_module::a() == 5);
 module::Sketch();
 ```
 

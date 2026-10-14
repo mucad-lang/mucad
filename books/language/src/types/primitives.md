@@ -16,12 +16,12 @@ Boolean values can be combined with `or` and `and` [operators](../expressions/op
 
 ```mu,boolean
 std::assert([true or false, true]);
-std::assert_eq([true and false, false]);
+std::assert(true and false == false);
 
-std::debug::assert_eq([4 == 4, true]);
-std::debug::assert_eq([4 == 5, false]);
-std::debug::assert_eq([4 == 5 or 4 == 4, true]);
-std::debug::assert_eq([4 == 5 and 4 == 4, false]);
+std::assert((4 == 4) == true);
+std::assert((4 == 5) == false);
+std::assert((4 == 5 or 4 == 4) == true);
+std::assert((4 == 5 and 4 == 4) == false);
 ```
 
 ## Integer
@@ -42,7 +42,7 @@ i = 3;
 
 ```mu,types_primitive_string
 text = "Hello µcad!";
-std::debug::assert_eq([std::string::len(text), 11]);
+std::assert(std::string::len(text) == 11);
 
 // logging
 std::print(text);

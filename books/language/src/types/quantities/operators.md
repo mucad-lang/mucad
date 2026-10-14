@@ -10,10 +10,9 @@ where units remain flexible.
 [![test](.test/types_quantity_operators.svg)](.test/types_quantity_operators.log)
 
 ```mu,types_quantity_operators
-use std::debug::assert_eq;
 
-assert_eq([6cm * 2cm, 12cm²]);
-assert_eq([6cm / 2cm, 3.0]);
-assert_eq([6cm + 2cm, 80mm]);
-assert_eq([6cm - 2cm, 0.04m]);
+std::assert(6cm * 2cm == 12cm²);
+std::assert(6cm / 2cm == 3.0);
+std::assert(6cm + 2cm == 80mm);
+std::assert(6cm - 2cm == 0.04m);
 ```

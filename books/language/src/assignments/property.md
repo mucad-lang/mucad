@@ -12,7 +12,7 @@ sketch MySketch(radius: Length) {
     prop diameter = radius * 2;
     std::geo2d::Circle(radius);
 }
-std::debug::assert_eq([MySketch(5cm).diameter, 10cm])
+std::assert(MySketch(5cm).diameter == 10cm)
 ```
 
 ## Restrictions
@@ -50,7 +50,7 @@ sketch MySketch(radius: Length) {
     }
     std::geo2d::Circle(radius);
 }
-std::debug::assert_eq([MySketch(5cm).diameter, 10cm])
+std::assert(MySketch(5cm).diameter == 10cm)
 ```
 
 ### Not in initializers

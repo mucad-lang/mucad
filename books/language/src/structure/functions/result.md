@@ -10,7 +10,7 @@ fn square(x: Scalar) -> Scalar {
     x * x
 }
 
-std::debug::assert_eq([square(8.0), 64.0]);
+std::assert(square(8.0) == 64.0);
 ```
 
 You may also use `if` to decide between different results.
@@ -28,8 +28,8 @@ fn pow(x: Scalar, n: Integer) -> Scalar {
     }
 }
 
-std::debug::assert_eq([pow(8.0, 2), 64.0]);
-std::debug::assert_eq([pow(8.0, -2), 0.015625]);
+std::assert(pow(8.0, 2) == 64.0);
+std::assert(pow(8.0, -2) == 0.015625);
 ```
 
 Of course returning a value twice is not allowed.
@@ -46,8 +46,8 @@ fn pow(x: Scalar, n: Integer) -> Scalar {
     1.0 // error: without else this line would return a second value
 }
 
-std::debug::assert_eq([pow(8.0, 2), 64.0]);
-std::debug::assert_eq([pow(8.0, -2), 0.015625]);
+std::assert(pow(8.0, 2) == 64.0);
+std::assert(pow(8.0, -2) == 0.015625);
 ```
 
 ## Early Return
@@ -68,6 +68,6 @@ fn pow(x: Scalar, n: Integer) -> Scalar {
     1.0
 }
 
-std::debug::assert_eq([pow(8.0, 2), 64.0]);
-std::debug::assert_eq([pow(8.0, -2), 0.015625]);
+std::assert(pow(8.0, 2) == 64.0);
+std::assert(pow(8.0, -2) == 0.015625);
 ```

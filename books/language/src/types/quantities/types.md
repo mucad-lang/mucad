@@ -43,7 +43,7 @@ centimeters = 100cm;
 meters = 1m;
 inches = 39.37007874015748in;
 
-std::debug::assert_eq([millimeters, centimeters, meters, inches]);
+std::assert(std::list::all_equal([millimeters, centimeters, meters, inches]));
 ```
 
 ## Angle
@@ -60,7 +60,7 @@ degree_ = 180deg;
 grad = 200grad;
 turn = 0.5turns;
 
-std::debug::assert_eq([degree, degree_, grad, turn, radian]);
+std::assert(std::list::all_equal([degree, degree_, grad, turn, radian]));
 ```
 
 ## Area
@@ -86,7 +86,7 @@ square_centimeter = 1000cm2;
 square_meter = 0.1m²;
 square_inch = 155in²;
 
-std::debug::assert_eq([square_millimeter, square_centimeter]);
+std::assert(square_millimeter == square_centimeter);
 ```
 
 ## Volume
@@ -118,15 +118,13 @@ liter = 1.0l;
 centiliter = 100.0cl;
 milliliter = 1000.0ml;
 
-std::debug::assert_eq(
-    [
+std::assert(std::list::all_equal([
         cubic_millimeter,
         cubic_centimeter,
         cubic_meter,
         centiliter,
         milliliter,
-    ],
-);
+    ]));
 ```
 
 ## Density
@@ -150,5 +148,5 @@ gram = 1000.0g;
 kilogram = 1.0kg;
 pound = 2.204623lb;
 
-std::debug::assert_eq([gram, kilogram]);
+std::assert(gram == kilogram);
 ```

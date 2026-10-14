@@ -10,10 +10,10 @@ assign it to a constant `v` with the following code:
 ```mu,expression_multiply
 v = 5 * 4.0mm;
 
-std::debug::assert_eq([v, 20mm]);
+std::assert(v == 20mm);
 ```
 
-The result of this expression would be `20mm` like the test (see `assert_eq`)
+The result of this expression would be `20mm` like the test (see `std::assert`)
 proves.
 In this form, the computed value is not yet used for anything, so the examples
 above will not produce any visible output or effect.
@@ -31,24 +31,23 @@ the units of the operands in an expression like the following examples show.
 [![test](.test/expression_quantity.svg)](.test/expression_quantity.log)
 
 ```mu,expression_quantity
-use std::debug::assert_eq;
 
 // an integer multiplied with another one remains a integer
-assert_eq([5 * 4, 20]);
+std::assert(5 * 4 == 20);
 
 // a scalar multiplied with another scalar or integer results in a scalar
-assert_eq([5.5 * 4.5, 24.75]);
-assert_eq([5.1 * 4, 20.4]);
-assert_eq([5 * 4.1, 20.5]);
+std::assert(5.5 * 4.5 == 24.75);
+std::assert(5.1 * 4 == 20.4);
+std::assert(5 * 4.1 == 20.5);
 
 // a scalar multiplied with a length is a length
-assert_eq([5 * 4mm, 20mm]);
+std::assert(5 * 4mm == 20mm);
 
 // two length multiplied with each another is an area
-assert_eq([5mm * 4mm, 0.2cm²]);
+std::assert(5mm * 4mm == 0.2cm²);
 
 // dividing an area by a length is a length
-assert_eq([20mm² / 4mm, 5mm]);
+std::assert(20mm² / 4mm == 5mm);
 ```
 
 ### Boolean results
@@ -59,7 +58,7 @@ Boolean operations (e.g. `!`, `>`, `==` or `&&`) lead to a boolean result.
 
 ```mu,expression_boolean
 // Using logical operators lead to a boolean result
-std::debug::assert_eq([5mm > 4mm, true]);
+std::assert((5mm > 4mm) == true);
 ```
 
 Even when using them with models:
@@ -68,7 +67,7 @@ Even when using them with models:
 
 ```mu,expression_model?mode=todo
 // Using logical operators between models too
-std::debug::assert_eq([std::geo2d::Circle(1cm) == std::geo2d::Circle(10mm), true]);
+std::assert((std::geo2d::Circle(1cm) == std::geo2d::Circle(10mm)) == true);
 ```
 
 Only *Boolean expressions* (expressions with a boolean result) can be used to define conditions (see [if statement](../flow/conditions.md)).

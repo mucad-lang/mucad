@@ -21,6 +21,6 @@ fn f(n: Integer) {
 }
 
 // function calls with parameter (and result checks)
-std::debug::assert_eq([f(1), 2]);
-std::debug::assert_eq([f(2), 4]);
+std::assert(f(1) == 2);
+std::assert(f(2) == 4);
 ```

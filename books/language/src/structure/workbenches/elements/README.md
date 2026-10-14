@@ -58,12 +58,12 @@ use std::debug::*;
 // Call sketch with diameter.
 d = Wheel(diameter = 2cm);
 // Check radius property.
-assert_eq([d.radius, 1cm]);
+std::assert(d.radius == 1cm);
 
 // Call sketch with radius.
 r = Wheel(radius = 2cm);
 // Check diameter property.
-assert_eq([r.diameter, 4cm]);
+std::assert(r.diameter == 4cm);
 
 r - d;
 ```
