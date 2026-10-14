@@ -1,6 +1,8 @@
 // Copyright © 2026 The µcad authors <info@ucad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::Block;
+
 /// Column text alignment for Markdown tables.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Alignment {
@@ -177,5 +179,11 @@ impl std::fmt::Display for TableBuilder {
         }
 
         Ok(())
+    }
+}
+
+impl From<TableBuilder> for Block {
+    fn from(table: TableBuilder) -> Self {
+        Block::Table(table.to_string().lines().map(String::from).collect())
     }
 }
