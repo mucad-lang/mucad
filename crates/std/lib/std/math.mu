@@ -1,6 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub use __mu::math::PI;
 pub use __mu::math::X;
 pub use __mu::math::Y;
 pub use __mu::math::Z;

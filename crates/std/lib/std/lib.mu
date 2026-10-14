@@ -9,6 +9,8 @@ pub mod math;
 // Check a condition and stop with an error message if it does not hold.
 pub use __mu::debug::assert;
 
+pub use __mu::debug::print;
+
 /*
 pub use __mu::math;
 pub use __mu::print;
