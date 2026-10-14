@@ -58,12 +58,43 @@ pub enum ExpectedTestResult {
     Fail,
 }
 
+/// The status of a test after it has run.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum TestStatus {
+    /// The test succeeded as expected.
+    Ok,
+    /// The test has not been run.
+    Todo,
+    /// The test failed unexpectedly.
+    Fail,
+    /// The test failed as expected.
+    FailOk,
+    /// The test succeeded, but is expected to fail.
+    OkFail,
+}
+
+impl std::fmt::Display for TestStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let status = match self {
+            TestStatus::Ok => "ok",
+            TestStatus::Todo => "todo",
+            TestStatus::Fail => "fail",
+            TestStatus::FailOk => "fail_ok",
+            TestStatus::OkFail => "ok_fail",
+        };
+        write!(f, "{status}")
+    }
+}
+
 #[derive(Debug)]
 pub struct TestResult {
     name: String,
-    result: String,
+    result: TestStatus,
     log_output: String,
 }
+
+/// Directory, into which tests export their models.
+const OUTPUT_DIR: &str = "target/doctest";
 
 #[derive(Debug)]
 pub struct TestCase {
@@ -139,26 +170,83 @@ impl TestCase {
         }))
     }
 
-    pub fn run(&self) -> TestResult {
-        match &self.mode {
-            TestMode::Todo => todo!(),
-            TestMode::Parse => todo!(),
-            TestMode::Compile => {
-                let mut compiler = mu::Compiler::new();
-                let (model, diag) = compiler.compile(self.source.clone()).expect("No error");
+    /// Run the test with `compiler` and compare the outcome with the expected result.
+    pub fn run(&self, compiler: &mut mu::Compiler) -> TestResult {
+        let (succeeded, log_output) = match &self.mode {
+            TestMode::Todo => return self.test_result(TestStatus::Todo, String::new()),
+            TestMode::Parse => self.parse(),
+            TestMode::Compile => match self.compile(compiler) {
+                Ok((model, log)) => (true, format!("{log}\n-- Model --\n{model}")),
+                Err(log) => (false, log),
+            },
+            TestMode::Export { resolution, path } => match self.compile(compiler) {
+                Ok((model, log)) => match self.export(&model, resolution, path.as_deref()) {
+                    Ok(path) => (true, format!("{log}\nExported '{}'.", path.display())),
+                    Err(err) => (false, format!("{log}\n{err:?}")),
+                },
+                Err(log) => (false, log),
+            },
+        };
 
-                TestResult {
-                    name: self.name.clone(),
-                    result: String::from("ok"),
-                    log_output: format!(
-                        "{}\n-- Model --\n{}",
-                        compiler.render_diag_to_string(&diag),
-                        model
-                    ),
-                }
-            }
-            TestMode::Export { .. } => todo!(),
+        let status = match (succeeded, &self.result) {
+            (true, ExpectedTestResult::Ok) => TestStatus::Ok,
+            (false, ExpectedTestResult::Ok) => TestStatus::Fail,
+            (false, ExpectedTestResult::Fail) => TestStatus::FailOk,
+            (true, ExpectedTestResult::Fail) => TestStatus::OkFail,
+        };
+        self.test_result(status, log_output)
+    }
+
+    fn test_result(&self, result: TestStatus, log_output: String) -> TestResult {
+        TestResult {
+            name: self.name.clone(),
+            result,
+            log_output,
         }
+    }
+
+    /// Parse the source and return if it succeeded and the diagnostics.
+    fn parse(&self) -> (bool, String) {
+        let diags = match mu::parse(&self.source) {
+            Ok((_, issues)) | Err(issues) => issues.into_diagnostics(),
+        };
+        let log = diags
+            .render_to_string(&&self.source, &Default::default())
+            .unwrap_or_default();
+        (!diags.has_errors(), log)
+    }
+
+    /// Compile the source and return the model and the diagnostics.
+    ///
+    /// Like in the CLI, a model with errors is a failure.
+    fn compile(&self, compiler: &mut mu::Compiler) -> Result<(mu::ModelTree, String), String> {
+        match compiler.compile(self.source.clone()) {
+            Ok((model, diags)) if !diags.has_errors() => {
+                Ok((model, compiler.render_diag_to_string(&diags)))
+            }
+            Ok((_, diags)) | Err(diags) => Err(compiler.render_diag_to_string(&diags)),
+        }
+    }
+
+    /// Export the model into [`OUTPUT_DIR`] and return the path of the exported file.
+    ///
+    /// Without a `path`, the file is named after the test.
+    fn export(
+        &self,
+        model: &mu::ModelTree,
+        resolution: &mu::RenderResolution,
+        path: Option<&std::path::Path>,
+    ) -> mu::Result<std::path::PathBuf> {
+        let output_dir = std::path::Path::new(OUTPUT_DIR);
+        let input = output_dir.join(self.name.replace("::", "/"));
+        let output = path.map(|path| output_dir.join(path));
+
+        let exporter = mu::Exporter::new().with_resolution(resolution.clone());
+        let target = exporter.output_path(model, &input, output.as_deref())?;
+        if let Some(dir) = target.parent() {
+            std::fs::create_dir_all(dir).map_err(|err| mu::report(&err.to_string()))?;
+        }
+        exporter.export(model, &input, Some(&target))
     }
 }
 
@@ -208,12 +296,13 @@ impl TestSuite {
     }
 
     pub fn run(&self) -> TestResultList {
+        let mut compiler = mu::Compiler::new();
         TestResultList {
             name: self.name.clone(),
             results: self
                 .test_cases
                 .iter()
-                .map(|test_case| test_case.run())
+                .map(|test_case| test_case.run(&mut compiler))
                 .collect(),
         }
     }
@@ -230,6 +319,25 @@ mod tests {
             line_offset: 0,
         };
         TestCase::from_code_block(std::path::Path::new("intro/basics.md"), &code_block)
+    }
+
+    const CIRCLE: &str = "__mu::geo2d::Circle(radius = 1mm);";
+
+    /// Run a test of `code` with a compiler without standard library.
+    fn run(header: &str, code: &str) -> TestResult {
+        let code_block = mu::md::CodeBlock {
+            header: header.parse().expect("A code block header"),
+            code: code.into(),
+            line_offset: 0,
+        };
+        let mut compiler = mu::Compiler::from_config(&mu::DriverConfig {
+            no_std: true,
+            ..Default::default()
+        });
+        TestCase::from_code_block(std::path::Path::new("intro/basics.md"), &code_block)
+            .expect("Valid")
+            .expect("A test")
+            .run(&mut compiler)
     }
 
     #[test]
@@ -298,5 +406,42 @@ mod tests {
             let err = test_case_from_header(header).expect_err(header);
             assert!(err.contains("intro::basics::circle"), "{err}");
         }
+    }
+
+    #[test]
+    fn run_modes() {
+        assert_eq!(
+            run("mu,a?mode=todo", "this is no µcad").result,
+            TestStatus::Todo
+        );
+        assert_eq!(run("mu,a?mode=parse", CIRCLE).result, TestStatus::Ok);
+
+        let result = run("mu,a?mode=compile", CIRCLE);
+        assert_eq!(result.result, TestStatus::Ok, "{}", result.log_output);
+        assert!(result.log_output.contains("-- Model --"));
+
+        let dir = tempfile::tempdir().expect("temp dir");
+        let svg = dir.path().join("circle.svg");
+        let result = run(&format!("mu,a?mode=export&path={}", svg.display()), CIRCLE);
+        assert_eq!(result.result, TestStatus::Ok, "{}", result.log_output);
+        assert!(svg.is_file());
+    }
+
+    #[test]
+    fn run_expected_result() {
+        let parse_error = "__mu::geo2d::Circle(radius = 1mm;";
+        assert_eq!(run("mu,a?mode=parse", parse_error).result, TestStatus::Fail);
+        assert_eq!(
+            run("mu,a?mode=parse&result=fail", parse_error).result,
+            TestStatus::FailOk
+        );
+        assert_eq!(
+            run("mu,a?mode=compile&result=fail", "Unknown();").result,
+            TestStatus::FailOk
+        );
+        assert_eq!(
+            run("mu,a?mode=compile&result=fail", CIRCLE).result,
+            TestStatus::OkFail
+        );
     }
 }
