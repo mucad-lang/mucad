@@ -28,6 +28,12 @@ impl TestSuite {
         })
     }
 
+    /// Filter test cases by wildcard.
+    pub fn filter_test_cases(&mut self, wildcard: regex::Regex) {
+        self.test_cases
+            .retain(|test_case| wildcard.is_match(&test_case.name));
+    }
+
     /// Insert or update the test banner of each test in the markdown files of `mdbook`.
     ///
     /// Returns the paths of the changed markdown files.
@@ -49,7 +55,7 @@ impl TestSuite {
 
     /// Run all tests with a compiler for `config` and print the status of each test,
     /// like `cargo test`.
-    pub fn run(&self, config: &mu::DriverConfig) -> TestResultList {
+    pub fn run(&self, no_output: bool, config: &mu::DriverConfig) -> TestResultList {
         let mut compiler = mu::Compiler::from_config(config);
         eprintln!("running {} tests", self.test_cases.len());
 
@@ -67,8 +73,11 @@ impl TestSuite {
                     }
                 };
                 eprintln!("test {} ... {}", result.name, result.result);
-                if let Err(err) = test_case.write_result_files(&result) {
-                    eprintln!("Cannot write the result files of {}: {err}", result.name);
+
+                if !no_output {
+                    if let Err(err) = test_case.write_result_files(&result) {
+                        eprintln!("Cannot write the result files of {}: {err}", result.name);
+                    }
                 }
                 result
             })

@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn test_case_from_header(header: &str) -> Result<Option<TestCase>, String> {
@@ -161,7 +160,7 @@ fn run_suite() {
         test_case("mu,b?mode=compile&result=fail", "Unknown();"),
         test_case("mu,c?mode=todo", ""),
     ])
-    .run(&no_std());
+    .run(true, &no_std());
     assert!(results.is_success());
     assert_eq!(results.summary(), "1 ok, 1 fail_ok, 1 todo");
 
@@ -169,7 +168,7 @@ fn run_suite() {
         test_case("mu,a?mode=compile", CIRCLE),
         test_case("mu,b?mode=compile", "Unknown();"),
     ])
-    .run(&no_std());
+    .run(true, &no_std());
     assert!(!results.is_success());
     assert_eq!(results.summary(), "1 ok, 1 fail");
 }
@@ -193,7 +192,7 @@ fn results_to_md() {
             test_case("mu,b?mode=compile", "Unknown();"),
         ],
     }
-    .run(&no_std());
+    .run(true, &no_std());
     let md = results.to_md().to_string();
 
     assert!(md.starts_with("# Book"), "{md}");
@@ -263,7 +262,7 @@ fn write_result_files() {
         name: None,
         test_cases: vec![test_case],
     }
-    .run(&no_std());
+    .run(true, &no_std());
 
     let banner = std::fs::read(dir.path().join(".test/circle.svg")).expect("A banner image");
     let ok_image =

@@ -39,7 +39,15 @@ enum Commands {
     },
 
     /// Test an mdbook and update test results, if needed.
-    Doctest { mdbook_path: std::path::PathBuf },
+    Doctest {
+        /// Do not write any output files (no export, no banners and no logs)
+        #[arg(long)]
+        no_output: bool,
+        /// The path to the md book
+        mdbook_path: std::path::PathBuf,
+        /// An optional wildcard string to run a test subset.
+        wildcard: Option<String>,
+    },
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -67,20 +75,33 @@ fn main() -> Result<(), Box<dyn Error>> {
             mu::docgen::LibraryDocGenerator::new(&std_lib)
                 .write_doc(output_path.unwrap_or(std::path::PathBuf::from("target/docs/std")))
         }
-        Commands::Doctest { mdbook_path } => {
+        Commands::Doctest {
+            mdbook_path,
+            no_output,
+            wildcard,
+        } => {
             use mu::md::WriteToFile;
 
             let mut mdbook = mu::md::MdBook::load(&mdbook_path)?;
-            let test_suite = TestSuite::from_mdbook(&mdbook)?;
 
-            // Only markdown files with new or changed test banners are written.
-            let src_path = mdbook_path.join(mdbook.config.src_path());
-            for md_file in TestSuite::set_banners(&mut mdbook) {
-                eprintln!("Updated test banners in {}", md_file.display());
-                mdbook.md_files[&md_file].write_to_file(src_path.join(&md_file))?;
+            let mut test_suite = TestSuite::from_mdbook(&mdbook)?;
+            if let Some(wildcard) = wildcard
+                && let Ok(regex) = regex::Regex::new(&wildcard)
+            {
+                test_suite.filter_test_cases(regex);
             }
 
-            let results = test_suite.run(&mu::DriverConfig::default());
+            if !no_output {
+                // Only markdown files with new or changed test banners are written.
+                let src_path = mdbook_path.join(mdbook.config.src_path());
+
+                for md_file in TestSuite::set_banners(&mut mdbook) {
+                    eprintln!("Updated test banners in {}", md_file.display());
+                    mdbook.md_files[&md_file].write_to_file(src_path.join(&md_file))?;
+                }
+            }
+
+            let results = test_suite.run(no_output, &mu::DriverConfig::default());
             println!("{results}");
 
             if !results.is_success() {
