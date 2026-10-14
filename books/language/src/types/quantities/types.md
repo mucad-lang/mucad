@@ -73,7 +73,7 @@ An `Area` is a two-dimensional quantity. It is the result when multiplying two `
 a = 3cm;
 b = 2cm;
 area = a * b;
-std::debug::assert(area == 6cm²);
+std::assert(area == 6cm²);
 ```
 
 Here is an example of how to use different areal units:
@@ -102,7 +102,7 @@ c = 4mm;
 
 volume = a * b * c;
 
-std::debug::assert(volume == 24mm³);
+std::assert(volume == 24mm³);
 ```
 
 Here is an example for units:

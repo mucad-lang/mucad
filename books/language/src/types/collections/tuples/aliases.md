@@ -13,7 +13,7 @@ You can use the type alias `Color` to deal with color values.
 ```mu,types_named_tuple_color
 color: Color = (r = 100%, g = 50%, b = 25%, a = 100%);
 
-std::debug::assert(color.r == 100%);
+std::assert(color.r == 100%);
 ```
 
 ## Vec2
@@ -26,7 +26,7 @@ You can use the type alias `Vec2`.
 ```mu,types_named_tuple_vec2
 v: Vec2 = (x = 2.0, y = 3.0);
 
-std::debug::assert(v.x + v.y == 5.0);
+std::assert(v.x + v.y == 5.0);
 ```
 
 ## Vec3
@@ -39,5 +39,5 @@ You can use the type alias `Vec3`.
 ```mu,types_named_tuple_vec3
 v: Vec3 = (x = 2.0, y = 3.0, z = 4.0);
 
-std::debug::assert(v.x + v.y + v.z == 9.0);
+std::assert(v.x + v.y + v.z == 9.0);
 ```

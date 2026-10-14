@@ -7,7 +7,7 @@ Boolean is the result type of boolean expressions, which may be `true` or `false
 [![test](.test/types_primitive_bool.svg)](.test/types_primitive_bool.log)
 
 ```mu,types_primitive_bool
-std::debug::assert(true != false);
+std::assert(true != false);
 ```
 
 Boolean values can be combined with `or` and `and` [operators](../expressions/operators.md):
@@ -15,8 +15,8 @@ Boolean values can be combined with `or` and `and` [operators](../expressions/op
 [![test](.test/boolean.svg)](.test/boolean.log)
 
 ```mu,boolean
-std::debug::assert_eq([true or false, true]);
-std::debug::assert_eq([true and false, false]);
+std::assert([true or false, true]);
+std::assert_eq([true and false, false]);
 
 std::debug::assert_eq([4 == 4, true]);
 std::debug::assert_eq([4 == 5, false]);

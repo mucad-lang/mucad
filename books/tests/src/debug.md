@@ -13,13 +13,13 @@ that point.
 [![test](.test/verify_assert.svg)](.test/verify_assert.log)
 
 ```mu,verify_assert
-std::debug::assert(true, "You won't see this message");
+std::assert(true, "You won't see this message");
 ```
 
 [![test](.test/verify_assert_fail.svg)](.test/verify_assert_fail.log)
 
 ```mu,verify_assert_fail?result=fail
-std::debug::assert(false, "this assertion fails"); // error
+std::assert(false, "this assertion fails"); // error
 ```
 
 ## Error

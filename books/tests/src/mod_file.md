@@ -4,7 +4,7 @@
 
 ```mu,mod_external_root
 mod external;
-std::debug::assert(std::debug::is_valid("external::a"));
+std::assert(std::debug::is_valid("external::a"));
 ```
 
 [![test](.test/mod_external.svg)](.test/mod_external.log)

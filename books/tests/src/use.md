@@ -4,7 +4,7 @@
 
 ```mu,use_test
 // use debug from `std/module.µcad`
-use std::debug::assert;
+use std::assert;
 use std::debug::assert_valid;
 use std::debug::assert_invalid;
 assert(true);
