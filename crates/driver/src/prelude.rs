@@ -119,6 +119,13 @@ pub mod format {
 pub use crate::Formatter;
 pub use format::{FormatConfig, Formatted, format};
 
+/// Symbols from `microcad_render`
+pub mod render {
+    pub use microcad_render::*;
+}
+
+pub use render::RenderResolution;
+
 /// Symbols from `microcad_export`
 pub mod export {
     pub use microcad_export::*;

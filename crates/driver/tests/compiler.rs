@@ -312,3 +312,19 @@ fn compile_boolean_op_calls() {
         compile(&format!("{a} & {b};"))
     );
 }
+
+/// The source files of a compilation include those of the standard library.
+#[test]
+fn compile_source_files() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile("std::geo2d::Circle(radius = 1mm);")
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+
+    let files = compiler.source_files();
+    assert!(
+        files.iter().any(|path| path.ends_with("std/geo2d.mu")),
+        "{files:?}"
+    );
+}

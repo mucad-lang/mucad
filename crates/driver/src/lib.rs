@@ -33,6 +33,34 @@ pub fn report(s: &str) -> Report {
 
 pub use config::DriverConfig;
 
+/// Parse a render resolution from a string, e.g. a length (`0.05mm`) or a percentage (`200%`).
+///
+/// A percentage is relative to the default resolution: `200%` is twice as fine.
+pub fn resolution_from_str(s: &str) -> Result<prelude::RenderResolution> {
+    use mu::RenderResolution;
+    use mu::types::{QuantityType, Unit, math::IntoFloat};
+    use prelude as mu;
+
+    let invalid = || {
+        miette::miette!(
+            "Invalid resolution `{s}`, expected a length (e.g. `0.05mm`) or a percentage (e.g. `200%`)"
+        )
+    };
+
+    let Value::Quantity(q) = value_from_str(s)? else {
+        return Err(invalid());
+    };
+    let value: f64 = q.value.into_float();
+    match (q.quantity_type, q.unit) {
+        _ if value <= 0.0 => Err(invalid()),
+        (QuantityType::Length, _) => Ok(RenderResolution::new(value)),
+        (_, Unit::Percent) => Ok(RenderResolution::new(
+            RenderResolution::default().linear / value,
+        )),
+        _ => Err(invalid()),
+    }
+}
+
 /// Parse a value from a string containing a literal.
 pub fn value_from_str(s: &str) -> Result<Value> {
     use mu::lower::Desugar;

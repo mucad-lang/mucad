@@ -100,6 +100,17 @@ impl Compiler {
             })
     }
 
+    /// All source files the most recent compilation depends on, e.g. to watch them for changes.
+    ///
+    /// These are the compiled source, its file modules and the source files of the libraries
+    /// it uses, e.g. the standard library.
+    /// If the last compilation failed while loading, the files of the compilation before are returned.
+    pub fn source_files(&self) -> Vec<std::path::PathBuf> {
+        self.resolve_context
+            .lib_cache()
+            .with_read(|lib_cache| lib_cache.source_files(&mu::base::LibraryId::ROOT))
+    }
+
     /// Execute a closure with a reference to the AST, if present.
     pub fn with_ast<F, R>(&self, id: mu::HashId, f: F) -> Option<R>
     where

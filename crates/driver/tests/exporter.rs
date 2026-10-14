@@ -74,3 +74,48 @@ fn export_wrong_type() {
             .is_err()
     );
 }
+
+/// A resolution is a length or a percentage of the default resolution.
+#[test]
+fn resolution_from_str() {
+    let linear = |s: &str| {
+        microcad_driver::resolution_from_str(s)
+            .expect("A resolution")
+            .linear
+    };
+    // Values are parsed as fixed point numbers.
+    let near = |a: f64, b: f64| (a - b).abs() < 1e-6;
+
+    assert!(near(linear("0.05mm"), 0.05));
+    assert!(near(linear("2cm"), 20.0));
+    let default = mu::RenderResolution::default().linear;
+    assert!(near(linear("200%"), default / 2.0));
+
+    for invalid in ["2", "0mm", "1°", "foo"] {
+        assert!(
+            microcad_driver::resolution_from_str(invalid).is_err(),
+            "{invalid}"
+        );
+    }
+}
+
+/// A finer resolution renders more triangles.
+#[test]
+fn export_resolution() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let triangles = |resolution: &str| {
+        let path = dir.path().join(format!("{resolution}.stl"));
+        mu::Exporter::new()
+            .with_resolution(
+                microcad_driver::resolution_from_str(resolution).expect("A resolution"),
+            )
+            .export(&compile(PART), "model.mu", Some(&path))
+            .expect("An STL");
+        std::fs::read_to_string(path)
+            .expect("An STL file")
+            .matches("facet normal")
+            .count()
+    };
+
+    assert!(triangles("1mm") < triangles("0.1mm"));
+}

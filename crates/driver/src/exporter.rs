@@ -13,6 +13,7 @@ use mu::types::{ModelType, model::NodeExt};
 #[derive(Debug, Default)]
 pub struct Exporter {
     config: mu::ExportConfig,
+    resolution: mu::RenderResolution,
 }
 
 impl Exporter {
@@ -22,6 +23,12 @@ impl Exporter {
 
     pub fn with_config(mut self, config: mu::ExportConfig) -> Self {
         self.config = config;
+        self
+    }
+
+    /// Render with a resolution other than the default.
+    pub fn with_resolution(mut self, resolution: mu::RenderResolution) -> Self {
+        self.resolution = resolution;
         self
     }
 }
@@ -38,7 +45,7 @@ impl Exporter {
         output: Option<&std::path::Path>,
     ) -> mu::Result<std::path::PathBuf> {
         let path = self.output_path(model, input, output)?;
-        let exporter = exporter(&path)?;
+        let exporter = self.exporter(&path)?;
 
         let model_type = model.root().deduce_output_type();
         if model_type != exporter.model_type() {
@@ -73,12 +80,21 @@ impl Exporter {
     }
 }
 
-/// The exporter for the extension of `path`.
-fn exporter(path: &std::path::Path) -> mu::Result<Box<dyn Export>> {
-    let extension = path.extension().and_then(|ext| ext.to_str());
-    match extension {
-        Some("svg") => Ok(Box::new(SvgExporter::default())),
-        Some("stl") => Ok(Box::new(StlExporter::default())),
-        _ => Err(miette::miette!("No exporter for {path:?}")),
+impl Exporter {
+    /// The exporter for the extension of `path`.
+    fn exporter(&self, path: &std::path::Path) -> mu::Result<Box<dyn Export>> {
+        let resolution = self.resolution.clone();
+        let extension = path.extension().and_then(|ext| ext.to_str());
+        match extension {
+            Some("svg") => Ok(Box::new(SvgExporter {
+                resolution,
+                ..Default::default()
+            })),
+            Some("stl") => Ok(Box::new(StlExporter {
+                resolution,
+                ..Default::default()
+            })),
+            _ => Err(miette::miette!("No exporter for {path:?}")),
+        }
     }
 }
