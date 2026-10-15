@@ -261,69 +261,22 @@ pub enum EvalInfo {
     Builtin(#[from] BuiltinAdvice),
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Diagnostic)]
 pub enum EvalIssue {
     /// A eval error.
     #[error(transparent)]
+    #[diagnostic(code(eval::error))]
     Err(#[from] EvalError),
 
     /// A warning from the eval.
     #[error(transparent)]
+    #[diagnostic(code(eval::warning))]
     Warn(#[from] EvalWarning),
 
     /// An info from the eval.
     #[error(transparent)]
+    #[diagnostic(code(eval::info))]
     Info(#[from] EvalInfo),
-}
-
-impl EvalIssue {
-    /// The diagnostic of the error, warning or info.
-    fn inner(&self) -> &dyn Diagnostic {
-        match self {
-            EvalIssue::Err(err) => err.kind(),
-            EvalIssue::Warn(warn) => warn,
-            EvalIssue::Info(info) => info,
-        }
-    }
-}
-
-/// The code and severity of the issue with help and labels of the error, warning or info.
-impl Diagnostic for EvalIssue {
-    fn code<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
-        Some(Box::new(match self {
-            EvalIssue::Err(_) => "eval::error",
-            EvalIssue::Warn(_) => "eval::warning",
-            EvalIssue::Info(_) => "eval::info",
-        }))
-    }
-
-    fn severity(&self) -> Option<Severity> {
-        Some(Issue::severity(self))
-    }
-
-    fn help<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
-        self.inner().help()
-    }
-
-    fn url<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
-        self.inner().url()
-    }
-
-    fn source_code(&self) -> Option<&dyn miette::SourceCode> {
-        self.inner().source_code()
-    }
-
-    fn labels(&self) -> Option<Box<dyn Iterator<Item = miette::LabeledSpan> + '_>> {
-        self.inner().labels()
-    }
-
-    fn related<'a>(&'a self) -> Option<Box<dyn Iterator<Item = &'a dyn Diagnostic> + 'a>> {
-        self.inner().related()
-    }
-
-    fn diagnostic_source(&self) -> Option<&dyn Diagnostic> {
-        self.inner().diagnostic_source()
-    }
 }
 
 impl From<BuiltinIssue> for EvalIssue {
@@ -346,6 +299,14 @@ impl Issue for EvalIssue {
             EvalIssue::Err(_) => Severity::Error,
             EvalIssue::Warn(_) => Severity::Warning,
             EvalIssue::Info(_) => Severity::Advice,
+        }
+    }
+
+    fn diagnostic(&self) -> &dyn Diagnostic {
+        match self {
+            Self::Err(err) => err.kind(),
+            Self::Warn(warn) => warn,
+            Self::Info(info) => info,
         }
     }
 }

@@ -210,7 +210,7 @@ impl<T: Artifact, I: Issue> StageResult<T, I> {
     }
 }
 
-impl<T: Artifact, I: Issue + Clone + Into<miette::Report>> ToDiagnostics for StageResult<T, I> {
+impl<T: Artifact, I: Issue + Clone> ToDiagnostics for StageResult<T, I> {
     fn to_diagnostics(&self) -> Diagnostics {
         match self.issues() {
             Some(issues) => issues.to_diagnostics(),

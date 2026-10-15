@@ -52,6 +52,14 @@ impl Issue for ParseIssue {
             Self::Info(_) => Severity::Advice,
         }
     }
+
+    fn diagnostic(&self) -> &dyn Diagnostic {
+        match self {
+            Self::Err(err) => err,
+            Self::Warn(warn) => warn,
+            Self::Info(info) => info,
+        }
+    }
 }
 
 impl SrcReferrer for ParseIssue {

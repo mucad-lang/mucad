@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::{GetSourceByHash, SrcReferrer, diag::*};
+use crate::{GetSourceByHash, diag::*};
 
 use miette::Severity;
 use std::io::IsTerminal;
@@ -122,9 +122,9 @@ impl Diagnostics {
         lines
     }
 
-    pub fn push<I: Issue + SrcReferrer + Into<miette::Report>>(&mut self, issue: I) {
-        let src_ref = issue.src_ref(); // Extract the metadata
-        let report = issue.into(); // Convert to miette::Report
+    pub fn push<I: Issue>(&mut self, issue: I) {
+        let src_ref = issue.src_ref();
+        let report = miette::Report::new(issue_diagnostic::IssueDiagnostic(issue));
 
         match report.severity() {
             Some(Severity::Error) | None => self.error_count += 1,

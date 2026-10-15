@@ -6,6 +6,7 @@
 mod diagnostic;
 mod diagnostics;
 mod issue;
+mod issue_diagnostic;
 
 pub use diagnostic::Diagnostic;
 pub use diagnostics::{DiagRenderOptions, Diagnostics};
@@ -16,7 +17,7 @@ pub trait ToDiagnostics {
     fn to_diagnostics(&self) -> Diagnostics;
 }
 
-impl<I: Issue + Clone + Into<miette::Report>> ToDiagnostics for IssueList<I> {
+impl<I: Issue + Clone> ToDiagnostics for IssueList<I> {
     fn to_diagnostics(&self) -> Diagnostics {
         let mut diags = Diagnostics::new();
         self.iter().for_each(|issue| {

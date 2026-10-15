@@ -16,6 +16,6 @@ sketch A(a: Length) {
         a = 2.0 * b; // ok
     }
 
-    init(a: Length) { // warning: lower::duplicated_default_initializer
+    init(a: Length) { // error: lower::duplicated_default_initializer
     }
 }

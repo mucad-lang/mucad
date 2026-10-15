@@ -8,19 +8,29 @@
 //! and accumulates them inside an [`IssueList`] without interrupting the
 //! primary evaluation flow.
 
-use miette::{Report, Severity};
+use miette::{Diagnostic, Severity};
 
 use crate::SrcReferrer;
 
 /// A trait to define an issue.
 pub trait Issue:
-    From<Self::Err> + From<Self::Warn> + From<Self::Info> + SrcReferrer + Into<Report>
+    From<Self::Err>
+    + From<Self::Warn>
+    + From<Self::Info>
+    + SrcReferrer
+    + Diagnostic
+    + Send
+    + Sync
+    + 'static
 {
     type Err;
     type Warn;
     type Info;
 
     fn severity(&self) -> Severity;
+
+    /// The diagnostic of the error, warning or info with its help and labels.
+    fn diagnostic(&self) -> &dyn Diagnostic;
 }
 
 /// An issue list contains issues (errors, warnings, infos) and tracks error and warning count.
@@ -131,7 +141,7 @@ impl<I: Issue> PushIssue<I> for IssueList<I> {
     /// Push an issue and count it by its severity.
     fn push_issue(&mut self, issue: impl Into<I>) {
         let issue = issue.into();
-        match issue.severity() {
+        match Issue::severity(&issue) {
             Severity::Error => self.err_count += 1,
             Severity::Warning => self.warn_count += 1,
             Severity::Advice => (),
