@@ -27,7 +27,7 @@ pub use primitives::*;
 pub use reflect::*;
 pub use size::*;
 
-pub use geo::ConvexHull;
+pub use geo::{Buffer, ConvexHull};
 
 /// Trait to return all points of 2D geometry.
 pub trait FetchPoints2D {

@@ -41,24 +41,6 @@ impl Geometry2D {
         lhs.boolean_op(&rhs, op.into())
     }
 
-    /// Apply hull operation.
-    pub fn hull(&self) -> Self {
-        match self {
-            Geometry2D::LineString(line_string) => Geometry2D::Polygon(line_string.convex_hull()),
-            Geometry2D::MultiLineString(multi_line_string) => {
-                Geometry2D::Polygon(multi_line_string.convex_hull())
-            }
-            Geometry2D::Polygon(polygon) => Geometry2D::Polygon(polygon.convex_hull()),
-            Geometry2D::MultiPolygon(multi_polygon) => {
-                Geometry2D::Polygon(multi_polygon.convex_hull())
-            }
-            Geometry2D::Line(line) => Geometry2D::Polygon(
-                LineString::new(vec![line.0.into(), line.1.into()]).convex_hull(),
-            ),
-            Geometry2D::Collection(collection) => Geometry2D::Polygon(collection.hull()),
-        }
-    }
-
     /// Returns true if this geometry fills an area (e.g. like a polygon or circle).
     pub fn is_areal(&self) -> bool {
         !matches!(
