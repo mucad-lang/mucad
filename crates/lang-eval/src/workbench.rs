@@ -111,10 +111,13 @@ impl Eval<ArgumentValue> for symbol::workbench::Argument {
                 let value: Value = expr.eval(context)?;
                 ArgumentValue::new(value, None)
             }
-            symbol::workbench::Argument::Named { name, expr, .. }
-            | symbol::workbench::Argument::AutoNamed { name, expr } => {
+            symbol::workbench::Argument::Named { name, expr, .. } => {
                 let value: Value = expr.eval(context)?;
                 ArgumentValue::new(value, Some(name.clone()))
+            }
+            symbol::workbench::Argument::AutoNamed { name, expr } => {
+                let value: Value = expr.eval(context)?;
+                ArgumentValue::inline(name.clone(), value)
             }
         })
     }
@@ -277,11 +280,19 @@ impl Callable for symbol::Workbench {
 
         use crate::ArgumentMatch;
 
-        let matching_inits: Vec<_> = self
+        // Only the inits with the highest match priority are candidates,
+        // e.g. `Circle(radius)` matches the parameter `radius` by name, not `diameter` by type.
+        let matches: Vec<_> = self
             .signature
             .inits
             .iter()
-            .filter(|iter| iter.is_matching(args))
+            .filter_map(|init| init.match_priority(args).map(|priority| (init, priority)))
+            .collect();
+        let best = matches.iter().map(|(_, priority)| *priority).max();
+        let matching_inits: Vec<_> = matches
+            .iter()
+            .filter(|(_, priority)| Some(*priority) == best)
+            .map(|(init, _)| *init)
             .collect();
 
         match matching_inits.len() {

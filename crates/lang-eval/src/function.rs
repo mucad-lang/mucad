@@ -48,9 +48,11 @@ impl Eval<ArgumentValue> for symbol::function::Argument {
             symbol::function::Argument::Unnamed(expr) => {
                 ArgumentValue::new(expr.eval(context)?.into_value(), None)
             }
-            symbol::function::Argument::Named { name, expr, .. }
-            | symbol::function::Argument::AutoNamed { name, expr } => {
+            symbol::function::Argument::Named { name, expr, .. } => {
                 ArgumentValue::new(expr.eval(context)?.into_value(), Some(name.clone()))
+            }
+            symbol::function::Argument::AutoNamed { name, expr } => {
+                ArgumentValue::inline(name.clone(), expr.eval(context)?.into_value())
             }
         })
     }

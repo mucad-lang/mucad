@@ -10,7 +10,7 @@ use microcad_lang_base::{Identifier, IdentifierList};
 use microcad_lang_resolve::library::symbol::{
     Function, ParameterList, function::FunctionSignature, workbench::Init,
 };
-use microcad_lang_types::{ArgumentValueList, Arguments, CallSignature, Tuple};
+use microcad_lang_types::{ArgumentValue, ArgumentValueList, Arguments, CallSignature, Tuple};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -78,18 +78,36 @@ pub trait ArgumentMatch {
             Some(parameters) => {
                 Matcher::new(&parameters, &self.default_values()).match_arguments(arguments)
             }
-            // A variadic function simply returns the arguments as tuple.
-            None => Ok(Arguments::from(Tuple {
-                named: arguments
-                    .iter()
-                    .filter_map(|arg| arg.id.as_ref().map(|id| (id.clone(), arg.value.clone())))
-                    .collect(),
-                positional: arguments
-                    .iter()
-                    .filter(|arg| arg.id.is_none())
-                    .map(|arg| arg.value.clone())
-                    .collect(),
-            })),
+            // A variadic function simply returns the arguments as tuple,
+            // arguments with inline identifiers are named.
+            None => {
+                let name =
+                    |arg: &ArgumentValue| arg.id.as_ref().or(arg.inline_id.as_ref()).cloned();
+                Ok(Arguments::from(Tuple {
+                    named: arguments
+                        .iter()
+                        .filter_map(|arg| name(arg).map(|id| (id, arg.value.clone())))
+                        .collect(),
+                    positional: arguments
+                        .iter()
+                        .filter(|arg| name(arg).is_none())
+                        .map(|arg| arg.value.clone())
+                        .collect(),
+                }))
+            }
+        }
+    }
+
+    /// The priority of the match of `arguments`, higher is better, or `None` if they don't match.
+    ///
+    /// Inline identifiers (e.g. `x` in `f(x)`) matching a parameter by name have priority over
+    /// matching by type, e.g. to choose between overloaded initializers.
+    fn match_priority(&self, arguments: &ArgumentValueList) -> Option<usize> {
+        match self.call_signature().parameters {
+            Some(parameters) => Matcher::new(&parameters, &self.default_values())
+                .match_priority(arguments)
+                .ok(),
+            None => Some(0),
         }
     }
 

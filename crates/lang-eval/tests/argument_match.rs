@@ -91,6 +91,14 @@ fn assert_eq() -> Signature {
     }
 }
 
+/// `(x: Integer, y: Integer)`
+fn x_y() -> Signature {
+    Signature {
+        signature: call_signature!(x: Type::Integer, y: Type::Integer),
+        default: tuple!(),
+    }
+}
+
 /// `(*)`
 fn variadic() -> Signature {
     Signature {
@@ -146,6 +154,15 @@ fn argument_match(
     => Ok(arguments!(any = mm(3.0), length = mm(2.0))); "positional any")]
 #[test_case(scalar(), vec![argument_value!(1)]
     => Ok(arguments!(x = 1)); "positional integer for scalar")]
+// Inline identifiers, e.g. `x` in `f(x)`
+#[test_case(x_y(), vec![ArgumentValue::inline("y", 2), argument_value!(1)]
+    => Ok(arguments!(x = 1, y = 2)); "inline identifier before type")]
+#[test_case(assert_eq(), vec![ArgumentValue::inline("v", mm(20.0)), argument_value!(mm(20.0))]
+    => Ok(arguments!(a = mm(20.0), b = mm(20.0), message = "default")); "inline identifier without parameter")]
+#[test_case(foo_foz(), vec![ArgumentValue::inline("f", 10), argument_value!(foz = 1)]
+    => Ok(arguments!(foo = 10, foz = 1)); "inline identifier is no short name")]
+#[test_case(circle(), vec![ArgumentValue::inline("radius", 1.0)]
+    => Ok(arguments!(radius = 1.0)); "inline identifier type checked later")]
 // Default values
 #[test_case(assert(), vec![argument_value!(true)]
     => Ok(arguments!(cond = true, message = "default")); "default")]
@@ -191,6 +208,19 @@ fn match_variadic() {
     );
 }
 
+/// A variadic signature names arguments with inline identifiers.
+#[test]
+fn match_variadic_inline() {
+    let arguments = vec![ArgumentValue::inline("x", 1.0)];
+    assert_eq!(
+        argument_match(variadic(), arguments),
+        Ok(Arguments::from(Tuple {
+            positional: vec![],
+            named: vec![(Identifier::no_ref("x"), 1.0.into())],
+        }))
+    );
+}
+
 /// A list argument for a non-list parameter results in one match per element.
 #[test]
 fn multi_match_cartesian_product() {
@@ -230,4 +260,21 @@ fn multi_match_cartesian_product() {
 fn multi_match_variadic() {
     let args: ArgumentValueList = [argument_value!(1.0)].into_iter().collect();
     assert!(variadic().argument_multi_match(&args).is_err());
+}
+
+/// Inline identifiers matching a parameter by name have priority over matching by type,
+/// e.g. to choose between overloaded initializers.
+#[test]
+fn match_priority() {
+    let diameter = Signature {
+        signature: call_signature!(diameter: Type::length()),
+        default: tuple!(),
+    };
+    let arguments: ArgumentValueList = [ArgumentValue::inline("radius", mm(1.0))]
+        .into_iter()
+        .collect();
+
+    assert_eq!(circle().match_priority(&arguments), Some(1));
+    assert_eq!(diameter.match_priority(&arguments), Some(0));
+    assert_eq!(foo_foz().match_priority(&arguments), None);
 }
