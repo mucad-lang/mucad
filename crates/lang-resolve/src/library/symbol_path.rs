@@ -7,6 +7,14 @@ pub struct SymbolAbsPath {
     pub parts: Vec<Identifier>,
 }
 
+/// The path with `::` as separator, e.g. `std::geo2d::Circle`.
+impl std::fmt::Display for SymbolAbsPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let parts: Vec<_> = self.parts.iter().map(|part| part.as_str()).collect();
+        write!(f, "{}", parts.join("::"))
+    }
+}
+
 impl SymbolAbsPath {
     /// Returns an iterator over references to the path components (from root to leaf).
     pub fn iter(&self) -> std::slice::Iter<'_, Identifier> {

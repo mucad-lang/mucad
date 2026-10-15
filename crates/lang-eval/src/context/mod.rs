@@ -11,7 +11,8 @@ pub use stack::*;
 
 use microcad_builtin::{BuiltinEvalContext, BuiltinLibrary};
 use microcad_lang_base::{
-    IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut, SrcRef,
+    ExternalId, IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut, SrcRef,
+    SymbolId, ToCompactString,
 };
 use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
@@ -189,6 +190,36 @@ impl LookUpName for EvalContext {
     fn look_up_built_in_name(&self, builtin_id: &microcad_builtin::BuiltinId) -> Option<Name> {
         self.builtins.look_up_built_in_name(builtin_id)
     }
+
+    fn look_up_item_name(&self, item_id: &SymbolNodeId) -> Option<Name> {
+        self.symbol_name(&SymbolId::Item(*item_id))
+    }
+
+    fn look_up_external_item_name(&self, external_id: &ExternalId) -> Option<Name> {
+        self.symbol_name(&SymbolId::External(external_id.clone()))
+    }
+}
+
+/// Symbol names
+impl EvalContext {
+    /// The full name of a symbol, e.g. `std::geo2d::Circle` or `__mu::debug::assert`.
+    ///
+    /// Items refer to the current library.
+    pub fn symbol_name(&self, id: &SymbolId) -> Option<Name> {
+        use microcad_lang_resolve::SymbolNodeExt;
+
+        let (lib_id, node_id) = match id {
+            SymbolId::Builtin(builtin_id) => {
+                return self.builtins.look_up_built_in_name(builtin_id);
+            }
+            SymbolId::Local(name) => return Some(name.clone()),
+            SymbolId::Item(node_id) => (*self.lib_id.as_ref()?, *node_id),
+            SymbolId::External(external_id) => (external_id.lib_id, external_id.id),
+        };
+        let lib = self.library(&lib_id)?;
+        let path = SymbolNodeRef::new(node_id, &lib.arena).abs_path();
+        Some(path.to_compact_string())
+    }
 }
 
 impl ContextScope for EvalContext {
@@ -196,8 +227,20 @@ impl ContextScope for EvalContext {
         self.stack.look_up_local(name)
     }
 
+    /// The full name of the called symbol, e.g. `std::geo2d::Circle`.
     fn current_symbol_name(&self) -> Option<String> {
-        self.stack.current_symbol_name()
+        self.stack
+            .current_call_scope()
+            .find_map(|frame| match frame {
+                StackFrame::Call(call) => Some(
+                    call.path
+                        .symbol_id()
+                        .and_then(|id| self.symbol_name(id))
+                        .map(|name| name.to_string())
+                        .unwrap_or_else(|| call.path.to_string()),
+                ),
+                frame => frame.current_symbol_name(),
+            })
     }
 
     fn current_symbol_src_ref(&self) -> SrcRef {

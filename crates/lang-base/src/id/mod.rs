@@ -128,7 +128,10 @@ impl<Ctx: LookUpName> DisplayWithCtx<Ctx> for SymbolId {
             SymbolId::Builtin(builtin_id) => builtin_id.fmt_with_ctx(f, ctx),
             SymbolId::Local(name) => write!(f, "@Local({name})"),
             SymbolId::Item(node_id) => node_id.fmt_with_ctx(f, ctx),
-            SymbolId::External(_) => todo!(),
+            SymbolId::External(external_id) => match ctx.look_up_external_item_name(external_id) {
+                Some(name) => write!(f, "{name}[{external_id}]"),
+                None => write!(f, "!{external_id}"),
+            },
         }
     }
 }

@@ -432,3 +432,17 @@ fn compile_abbreviated_arguments() {
         "{diags:?}"
     );
 }
+
+/// Errors name the called symbol with its full path.
+#[test]
+fn compile_symbol_name() {
+    let mut compiler = std_compiler();
+    let diags = match compiler.compile("std::geo2d::Circle(foo = 1mm);") {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+    let message = diags.iter().next().expect("An error").report.to_string();
+    assert_eq!(
+        message,
+        "Workbench `std::geo2d::Circle` cannot find initialization for those arguments"
+    );
+}
