@@ -3,7 +3,7 @@
 
 //! A resolve error
 
-use microcad_lang_base::{HashId, SrcRef, SrcReferrer, element::Case};
+use microcad_lang_base::{HashId, SrcRef, SrcReferrer};
 
 use microcad_lang_lower::LowerError;
 use microcad_lang_parse::ParseError;
@@ -32,14 +32,6 @@ pub enum ResolveErrorKind {
     #[error("{0}")]
     Manifest(#[from] ManifestError),
 
-    #[error("Wrong case")]
-    #[diagnostic(severity = "warning")]
-    WrongCase {
-        expected: Case,
-        actual: Case,
-        #[label]
-        src_ref: SrcRef,
-    },
     #[error("Type mismatch: {specified} != {actual}")]
     TypeMismatch {
         specified: Type,
@@ -179,7 +171,6 @@ impl SrcReferrer for ResolveError {
     fn src_ref(&self) -> SrcRef {
         use ResolveErrorKind::*;
         match &*self.0 {
-            WrongCase { src_ref, .. } => *src_ref,
             TypeMismatch {
                 specified_src_ref, ..
             } => *specified_src_ref,

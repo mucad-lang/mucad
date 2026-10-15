@@ -12,7 +12,7 @@ use crate::{
     Manifest, ResolveError, ResolveErrorKind, ResolveLibraryContext, ResolveResult,
     library::{Symbol, SymbolNodeId},
     locate,
-    resolve::visitor::ResolveVisitor,
+    resolve::{case_check::CaseCheck, visitor::ResolveVisitor},
 };
 
 impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
@@ -31,7 +31,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         };
 
         if id.is_some() {
-            ResolveVisitor::new(self).visit();
+            self.resolve();
         }
         Ok(id)
     }
@@ -48,9 +48,17 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         let id = self.load_source_symbol(source, Some(root))?;
 
         if id.is_some() {
-            ResolveVisitor::new(self).visit();
+            self.resolve();
         }
         Ok(id)
+    }
+
+    /// Resolve the paths of the loaded library, then check the case of its symbol names.
+    fn resolve(&mut self) {
+        ResolveVisitor::new(self).visit();
+        CaseCheck::check(self.lib())
+            .into_iter()
+            .for_each(|warning| self.push_warn(warning));
     }
 
     /// Load a single file as library.

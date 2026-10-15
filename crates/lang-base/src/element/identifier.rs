@@ -85,50 +85,14 @@ impl Identifier {
             && str.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
     }
 
-    /// Detect if the identifier matches a certain case.
-    pub fn detect_case(&self) -> Case {
-        let s = &self.0.value;
-
-        if s.is_empty() {
-            return Case::Invalid;
-        }
-
-        if s.len() == 1 {
-            let c = s.chars().next().expect("At least one char");
-            if c.is_ascii_uppercase() {
-                return Case::UpperSingleChar;
-            } else {
-                return Case::Invalid;
-            }
-        }
-
-        let has_underscore = s.contains('_');
-
-        if has_underscore {
-            if s.chars().all(|c| c.is_ascii_uppercase() || c == '_') {
-                return Case::UpperSnake;
-            } else if s.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
-                return Case::LowerSnake;
-            } else {
-                return Case::Invalid;
-            }
-        } else {
-            // Must be PascalCase: starts with uppercase and contains no underscores
-            let mut chars = s.chars();
-            if let Some(first) = chars.next()
-                && first.is_ascii_uppercase()
-                && chars.all(|c| c.is_ascii_alphanumeric())
-            {
-                return Case::Pascal;
-            }
-        }
-
-        Case::Invalid
+    /// Returns if the identifier is written in `case`, e.g. `MY_VALUE` in `UPPER_SNAKE_CASE`.
+    pub fn is_case(&self, case: Case) -> bool {
+        case.matches(&self.0.value)
     }
 }
 
 /// A case for an identifier.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Case {
     /// PascalCase
     Pascal,
@@ -136,10 +100,36 @@ pub enum Case {
     LowerSnake,
     /// UPPER_SNAKE_CASE
     UpperSnake,
-    /// A
-    UpperSingleChar,
-    /// Invalid.
-    Invalid,
+}
+
+impl Case {
+    /// Returns if `name` is written in this case.
+    ///
+    /// A single upper case letter like `A` is `PascalCase` and `UPPER_SNAKE_CASE`.
+    pub fn matches(&self, name: &str) -> bool {
+        match self {
+            Case::Pascal => {
+                name.starts_with(|c: char| c.is_ascii_uppercase())
+                    && name.chars().all(|c| c.is_ascii_alphanumeric())
+            }
+            Case::LowerSnake => name
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_'),
+            Case::UpperSnake => name
+                .chars()
+                .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_'),
+        }
+    }
+}
+
+impl std::fmt::Display for Case {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Case::Pascal => write!(f, "PascalCase"),
+            Case::LowerSnake => write!(f, "lower_snake_case"),
+            Case::UpperSnake => write!(f, "UPPER_SNAKE_CASE"),
+        }
+    }
 }
 
 /// Shortened identifier
@@ -311,24 +301,6 @@ fn identifier_hash() {
 }
 
 #[test]
-fn identifier_case() {
-    let detect_case = |s| -> Case { Identifier::no_ref(s).detect_case() };
-
-    assert_eq!(detect_case("PascalCase"), Case::Pascal);
-    assert_eq!(detect_case("lower_snake_case"), Case::LowerSnake);
-    assert_eq!(detect_case("UPPER_SNAKE_CASE"), Case::UpperSnake);
-    assert_eq!(detect_case("notValid123_"), Case::Invalid);
-    assert_eq!(detect_case(""), Case::Invalid);
-    assert_eq!(detect_case("A"), Case::UpperSingleChar); // New case
-    assert_eq!(detect_case("z"), Case::Invalid); // lowercase single letter
-    assert_eq!(detect_case("_"), Case::Invalid); // only underscore
-    assert_eq!(detect_case("a_b"), Case::LowerSnake);
-    assert_eq!(detect_case("A_B"), Case::UpperSnake);
-
-    println!("All tests passed.");
-}
-
-#[test]
 fn test_short_identifiers() {
     fn test(id: &str) -> String {
         Identifier::from(id).short_id().to_string()
@@ -337,4 +309,27 @@ fn test_short_identifiers() {
     assert_eq!(test("weather_thermal_function"), "w_t_f");
     assert_eq!(test("width"), "w");
     assert_eq!(test("WeatherThermal_Function"), "W_F");
+}
+
+#[test]
+fn identifier_case() {
+    let is_case = |name: &str, case: Case| Identifier::no_ref(name).is_case(case);
+
+    assert!(is_case("MySketch", Case::Pascal));
+    assert!(is_case("A", Case::Pascal));
+    assert!(!is_case("my_sketch", Case::Pascal));
+    assert!(!is_case("My_Sketch", Case::Pascal));
+
+    assert!(is_case("my_value2", Case::LowerSnake));
+    assert!(is_case("a", Case::LowerSnake));
+    assert!(!is_case("myValue", Case::LowerSnake));
+
+    assert!(is_case("MY_VALUE2", Case::UpperSnake));
+    assert!(is_case("A", Case::UpperSnake));
+    assert!(!is_case("MyValue", Case::UpperSnake));
+    assert!(!is_case("a", Case::UpperSnake));
+
+    for case in [Case::Pascal, Case::LowerSnake, Case::UpperSnake] {
+        assert!(!is_case("notValid123_", case));
+    }
 }

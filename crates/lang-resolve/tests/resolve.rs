@@ -511,3 +511,44 @@ fn resolve_prelude(dependency: bool, code: &str) -> Vec<String> {
     };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
+
+/// Symbol names are written in the case of their kind, otherwise there is a warning.
+#[test_case::test_case("const A = 1;\nconst MY_VALUE = 1;"
+    => Vec::<String>::new(); "constants")]
+#[test_case::test_case("const a = 1;\nconst MyValue = 1;"
+    => vec!["`a` should be written in UPPER_SNAKE_CASE", "`MyValue` should be written in UPPER_SNAKE_CASE"];
+    "wrong constants")]
+#[test_case::test_case("sketch MySketch() {}\npart P() {}\nop my_op() {}"
+    => Vec::<String>::new(); "workbenches")]
+#[test_case::test_case("sketch my_sketch() {}\nop MyOp() {}"
+    => vec!["`my_sketch` should be written in PascalCase", "`MyOp` should be written in lower_snake_case"];
+    "wrong workbenches")]
+#[test_case::test_case("fn my_fn() {}\nmod my_mod {}"
+    => Vec::<String>::new(); "functions and modules")]
+#[test_case::test_case("mod MyMod {}\nfn MyFn() {}"
+    => vec!["`MyMod` should be written in lower_snake_case", "`MyFn` should be written in lower_snake_case"];
+    "wrong functions and modules")]
+fn resolve_case_check(code: &str) -> Vec<String> {
+    let mut ctx = ResolveContext::new();
+    let issues = match microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(code),
+        &mut ctx,
+    ) {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+    issues.iter().map(|issue| issue.to_string()).collect()
+}
+
+/// The name of the main source file is taken from its path and not checked.
+#[test]
+fn resolve_case_check_file_name() {
+    let mut ctx = ResolveContext::new();
+    let source = microcad_lang_base::Source::new(
+        std::path::PathBuf::from("README.mu"),
+        "const A = 1;".into(),
+    );
+    let issues = match microcad_lang_resolve::resolve_source(source, &mut ctx) {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+    assert!(issues.is_empty(), "{issues:?}");
+}

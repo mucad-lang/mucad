@@ -4,7 +4,7 @@
 mod error;
 
 pub use error::{ResolveError, ResolveErrorKind};
-use microcad_lang_base::{Issue, SrcRef, SrcReferrer};
+use microcad_lang_base::{Identifier, Issue, SrcRef, SrcReferrer, element::Case};
 use microcad_lang_lower::{LowerInfo, LowerIssue, LowerWarning};
 use microcad_lang_parse::{ParseInfo, ParseIssue, ParseWarning};
 use miette::{Diagnostic, Severity};
@@ -16,6 +16,24 @@ pub enum ResolveWarning {
     Parse(#[from] ParseWarning),
     #[error("{0}")]
     Lower(#[from] LowerWarning),
+
+    /// A symbol name is not written in the case of its kind, e.g. `UPPER_SNAKE_CASE` for constants.
+    #[error("`{name}` should be written in {expected}")]
+    WrongCase {
+        name: Identifier,
+        expected: Case,
+        #[label("Not in {expected}")]
+        src_ref: SrcRef,
+    },
+}
+
+impl SrcReferrer for ResolveWarning {
+    fn src_ref(&self) -> SrcRef {
+        match self {
+            Self::WrongCase { src_ref, .. } => *src_ref,
+            Self::Parse(_) | Self::Lower(_) => SrcRef::none(),
+        }
+    }
 }
 
 #[derive(Debug, Error, Diagnostic)]
@@ -84,7 +102,8 @@ impl SrcReferrer for ResolveIssue {
     fn src_ref(&self) -> SrcRef {
         match self {
             Self::Err(err) => err.src_ref(),
-            _ => SrcRef::none(),
+            Self::Warn(warn) => warn.src_ref(),
+            Self::Info(_) => SrcRef::none(),
         }
     }
 }
