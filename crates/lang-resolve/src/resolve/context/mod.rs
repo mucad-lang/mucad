@@ -4,10 +4,12 @@
 mod cache;
 mod lib_ctx;
 mod loader;
+mod prelude;
 
 pub use cache::{LibraryCache, SourceCache};
 pub use lib_ctx::ResolveLibraryContext;
 use microcad_lang_parse::Ast;
+pub use prelude::Prelude;
 use std::collections::BTreeMap;
 
 use microcad_lang_base::{
@@ -26,6 +28,8 @@ pub struct ResolveContext {
     implicit_dependencies: BTreeMap<Name, LibraryId>,
     /// Paths of the external libraries being loaded, to detect cyclic dependencies.
     loading: Vec<std::path::PathBuf>,
+    /// Symbols which can be used by name without `use`, e.g. of `std`.
+    prelude: Option<Prelude>,
 }
 
 /// Builder methods.
@@ -157,6 +161,16 @@ impl ResolveContext {
     pub fn add_implicit_dependency(&mut self, name: impl Into<Name>, lib_id: LibraryId) {
         self.implicit_dependencies.insert(name.into(), lib_id);
     }
+
+    /// Set the symbols which can be used by name without `use`, e.g. `Circle` of `std`.
+    pub fn set_prelude(&mut self, prelude: Prelude) {
+        self.prelude = Some(prelude);
+    }
+
+    /// The symbols which can be used by name without `use`, if any.
+    pub fn prelude(&self) -> Option<&Prelude> {
+        self.prelude.as_ref()
+    }
 }
 
 /// Builder for constructing a [`ResolveContext`].
@@ -210,6 +224,7 @@ impl ResolveContextBuilder {
             lib_cache: self.lib_cache.unwrap_or_default(),
             src_cache: self.src_cache.unwrap_or_default(),
             loading: Vec::new(),
+            prelude: None,
         }
     }
 }

@@ -66,6 +66,17 @@ impl<'ctx, 'lib> ResolveLibraryContext<'ctx, 'lib> {
         self.ctx.lib_cache.clone()
     }
 
+    /// The symbol of the prelude with `name`, if the library depends on the library of the prelude.
+    pub(crate) fn prelude_symbol(&self, name: &Identifier) -> Option<SymbolId> {
+        let prelude = self.ctx.prelude()?;
+        self.lib
+            .dependencies
+            .values()
+            .any(|lib_id| *lib_id == prelude.library)
+            .then(|| prelude.symbols.get(name).cloned())
+            .flatten()
+    }
+
     pub(crate) fn arena_mut(&mut self) -> &mut SymbolArena {
         &mut self.lib.arena
     }

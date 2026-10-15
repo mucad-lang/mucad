@@ -459,3 +459,55 @@ fn resolve_property_assignment(code: &str) -> Vec<String> {
     };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
+
+/// A context with a prelude with `Shape` and `R` of the library `globlib`,
+/// which is an implicit dependency, if `dependency` is `true`.
+fn prelude_context(dependency: bool) -> ResolveContext {
+    use microcad_lang_base::{ExternalId, SymbolId};
+
+    let mut ctx = ResolveContext::new();
+    let (lib_id, _) = ctx
+        .load_external_library("tests/test_cases/glob_lib")
+        .expect("A library");
+    if dependency {
+        ctx.add_implicit_dependency("globlib", lib_id);
+    }
+
+    let lib = ctx
+        .lib_cache()
+        .with_read(|lib_cache| lib_cache.get(&lib_id))
+        .expect("The library");
+    let mut prelude = microcad_lang_resolve::Prelude::new(lib_id);
+    for name in ["Shape", "R"] {
+        let id = lib
+            .look_up(lib.root, &path(&format!("::globlib::geo::{name}")))
+            .expect("A symbol");
+        prelude
+            .symbols
+            .insert(name.into(), SymbolId::External(ExternalId { lib_id, id }));
+    }
+    ctx.set_prelude(prelude);
+    ctx
+}
+
+/// Symbols of the prelude can be used by name, all other symbols have priority.
+#[test_case::test_case(true, "Shape();\n__mu::geo2d::Circle(radius = R);"
+    => Vec::<String>::new(); "prelude")]
+#[test_case::test_case(true, "sketch Shape() {}\nShape();"
+    => Vec::<String>::new(); "own symbol before prelude")]
+#[test_case::test_case(true, "R = 2mm;\n__mu::geo2d::Circle(radius = R);"
+    => Vec::<String>::new(); "local before prelude")]
+#[test_case::test_case(false, "Shape();"
+    => vec!["Unresolved symbol: Shape"]; "prelude only with dependency")]
+#[test_case::test_case(true, "geo::Shape();"
+    => vec!["Unresolved symbol: geo::Shape"]; "prelude only for names")]
+fn resolve_prelude(dependency: bool, code: &str) -> Vec<String> {
+    let mut ctx = prelude_context(dependency);
+    let issues = match microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(code),
+        &mut ctx,
+    ) {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+    issues.iter().map(|issue| issue.to_string()).collect()
+}

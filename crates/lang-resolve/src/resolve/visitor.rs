@@ -289,6 +289,14 @@ impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> 
             }
         }
 
+        // The prelude has the lowest priority, e.g. `Circle` for `std::geo2d::Circle`.
+        if paths.is_empty()
+            && let Some(id) = unresolved_path.single_identifier()
+            && let Some(symbol_id) = self.lib_ctx.prelude_symbol(id)
+        {
+            paths.push(symbol::Path::Resolved(symbol_id));
+        }
+
         // Unresolved and ambiguous paths stay unresolved, evaluation reports them again.
         match paths.len() {
             0 => self.lib_ctx.push_err(ResolveErrorKind::UnresolvedPath {
