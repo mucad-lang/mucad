@@ -1,0 +1,31 @@
+---
+source: crates/driver/tests/compiler.rs
+expression: display(&model)
+---
+Group
+└── Multiplicity
+    ├── Workpiece(sketch)
+    │   │   - x [in]: Integer = -1
+    │   └── Group
+    │       └── Workpiece(sketch)
+    │           │   - height [in]: Length = 10mm
+    │           │   - width [in]: Length = 10mm
+    │           │   - x [in]: Length = -5mm
+    │           │   - y [in]: Length = -5mm
+    │           └── Builtin(__mu::geo2d::Rect[0x889349cd5d718d8e])
+    │                   - height [in]: Length = 10mm
+    │                   - width [in]: Length = 10mm
+    │                   - x [in]: Length = -5mm
+    │                   - y [in]: Length = -5mm
+    └── Workpiece(sketch)
+        │   - x [in]: Integer = 2
+        └── Group
+            └── Workpiece(sketch)
+                │   - center [in]: (x: Length, y: Length) = (x = 0mm, y = 0mm)
+                │   - radius [in]: Length = 5mm
+                └── Builtin(Translate(0mm, 0mm, 0mm))
+                    │   - x: Length = 0mm
+                    │   - y: Length = 0mm
+                    │   - z: Length = 0mm
+                    └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
+                            - radius [in]: Length = 5mm

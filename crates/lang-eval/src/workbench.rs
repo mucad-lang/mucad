@@ -297,7 +297,7 @@ impl Callable for symbol::Workbench {
 
         match matching_inits.len() {
             0 => Err(EvalErrorKind::NoInitializationFound {
-                src_ref: self.signature.parameters.src_ref,
+                src_ref: context.current_symbol_src_ref(),
                 path: context.current_symbol_name().unwrap_or_default(),
                 arguments: args.to_string(),
                 inits: self
@@ -335,7 +335,7 @@ impl Callable for symbol::Workbench {
                     }
                     Err(err) => {
                         return Err(EvalError::argument_match(
-                            self.signature.parameters.src_ref,
+                            context.current_symbol_src_ref(),
                             context.current_symbol_name().unwrap_or_default(),
                             err,
                         ));
@@ -345,7 +345,7 @@ impl Callable for symbol::Workbench {
                 Ok(ModelTree::to_multiplicity(models).into())
             }
             _n => Err(EvalErrorKind::AmbiguousInitialization {
-                src_ref: self.signature.parameters.src_ref,
+                src_ref: context.current_symbol_src_ref(),
                 path: context.current_symbol_name().unwrap_or_default(),
                 arguments: args.to_string(),
                 inits: matching_inits.iter().map(|init| init.to_string()).collect(),

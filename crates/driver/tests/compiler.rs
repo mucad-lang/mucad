@@ -527,3 +527,40 @@ fn compile_prelude_no_std() {
         .expect("A model, despite errors");
     assert!(diags.has_errors(), "{diags:?}");
 }
+
+/// A list argument for a parameter of its element type calls the workbench once per element.
+#[test]
+fn compile_positional_multiplicity() {
+    let mut compiler = std_compiler();
+    let (model, diags) = compiler
+        .compile(
+            "sketch MySketch(x: Integer) {\n\
+                if x > 0 { Circle(radius = 5mm) } else { Rect(10mm) }\n\
+            }\n\
+            MySketch([-1, 2]);",
+        )
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+    insta::assert_snapshot!("compile_positional_multiplicity", display(&model));
+}
+
+/// An initialization error is reported at the call with the possible initializations.
+#[test]
+fn compile_no_initialization_found() {
+    let mut compiler = std_compiler();
+    let diags = compiler
+        .compile(
+            "sketch S(x: Integer) {\n\
+                init(a: Length) { x = 1; }\n\
+                Circle(radius = 1mm)\n\
+            }\n\
+            S(\"text\");",
+        )
+        .expect_err("No model");
+    let diag = diags.iter().next().expect("An error");
+    // The call in the fifth line (zero-based), not the definition.
+    assert_eq!(diag.src_ref.line(), Some(4));
+    let help = diag.report.help().expect("A help").to_string();
+    assert!(help.contains("init(a: Length)"), "{help}");
+    assert!(help.contains("init(x: Integer)"), "{help}");
+}

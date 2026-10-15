@@ -99,6 +99,14 @@ fn x_y() -> Signature {
     }
 }
 
+/// `(x: Integer, y: Integer = 0)`
+fn x_y_default() -> Signature {
+    Signature {
+        signature: call_signature!(x: Type::Integer, y: Type::Integer),
+        default: tuple!(y = 0),
+    }
+}
+
 /// `(*)`
 fn variadic() -> Signature {
     Signature {
@@ -229,10 +237,13 @@ fn multi_match_cartesian_product() {
         default: tuple!(),
     };
 
-    // f(a = [1.0, 2.0], b = [10.0, 20.0, 30.0])
+    // f(a = [1mm, 2mm], b = [10mm, 20mm, 30mm])
     let args: ArgumentValueList = [
-        ArgumentValue::new(list![1.0, 2.0], Some(Identifier::no_ref("a"))),
-        ArgumentValue::new(list![10.0, 20.0, 30.0], Some(Identifier::no_ref("b"))),
+        ArgumentValue::new(list![mm(1.0), mm(2.0)], Some(Identifier::no_ref("a"))),
+        ArgumentValue::new(
+            list![mm(10.0), mm(20.0), mm(30.0)],
+            Some(Identifier::no_ref("b")),
+        ),
     ]
     .into_iter()
     .collect();
@@ -245,13 +256,47 @@ fn multi_match_cartesian_product() {
     assert_eq!(
         result,
         [
-            arguments!(a = 1.0, b = 10.0),
-            arguments!(a = 1.0, b = 20.0),
-            arguments!(a = 1.0, b = 30.0),
-            arguments!(a = 2.0, b = 10.0),
-            arguments!(a = 2.0, b = 20.0),
-            arguments!(a = 2.0, b = 30.0),
+            arguments!(a = mm(1.0), b = mm(10.0)),
+            arguments!(a = mm(1.0), b = mm(20.0)),
+            arguments!(a = mm(1.0), b = mm(30.0)),
+            arguments!(a = mm(2.0), b = mm(10.0)),
+            arguments!(a = mm(2.0), b = mm(20.0)),
+            arguments!(a = mm(2.0), b = mm(30.0)),
         ]
+    );
+}
+
+/// A positional list argument for a parameter of its element type results in one match per element.
+#[test]
+fn multi_match_positional() {
+    let args: ArgumentValueList = [argument_value!(list![-1, 0, 2])].into_iter().collect();
+
+    assert_eq!(
+        x_y_default()
+            .argument_multi_match(&args)
+            .expect("A multi match"),
+        [
+            arguments!(x = -1, y = 0),
+            arguments!(x = 0, y = 0),
+            arguments!(x = 2, y = 0),
+        ]
+    );
+}
+
+/// A list argument for a list parameter is no multiplicity.
+#[test]
+fn multi_match_list_parameter() {
+    let signature = Signature {
+        signature: call_signature!(x: Type::List(Box::new(Type::Integer))),
+        default: tuple!(),
+    };
+    let args: ArgumentValueList = [argument_value!(list![1, 2])].into_iter().collect();
+
+    assert_eq!(
+        signature
+            .argument_multi_match(&args)
+            .expect("A multi match"),
+        [arguments!(x = list![1, 2])]
     );
 }
 

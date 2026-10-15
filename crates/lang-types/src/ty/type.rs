@@ -123,6 +123,15 @@ impl Type {
             _ => self == other,
         }
     }
+
+    /// Returns if a list matches the parameter type `param` by its elements (parameter multiplicity),
+    /// e.g. `[Integer]` matches `Integer`, but `[Integer]` doesn't match `[Integer]` or `Any` this way.
+    pub fn matches_multiplicity(&self, param: &Type) -> bool {
+        match self {
+            Self::List(ty) => !self.matches(param) && ty.matches(param),
+            _ => false,
+        }
+    }
 }
 
 impl std::str::FromStr for Type {

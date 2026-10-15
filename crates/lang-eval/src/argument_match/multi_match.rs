@@ -4,7 +4,7 @@
 //! Match arguments with lists to multiple argument combinations.
 
 use microcad_lang_base::Identifier;
-use microcad_lang_types::{ArgumentValueList, Arguments, Tuple, Type, Value};
+use microcad_lang_types::{ArgumentValueList, Arguments, Tuple, Ty, Value};
 
 use crate::{ArgumentMatch, ArgumentMatchError};
 
@@ -37,7 +37,7 @@ pub(super) fn argument_multi_match(
                 .map(|(_, ty)| ty);
             match (expected_ty, &val) {
                 (Some(expected), Value::List(elements))
-                    if expected.is_list_of(expected) || !expected.is_list_of(&Type::Any) =>
+                    if val.ty().matches_multiplicity(expected) =>
                 {
                     let elements = elements.to_vec();
                     (id, elements)
