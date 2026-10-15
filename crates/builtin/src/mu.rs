@@ -511,7 +511,7 @@ pub mod string {
     #[builtin_fn(string::len(s: String) -> Integer)]
     pub fn len(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let s: String = args.try_get("s")?;
-        Ok(s.len().into())
+        Ok(s.chars().count().into())
     }
 }
 

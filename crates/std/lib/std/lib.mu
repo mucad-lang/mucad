@@ -3,9 +3,10 @@
 
 pub mod geo2d;
 pub mod geo3d;
-pub mod ops;
-pub mod math;
 pub mod list;
+pub mod math;
+pub mod ops;
+pub mod string;
 
 // Check a condition and stop with an error message if it does not hold.
 pub use __mu::debug::assert;
