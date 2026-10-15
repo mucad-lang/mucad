@@ -9,8 +9,7 @@ use microcad_lang_eval::{Callable, Eval, EvalContext};
 use microcad_lang_resolve::{
     SymbolId, call_builtin, expr,
     library::symbol::{
-        self, ExprSpec, Parameter, Path, SourceStatement, WorkbenchExpression, WorkbenchStatement,
-        workbench,
+        self, Parameter, Path, SourceStatement, WorkbenchExpression, WorkbenchStatement, workbench,
     },
 };
 
