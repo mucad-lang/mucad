@@ -83,6 +83,14 @@ fn assert() -> Signature {
     }
 }
 
+/// `(a: Any, b: Any, message: String = "default")`
+fn assert_eq() -> Signature {
+    Signature {
+        signature: call_signature!(a: Type::Any, b: Type::Any, message: Type::String),
+        default: tuple!(message = "default"),
+    }
+}
+
 /// `(*)`
 fn variadic() -> Signature {
     Signature {
@@ -147,6 +155,10 @@ fn argument_match(
     => Ok(arguments!(cond = true, message = "given")); "default overridden by abbreviation")]
 #[test_case(assert(), vec![argument_value!(true), argument_value!("given")]
     => Ok(arguments!(cond = true, message = "given")); "default overridden positionally")]
+#[test_case(assert_eq(), vec![argument_value!("x"), argument_value!("y")]
+    => Ok(arguments!(a = "x", b = "y", message = "default")); "default after required")]
+#[test_case(assert_eq(), vec![argument_value!("x"), argument_value!("y"), argument_value!("z")]
+    => Ok(arguments!(a = "x", b = "y", message = "z")); "default given positionally last")]
 // Missing arguments
 #[test_case(circle(), vec![]
     => Err("Missing arguments: radius".into()); "missing")]

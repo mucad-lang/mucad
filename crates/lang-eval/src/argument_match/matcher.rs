@@ -119,8 +119,9 @@ impl Matcher {
 
     /// Match positional arguments by type to parameters without an argument.
     ///
-    /// A parameter of exactly the argument type is preferred, e.g. to a parameter of type `Any`.
-    /// Parameters with default values can be given positionally, too.
+    /// Required parameters are filled before parameters with default values, e.g. in
+    /// `assert_eq(a: Any, b: Any, message: String = "")` two strings are `a` and `b`.
+    /// Within these, a parameter of exactly the argument type is preferred, e.g. to `Any`.
     /// Positional arguments, which match no parameter, are an error.
     fn positional(&mut self, arguments: &ArgumentValueList) -> Result<(), ArgumentMatchError> {
         use microcad_lang_types::Ty;
@@ -132,15 +133,21 @@ impl Matcher {
             .map(|arg| &arg.value)
         {
             let ty = value.ty();
-            let position = self
-                .0
-                .iter()
-                .position(|param| !param.given && param.ty == ty)
-                .or_else(|| {
-                    self.0
-                        .iter()
-                        .position(|param| !param.given && ty.matches(&param.ty))
-                });
+            // Required parameters come first, then those with default values.
+            // Within these, the exact type is preferred, e.g. to `Any`.
+            let open = |param: &MatchedParameter, required: bool| {
+                !param.given && param.value.is_none() == required
+            };
+            let position = [true, false].into_iter().find_map(|required| {
+                self.0
+                    .iter()
+                    .position(|param| open(param, required) && param.ty == ty)
+                    .or_else(|| {
+                        self.0
+                            .iter()
+                            .position(|param| open(param, required) && ty.matches(&param.ty))
+                    })
+            });
             match position {
                 Some(position) => {
                     self.0[position].value = Some(value.clone());
