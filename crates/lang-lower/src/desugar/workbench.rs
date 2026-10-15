@@ -7,7 +7,6 @@ use crate::{
     ir,
 };
 
-use microcad_builtin::__mu;
 use microcad_lang_base::{PushIssue, SpanToSrcRef, SrcRef};
 use microcad_lang_parse::ast;
 
@@ -207,58 +206,7 @@ impl Desugar<ast::Expression> for ir::WorkbenchExpression {
                 Self::Marker(ir::Marker::desugar(identifier, context)?)
             }
             ast::Expression::Body(body) => Self::Group(ir::Group::desugar(body, context)?),
-            ast::Expression::ElementAccess(access) => access.element_chain.iter().try_fold(
-                Self::desugar(access.expr.as_ref(), context)?,
-                |lhs, element| -> LowerResult<Self> {
-                    use ast::ElementInner::*;
-                    let src_ref = context.span_to_src_ref(&access.span);
-
-                    Ok(match &element.inner {
-                        Attribute(a) => Self::Call(ir::Call {
-                            path: __mu!(core::attribute_access).into(),
-                            args: ir::ArgumentList::from_iter([
-                                ir::Argument::named("lhs", lhs),
-                                ir::Argument::named(
-                                    "name",
-                                    Self::Value(
-                                        ir::ConstantValue::new(a.name.clone())
-                                            .with_src_ref(context.span_to_src_ref(&a.span)),
-                                    ),
-                                ),
-                            ]),
-                            src_ref,
-                        }),
-                        Tuple(t) => Self::Call(ir::Call {
-                            path: __mu!(core::member_access).into(),
-                            args: ir::ArgumentList::from_iter([
-                                ir::Argument::named("lhs", lhs),
-                                ir::Argument::named(
-                                    "name",
-                                    Self::Value(
-                                        ir::ConstantValue::new(t.name.clone())
-                                            .with_src_ref(context.span_to_src_ref(&t.span)),
-                                    ),
-                                ),
-                            ]),
-                            src_ref,
-                        }),
-                        Method(m) => Self::Call(ir::Call {
-                            path: ir::Path::desugar(&m.path, context)?,
-                            args: ir::ArgumentList::desugar(&m.arguments, context)?
-                                .desugar_method(lhs),
-                            src_ref,
-                        }),
-                        ListElement(e) => Self::Call(ir::Call {
-                            path: __mu!(core::list_access).into(),
-                            args: ir::ArgumentList::from_iter([
-                                ir::Argument::named("lhs", lhs),
-                                ir::Argument::named("index", Self::desugar(e.as_ref(), context)?),
-                            ]),
-                            src_ref,
-                        }),
-                    })
-                },
-            )?,
+            ast::Expression::ElementAccess(access) => Self::desugar(access, context)?,
             ast::Expression::If(if_expr) => Self::If(ir::If::desugar(if_expr, context)?),
             ast::Expression::Error(_) => todo!(),
         })

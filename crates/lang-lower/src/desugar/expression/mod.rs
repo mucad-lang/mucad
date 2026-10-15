@@ -166,6 +166,66 @@ where
     }
 }
 
+impl<Expr: ir::ExprSpec> Desugar<ast::ElementAccess> for Expr
+where
+    Expr: Desugar<ast::Expression> + From<ir::Call<Expr>> + From<ir::ConstantValue> + DesugarExpr,
+{
+    fn desugar(access: &ast::ElementAccess, context: &mut LowerContext) -> LowerResult<Self> {
+        access.element_chain.iter().try_fold(
+            Expr::desugar(access.expr.as_ref(), context)?,
+            |lhs, element| -> LowerResult<Expr> {
+                use ast::ElementInner::*;
+                let src_ref = context.span_to_src_ref(&access.span);
+
+                Ok(match &element.inner {
+                    // Desugar `foo#bar` to `__mu::core::attribute_access(lhs = foo, name = bar)`
+                    Attribute(a) => ir::Call {
+                        path: __mu!(core::attribute_access).into(),
+                        args: ir::ArgumentList::from_iter([
+                            ir::Argument::named("lhs", lhs),
+                            ir::Argument::named(
+                                "name",
+                                ir::ConstantValue::new(a.name.clone())
+                                    .with_src_ref(context.span_to_src_ref(&a.span)),
+                            ),
+                        ]),
+                        src_ref,
+                    },
+                    // Desugar `foo.bar` to `__mu::core::member_access(lhs = foo, name = bar)`
+                    Tuple(t) => ir::Call {
+                        path: __mu!(core::member_access).into(),
+                        args: ir::ArgumentList::from_iter([
+                            ir::Argument::named("lhs", lhs),
+                            ir::Argument::named(
+                                "name",
+                                ir::ConstantValue::new(t.name.clone())
+                                    .with_src_ref(context.span_to_src_ref(&t.span)),
+                            ),
+                        ]),
+                        src_ref,
+                    },
+                    // Desugar `foo.bar(args...)` to `bar(self = foo, args...)`
+                    Method(m) => ir::Call {
+                        path: ir::Path::desugar(&m.path, context)?,
+                        args: ir::ArgumentList::desugar(&m.arguments, context)?.desugar_method(lhs),
+                        src_ref,
+                    },
+                    // Desugar `foo[bar]` to `__mu::core::list_access(lhs = foo, index = bar)`
+                    ListElement(e) => ir::Call {
+                        path: __mu!(core::list_access).into(),
+                        args: ir::ArgumentList::from_iter([
+                            ir::Argument::named("lhs", lhs),
+                            ir::Argument::named("index", Self::desugar(e.as_ref(), context)?),
+                        ]),
+                        src_ref,
+                    },
+                }
+                .into())
+            },
+        )
+    }
+}
+
 impl Desugar<ast::Expression> for ir::ConstantExpression {
     fn desugar(node: &ast::Expression, context: &mut LowerContext) -> LowerResult<Self> {
         Ok(match node {
@@ -179,7 +239,8 @@ impl Desugar<ast::Expression> for ir::ConstantExpression {
             ast::Expression::BinaryOperation(binop) => {
                 Self::Call(ir::Call::desugar(binop, context)?)
             }
-            ast::Expression::UnaryOperation(unop) => Self::Call(ir::Call::desugar(unop, context)?),
+            ast::Expression::UnaryOperation(unop) => ir::Call::desugar(unop, context)?.into(),
+            ast::Expression::ElementAccess(access) => Self::desugar(access, context)?,
             expr => {
                 context.push_err(LowerError::InvalidConstantExpression {
                     src_ref: context.span_to_src_ref(&expr.span()),
