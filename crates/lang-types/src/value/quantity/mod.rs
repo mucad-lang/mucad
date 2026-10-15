@@ -274,8 +274,8 @@ impl<'de> serde::de::Visitor<'de> for QuantityVisitor {
         // 3. Infer QuantityType from unit
         let quantity_type = unit.quantity_type();
 
-        // 4. Normalize value to standard base unit if needed, before rounding to a `Scalar`
-        let value = unit.normalize_f64(num_f64);
+        // 4. Normalize value to standard base unit if needed
+        let value = unit.normalize(Scalar::from_num(num_f64));
 
         Ok(Quantity {
             value,

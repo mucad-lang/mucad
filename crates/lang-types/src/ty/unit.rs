@@ -7,6 +7,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{QuantityType, Scalar, Ty, Type, TypeError};
 
+/// A fixed-point number with more fractional bits than a [`Scalar`] for the factors of units.
+///
+/// The integer part has 31 bits for factors up to `1_000_000_000` (`m³`).
+type Factor = fixed::FixedI128<fixed::types::extra::U96>;
+
 /// Definition of type & scale of numbers.
 #[derive(
     Default, Clone, Debug, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize,
@@ -208,90 +213,82 @@ impl Unit {
         }
     }
 
-    pub fn factor(&self) -> Scalar {
-        Scalar::from_num(self.factor_f64())
-    }
-
-    /// The factor to the base unit, e.g. `1000.0` from `m` to `mm`.
-    fn factor_f64(&self) -> f64 {
+    /// The factor to the base unit, e.g. `1000` from `m` to `mm`.
+    ///
+    /// The factor has more fractional bits than a [`Scalar`], e.g. for `µm` or `°`.
+    fn factor(&self) -> Factor {
         match &self {
             // Scalar
-            Self::None => 1.0,
-            Self::Percent => 0.01_f64,
+            Self::None => Factor::ONE,
+            Self::Percent => Factor::lit("0.01"),
 
             // Lengths
-            Self::Meter => 1_000_f64,
-            Self::Centimeter => 10_f64,
-            Self::Millimeter => 1.0,
-            Self::Micrometer => 1.0 / 1_000_f64,
-            Self::Inch => 25.4_f64,
-            Self::Foot => 304.8_f64,
-            Self::Yard => 914.4_f64,
+            Self::Meter => Factor::lit("1000"),
+            Self::Centimeter => Factor::lit("10"),
+            Self::Millimeter => Factor::ONE,
+            Self::Micrometer => Factor::lit("0.001"),
+            Self::Inch => Factor::lit("25.4"),
+            Self::Foot => Factor::lit("304.8"),
+            Self::Yard => Factor::lit("914.4"),
 
             // Angles
-            Self::Deg | Self::DegS => 1.0 / 180. * std::f64::consts::PI,
-            Self::Grad => 1.0 / 200. * std::f64::consts::PI,
-            Self::Turns => 2.0 * std::f64::consts::PI,
-            Self::Rad => 1.0,
+            Self::Deg | Self::DegS => Factor::PI / 180,
+            Self::Grad => Factor::PI / 200,
+            Self::Turns => Factor::TAU,
+            Self::Rad => Factor::ONE,
 
             // Weights
-            Self::Gram => 1.0,
-            Self::Kilogram => 1_000_f64,
-            Self::Pound => 453.59237_f64,
-            Self::Ounce => 28.349_523_125_f64,
+            Self::Gram => Factor::ONE,
+            Self::Kilogram => Factor::lit("1000"),
+            Self::Pound => Factor::lit("453.59237"),
+            Self::Ounce => Factor::lit("28.349523125"),
 
             // Areas
-            Self::Meter2 => 1_000_000_f64,
-            Self::Centimeter2 => 100_f64,
-            Self::Millimeter2 => 1.0,
-            Self::Micrometer2 => 0.000_001,
-            Self::Inch2 => 645.16_f64,
-            Self::Foot2 => 92_903_043.04_f64,
-            Self::Yard2 => 836_127.36_f64,
+            Self::Meter2 => Factor::lit("1000000"),
+            Self::Centimeter2 => Factor::lit("100"),
+            Self::Millimeter2 => Factor::ONE,
+            Self::Micrometer2 => Factor::lit("0.000001"),
+            Self::Inch2 => Factor::lit("645.16"),
+            Self::Foot2 => Factor::lit("92903.04"),
+            Self::Yard2 => Factor::lit("836127.36"),
 
             // Volumes
-            Self::Meter3 => 1_000_000_000_f64,
-            Self::Centimeter3 => 1_000_f64,
-            Self::Millimeter3 => 1.0,
-            Self::Micrometer3 => 0.000_000_001,
-            Self::Inch3 => 16_387.06_f64,
-            Self::Foot3 => 28_316_846.592_f64,
-            Self::Yard3 => 764_554_857.984_f64,
-            Self::Liter => 1_000_000_f64,
-            Self::Centiliter => 10_000_f64,
-            Self::Milliliter => 1_000_f64,
-            Self::Microliter => 1_f64,
+            Self::Meter3 => Factor::lit("1000000000"),
+            Self::Centimeter3 => Factor::lit("1000"),
+            Self::Millimeter3 => Factor::ONE,
+            Self::Micrometer3 => Factor::lit("0.000000001"),
+            Self::Inch3 => Factor::lit("16387.064"),
+            Self::Foot3 => Factor::lit("28316846.592"),
+            Self::Yard3 => Factor::lit("764554857.984"),
+            Self::Liter => Factor::lit("1000000"),
+            Self::Centiliter => Factor::lit("10000"),
+            Self::Milliliter => Factor::lit("1000"),
+            Self::Microliter => Factor::ONE,
 
             // Densities
-            Self::GramPerMeter3 => 0.000_000_001_f64,
-            Self::GramPerMillimeter3 => 1_f64,
+            Self::GramPerMeter3 => Factor::lit("0.000000001"),
+            Self::GramPerMillimeter3 => Factor::ONE,
         }
     }
 
     /// The number of decimals of a value in this unit within the resolution of a [`Scalar`],
     /// e.g. 9 for `mm` and 7 for `°`.
     pub fn decimals(&self) -> usize {
-        let resolution = Scalar::DELTA.to_num::<f64>() / self.factor_f64();
+        // In `f64`, because the resolution is smaller than a `Scalar` for large factors.
+        let resolution = Scalar::DELTA.to_num::<f64>() / self.factor().to_num::<f64>();
         (-resolution.log10()).floor().max(0.0) as usize
     }
 
-    /// Normalize a value, e.g. of a literal, to the base unit.
-    ///
-    /// The value is rounded to a [`Scalar`] after normalizing, e.g. `0.04m` becomes exactly `40mm`.
-    pub fn normalize_f64(self, x: f64) -> Scalar {
-        Scalar::from_num(x * self.factor_f64())
-    }
-
     /// Normalize value to base unit.
+    ///
+    /// The product with the precise factor is rounded only once, e.g. `1000µm` is `1mm`.
     pub fn normalize(self, x: Scalar) -> Scalar {
-        self.normalize_f64(x.to_num())
+        Scalar::ZERO.add_prod(x, self.factor())
     }
 
-    /// Denormalize value to unit
-    ///
-    /// The exact inverse of [`Unit::normalize_f64`], e.g. `π/2` in degrees is `90°`.
+    /// Denormalize value to unit, the inverse of [`Unit::normalize`].
     pub fn denormalize(self, x: Scalar) -> Scalar {
-        Scalar::from_num(x.to_num::<f64>() / self.factor_f64())
+        Scalar::ZERO.add_prod(x, Factor::ONE / self.factor())
     }
 }
 
