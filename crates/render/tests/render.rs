@@ -27,7 +27,7 @@ fn render_circle() {
 
 /// Circle(42mm) - Circle(23mm);
 #[test]
-fn render_difference() {
+fn render_subtract() {
     let mut ctx = BuiltinEvalContext::default();
 
     // {
@@ -37,7 +37,7 @@ fn render_difference() {
     let mut group = ModelTree::new(Element::Group);
     group.append(circle(42.0));
     group.append(circle(23.0));
-    let diff = mu::ops::difference(arguments!(self = group), &mut ctx).expect("No error");
+    let diff = mu::ops::subtract(arguments!(self = group), &mut ctx).expect("No error");
 
     let geometry = Renderer::new().render(&diff).expect("No render errors");
 

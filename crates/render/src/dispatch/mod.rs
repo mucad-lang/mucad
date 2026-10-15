@@ -23,8 +23,14 @@ impl RenderHooks {
         let mut hooks = RenderHooks::default();
         hooks.insert::<mu::geo2d::Circle>();
         hooks.insert::<mu::geo2d::Rect>();
-        hooks.insert::<mu::ops::Difference>();
         hooks.insert::<mu::ops::Extrude>();
+        hooks.insert::<mu::ops::Buffer>();
+        hooks.insert::<mu::ops::Center>();
+        hooks.insert::<mu::ops::Hull>();
+        hooks.insert::<mu::ops::Revolve>();
+        hooks.insert::<mu::ops::Subtract>();
+        hooks.insert::<mu::ops::Intersect>();
+        hooks.insert::<mu::ops::Union>();
         hooks
     }
 }
