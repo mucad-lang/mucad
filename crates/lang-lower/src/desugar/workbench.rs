@@ -166,7 +166,7 @@ impl Desugar<ast::Body> for ir::Group {
             use ast::Statement::*;
             match stmt {
                 FileModule(_) | Const(_) | Use(_) | InlineModule(_) | Init(_) | Workbench(_)
-                | Function(_) | Return(_) | InnerAttribute(_) | InnerDocComment(_) | Error(_) => {
+                | Function(_) | Return(_) | InnerDocComment(_) | Error(_) => {
                     context.push_err(LowerError::StatementNotAllowed { src_ref })
                 }
                 _ => {}
