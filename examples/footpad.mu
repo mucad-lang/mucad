@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::ops::*;
-use std::geo2d::*;
 
 part FootPad(
     height = 45mm,

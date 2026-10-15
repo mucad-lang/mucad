@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // file: dome.mu
 
-use std::geo2d::*;
-use std::ops::*;
-
 pub part Dome(size: Length, strut_width = 1mm) {
     Rect(strut_width)
         .translate(x = size)

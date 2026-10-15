@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::math::*;
-use std::ops::*;
 use std::geo3d::*;
 
 part CsgCube(size: Length) {
