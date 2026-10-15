@@ -49,6 +49,18 @@ impl ModelTree {
     pub fn root<'a>(&'a self) -> NodeRef<'a> {
         NodeRef::new(self.root, &self.arena)
     }
+
+    /// Returns `true` if the model contains primitives (e.g. a circle), which can be rendered.
+    ///
+    /// E.g. a sketch which only checks values has no primitives.
+    pub fn has_primitives(&self) -> bool {
+        self.root().descendants().any(|node| {
+            matches!(
+                node.element,
+                model::Element::BuiltinWorkpiece(BuiltinWorkpiece::Primitive(..))
+            )
+        })
+    }
 }
 
 impl model::AttributeAccess for ModelTree {
