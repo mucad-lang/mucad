@@ -12,8 +12,8 @@ use crate::{
     resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
 use microcad_lang_base::{
-    ExternalId, HashSet, Identifier, LibraryId, PushIssue, SharedMut, SingleIdentifier, SymbolId,
-    ToCompactString,
+    ExternalId, HashSet, Identifier, LibraryId, PushIssue, SharedMut, SingleIdentifier,
+    SrcReferrer, SymbolId, ToCompactString,
 };
 
 /// The symbol a looked up node stands for.
@@ -93,6 +93,26 @@ pub struct ResolveVisitor<'a, 'lib, 'ctx> {
 }
 
 impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
+    /// Declare the property `name` of a source or workbench, e.g. `a = 5;`.
+    ///
+    /// The properties of a model have unique names, so a second assignment of a name in the same
+    /// scope is an error. Functions have local variables instead, which can be assigned again.
+    fn declare_property(&mut self, name: Identifier) {
+        if self
+            .stack
+            .top()
+            .local_table()
+            .is_some_and(|locals| locals.exists(&name))
+        {
+            self.lib_ctx
+                .push_err(ResolveErrorKind::PropertyAlreadyDefined {
+                    name: name.to_string(),
+                    src_ref: name.src_ref(),
+                });
+        }
+        self.declare_local(name);
+    }
+
     pub fn new(lib_ctx: &'a mut ResolveLibraryContext<'lib, 'ctx>) -> Self {
         Self {
             stack: ResolveStack::default(),
@@ -359,7 +379,7 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchExpressionVisitorMut for ResolveVisitor<'
         }
         self.visit_workbench_expr(&mut statement.expression);
         if let Some(name) = &mut statement.name {
-            self.declare_local(name.clone());
+            self.declare_property(name.clone());
         }
     }
 
@@ -393,7 +413,7 @@ impl<'a, 'lib, 'ctx> visitor::SourceVisitorMut for ResolveVisitor<'a, 'lib, 'ctx
         self.visit_model_attributes(&mut statement.attr);
         self.visit_workbench_expr(&mut statement.expression);
         if let Some(name) = &mut statement.name {
-            self.declare_local(name.clone());
+            self.declare_property(name.clone());
         }
     }
 }

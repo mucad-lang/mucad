@@ -74,6 +74,17 @@ pub enum ResolveErrorKind {
         src_ref: SrcRef,
     },
 
+    /// Assignments in sources and workbenches are properties of the model with unique names.
+    #[error("Property `{name}` is already defined in this scope")]
+    #[diagnostic(help(
+        "Assignments in sources and workbenches are properties of the model, use another name."
+    ))]
+    PropertyAlreadyDefined {
+        name: String,
+        #[label("Property defined again")]
+        src_ref: SrcRef,
+    },
+
     #[error("Library `{name}` not loaded")]
     LibraryNotLoaded { name: String },
 
@@ -172,7 +183,9 @@ impl SrcReferrer for ResolveError {
             TypeMismatch {
                 specified_src_ref, ..
             } => *specified_src_ref,
-            UnresolvedPath { src_ref, .. } | AmbiguousPath { src_ref, .. } => *src_ref,
+            UnresolvedPath { src_ref, .. }
+            | AmbiguousPath { src_ref, .. }
+            | PropertyAlreadyDefined { src_ref, .. } => *src_ref,
             ParseError(err) => err.src_ref,
             LowerError(err) => err.src_ref(),
             _ => SrcRef::none(),

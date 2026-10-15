@@ -476,3 +476,15 @@ fn compile_micro_units() {
         .expect("A model");
     assert!(!diags.has_errors(), "{diags:?}");
 }
+
+/// Local variables of functions can be assigned again, unlike properties.
+#[test]
+fn compile_function_reassignment() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile(
+            "fn f() -> Integer {\n    a = 5;\n    a = a * 2;\n    a\n}\nstd::assert_eq(f(), 10);",
+        )
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}

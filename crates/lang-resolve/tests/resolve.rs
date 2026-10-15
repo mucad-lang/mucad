@@ -436,3 +436,26 @@ fn resolve_cyclic_dependency() {
         "{issues:?}"
     );
 }
+
+/// Assignments in sources and workbenches are properties of the model with unique names,
+/// functions have local variables, which can be assigned again.
+#[test_case::test_case("a = 5;\na = a * 2;"
+    => vec!["Property `a` is already defined in this scope"]; "source")]
+#[test_case::test_case("sketch S() {\n    a = 5;\n    a = a * 2;\n}"
+    => vec!["Property `a` is already defined in this scope"]; "workbench")]
+#[test_case::test_case("fn f() -> Integer {\n    a = 5;\n    a = a * 2;\n    a\n}"
+    => Vec::<String>::new(); "function")]
+#[test_case::test_case("a = 5;\n{\n    a = a * 2;\n}"
+    => Vec::<String>::new(); "group is a new scope")]
+#[test_case::test_case("a = 5;\nb = a * 2;"
+    => Vec::<String>::new(); "different names")]
+fn resolve_property_assignment(code: &str) -> Vec<String> {
+    let mut ctx = ResolveContext::new();
+    let issues = match microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(code),
+        &mut ctx,
+    ) {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+    issues.iter().map(|issue| issue.to_string()).collect()
+}
