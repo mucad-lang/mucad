@@ -77,6 +77,17 @@ pub enum ResolveErrorKind {
         src_ref: SrcRef,
     },
 
+    /// The symbols of a module or workbench have unique names.
+    #[error("Symbol `{name}` is already defined in this scope")]
+    #[diagnostic(help("Rename one of the symbols."))]
+    SymbolAlreadyDefined {
+        name: String,
+        #[label("Symbol defined again")]
+        src_ref: SrcRef,
+        #[label("First definition")]
+        first_src_ref: SrcRef,
+    },
+
     /// An alias stands for itself through other aliases, e.g. `use d as c; use c as d;`.
     #[error("Cyclic alias `{name}`")]
     #[diagnostic(help("The alias refers to itself through other aliases."))]
@@ -186,7 +197,8 @@ impl SrcReferrer for ResolveError {
             UnresolvedPath { src_ref, .. }
             | AmbiguousPath { src_ref, .. }
             | PropertyAlreadyDefined { src_ref, .. }
-            | CyclicAlias { src_ref, .. } => *src_ref,
+            | CyclicAlias { src_ref, .. }
+            | SymbolAlreadyDefined { src_ref, .. } => *src_ref,
             ParseError(err) => err.src_ref,
             LowerError(err) => err.src_ref(),
             _ => SrcRef::none(),

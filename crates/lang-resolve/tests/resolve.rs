@@ -582,3 +582,28 @@ fn resolve_module_alias(external: bool, code: &str) -> Vec<String> {
     };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
+
+/// The symbols of a module or workbench have unique names.
+#[test_case::test_case("const A = 1;\nconst A = 2;"
+    => vec!["Symbol `A` is already defined in this scope"]; "source")]
+#[test_case::test_case("mod m {\n    const A = 1;\n    const A = 2;\n}"
+    => vec!["Symbol `A` is already defined in this scope"]; "module")]
+#[test_case::test_case("sketch S() {\n    const A = 1;\n    const A = 2;\n}"
+    => vec!["Symbol `A` is already defined in this scope"]; "workbench")]
+#[test_case::test_case("sketch s() {}\nfn s() {}"
+    => vec!["Symbol `s` is already defined in this scope", "`s` should be written in PascalCase"];
+    "different kinds")]
+#[test_case::test_case("mod m {\n    pub const A = 1;\n}\nuse m::A;\nconst A = 2;"
+    => vec!["Symbol `A` is already defined in this scope"]; "alias")]
+#[test_case::test_case("const A = 1;\nmod m {\n    const A = 2;\n}\nsketch S() {\n    const A = 3;\n}\nsketch T() {\n    const A = 4;\n}"
+    => Vec::<String>::new(); "different scopes")]
+fn resolve_duplicate_symbol(code: &str) -> Vec<String> {
+    let mut ctx = ResolveContext::new();
+    let issues = match microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(code),
+        &mut ctx,
+    ) {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+    issues.iter().map(|issue| issue.to_string()).collect()
+}
