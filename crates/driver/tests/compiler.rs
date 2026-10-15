@@ -412,3 +412,23 @@ fn compile_builtin_issues() {
     assert_eq!(diag.src_ref.line(), Some(0), "{diag:?}");
     assert!(display(&model).contains("Circle"), "{}", display(&model));
 }
+
+/// Arguments can be abbreviated by the first letter of a parameter, if it is unique.
+#[test]
+fn compile_abbreviated_arguments() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile("std::geo2d::Circle(r = 42mm);")
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+
+    let diags = match compiler
+        .compile("fn f(foo: Integer, foz: Integer) { foo + foz }\nx = f(f = 10, foz = 1);")
+    {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+    assert!(
+        format!("{diags:?}").contains("Argument `f` is ambiguous: foo,foz"),
+        "{diags:?}"
+    );
+}

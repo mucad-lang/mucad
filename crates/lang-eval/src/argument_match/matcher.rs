@@ -1,0 +1,182 @@
+// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+//! Match the arguments of a call to parameters.
+
+use microcad_lang_base::{Identifier, IdentifierList};
+use microcad_lang_types::{
+    ArgumentValue, ArgumentValueList, Arguments, CallParameters, Tuple, Type, Value,
+};
+
+use crate::ArgumentMatchError;
+
+/// A parameter with the value of its argument.
+struct MatchedParameter {
+    id: Identifier,
+    ty: Type,
+    /// The value of the argument or the default value.
+    value: Option<Value>,
+    /// The argument has been given, its value is no default value.
+    given: bool,
+}
+
+/// Matches the arguments of a call to parameters in three steps:
+///
+/// 1. Named arguments by the parameter name, or by an abbreviation (e.g. `r` for `radius`).
+/// 2. Positional arguments by type, an argument without matching parameter is an error.
+/// 3. Default values for parameters without arguments.
+pub(super) struct Matcher(Vec<MatchedParameter>);
+
+impl Matcher {
+    /// A matcher for `parameters`, which get their `default_values` if no argument is given.
+    pub(super) fn new(parameters: &CallParameters, default_values: &Tuple) -> Self {
+        Self(
+            parameters
+                .iter()
+                .map(|(id, ty)| MatchedParameter {
+                    id: id.clone(),
+                    ty: ty.clone(),
+                    value: default_values.get_field(id).cloned(),
+                    given: false,
+                })
+                .collect(),
+        )
+    }
+
+    /// Match `arguments` and return the arguments by parameter name.
+    pub(super) fn match_arguments(
+        mut self,
+        arguments: &ArgumentValueList,
+    ) -> Result<Arguments, ArgumentMatchError> {
+        self.named(arguments)?;
+        self.positional(arguments)?;
+        self.finish()
+    }
+
+    /// Match named arguments by the parameter name or an abbreviation.
+    fn named(&mut self, arguments: &ArgumentValueList) -> Result<(), ArgumentMatchError> {
+        let mut unexpected = Vec::new();
+        for (id, value) in arguments
+            .iter()
+            .filter_map(|ArgumentValue { id, value, .. }| Some((id.as_ref()?, value)))
+        {
+            match self.find(id)? {
+                Some(param) if param.given => {
+                    return Err(ArgumentMatchError::DuplicateArgument(param.id.clone()));
+                }
+                Some(param) => {
+                    param.value = Some(value.clone());
+                    param.given = true;
+                }
+                None => unexpected.push(id.clone()),
+            }
+        }
+
+        match unexpected.is_empty() {
+            true => Ok(()),
+            false => Err(ArgumentMatchError::UnexpectedArguments(
+                IdentifierList::from_iter(unexpected),
+            )),
+        }
+    }
+
+    /// The parameter for the named argument `id`.
+    ///
+    /// This is the parameter with the same name or, if `id` is a single letter,
+    /// the only parameter starting with this letter, e.g. `r` for `radius`.
+    fn find(
+        &mut self,
+        id: &Identifier,
+    ) -> Result<Option<&mut MatchedParameter>, ArgumentMatchError> {
+        if let Some(position) = self.0.iter().position(|param| &param.id == id) {
+            return Ok(Some(&mut self.0[position]));
+        }
+
+        let mut letters = id.as_str().chars();
+        let (Some(letter), None) = (letters.next(), letters.next()) else {
+            return Ok(None);
+        };
+        let candidates: Vec<_> = self
+            .0
+            .iter()
+            .enumerate()
+            .filter(|(_, param)| param.id.as_str().starts_with(letter))
+            .map(|(position, _)| position)
+            .collect();
+
+        match candidates.as_slice() {
+            [] => Ok(None),
+            [position] => Ok(Some(&mut self.0[*position])),
+            _ => Err(ArgumentMatchError::AmbiguousArgument {
+                argument: id.clone(),
+                parameters: candidates
+                    .iter()
+                    .map(|position| self.0[*position].id.clone())
+                    .collect(),
+            }),
+        }
+    }
+
+    /// Match positional arguments by type to parameters without an argument.
+    ///
+    /// A parameter of exactly the argument type is preferred, e.g. to a parameter of type `Any`.
+    /// Parameters with default values can be given positionally, too.
+    /// Positional arguments, which match no parameter, are an error.
+    fn positional(&mut self, arguments: &ArgumentValueList) -> Result<(), ArgumentMatchError> {
+        use microcad_lang_types::Ty;
+
+        let mut unexpected = Vec::new();
+        for value in arguments
+            .iter()
+            .filter(|arg| arg.id.is_none())
+            .map(|arg| &arg.value)
+        {
+            let ty = value.ty();
+            let position = self
+                .0
+                .iter()
+                .position(|param| !param.given && param.ty == ty)
+                .or_else(|| {
+                    self.0
+                        .iter()
+                        .position(|param| !param.given && ty.matches(&param.ty))
+                });
+            match position {
+                Some(position) => {
+                    self.0[position].value = Some(value.clone());
+                    self.0[position].given = true;
+                }
+                // The type shows why the argument does not match, e.g. `1 (Scalar)`.
+                None => unexpected.push(format!("{value} ({ty})")),
+            }
+        }
+
+        match unexpected.is_empty() {
+            true => Ok(()),
+            false => Err(ArgumentMatchError::UnexpectedPositionalArguments(
+                unexpected.join(", "),
+            )),
+        }
+    }
+
+    /// The arguments by parameter name, or an error for parameters without value.
+    fn finish(self) -> Result<Arguments, ArgumentMatchError> {
+        let missing: Vec<_> = self
+            .0
+            .iter()
+            .filter(|param| param.value.is_none())
+            .map(|param| param.id.clone())
+            .collect();
+        if !missing.is_empty() {
+            return Err(ArgumentMatchError::MissingArguments(
+                IdentifierList::from_iter(missing),
+            ));
+        }
+
+        Ok(Arguments::from_iter(
+            self.0
+                .into_iter()
+                .map(|param| (param.id, param.value.unwrap_or_default())),
+        ))
+    }
+}

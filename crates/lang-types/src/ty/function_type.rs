@@ -223,7 +223,7 @@ impl std::fmt::Display for FunctionType {
 macro_rules! call_signature {
     // 1. Variadic call signature
     (*) => {
-        $crate::CallSignature::variadic(None)
+        $crate::CallSignature::variadic()
     };
 
     // 2. Named parameters without return type: function_type!((a: TypeA, b: TypeB))

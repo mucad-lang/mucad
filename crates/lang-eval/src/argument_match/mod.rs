@@ -1,15 +1,20 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Argument match trait
+//! Match the arguments of a call to parameters.
+
+mod matcher;
+mod multi_match;
 
 use microcad_lang_base::{Identifier, IdentifierList};
 use microcad_lang_resolve::library::symbol::{
     Function, ParameterList, function::FunctionSignature, workbench::Init,
 };
-use microcad_lang_types::{ArgumentValueList, Arguments, CallSignature, Tuple, Type, Value};
+use microcad_lang_types::{ArgumentValueList, Arguments, CallSignature, Tuple};
 use miette::Diagnostic;
 use thiserror::Error;
+
+use matcher::Matcher;
 
 #[derive(Error, Debug, Diagnostic)]
 pub enum ArgumentMatchError {
@@ -30,6 +35,24 @@ pub enum ArgumentMatchError {
     /// Unexpected arguments
     #[error("Unexpected arguments: {0}")]
     UnexpectedArguments(IdentifierList),
+
+    /// Positional arguments, which match no parameter by type.
+    #[error("Unexpected positional arguments: {0}")]
+    UnexpectedPositionalArguments(String),
+
+    /// An abbreviated argument matches several parameters.
+    #[error("Argument `{argument}` is ambiguous: {parameters}")]
+    #[diagnostic(help("Use the full parameter name."))]
+    AmbiguousArgument {
+        /// The abbreviated argument, e.g. `f`.
+        argument: Identifier,
+        /// The parameters starting like the argument, e.g. `foo` and `foz`.
+        parameters: IdentifierList,
+    },
+
+    /// A parameter is given more than once, e.g. as `r` and `radius`.
+    #[error("Argument `{0}` is given more than once")]
+    DuplicateArgument(Identifier),
 }
 
 pub trait ArgumentMatch {
@@ -43,189 +66,40 @@ pub trait ArgumentMatch {
         self.argument_match(arguments).is_ok() // TODO Implement a custom and more performant algorithm here.
     }
 
+    /// Match `arguments` to the parameters of the call signature.
+    ///
+    /// Named arguments are matched by name or by an abbreviation (e.g. `r` for `radius`),
+    /// positional arguments by type. Parameters without argument get their default value.
     fn argument_match(
         &self,
         arguments: &ArgumentValueList,
     ) -> Result<Arguments, ArgumentMatchError> {
-        use microcad_lang_types::Ty;
-
-        let call_signature = self.call_signature();
-
-        // 1. A variadic function simply returns the arguments as tuple.
-        if call_signature.is_variadic() {
-            return Ok(Arguments::from(Tuple {
+        match self.call_signature().parameters {
+            Some(parameters) => {
+                Matcher::new(&parameters, &self.default_values()).match_arguments(arguments)
+            }
+            // A variadic function simply returns the arguments as tuple.
+            None => Ok(Arguments::from(Tuple {
                 named: arguments
                     .iter()
                     .filter_map(|arg| arg.id.as_ref().map(|id| (id.clone(), arg.value.clone())))
                     .collect(),
                 positional: arguments
                     .iter()
-                    .filter_map(|arg| match &arg.id {
-                        Some(_) => None,
-                        None => Some(arg.value.clone()),
-                    })
+                    .filter(|arg| arg.id.is_none())
+                    .map(|arg| arg.value.clone())
                     .collect(),
-            }));
+            })),
         }
-
-        let params = &call_signature.parameters.unwrap();
-        let default_values = self.default_values();
-
-        #[derive(Debug)]
-        struct MatchArg {
-            id: Identifier,
-            ty: Type,
-            /// The value of the argument or the default value.
-            value: Option<Value>,
-            /// The argument has been given, its value is no default value.
-            given: bool,
-        }
-
-        // 2. Construct the named arguments first, do the type check later
-        let mut matched_args: Vec<MatchArg> = params
-            .iter()
-            .map(|(id, ty)| MatchArg {
-                id: id.clone(),
-                ty: ty.clone(),
-                value: default_values.get_field(id).cloned(),
-                given: false,
-            })
-            .collect();
-
-        let mut unexpected_arguments = Vec::new();
-
-        // 3. Try to match named arguments
-        arguments.args.iter().for_each(|arg| {
-            if let Some(id) = &arg.id {
-                if let Some(match_arg) = matched_args
-                    .iter_mut()
-                    .find(|match_arg| &match_arg.id == id)
-                {
-                    match_arg.value = Some(arg.value.clone());
-                    match_arg.given = true;
-                } else {
-                    unexpected_arguments.push(id.clone());
-                }
-            }
-        });
-
-        if !unexpected_arguments.is_empty() {
-            return Err(ArgumentMatchError::UnexpectedArguments(
-                IdentifierList::from_iter(unexpected_arguments),
-            ));
-        }
-
-        // 4. Try to find positional arguments by type
-        arguments
-            .args
-            .iter()
-            .filter(|arg| arg.id.is_none())
-            .for_each(|arg| {
-                let ty = arg.value.ty();
-                // A parameter of exactly this type is preferred, e.g. to a parameter of type `Any`.
-                // Parameters with default values can be given positionally, too.
-                let position = matched_args
-                    .iter()
-                    .position(|match_arg| !match_arg.given && match_arg.ty == ty)
-                    .or_else(|| {
-                        matched_args
-                            .iter()
-                            .position(|match_arg| !match_arg.given && ty.matches(&match_arg.ty))
-                    });
-                if let Some(position) = position {
-                    matched_args[position].value = Some(arg.value.clone());
-                    matched_args[position].given = true;
-                }
-            });
-
-        let missing_arguments: Vec<_> = matched_args
-            .iter()
-            .filter_map(|arg| {
-                if arg.value.is_none() {
-                    Some(arg.id.clone())
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        if !missing_arguments.is_empty() {
-            return Err(ArgumentMatchError::MissingArguments(
-                IdentifierList::from_iter(missing_arguments),
-            ));
-        }
-
-        Ok(Arguments::from_iter(matched_args.into_iter().map(
-            |match_arg| (match_arg.id, match_arg.value.unwrap_or_default()),
-        )))
     }
 
+    /// Match `arguments`, a list argument for a non-list parameter results in one match
+    /// per element.
     fn argument_multi_match(
         &self,
         arguments: &ArgumentValueList,
     ) -> Result<Vec<Arguments>, ArgumentMatchError> {
-        // Step 1: Bind base arguments and resolve default values
-        let base_args = self.argument_match(arguments)?;
-
-        let call_signature = self.call_signature();
-        if call_signature.is_variadic() {
-            return Err(ArgumentMatchError::MultiMatchNotAllowedForVariadic {
-                arguments: arguments.to_string(),
-            });
-        }
-
-        // Step 2: Extract parameter metadata
-        let params_map = call_signature.parameters.unwrap();
-
-        // Step 3: Identify which arguments need vectorization
-        let mut resolved_lists: Vec<(Identifier, Vec<Value>)> =
-            Vec::with_capacity(base_args.0.named.len());
-
-        for (id, val) in base_args.0.named {
-            let expected_ty = params_map
-                .iter()
-                .find(|(p_id, _)| p_id == &id)
-                .map(|(_, ty)| ty);
-
-            if let (Some(expected), Value::List(elements)) = (expected_ty, &val) {
-                if expected.is_list_of(expected) || !expected.is_list_of(&Type::Any) {
-                    resolved_lists.push((id, elements.to_vec()));
-                } else {
-                    resolved_lists.push((id, vec![val.clone()]));
-                }
-            } else {
-                resolved_lists.push((id, vec![val.clone()]));
-            }
-        }
-
-        // Step 4: Compute Cartesian product across all argument value lists
-        let mut combinations: Vec<Vec<(Identifier, Value)>> = vec![vec![]];
-
-        for (id, values) in resolved_lists {
-            let mut next_combinations = Vec::new();
-            for current_combination in combinations {
-                for val in &values {
-                    let mut extended = current_combination.clone();
-                    extended.push((id.clone(), val.clone()));
-                    next_combinations.push(extended);
-                }
-            }
-            combinations = next_combinations;
-        }
-
-        // Step 5: Convert combinations into Arguments
-        let result = combinations
-            .into_iter()
-            .map(|named| {
-                Tuple {
-                    positional: vec![],
-                    named,
-                }
-                .into()
-            })
-            .collect();
-
-        Ok(result)
+        multi_match::argument_multi_match(self, arguments)
     }
 }
 

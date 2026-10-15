@@ -1,19 +1,23 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+//! Argument match tests
+
 use microcad_lang_base::Identifier;
 use microcad_lang_eval::ArgumentMatch;
 use microcad_lang_types::{
-    ArgumentValue, ArgumentValueList, CallSignature, Length, Tuple, Type, argument_value,
-    arguments, call_signature, list, tuple,
+    ArgumentValue, ArgumentValueList, Arguments, CallSignature, Length, Tuple, Type, Value,
+    argument_value, arguments, call_signature, list, tuple,
 };
+use test_case::test_case;
 
-struct ArgumentMatchDummy {
-    pub signature: CallSignature,
-    pub default: Tuple,
+/// A call signature with default values.
+struct Signature {
+    signature: CallSignature,
+    default: Tuple,
 }
 
-impl ArgumentMatch for ArgumentMatchDummy {
+impl ArgumentMatch for Signature {
     fn call_signature(&self) -> CallSignature {
         self.signature.clone()
     }
@@ -23,47 +27,162 @@ impl ArgumentMatch for ArgumentMatchDummy {
     }
 }
 
+/// `(radius: Length)`
+fn circle() -> Signature {
+    Signature {
+        signature: call_signature!(radius: Type::length()),
+        default: tuple!(),
+    }
+}
+
+/// `(r: Length, radius: Length)`
+fn r_and_radius() -> Signature {
+    Signature {
+        signature: call_signature!(r: Type::length(), radius: Type::length()),
+        default: tuple!(),
+    }
+}
+
+/// `(foo: Integer, foz: Integer)`
+fn foo_foz() -> Signature {
+    Signature {
+        signature: call_signature!(foo: Type::Integer, foz: Type::Integer),
+        default: tuple!(),
+    }
+}
+
+/// `(a: Scalar, b: Length)`
+fn scalar_length() -> Signature {
+    Signature {
+        signature: call_signature!(a: Type::scalar(), b: Type::length()),
+        default: tuple!(),
+    }
+}
+
+/// `(any: Any, length: Length)`
+fn any_length() -> Signature {
+    Signature {
+        signature: call_signature!(any: Type::Any, length: Type::length()),
+        default: tuple!(),
+    }
+}
+
+/// `(x: Scalar)`
+fn scalar() -> Signature {
+    Signature {
+        signature: call_signature!(x: Type::scalar()),
+        default: tuple!(),
+    }
+}
+
+/// `(cond: Bool, message: String = "default")`
+fn assert() -> Signature {
+    Signature {
+        signature: call_signature!(cond: Type::Bool, message: Type::String),
+        default: tuple!(message = "default"),
+    }
+}
+
+/// `(*)`
+fn variadic() -> Signature {
+    Signature {
+        signature: call_signature!(*),
+        default: tuple!(),
+    }
+}
+
+fn mm(value: f64) -> Value {
+    Length::mm(value).into()
+}
+
+/// Match `arguments`, errors are compared by their message.
+fn argument_match(
+    signature: Signature,
+    arguments: Vec<ArgumentValue>,
+) -> Result<Arguments, String> {
+    signature
+        .argument_match(&arguments.into_iter().collect())
+        .map_err(|err| err.to_string())
+}
+
+// Named arguments
+#[test_case(circle(), vec![argument_value!(radius = mm(42.0))]
+    => Ok(arguments!(radius = mm(42.0))); "named")]
+#[test_case(scalar_length(), vec![argument_value!(b = mm(2.0)), argument_value!(a = 1.0)]
+    => Ok(arguments!(a = 1.0, b = mm(2.0))); "named in any order")]
+#[test_case(circle(), vec![argument_value!(diameter = mm(42.0))]
+    => Err("Unexpected arguments: diameter".into()); "named unexpected")]
+// Abbreviations
+#[test_case(circle(), vec![argument_value!(r = mm(42.0))]
+    => Ok(arguments!(radius = mm(42.0))); "abbreviation")]
+#[test_case(r_and_radius(), vec![argument_value!(r = mm(1.0)), argument_value!(radius = mm(2.0))]
+    => Ok(arguments!(r = mm(1.0), radius = mm(2.0))); "abbreviation is no exact name")]
+#[test_case(foo_foz(), vec![argument_value!(f = 10), argument_value!(foz = 1)]
+    => Err("Argument `f` is ambiguous: foo,foz".into()); "abbreviation ambiguous")]
+#[test_case(circle(), vec![argument_value!(d = mm(42.0))]
+    => Err("Unexpected arguments: d".into()); "abbreviation unknown")]
+#[test_case(circle(), vec![argument_value!(ra = mm(42.0))]
+    => Err("Unexpected arguments: ra".into()); "abbreviation only a letter")]
+#[test_case(circle(), vec![argument_value!(r = mm(1.0)), argument_value!(radius = mm(2.0))]
+    => Err("Argument `radius` is given more than once".into()); "abbreviation and name")]
+// Positional arguments
+#[test_case(circle(), vec![argument_value!(mm(42.0))]
+    => Ok(arguments!(radius = mm(42.0))); "positional")]
+#[test_case(scalar_length(), vec![argument_value!(mm(2.0)), argument_value!(1.0)]
+    => Ok(arguments!(a = 1.0, b = mm(2.0))); "positional by type")]
+#[test_case(scalar_length(), vec![argument_value!(b = mm(2.0)), argument_value!(1.0)]
+    => Ok(arguments!(a = 1.0, b = mm(2.0))); "positional and named")]
+#[test_case(any_length(), vec![argument_value!(mm(2.0)), argument_value!(1.0)]
+    => Ok(arguments!(any = 1.0, length = mm(2.0))); "positional exact type before any")]
+#[test_case(any_length(), vec![argument_value!(length = mm(2.0)), argument_value!(mm(3.0))]
+    => Ok(arguments!(any = mm(3.0), length = mm(2.0))); "positional any")]
+#[test_case(scalar(), vec![argument_value!(1)]
+    => Ok(arguments!(x = 1)); "positional integer for scalar")]
+// Default values
+#[test_case(assert(), vec![argument_value!(true)]
+    => Ok(arguments!(cond = true, message = "default")); "default")]
+#[test_case(assert(), vec![argument_value!(true), argument_value!(message = "given")]
+    => Ok(arguments!(cond = true, message = "given")); "default overridden by name")]
+#[test_case(assert(), vec![argument_value!(true), argument_value!(m = "given")]
+    => Ok(arguments!(cond = true, message = "given")); "default overridden by abbreviation")]
+#[test_case(assert(), vec![argument_value!(true), argument_value!("given")]
+    => Ok(arguments!(cond = true, message = "given")); "default overridden positionally")]
+// Missing arguments
+#[test_case(circle(), vec![]
+    => Err("Missing arguments: radius".into()); "missing")]
+#[test_case(assert(), vec![argument_value!(message = "given")]
+    => Err("Missing arguments: cond".into()); "missing without default")]
+// Positional arguments without matching parameter
+#[test_case(circle(), vec![argument_value!(1.0)]
+    => Err("Unexpected positional arguments: 1 (Scalar)".into()); "unexpected positional of other type")]
+#[test_case(circle(), vec![argument_value!(mm(1.0)), argument_value!(mm(2.0))]
+    => Err("Unexpected positional arguments: 2mm (Length)".into()); "unexpected positional surplus")]
+#[test_case(circle(), vec![argument_value!(radius = mm(1.0)), argument_value!(mm(2.0))]
+    => Err("Unexpected positional arguments: 2mm (Length)".into()); "unexpected positional for named")]
+fn match_arguments(
+    signature: Signature,
+    arguments: Vec<ArgumentValue>,
+) -> Result<Arguments, String> {
+    argument_match(signature, arguments)
+}
+
+/// A variadic signature returns all arguments.
 #[test]
-fn argument_matching() {
-    let dummy = ArgumentMatchDummy {
-        signature: call_signature!(a: Type::scalar(), b: Type::length(), c: Type::scalar(), d: Type::length()),
-        default: tuple!(d = Length::mm(4.0)),
-    };
-
-    let arguments: ArgumentValueList = [
-        argument_value!(a = 1.0),
-        argument_value!(b = Length::mm(2.0)),
-        argument_value!(3.0),
-    ]
-    .into_iter()
-    .collect();
-
-    let result = dummy
-        .argument_match(&arguments)
-        .expect("expect valid arguments");
-
+fn match_variadic() {
+    let arguments = vec![argument_value!(1.0), argument_value!(a = 2)];
     assert_eq!(
-        result,
-        arguments!(a = 1.0, b = Length::mm(2.0), c = 3.0, d = Length::mm(4.0))
+        argument_match(variadic(), arguments),
+        Ok(Arguments::from(Tuple {
+            positional: vec![1.0.into()],
+            named: vec![(Identifier::no_ref("a"), 2.into())],
+        }))
     );
 }
 
-#[test]
-fn argument_match_fail() {
-    let dummy = ArgumentMatchDummy {
-        signature: call_signature!(x: Type::scalar(), y: Type::scalar(), z: Type::scalar()),
-        default: tuple!(),
-    };
-
-    let arguments: ArgumentValueList = [argument_value!(x = 1.0), argument_value!(Length::mm(1.0))]
-        .into_iter()
-        .collect();
-    assert!(dummy.argument_match(&arguments).is_err());
-}
-
+/// A list argument for a non-list parameter results in one match per element.
 #[test]
 fn multi_match_cartesian_product() {
-    let dummy = ArgumentMatchDummy {
+    let signature = Signature {
         signature: call_signature!(a: Type::length(), b: Type::length()),
         default: tuple!(),
     };
@@ -76,65 +195,27 @@ fn multi_match_cartesian_product() {
     .into_iter()
     .collect();
 
-    let result = dummy.argument_multi_match(&args).unwrap();
+    let result = signature
+        .argument_multi_match(&args)
+        .expect("A multi match");
 
     // 2 x 3 = 6 combinations expected
-    assert_eq!(result.len(), 6);
-
-    assert_eq!(result[0], arguments!(a = 1.0, b = 10.0));
-    assert_eq!(result[1], arguments!(a = 1.0, b = 20.0));
-    assert_eq!(result[2], arguments!(a = 1.0, b = 30.0));
-    assert_eq!(result[3], arguments!(a = 2.0, b = 10.0));
-    assert_eq!(result[4], arguments!(a = 2.0, b = 20.0));
-    assert_eq!(result[5], arguments!(a = 2.0, b = 30.0));
-}
-
-/// A positional argument matches a parameter of type `Any`,
-/// but a parameter of exactly its type is preferred.
-#[test]
-fn argument_match_any() {
-    let dummy = ArgumentMatchDummy {
-        signature: call_signature!(x: Type::Any),
-        default: tuple!(),
-    };
-    let arguments: ArgumentValueList = [argument_value!(Length::mm(2.0))].into_iter().collect();
     assert_eq!(
-        dummy.argument_match(&arguments).expect("A match"),
-        arguments!(x = Length::mm(2.0))
-    );
-
-    let dummy = ArgumentMatchDummy {
-        signature: call_signature!(any: Type::Any, length: Type::length()),
-        default: tuple!(),
-    };
-    let arguments: ArgumentValueList = [argument_value!(Length::mm(2.0)), argument_value!(1.0)]
-        .into_iter()
-        .collect();
-    assert_eq!(
-        dummy.argument_match(&arguments).expect("A match"),
-        arguments!(any = 1.0, length = Length::mm(2.0))
+        result,
+        [
+            arguments!(a = 1.0, b = 10.0),
+            arguments!(a = 1.0, b = 20.0),
+            arguments!(a = 1.0, b = 30.0),
+            arguments!(a = 2.0, b = 10.0),
+            arguments!(a = 2.0, b = 20.0),
+            arguments!(a = 2.0, b = 30.0),
+        ]
     );
 }
 
-/// A default value is used if the argument is missing, a positional argument overrides it.
+/// A multi match with a variadic signature is an error.
 #[test]
-fn argument_match_default_positional() {
-    let dummy = ArgumentMatchDummy {
-        signature: call_signature!(cond: Type::Bool, message: Type::String),
-        default: tuple!(message = "default"),
-    };
-
-    let arguments: ArgumentValueList = [argument_value!(true)].into_iter().collect();
-    assert_eq!(
-        dummy.argument_match(&arguments).expect("A match"),
-        arguments!(cond = true, message = "default")
-    );
-
-    let arguments: ArgumentValueList = [argument_value!(true), argument_value!("given")]
-        .into_iter()
-        .collect();
-    assert_eq!(
-        dummy.argument_match(&arguments).expect("A match"),
-        arguments!(cond = true, message = "given")
-    );
+fn multi_match_variadic() {
+    let args: ArgumentValueList = [argument_value!(1.0)].into_iter().collect();
+    assert!(variadic().argument_multi_match(&args).is_err());
 }
