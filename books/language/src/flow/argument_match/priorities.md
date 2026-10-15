@@ -59,17 +59,6 @@ std::assert_eq(f(w = 1cm, h = 2cm), 2cm²);
 std::assert_eq(f(w = 1cm, height = 2cm), 2cm²);
 ```
 
-Here are some usual examples of short identifiers:
-
-| Identifier                    | Short Identifier |
-| ----------------------------- | ---------------- |
-| `parameter`                   | `p`              |
-| `my_parameter`                | `m_p`            |
-| `my_very_long_parameter_name` | `m_v_l_p_n`      |
-| `my_Parameter`                | `m_P`            |
-| `MyParameter`                 | `M`              |
-| `myParameter`                 | `m`              |
-
 ## Match Type
 
 Nameless values can be used if all parameter types of the called function
