@@ -86,7 +86,7 @@ fn stl_export() -> std::io::Result<()> {
     .expect("No error");
     group.append(translate);
 
-    let diff = mu::ops::difference(arguments!(self = group), &mut ctx).expect("No error");
+    let diff = mu::ops::subtract(arguments!(self = group), &mut ctx).expect("No error");
     let extrude = mu::ops::extrude(
         arguments!(
             self = diff,

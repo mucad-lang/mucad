@@ -267,7 +267,7 @@ fn difference() -> std::io::Result<()> {
             let mut group = ModelTree::new(Element::Group);
             group.append(circle(42.0));
             group.append(circle(23.0));
-            let diff = mu::ops::difference(arguments!(self = group), &mut ctx).expect("No error");
+            let diff = mu::ops::subtract(arguments!(self = group), &mut ctx).expect("No error");
             let translate = mu::ops::translate(
                 arguments!(
                     self = diff,
@@ -312,7 +312,7 @@ fn svg_export() -> std::io::Result<()> {
     .expect("No error");
     group.append(translate);
 
-    let model = mu::ops::difference(arguments!(self = group), &mut ctx).expect("No error");
+    let model = mu::ops::subtract(arguments!(self = group), &mut ctx).expect("No error");
 
     SvgExporter::default()
         .export_to_path(&model, &target_dir().join("rect_diff.svg"))
