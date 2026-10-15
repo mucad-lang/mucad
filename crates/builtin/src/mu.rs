@@ -339,7 +339,7 @@ pub mod debug {
         let message: String = args.try_get("message")?;
 
         // Equal like the operator `==`, e.g. with the tolerance of the number representation.
-        if matches!(a.cmp(BinaryOperator::Equal, &b)?, Value::Bool(true)) {
+        if matches!(a.cmp(BinaryOperator::Equal, b)?, Value::Bool(true)) {
             // assertion ok: return None.
             Ok(Value::None)
         } else {
