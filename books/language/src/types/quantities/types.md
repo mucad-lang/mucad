@@ -1,6 +1,6 @@
 # Quantity Types
 
-The following *quantity types* are [currently](https://codeberg.org/microcad/microcad/issues/76) supported in µcad:
+The following *quantity types* supported in µcad:
 
 | Type      | Metric Units                                | Imperial Units                 |
 | --------- | ------------------------------------------- | ------------------------------ |

@@ -8,9 +8,7 @@ assign it to a constant `v` with the following code:
 [![test](.test/expression_multiply.svg)](.test/expression_multiply.log)
 
 ```mu,expression_multiply
-v = 5 * 4.0mm;
-
-std::assert_eq(v, 20mm);
+std::assert_eq(5 * 4.0mm, 20mm);
 ```
 
 The result of this expression would be `20mm` like the test (see `std::assert`)
