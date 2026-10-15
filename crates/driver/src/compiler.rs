@@ -59,9 +59,25 @@ pub struct Compiler {
     no_std: bool,
     /// Paths to search for the standard library.
     search_paths: Vec<std::path::PathBuf>,
-    /// The standard library is loaded once per compiler.
-    std_loaded: bool,
+    /// The standard library, which is loaded once per compiler.
+    std: Option<mu::base::LibraryId>,
 }
+
+/// Symbols of the standard library which can be used by name, e.g. `Circle` instead of `std::geo2d::Circle`.
+const PRELUDE: &[&str] = &[
+    "geo2d::Circle",
+    "geo2d::Rect",
+    "ops::extrude",
+    "ops::revolve",
+    "ops::translate",
+    "ops::rotate",
+    "ops::scale",
+    "ops::orient",
+    "ops::hull",
+    "print",
+    "assert",
+    "assert_eq",
+];
 
 impl Compiler {
     /// A compiler with the default configuration, which loads the standard library.
@@ -75,7 +91,7 @@ impl Compiler {
             resolve_context: mu::ResolveContext::new(),
             no_std: config.no_std,
             search_paths: config.search_paths.clone(),
-            std_loaded: false,
+            std: None,
         }
     }
 }
@@ -129,7 +145,7 @@ impl Compiler {
 
     /// Load the standard library once and make it an implicit dependency of every library.
     fn load_std(&mut self) -> CompileResult<()> {
-        if self.no_std || self.std_loaded {
+        if self.no_std || self.std.is_some() {
             return Ok(((), mu::Diagnostics::default()));
         }
 
@@ -148,9 +164,43 @@ impl Compiler {
             .then(|lib_id| {
                 self.resolve_context
                     .add_implicit_dependency(StdLib::info().name, lib_id);
-                self.std_loaded = true;
+                self.std = Some(lib_id);
+                let prelude = self.prelude();
+                self.resolve_context.set_prelude(prelude);
                 Ok(((), mu::Diagnostics::default()))
             })
+    }
+
+    /// The prelude with the [`PRELUDE`] symbols of the standard library.
+    ///
+    /// Without a loaded standard library the prelude is empty.
+    fn prelude(&self) -> mu::resolve::Prelude {
+        let Some(lib_id) = self.std else {
+            return mu::resolve::Prelude::new(mu::base::LibraryId::ROOT);
+        };
+        let mut prelude = mu::resolve::Prelude::new(lib_id);
+        let Some(lib) = self
+            .resolve_context
+            .lib_cache()
+            .with_read(|lib_cache| lib_cache.get(&lib_id))
+        else {
+            return prelude;
+        };
+
+        let std_name = StdLib::info().name;
+        for path in PRELUDE {
+            let Ok(full_path) =
+                format!("::{std_name}::{path}").parse::<mu::lower::ir::UnresolvedPath>();
+            match (lib.look_up(lib.root, &full_path), full_path.parts.last()) {
+                (Some(node_id), Some(name)) => {
+                    prelude
+                        .symbols
+                        .insert(name.clone(), lib.symbol_id(node_id, Some(lib_id)));
+                }
+                _ => log::warn!("Prelude symbol `{full_path}` not found in the standard library"),
+            }
+        }
+        prelude
     }
 
     /// Find the standard library in the search paths, or install it into its default path.

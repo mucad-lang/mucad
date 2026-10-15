@@ -16,37 +16,10 @@ use microcad_lang_base::{
     SrcReferrer, SymbolId, ToCompactString,
 };
 
-/// The symbol a looked up node stands for.
-///
-/// An alias (`pub use __mu::debug::assert;`) stands for its target, aliases of aliases are followed.
-/// Symbols of an external library (`lib_id`) become [`SymbolId::External`].
-fn symbol_target(lib: &Library, node_id: SymbolNodeId, lib_id: Option<LibraryId>) -> SymbolId {
-    let in_lib = |id| match lib_id {
-        Some(lib_id) => SymbolId::External(ExternalId { lib_id, id }),
-        None => SymbolId::Item(id),
-    };
-
-    // Limit the depth to stop at cyclic aliases.
-    let mut node_id = node_id;
-    for _ in 0..16 {
-        let symbol::SymbolDef::Alias(alias) = &SymbolNodeRef::new(node_id, &lib.arena).get().def
-        else {
-            break;
-        };
-        match alias.path.symbol_id() {
-            Some(SymbolId::Item(target)) => node_id = *target,
-            Some(target) => return target.clone(),
-            // Alias not resolved yet.
-            None => break,
-        }
-    }
-    in_lib(node_id)
-}
-
-/// The symbol of a look up result in `lib`, see [`symbol_target`].
+/// The symbol of a look up result in `lib`, see [`Library::symbol_id`].
 fn found_symbol(lib: &Library, found: LookUp, lib_id: Option<LibraryId>) -> SymbolId {
     match found {
-        LookUp::Local(node_id) => symbol_target(lib, node_id, lib_id),
+        LookUp::Local(node_id) => lib.symbol_id(node_id, lib_id),
         LookUp::External(symbol_id) => symbol_id,
     }
 }

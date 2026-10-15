@@ -488,3 +488,42 @@ fn compile_function_reassignment() {
         .expect("A model");
     assert!(!diags.has_errors(), "{diags:?}");
 }
+
+/// Symbols of the prelude of the standard library can be used by name.
+#[test]
+fn compile_prelude() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile(
+            "Circle(radius = 1mm).translate(x = 1mm).hull();\n\
+            Rect(10mm).extrude(height = 1mm);\n\
+            Circle(radius = 1mm).translate(x = 2mm).revolve(90°);\n\
+            Circle(radius = 1mm).rotate(angle = 45°).scale(s = 2.0);\n\
+            Circle(radius = 1mm).extrude(height = 1mm).orient(v = (x = 1.0, y = 0.0, z = 0.0));\n\
+            assert(true);\n\
+            assert_eq(1, 1);\n\
+            print(\"prelude\");",
+        )
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}
+
+/// Own symbols have priority over the prelude.
+#[test]
+fn compile_prelude_shadowed() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile("fn assert_eq(a: Integer, b: Integer) {}\nassert_eq(1, 2);")
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}
+
+/// Without standard library there is no prelude.
+#[test]
+fn compile_prelude_no_std() {
+    let mut compiler = compiler();
+    let (_, diags) = compiler
+        .compile("Circle(radius = 1mm);")
+        .expect("A model, despite errors");
+    assert!(diags.has_errors(), "{diags:?}");
+}

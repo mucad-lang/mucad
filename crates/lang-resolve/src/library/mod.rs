@@ -155,6 +155,33 @@ impl Library {
         }
     }
 
+    /// The symbol a node of this library stands for.
+    ///
+    /// An alias (`pub use __mu::debug::assert;`) stands for its target, aliases of aliases are followed.
+    /// Symbols of an external library (`lib_id`) become [`SymbolId::External`].
+    pub fn symbol_id(&self, node_id: SymbolNodeId, lib_id: Option<LibraryId>) -> SymbolId {
+        let in_lib = |id| match lib_id {
+            Some(lib_id) => SymbolId::External(ExternalId { lib_id, id }),
+            None => SymbolId::Item(id),
+        };
+
+        // Limit the depth to stop at cyclic aliases.
+        let mut node_id = node_id;
+        for _ in 0..16 {
+            let SymbolDef::Alias(alias) = &SymbolNodeRef::new(node_id, &self.arena).get().def
+            else {
+                break;
+            };
+            match alias.path.symbol_id() {
+                Some(SymbolId::Item(target)) => node_id = *target,
+                Some(target) => return target.clone(),
+                // Alias not resolved yet.
+                None => break,
+            }
+        }
+        in_lib(node_id)
+    }
+
     /// Public entry point for symbol lookup.
     ///
     /// Symbols imported from other libraries are not found, see [`Library::look_up_symbol`].
