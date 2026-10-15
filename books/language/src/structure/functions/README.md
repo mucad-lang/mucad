@@ -41,8 +41,8 @@ fn f(x: Scalar, y = 1mm) -> Length {
     x * y
 }
 
-std::assert(f(2) == 2mm);
-std::assert(f(2, 2mm) == 4mm);
+std::assert_eq(f(2), 2mm);
+std::assert_eq(f(2, 2mm), 4mm);
 ```
 
 Functions may be declared within [source files](../source_file.md),

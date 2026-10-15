@@ -20,8 +20,8 @@ use std::debug::*;
 
 a = 5;
 b = a * 2;
-std::assert(a == 5);
-std::assert(b == 10);
+std::assert_eq(a, 5);
+std::assert_eq(b, 10);
 ```
 
 ## Locality
@@ -38,7 +38,7 @@ use std::debug::*;
 
 // define a within scope #0
 a = 5;
-std::assert(a == 5);
+std::assert_eq(a, 5);
 
 // scope #1
 {
@@ -88,7 +88,7 @@ Even if using *anonymous scopes* this does not change.
 a = 5;
 {
     a = a * 2;
-    std::assert(a == 10);
+    std::assert_eq(a, 10);
 }
 ```
 

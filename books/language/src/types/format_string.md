@@ -6,7 +6,7 @@ notation to insert expressions into a text.
 [![test](.test/format_string.svg)](.test/format_string.log)
 
 ```mu,format_string
-std::assert("{2 + 5}" == "7");
+std::assert_eq("{2 + 5}", "7");
 ```
 
 Usually they are used to insert parameters into text:

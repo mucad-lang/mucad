@@ -15,11 +15,11 @@ Arrays support the following operators.
 
 ```mu,array_operations
 
-std::assert([1, 2] + 2 == [3, 4]);
-std::assert([1, 2] - 2 == [-1, 0]);
-std::assert([-1.0, 2.0] * 2.0 == [-2.0, 4.0]);
-std::assert([1.0, 2.0] / 2.0 == [0.5, 1.0]);
-std::assert(-[-1.0, 1.0] == [1.0, -1.0]);
+std::assert_eq([1, 2] + 2, [3, 4]);
+std::assert_eq([1, 2] - 2, [-1, 0]);
+std::assert_eq([-1.0, 2.0] * 2.0, [-2.0, 4.0]);
+std::assert_eq([1.0, 2.0] / 2.0, [0.5, 1.0]);
+std::assert_eq(-[-1.0, 1.0], [1.0, -1.0]);
 ```
 
 [![test](.test/array_operator_not.svg)](.test/array_operator_not.log)

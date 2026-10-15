@@ -32,8 +32,8 @@ sketch Wheel(radius: Length) {
     std::geo2d::Circle(radius);
 }
 
-std::assert(Wheel(radius = 5cm).radius == 5cm);
-std::assert(Wheel(radius = 5cm).diameter == 10cm);
+std::assert_eq(Wheel(radius = 5cm).radius, 5cm);
+std::assert_eq(Wheel(radius = 5cm).diameter, 10cm);
 ```
 
 If there are no initializers, the initialization code is just part of the

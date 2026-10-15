@@ -32,20 +32,20 @@ Here are some examples of each operator:
 
 ```mu,operator_examples
 
-std::assert(-5 == 0 - 5); // Negation
-std::assert(5 + 6 == 11); // Addition
-std::assert(5 - 6 == -1); // Subtraction
-std::assert(5 * 6 == 30); // Multiplication
-std::assert(5 / 6 == 0.83333333333333333); // Division
-std::assert(5 ^ 6 == 15625); // Power
-std::assert((true & false) == false); // Logical AND
-std::assert((true | false) == true); // Logical OR
-std::assert((5 > 6) == false); // Greater than
-std::assert((5 >= 6) == false); // Greater or equal
-std::assert((5 < 6) == true); // Less than
-std::assert((5 <= 6) == true); // Less or equal
-std::assert((5 == 6) == false); // Equal
-std::assert((5 != 6) == true); // Not equal
+std::assert_eq(-5, 0 - 5); // Negation
+std::assert_eq(5 + 6, 11); // Addition
+std::assert_eq(5 - 6, -1); // Subtraction
+std::assert_eq(5 * 6, 30); // Multiplication
+std::assert_eq(5 / 6, 0.83333333333333333); // Division
+std::assert_eq(5 ^ 6, 15625); // Power
+std::assert_eq(true & false, false); // Logical AND
+std::assert_eq(true | false, true); // Logical OR
+std::assert_eq(5 > 6, false); // Greater than
+std::assert_eq(5 >= 6, false); // Greater or equal
+std::assert_eq(5 < 6, true); // Less than
+std::assert_eq(5 <= 6, true); // Less or equal
+std::assert_eq(5 == 6, false); // Equal
+std::assert_eq(5 != 6, true); // Not equal
 ```
 
 ## Operators & Arrays

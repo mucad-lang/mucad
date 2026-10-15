@@ -15,7 +15,7 @@ Like `x` is in the following example:
 ```mu,call_match
 fn f(x: Length) -> Length { x * 2 }
 
-std::assert(f(x = 10m) == 20m);
+std::assert_eq(f(x = 10m), 20m);
 ```
 
 Fortunately there are some facilities for your convenience, like:

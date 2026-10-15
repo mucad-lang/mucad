@@ -24,7 +24,7 @@ and the result is a *value*:
 x = std::math::abs(-2);
 
 // check value
-std::assert(x == 2);
+std::assert_eq(x, 2);
 ```
 
 ## Calling Workbenches
@@ -38,7 +38,7 @@ except that the result is a *model*.
 // call sketch Circle with a size and store object node in s
 s = std::geo2d::Circle(diameter = 2cm);
 
-std::assert(s.radius == 1cm);
+std::assert_eq(s.radius, 1cm);
 ```
 
 ## Calling Operations

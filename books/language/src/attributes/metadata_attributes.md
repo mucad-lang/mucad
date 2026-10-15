@@ -20,7 +20,7 @@ In a viewer and for some exporter, the model will be rendered in the specified c
 #[color = "#FFFFFF"]
 c = std::geo2d::Circle(r = 42.0mm);
 
-std::assert(c#color == (r = 1.0, g = 1.0, b = 1.0, a = 1.0));
+std::assert_eq(c#color, (r = 1.0, g = 1.0, b = 1.0, a = 1.0));
 ```
 
 You can access the color property using the `#` accessor.
@@ -44,5 +44,5 @@ This means the circle in the example below will be rendered with a resolution `0
 #[resolution = 200%]
 c = std::geo2d::Circle(r = 42.0mm);
 
-std::assert(c#resolution == 200%);
+std::assert_eq(c#resolution, 200%);
 ```

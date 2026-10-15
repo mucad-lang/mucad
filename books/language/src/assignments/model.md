@@ -7,7 +7,7 @@ value on the right side they store a model.
 
 ```mu,model_assignment
 m = std::geo2d::Circle(radius = 10mm); // assign the model of a circle into m
-std::assert(m.radius == 10mm); // access property radius of m
+std::assert_eq(m.radius, 10mm); // access property radius of m
 ```
 
 Using a model as a value or vice versa does not work without further operations.

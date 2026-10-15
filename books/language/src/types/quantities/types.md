@@ -73,7 +73,7 @@ An `Area` is a two-dimensional quantity. It is the result when multiplying two `
 a = 3cm;
 b = 2cm;
 area = a * b;
-std::assert(area == 6cm²);
+std::assert_eq(area, 6cm²);
 ```
 
 Here is an example of how to use different areal units:
@@ -86,7 +86,7 @@ square_centimeter = 1000cm2;
 square_meter = 0.1m²;
 square_inch = 155in²;
 
-std::assert(square_millimeter == square_centimeter);
+std::assert_eq(square_millimeter, square_centimeter);
 ```
 
 ## Volume
@@ -102,7 +102,7 @@ c = 4mm;
 
 volume = a * b * c;
 
-std::assert(volume == 24mm³);
+std::assert_eq(volume, 24mm³);
 ```
 
 Here is an example for units:
@@ -148,5 +148,5 @@ gram = 1000.0g;
 kilogram = 1.0kg;
 pound = 2.204623lb;
 
-std::assert(gram == kilogram);
+std::assert_eq(gram, kilogram);
 ```

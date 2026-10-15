@@ -11,8 +11,8 @@ where units remain flexible.
 
 ```mu,types_quantity_operators
 
-std::assert(6cm * 2cm == 12cm²);
-std::assert(6cm / 2cm == 3.0);
-std::assert(6cm + 2cm == 80mm);
-std::assert(6cm - 2cm == 0.04m);
+std::assert_eq(6cm * 2cm, 12cm²);
+std::assert_eq(6cm / 2cm, 3.0);
+std::assert_eq(6cm + 2cm, 80mm);
+std::assert_eq(6cm - 2cm, 0.04m);
 ```
