@@ -122,7 +122,7 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
                         Ok(FlowSignal::Yield(value))
                     }
                     Some(_) => context.catch(EvalErrorKind::SymbolCannotBeCalled {
-                        path: self.path.to_string(),
+                        path: context.current_symbol_name().unwrap_or_default(),
                         src_ref: self.src_ref,
                     }),
                     None => context.catch(EvalErrorKind::BuiltinNotFound {
@@ -132,7 +132,7 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
                 }
             }
             path => context.catch(EvalError::new(EvalErrorKind::SymbolCannotBeCalled {
-                path: path.to_string(),
+                path: context.current_symbol_name().unwrap_or_default(),
                 src_ref: self.src_ref,
             })),
         }
