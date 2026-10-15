@@ -25,8 +25,8 @@ Outer attributes are placed **outside** and **before** a statement. They apply t
 ```mu,outer_attributes
 #[color = "#FF0000"]
 {
-    std::geo2d::Circle(r = 20mm);
-    std::geo2d::Rect(size = 20mm).std::ops::translate(x = 20mm);
+    Circle(r = 20mm);
+    Rect(size = 20mm).translate(x = 20mm);
 }
 ```
 
@@ -42,8 +42,8 @@ The following code is semantically equivalent to the outer attribute example abo
 {
     #![color = "#FF0000"]
 
-    std::geo2d::Circle(r = 20mm);
-    std::geo2d::Rect(size = 20mm).std::ops::translate(x = 20mm);
+    Circle(r = 20mm);
+    Rect(size = 20mm).translate(x = 20mm);
 }
 ```
 

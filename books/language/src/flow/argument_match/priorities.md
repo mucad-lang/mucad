@@ -39,7 +39,7 @@ fn f(width: Length, height: Length) -> Area { width * height }
 
 x = f(height = 2cm, width = 1cm); // call f() with parameters in arbitrary order
 
-std::assert_eq(x, 2cm²);
+assert_eq(x, 2cm²);
 ```
 
 ## Match Short Identifier
@@ -54,9 +54,9 @@ The short form consists of the first letter of each word separated by underscore
 fn f(width: Length, height: Length) -> Area { width * height }
 
 // use short identifiers
-std::assert_eq(f(w = 1cm, h = 2cm), 2cm²);
+assert_eq(f(w = 1cm, h = 2cm), 2cm²);
 // can be mixed
-std::assert_eq(f(w = 1cm, height = 2cm), 2cm²);
+assert_eq(f(w = 1cm, height = 2cm), 2cm²);
 ```
 
 ## Match Type

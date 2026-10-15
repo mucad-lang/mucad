@@ -6,7 +6,7 @@ notation to insert expressions into a text.
 [![test](.test/format_string.svg)](.test/format_string.log)
 
 ```mu,format_string
-std::assert_eq("{2 + 5}", "7");
+assert_eq("{2 + 5}", "7");
 ```
 
 Usually they are used to insert parameters into text:
@@ -15,7 +15,7 @@ Usually they are used to insert parameters into text:
 
 ```mu,format_string_value
 fn print_length(length: Length) {
-    std::print("{length}");
+    print("{length}");
 }
 
 print_length(7mm);
@@ -29,7 +29,7 @@ If a format string expression cannot be evaluated, you will get an error.
 
 ```mu,format_string_err?result=fail
 fn print_length(length: Length) {
-    std::print("{size}"); // error: size is not known
+    print("{size}"); // error: size is not known
 }
 
 print_length(7mm);

@@ -27,8 +27,8 @@ w = Wheel(1cm);
 w;
 
 // check if r is 5cm an thickness equals the default (1cm)
-std::assert_eq(w.radius, 1cm);
-std::assert_eq(w.thickness, 5mm);
+assert_eq(w.radius, 1cm);
+assert_eq(w.thickness, 5mm);
 ```
 
 Output

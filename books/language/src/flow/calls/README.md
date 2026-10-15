@@ -24,7 +24,7 @@ and the result is a *value*:
 x = std::math::abs(-2);
 
 // check value
-std::assert_eq(x, 2);
+assert_eq(x, 2);
 ```
 
 ## Calling Workbenches
@@ -36,9 +36,9 @@ except that the result is a *model*.
 
 ```mu,call_workbench
 // call sketch Circle with a size and store object node in s
-s = std::geo2d::Circle(diameter = 2cm);
+s = Circle(diameter = 2cm);
 
-std::assert_eq(s.radius, 1cm);
+assert_eq(s.radius, 1cm);
 ```
 
 ## Calling Operations
@@ -50,10 +50,10 @@ a [model](../../types/models/) which come out of [workbenches](../../structure/w
 
 ```mu,call_model
 // call square with a size and store object node in s
-s = std::geo2d::Circle(radius = 2cm);
+s = Circle(radius = 2cm);
 
 // translate object s
-s.std::ops::translate(x = 1cm);
+s.translate(x = 1cm);
 ```
 
 Surely this looks better when using thw `use statement`.
@@ -65,7 +65,7 @@ Surely this looks better when using thw `use statement`.
 use std::ops::translate;
 
 // call square with a size and store object node in s
-s = std::geo2d::Circle(radius = 2cm);
+s = Circle(radius = 2cm);
 
 // translate object s
 s.translate(x = 1cm);

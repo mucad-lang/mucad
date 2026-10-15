@@ -11,7 +11,7 @@ mod my_module {
     }
 }
 
-std::print(my_module::sub_module::TEXT);
+print(my_module::sub_module::TEXT);
 ```
 
 ## Restrictions
@@ -25,7 +25,7 @@ Using `pub` is not allowed within workbenches:
 ```mu,pub_assignment_workbench
 sketch MySketch() {
     pub const TEXT = "Hello";
-    std::print(TEXT);
+    print(TEXT);
 }
 
 MySketch();

@@ -17,7 +17,7 @@ a = 2cm;
 b = 5cm;
 c = sqrt(a * a + b * b);
 
-std::print("{c}");
+print("{c}");
 ```
 
 >[!TIP]

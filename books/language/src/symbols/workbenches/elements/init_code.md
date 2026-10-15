@@ -29,11 +29,11 @@ sketch Wheel(radius: Length) {
     prop diameter = radius * FACTOR;
 
     // code body
-    std::geo2d::Circle(radius);
+    Circle(radius);
 }
 
-std::assert_eq(Wheel(radius = 5cm).radius, 5cm);
-std::assert_eq(Wheel(radius = 5cm).diameter, 10cm);
+assert_eq(Wheel(radius = 5cm).radius, 5cm);
+assert_eq(Wheel(radius = 5cm).diameter, 10cm);
 ```
 
 If there are no initializers, the initialization code is just part of the

@@ -29,7 +29,7 @@ sketch Wheel(radius: Length, thickness = 5mm) {
     }
 
     // building code starts here
-    std::geo2d::Circle(radius);
+    Circle(radius);
 }
 Wheel(radius = 1cm);
 ```

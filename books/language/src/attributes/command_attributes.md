@@ -13,10 +13,10 @@ Assume you have created a model and want to export it to a specific file:
 
 ```mu,attributes_export
 #[export("rect.svg")] // Will be exported to `rect.svg`
-std::geo2d::Rect(42mm);
+Rect(42mm);
 
 #[export("circle.svg")] // Will be exported to `circle.svg`
-std::geo2d::Circle(r = 42mm);
+Circle(r = 42mm);
 ```
 
 When this µcad source file is exported via the command line interface, the two models will be exported to `rect.svg` and `circle.svg`.

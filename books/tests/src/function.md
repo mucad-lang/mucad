@@ -18,8 +18,8 @@ fn f(n: Scalar) {
     n+1
 }
 use std::debug::*;
-std::assert_eq(f(1), 2);
-std::assert_eq(f(4), 5);
+assert_eq(f(1), 2);
+assert_eq(f(4), 5);
 ```
 
 [![test](.test/function_return_value.svg)](.test/function_return_value.log)
@@ -29,8 +29,8 @@ fn f(n: Scalar) {
     return n+1;
 }
 use std::debug::*;
-std::assert_eq(f(1), 2);
-std::assert_eq(f(4), 5);
+assert_eq(f(1), 2);
+assert_eq(f(4), 5);
 ```
 
 [![test](.test/function_if_result.svg)](.test/function_if_result.log)
@@ -44,8 +44,8 @@ fn f(n: Scalar) {
     }
 }
 use std::debug::*;
-std::assert_eq(f(1), 2);
-std::assert_eq(f(4), 3);
+assert_eq(f(1), 2);
+assert_eq(f(4), 3);
 ```
 
 [![test](.test/function_mixed.svg)](.test/function_mixed.log)
@@ -58,8 +58,8 @@ fn f(n: Scalar) {
     n+1
 }
 use std::debug::*;
-std::assert_eq(f(1), 2);
-std::assert_eq(f(4), 3);
+assert_eq(f(1), 2);
+assert_eq(f(4), 3);
 ```
 
 [![test](.test/function_missing.svg)](.test/function_missing.log)
@@ -72,6 +72,6 @@ fn f(n: Scalar) { // error: not all paths return a value
 }
 
 use std::debug::*;
-std::assert_eq(f(1), 2);
-std::assert_eq(f(4), 3);
+assert_eq(f(1), 2);
+assert_eq(f(4), 3);
 ```

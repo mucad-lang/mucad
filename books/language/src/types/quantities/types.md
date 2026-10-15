@@ -43,7 +43,7 @@ centimeters = 100cm;
 meters = 1m;
 inches = 39.37007874015748in;
 
-std::assert(std::list::all_equal([millimeters, centimeters, meters, inches]));
+assert(std::list::all_equal([millimeters, centimeters, meters, inches]));
 ```
 
 ## Angle
@@ -60,7 +60,7 @@ degree_ = 180deg;
 grad = 200grad;
 turn = 0.5turns;
 
-std::assert(std::list::all_equal([degree, degree_, grad, turn, radian]));
+assert(std::list::all_equal([degree, degree_, grad, turn, radian]));
 ```
 
 ## Area
@@ -73,7 +73,7 @@ An `Area` is a two-dimensional quantity. It is the result when multiplying two `
 a = 3cm;
 b = 2cm;
 area = a * b;
-std::assert_eq(area, 6cm²);
+assert_eq(area, 6cm²);
 ```
 
 Here is an example of how to use different areal units:
@@ -86,7 +86,7 @@ square_centimeter = 1000cm2;
 square_meter = 0.1m²;
 square_inch = 155in²;
 
-std::assert_eq(square_millimeter, square_centimeter);
+assert_eq(square_millimeter, square_centimeter);
 ```
 
 ## Volume
@@ -102,7 +102,7 @@ c = 4mm;
 
 volume = a * b * c;
 
-std::assert_eq(volume, 24mm³);
+assert_eq(volume, 24mm³);
 ```
 
 Here is an example for units:
@@ -118,7 +118,7 @@ liter = 1.0l;
 centiliter = 100.0cl;
 milliliter = 1000.0ml;
 
-std::assert(std::list::all_equal([
+assert(std::list::all_equal([
         cubic_millimeter,
         cubic_centimeter,
         cubic_meter,
@@ -148,5 +148,5 @@ gram = 1000.0g;
 kilogram = 1.0kg;
 pound = 2.204623lb;
 
-std::assert_eq(gram, kilogram);
+assert_eq(gram, kilogram);
 ```

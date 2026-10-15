@@ -8,7 +8,7 @@ assign it to a constant `v` with the following code:
 [![test](.test/expression_multiply.svg)](.test/expression_multiply.log)
 
 ```mu,expression_multiply
-std::assert_eq(5 * 4.0mm, 20mm);
+assert_eq(5 * 4.0mm, 20mm);
 ```
 
 The result of this expression would be `20mm` like the test (see `std::assert`)
@@ -31,21 +31,21 @@ the units of the operands in an expression like the following examples show.
 ```mu,expression_quantity
 
 // an integer multiplied with another one remains a integer
-std::assert_eq(5 * 4, 20);
+assert_eq(5 * 4, 20);
 
 // a scalar multiplied with another scalar or integer results in a scalar
-std::assert_eq(5.5 * 4.5, 24.75);
-std::assert_eq(5.1 * 4, 20.4);
-std::assert_eq(5 * 4.1, 20.5);
+assert_eq(5.5 * 4.5, 24.75);
+assert_eq(5.1 * 4, 20.4);
+assert_eq(5 * 4.1, 20.5);
 
 // a scalar multiplied with a length is a length
-std::assert_eq(5 * 4mm, 20mm);
+assert_eq(5 * 4mm, 20mm);
 
 // two length multiplied with each another is an area
-std::assert_eq(5mm * 4mm, 0.2cm²);
+assert_eq(5mm * 4mm, 0.2cm²);
 
 // dividing an area by a length is a length
-std::assert_eq(20mm² / 4mm, 5mm);
+assert_eq(20mm² / 4mm, 5mm);
 ```
 
 ### Boolean results
@@ -56,7 +56,7 @@ Boolean operations (e.g. `!`, `>`, `==` or `&&`) lead to a boolean result.
 
 ```mu,expression_boolean
 // Using logical operators lead to a boolean result
-std::assert_eq(5mm > 4mm, true);
+assert_eq(5mm > 4mm, true);
 ```
 
 Even when using them with models:
@@ -65,7 +65,7 @@ Even when using them with models:
 
 ```mu,model_eq
 // Using logical operators between models too
-std::assert_eq(std::geo2d::Circle(r = 1cm) == std::geo2d::Circle(r = 10mm), true);
+assert_eq(Circle(r = 1cm) == Circle(r = 10mm), true);
 ```
 
 Only *Boolean expressions* (expressions with a boolean result) can be used to define conditions (see [if statement](../flow/conditions.md)).

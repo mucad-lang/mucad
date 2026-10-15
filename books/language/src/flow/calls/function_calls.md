@@ -21,6 +21,6 @@ fn f(n: Integer) {
 }
 
 // function calls with parameter (and result checks)
-std::assert_eq(f(1), 2);
-std::assert_eq(f(2), 4);
+assert_eq(f(1), 2);
+assert_eq(f(2), 4);
 ```

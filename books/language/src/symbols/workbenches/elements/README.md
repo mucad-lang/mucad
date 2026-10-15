@@ -50,7 +50,7 @@ sketch Wheel(radius: Length) {
     r = radius;
 
     // Create a circle.
-    std::geo2d::Circle(r);
+    Circle(r);
 }
 
 use std::debug::*;
@@ -58,12 +58,12 @@ use std::debug::*;
 // Call sketch with diameter.
 d = Wheel(diameter = 2cm);
 // Check radius property.
-std::assert_eq(d.radius, 1cm);
+assert_eq(d.radius, 1cm);
 
 // Call sketch with radius.
 r = Wheel(radius = 2cm);
 // Check diameter property.
-std::assert_eq(r.diameter, 4cm);
+assert_eq(r.diameter, 4cm);
 
 r - d;
 ```

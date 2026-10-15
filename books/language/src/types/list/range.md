@@ -11,8 +11,8 @@ consecutive values.
 [![test](.test/range_expressions.svg)](.test/range_expressions.log)
 
 ```mu,range_expressions
-std::assert_eq([1..5], [1, 2, 3, 4, 5]);
-std::assert_eq([-2..2], [-2, -1, 0, 1, 2]);
+assert_eq([1..5], [1, 2, 3, 4, 5]);
+assert_eq([-2..2], [-2, -1, 0, 1, 2]);
 ```
 
 The order of the endpoints of a range is important.

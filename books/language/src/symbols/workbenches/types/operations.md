@@ -17,7 +17,7 @@ passes-through the original input model:
 op nop() { @input }
 
 // use operation `nop` on a circle results in the same circle
-std::geo2d::Circle(radius = 1cm).nop();
+Circle(radius = 1cm).nop();
 ```
 
 Output
@@ -48,8 +48,8 @@ op punched_disk() {
 
 // use operation punch_disk with two circles
 {
-    std::geo2d::Circle(radius = 1cm);
-    std::geo2d::Circle(radius = 2cm);
+    Circle(radius = 1cm);
+    Circle(radius = 2cm);
 }.punched_disk();
 ```
 
@@ -66,7 +66,7 @@ op punch_disk(radius: Length) {
     if @input.count() == 1 {
         {
             @input;
-            std::geo2d::Circle(radius);
+            Circle(radius);
         }.subtract();
     } else {
         std::error("punch_disk must get one object");
@@ -75,7 +75,7 @@ op punch_disk(radius: Length) {
 
 // use operation punch_disk on a circle
 {
-    std::geo2d::Circle(radius = 2cm);
+    Circle(radius = 2cm);
 }.punch_disk(radius = 1cm);
 ```
 

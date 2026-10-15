@@ -26,6 +26,6 @@ You can then load the TOML file by using `std::import` and access its values:
 ```mu,toml_import?mode=todo
 data = std::import("example.toml");
 
-std::assert_eq(data.M10.diameter, 10.0);
-std::assert_eq(data.M6.pitch, 1.0);
+assert_eq(data.M10.diameter, 10.0);
+assert_eq(data.M6.pitch, 1.0);
 ```

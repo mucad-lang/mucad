@@ -10,9 +10,9 @@ The may appear anywhere within the building code of a workbench and can then be 
 ```mu,prop_assignment
 sketch MySketch(radius: Length) {
     prop diameter = radius * 2;
-    std::geo2d::Circle(radius);
+    Circle(radius);
 }
-std::assert_eq(MySketch(5cm).diameter, 10cm)
+assert_eq(MySketch(5cm).diameter, 10cm)
 ```
 
 ## Restrictions
@@ -48,9 +48,9 @@ sketch MySketch(radius: Length) {
     init() {
         radius = 1;
     }
-    std::geo2d::Circle(radius);
+    Circle(radius);
 }
-std::assert_eq(MySketch(5cm).diameter, 10cm)
+assert_eq(MySketch(5cm).diameter, 10cm)
 ```
 
 ### Not in initializers
@@ -63,7 +63,7 @@ sketch MySketch(radius: Length) {
         radius = 1;
         prop diameter = radius * 2; // error: not in initializer
     }
-    std::geo2d::Circle(radius);
+    Circle(radius);
 }
 MySketch(5cm)
 ```

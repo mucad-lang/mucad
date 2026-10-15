@@ -26,8 +26,8 @@ sketch Wheel(outer: Length) {
 t = Wheel(1cm);
 
 // extract and display `outer` and `inner` from generated wheel
-std::print("outer: {t.outer}");
-std::print("inner: {t.inner}");
+print("outer: {t.outer}");
+print("inner: {t.inner}");
 ```
 
 Output
@@ -54,9 +54,9 @@ sketch Wheel(outer: Length) {
 t = Wheel(outer = 1cm);
 
 // you can still extract and display `outer`
-std::print("outer: {t.outer}");
+print("outer: {t.outer}");
 // but you cannot access `inner` anymore
-std::print("inner: {t.inner}"); // error
+print("inner: {t.inner}"); // error
 ```
 
 ## Restrictions
@@ -79,7 +79,7 @@ sketch Wheel(radius: Length, thickness = 5cm) {
 }
 center = Wheel(radius = 1cm, inner = 0.5cm).center;
 
-std::assert_eq(center, 1.75cm);
+assert_eq(center, 1.75cm);
 ```
 
 Output

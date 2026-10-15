@@ -12,9 +12,9 @@ The following example will produce 4 rectangles at different positions:
 [![test](.test/multiplicity_arrays.svg)](.test/multiplicity_arrays.log)
 
 ```mu,multiplicity_arrays
-r = std::geo2d::Rect(width = 2mm, height = 2mm);
+r = Rect(width = 2mm, height = 2mm);
 
-r.std::ops::translate(x = [-4mm, 4mm], y = [-4mm, 4mm]);
+r.translate(x = [-4mm, 4mm], y = [-4mm, 4mm]);
 ```
 
 Because in the above example `x` and `y` have two values each, the result
@@ -23,7 +23,7 @@ are four (2×2) calls:
 [![test](.test/no_multiplicity.svg)](.test/no_multiplicity.log)
 
 ```mu,no_multiplicity
-r = std::geo2d::Rect(width = 2mm, height = 2mm);
+r = Rect(width = 2mm, height = 2mm);
 
 use std::ops::translate;
 r.translate(x = -4mm, y = -4mm);

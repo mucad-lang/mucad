@@ -7,7 +7,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 
-use std::geo2d::*;
 use std::geo3d::*;
 use std::ops::*;
 use std::math::*;

@@ -26,7 +26,7 @@ You will get an error if you generate a 2D model with a part:
 
 ```mu,part_2d?result=fail
 part MyPart(radius: Length) {
-    std::geo2d::Circle(radius); // error: Circle is not a 3D primitive
+    Circle(radius); // error: Circle is not a 3D primitive
 }
 
 MyPart(1cm);

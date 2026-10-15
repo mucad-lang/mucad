@@ -9,7 +9,6 @@ Sketches are named in `PascalCase`:
 
 ```mu,sketch_basic
 sketch MySketch(radius: Length) {
-    use std::geo2d::*;
     Circle(radius) - Rect(size = radius);
 }
 

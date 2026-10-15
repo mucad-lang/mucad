@@ -52,7 +52,6 @@ rounded corners and three cylinders as holes:
 
 ```mu,first_example
 use std::math::*;
-use std::ops::*;
 use std::geo3d::*;
 
 part CsgCube(size: Length) {

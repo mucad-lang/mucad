@@ -6,8 +6,8 @@ value on the right side they store a model.
 [![test](.test/model_assignment.svg)](.test/model_assignment.log)
 
 ```mu,model_assignment
-m = std::geo2d::Circle(radius = 10mm); // assign the model of a circle into m
-std::assert_eq(m.radius, 10mm); // access property radius of m
+m = Circle(radius = 10mm); // assign the model of a circle into m
+assert_eq(m.radius, 10mm); // access property radius of m
 ```
 
 Using a model as a value or vice versa does not work without further operations.
@@ -15,8 +15,8 @@ Using a model as a value or vice versa does not work without further operations.
 [![test](.test/model_assignment_cross.svg)](.test/model_assignment_cross.log)
 
 ```mu,model_assignment_cross?result=fail
-m = std::geo2d::Circle(radius = 10mm); // assign the model of a circle into m
-std::geo2d::Circle(radius = m); // error: cannot use m as value
+m = Circle(radius = 10mm); // assign the model of a circle into m
+Circle(radius = m); // error: cannot use m as value
 ```
 
 ## Restrictions
@@ -36,7 +36,7 @@ Model assignments are not available in modules:
 
 ```mu,assignment_model_module?result=fail
 mod my_module {
-    a = std::geo2d::Circle(radius = 1mm); // error
+    a = Circle(radius = 1mm); // error
 }
 ```
 
@@ -48,7 +48,7 @@ Model assignments are not available in workbenches' initialization code:
 
 ```mu,assignment_model_workbench?result=fail
 sketch MySketch() {
-    a = std::geo2d::Circle(radius = 1mm); // error
+    a = Circle(radius = 1mm); // error
     init(_x: Scalar) {}
 }
 

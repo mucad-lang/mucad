@@ -36,7 +36,7 @@ use std::ops::translate;
 [![test](.test/sketch_with_empty_body.svg)](.test/sketch_with_empty_body.log)
 
 ```mu,sketch_with_empty_body?mode=todo
-{}.std::ops::translate(x = 5mm);
+{}.translate(x = 5mm);
 ```
 
 [![test](.test/sketch_with_body.svg)](.test/sketch_with_body.log)
@@ -50,8 +50,8 @@ Circle(radius = 2mm) { Circle(radius = 1mm); } // parse_error: sketch with body
 [![test](.test/empty_op.svg)](.test/empty_op.log)
 
 ```mu,empty_op?result=fail
-std::ops::translate(x = 3.0mm); // error: Cannot call operation without workpiece. 
-{}.std::ops::translate(x = 3.0mm);
+translate(x = 3.0mm); // error: Cannot call operation without workpiece. 
+{}.translate(x = 3.0mm);
 ```
 
 [![test](.test/group.svg)](.test/group.log)

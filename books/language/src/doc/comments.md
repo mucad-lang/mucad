@@ -14,8 +14,8 @@ By using `//` or `/* ... */` you may insert comments within the code.
 /* Block comments my have...
    ...multiple lines. */
 
-std::print("Hello, "); // Line comments can be appended to a line
-std::print( /* Block comments can be placed almost anywhere */ "world!");
+print("Hello, "); // Line comments can be appended to a line
+print( /* Block comments can be placed almost anywhere */ "world!");
 ```
 
 ## Doc Comments (`///`, `//!`)

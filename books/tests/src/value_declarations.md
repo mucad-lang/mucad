@@ -45,48 +45,48 @@ mod module {
             init(alt_param = 7) {
                 init_local = 8;
 
-                std::assert_eq(value, 3);
-                std::assert_eq(pub_value, 4);
+                assert_eq(value, 3);
+                assert_eq(pub_value, 4);
                 assert_invalid("param");
-                std::assert_eq(sketch_local, 6);
-                std::assert_eq(alt_param, 7);
-                std::assert_eq(init_local, 8);
+                assert_eq(sketch_local, 6);
+                assert_eq(alt_param, 7);
+                assert_eq(init_local, 8);
             }
 
             // property of sketch
             prop property = 9;
 
             // post init code
-            std::assert_eq(value, 3);
-            std::assert_eq(pub_value, 4);
-            std::assert_eq(param, 5);
-            std::assert_eq(sketch_local, 6);
+            assert_eq(value, 3);
+            assert_eq(pub_value, 4);
+            assert_eq(param, 5);
+            assert_eq(sketch_local, 6);
             assert_invalid("alt_param");
             assert_invalid("init_local");
-            std::assert_eq(property, 9);
+            assert_eq(property, 9);
 
             function();
         }
 
         fn function(fn_param = 10) {
-            std::assert_eq(value, 3);
-            std::assert_eq(pub_value, 4);
+            assert_eq(value, 3);
+            assert_eq(pub_value, 4);
             assert_invalid("param");
             // assert_invalid(Workbench);
-            std::assert_eq(fn_param, 10);
+            assert_eq(fn_param, 10);
 
             return 0;
         }
     }
 
     pub fn function(fn_param = 11) {
-        std::assert_eq(value, 1);
-        std::assert_eq(pub_value, 2);
+        assert_eq(value, 1);
+        assert_eq(pub_value, 2);
         assert_invalid("pub_sub_module::value");
-        std::assert_eq(pub_sub_module::pub_value, 4);
+        assert_eq(pub_sub_module::pub_value, 4);
         assert_invalid("Workbench");
         assert_invalid("PrivateWorkbench");
-        std::assert_eq(fn_param, 11);
+        assert_eq(fn_param, 11);
         
         return 0;
     }
@@ -94,10 +94,10 @@ mod module {
 
 // source file code 
 assert_invalid("module::value");
-std::assert_eq(module::pub_value, 2);
+assert_eq(module::pub_value, 2);
 assert_invalid("module::pub_sub_module::value");
-std::assert_eq(module::pub_sub_module::pub_value, 4);
-std::assert_eq(module::pub_sub_module::Workbench(p=5).property, 9);
+assert_eq(module::pub_sub_module::pub_value, 4);
+assert_eq(module::pub_sub_module::Workbench(p=5).property, 9);
 assert_invalid("module::pub_sub_module::PrivateWorkbench");
-std::assert_eq(module::function(), 0);
+assert_eq(module::function(), 0);
 ```

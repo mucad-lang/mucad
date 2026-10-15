@@ -53,7 +53,7 @@ Another example uses an array of tuples and produces the same output:
 [![test](.test/multiplicity_tuple_array.svg)](.test/multiplicity_tuple_array.log)
 
 ```mu,multiplicity_tuple_array?mode=todo
-r = std::geo2d::Rect(width = 2mm, height = 2mm);
+r = Rect(width = 2mm, height = 2mm);
 
-r.std::ops::translate([(x=-4mm, y=-4mm), (x=-4mm, y=4mm), (x=4mm, y=-4mm), (x=4mm, y=4mm)]);
+r.translate([(x=-4mm, y=-4mm), (x=-4mm, y=4mm), (x=4mm, y=-4mm), (x=4mm, y=4mm)]);
 ```

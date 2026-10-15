@@ -6,7 +6,7 @@ We call this a *model expression*:
 [![test](.test/model_expression.svg)](.test/model_expression.log)
 
 ```mu,model_expression
-std::geo2d::Rect(1cm) - std::geo2d::Circle(radius = 3mm);
+Rect(1cm) - Circle(radius = 3mm);
 ```
 
 In this expression which consists of a subtraction operation of the results of
@@ -23,8 +23,8 @@ operation `subtract` to it is equivalent to the above code:
 ```mu,model_expression_subtract
 
 {
-    std::geo2d::Rect(1cm);
-    std::geo2d::Circle(radius = 3mm);
+    Rect(1cm);
+    Circle(radius = 3mm);
 }.std::ops::subtract();
 ```
 

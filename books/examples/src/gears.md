@@ -9,7 +9,6 @@
 // Copyright © 2025 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::ops::*;
 use std::geo2d::*;
 
 InvoluteGearProfile(1.0mm, 100);
@@ -31,7 +30,6 @@ InvoluteGearProfile(1.0mm, 100);
 // Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::ops::*;
 use std::geo2d::*;
 use std::math::*;
 

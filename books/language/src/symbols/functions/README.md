@@ -14,7 +14,7 @@ The function definition starts with the keyword `fn`, followed by an
 // define function print_error with text as parameter of type String
 fn print_error(text: String) {
     // code body
-    std::print("ERROR: {text}");
+    print("ERROR: {text}");
 }
 
 print_error("first");
@@ -41,8 +41,8 @@ fn f(x: Scalar, y = 1mm) -> Length {
     x * y
 }
 
-std::assert_eq(f(2), 2mm);
-std::assert_eq(f(2, 2mm), 4mm);
+assert_eq(f(2), 2mm);
+assert_eq(f(2, 2mm), 4mm);
 ```
 
 Functions may be declared within [source files](../source_file.md),

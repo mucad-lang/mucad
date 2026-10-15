@@ -13,5 +13,5 @@ fn f(x: Integer) {
     }
 }
 
-std::print(f(5));  // prints "match"
+print(f(5));  // prints "match"
 ```
