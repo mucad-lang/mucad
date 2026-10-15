@@ -338,7 +338,8 @@ pub mod debug {
         let b = args.get("b");
         let message: String = args.try_get("message")?;
 
-        if a == b {
+        // Equal like the operator `==`, e.g. with the tolerance of the number representation.
+        if matches!(a.cmp(BinaryOperator::Equal, &b)?, Value::Bool(true)) {
             // assertion ok: return None.
             Ok(Value::None)
         } else {
