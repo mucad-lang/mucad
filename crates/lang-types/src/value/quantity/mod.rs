@@ -61,20 +61,23 @@ impl Quantity {
         todo!()
     }
 
+    /// Compare with `rhs`, values within the rounding errors are equal, see [`approx_eq`].
     pub fn cmp(&self, op: BinaryOperator, rhs: &Self) -> ValueResult {
         let lhs = self;
         match lhs.quantity_type == rhs.quantity_type {
-            true => Ok(match op {
-                BinaryOperator::GreaterThan => lhs.value > rhs.value,
-                BinaryOperator::LessThan => lhs.value < rhs.value,
-                BinaryOperator::GreaterEqual => lhs.value >= rhs.value,
-                BinaryOperator::LessEqual => lhs.value <= rhs.value,
-                BinaryOperator::Equal => lhs.value == rhs.value,
-                BinaryOperator::Near => todo!(),
-                BinaryOperator::NotEqual => lhs.value != rhs.value,
-                op => unreachable!("No comparison operator: {op}"),
+            true => {
+                let equal = approx_eq(lhs.value, rhs.value);
+                Ok(match op {
+                    BinaryOperator::GreaterThan => lhs.value > rhs.value && !equal,
+                    BinaryOperator::LessThan => lhs.value < rhs.value && !equal,
+                    BinaryOperator::GreaterEqual => lhs.value > rhs.value || equal,
+                    BinaryOperator::LessEqual => lhs.value < rhs.value || equal,
+                    BinaryOperator::Equal | BinaryOperator::Near => equal,
+                    BinaryOperator::NotEqual => !equal,
+                    op => unreachable!("No comparison operator: {op}"),
+                }
+                .into())
             }
-            .into()),
             false => {
                 Err(
                     TypeError::binary_op(lhs.quantity_type.clone(), rhs.quantity_type.clone(), op)
@@ -125,14 +128,26 @@ impl std::fmt::Display for Quantity {
     }
 }
 
+/// Two values are equal within the rounding errors of fixed-point arithmetic,
+/// e.g. `5.1 * 4 == 20.4`, although `5.1` cannot be represented exactly.
+///
+/// The tolerance is 64 times the resolution of a [`Scalar`] (about `1.5e-8`), or for larger
+/// values `1e-8` of the larger value, because rounding errors grow with the operands.
+pub fn approx_eq(a: Scalar, b: Scalar) -> bool {
+    let relative = a.abs().max(b.abs()) / Scalar::from_num(100_000_000);
+    let tolerance = (Scalar::DELTA * 64).max(relative);
+    (a - b).abs() <= tolerance
+}
+
 impl PartialEq for Quantity {
+    /// Values within the rounding errors are equal, see [`approx_eq`].
     fn eq(&self, other: &Self) -> bool {
         // 1. Ensure the types match first
         if self.quantity_type != other.quantity_type {
             return false;
         }
 
-        self.value == other.value
+        approx_eq(self.value, other.value)
     }
 }
 
