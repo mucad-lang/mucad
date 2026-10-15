@@ -74,7 +74,8 @@ pub enum LogosToken<'a> {
 
     #[regex("(_|[a-zA-Z])[_a-zA-Z0-9']*", callback = token_cow, priority = 4)]
     Identifier(Cow<'a, str>),
-    #[regex(r#"([a-z]+[²³23]?(/[a-z]+[²³23]?)?)|°|%|'"#, callback = token_cow, priority = 3)]
+    // `µ` (U+00B5) is the prefix of micro units, e.g. `µm` or `µl`.
+    #[regex(r#"(µ?[a-z]+[²³23]?(/[a-z]+[²³23]?)?)|°|%|'"#, callback = token_cow, priority = 3)]
     Unit(Cow<'a, str>),
 
     #[regex(r#"(0|[1-9]\d*)"#, callback = token_cow)]

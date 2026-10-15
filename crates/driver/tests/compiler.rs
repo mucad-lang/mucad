@@ -461,3 +461,18 @@ fn compile_quantity_units() {
         .expect("A model");
     assert!(!diags.has_errors(), "{diags:?}");
 }
+
+/// Micro units with prefix `µ`, e.g. `µm` or `µl`.
+#[test]
+fn compile_micro_units() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile(
+            "std::assert_eq(1000µm, 1mm);\n\
+            std::assert_eq(1000µl, 1ml);\n\
+            std::assert_eq(1000000µm2, 1mm2);\n\
+            std::assert_eq(1000000000µm³, 1mm³);",
+        )
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}
