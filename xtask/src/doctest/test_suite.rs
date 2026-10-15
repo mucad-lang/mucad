@@ -3,7 +3,7 @@
 
 use microcad_driver::prelude as mu;
 
-use crate::doctest::{TestCase, TestResultList, TestStatus};
+use crate::doctest::{TestCase, TestResult, TestResultList, TestStatus};
 
 #[derive(Debug)]
 pub struct TestSuite {
@@ -72,10 +72,15 @@ impl TestSuite {
                     Err(panic) => {
                         // The compiler may be broken after a panic, e.g. by a poisoned lock.
                         compiler = mu::Compiler::from_config(config);
-                        test_case.test_result(TestStatus::Fail, panic.to_string())
+                        TestResult {
+                            name: test_case.name.clone(),
+                            status: TestStatus::Fail,
+                            source: test_case.source.clone(),
+                            log_output: panic.to_string(),
+                        }
                     }
                 };
-                eprintln!("test {} ... {}", result.name, result.result);
+                eprintln!("test {} ... {}", result.name, result.status);
 
                 if !no_output {
                     if let Err(err) = test_case.write_result_files(&result) {
@@ -95,7 +100,7 @@ impl TestSuite {
         let failures = results
             .results
             .iter()
-            .filter(|result| !result.result.is_success());
+            .filter(|result| !result.status.is_success());
         for (i, result) in failures.enumerate() {
             if i == 0 {
                 eprintln!("\nfailures:");

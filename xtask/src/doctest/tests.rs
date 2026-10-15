@@ -117,19 +117,19 @@ fn from_code_block_invalid() {
 #[test]
 fn run_modes() {
     assert_eq!(
-        run("mu,a?mode=todo", "this is no µcad").result,
+        run("mu,a?mode=todo", "this is no µcad").status,
         TestStatus::Todo
     );
-    assert_eq!(run("mu,a?mode=parse", CIRCLE).result, TestStatus::Ok);
+    assert_eq!(run("mu,a?mode=parse", CIRCLE).status, TestStatus::Ok);
 
     let result = run("mu,a?mode=compile", CIRCLE);
-    assert_eq!(result.result, TestStatus::Ok, "{}", result.log_output);
+    assert_eq!(result.status, TestStatus::Ok, "{}", result.log_output);
     assert!(result.log_output.contains("-- Model --"));
 
     let dir = tempfile::tempdir().expect("temp dir");
     let svg = dir.path().join("circle.svg");
     let result = run(&format!("mu,a?mode=export&path={}", svg.display()), CIRCLE);
-    assert_eq!(result.result, TestStatus::Ok, "{}", result.log_output);
+    assert_eq!(result.status, TestStatus::Ok, "{}", result.log_output);
     assert!(svg.is_file());
 }
 
@@ -137,24 +137,24 @@ fn run_modes() {
 #[test]
 fn run_export_without_geometry() {
     let result = run("mu,a", "a = 2cm;\nb = a * 2;");
-    assert_eq!(result.result, TestStatus::Ok, "{}", result.log_output);
+    assert_eq!(result.status, TestStatus::Ok, "{}", result.log_output);
     assert!(result.log_output.contains("No model to export."));
 }
 
 #[test]
 fn run_expected_result() {
     let parse_error = "__mu::geo2d::Circle(radius = 1mm;";
-    assert_eq!(run("mu,a?mode=parse", parse_error).result, TestStatus::Fail);
+    assert_eq!(run("mu,a?mode=parse", parse_error).status, TestStatus::Fail);
     assert_eq!(
-        run("mu,a?mode=parse&result=fail", parse_error).result,
+        run("mu,a?mode=parse&result=fail", parse_error).status,
         TestStatus::FailOk
     );
     assert_eq!(
-        run("mu,a?mode=compile&result=fail", "Unknown();").result,
+        run("mu,a?mode=compile&result=fail", "Unknown();").status,
         TestStatus::FailOk
     );
     assert_eq!(
-        run("mu,a?mode=compile&result=fail", CIRCLE).result,
+        run("mu,a?mode=compile&result=fail", CIRCLE).status,
         TestStatus::OkFail
     );
 }

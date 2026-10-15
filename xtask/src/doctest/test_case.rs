@@ -93,7 +93,7 @@ impl TestCase {
     /// A panic, e.g. a `todo!()` in the compiler, is returned as error.
     pub fn run(&self, compiler: &mut mu::Compiler) -> Result<TestResult, Panic> {
         if let TestMode::Todo = self.mode {
-            return Ok(self.test_result(TestStatus::Todo, String::new()));
+            return Ok(TestResult::todo(self.name.clone(), self.source.clone()));
         }
 
         let outcome =
@@ -106,7 +106,12 @@ impl TestCase {
             (Ok(_), ExpectedTestResult::Fail) => TestStatus::OkFail,
         };
         let (Ok(log_output) | Err(log_output)) = outcome;
-        Ok(self.test_result(status, log_output))
+        Ok(TestResult {
+            name: self.name.clone(),
+            status,
+            source: self.source.clone(),
+            log_output,
+        })
     }
 
     /// Execute the test and return its log: `Ok` if it succeeded, `Err` if it failed.
@@ -166,7 +171,7 @@ impl TestCase {
         // Link the image for the status, e.g. `xtask/images/ok.svg`.
         let image = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("images")
-            .join(format!("{}.svg", result.result));
+            .join(format!("{}.svg", result.status));
         let banner = dir.join(format!("{}.svg", self.block_name()));
         let _ = std::fs::remove_file(&banner);
         std::fs::hard_link(&image, &banner)
@@ -212,16 +217,8 @@ impl TestCase {
             "Source file",
             source_file,
             result.log_output.trim_end(),
-            result.result.description(),
+            result.status.description(),
         )
-    }
-
-    pub(crate) fn test_result(&self, result: TestStatus, log_output: String) -> TestResult {
-        TestResult {
-            name: self.name.clone(),
-            result,
-            log_output,
-        }
     }
 
     /// Parse the source and return the diagnostics.

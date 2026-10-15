@@ -8,8 +8,20 @@ use crate::doctest::TestStatus;
 #[derive(Debug)]
 pub struct TestResult {
     pub name: String,
-    pub result: TestStatus,
+    pub status: TestStatus,
+    pub source: mu::Source,
     pub log_output: String,
+}
+impl TestResult {
+    /// Create an empty result from a todo.
+    pub(crate) fn todo(name: String, source: mu::Source) -> TestResult {
+        Self {
+            name,
+            status: TestStatus::Todo,
+            source,
+            log_output: String::new(),
+        }
+    }
 }
 
 /// A test result list with a markdown output.
@@ -22,7 +34,7 @@ pub struct TestResultList {
 impl TestResultList {
     /// Returns `true` if no test failed unexpectedly.
     pub fn is_success(&self) -> bool {
-        self.results.iter().all(|result| result.result.is_success())
+        self.results.iter().all(|result| result.status.is_success())
     }
 
     /// The number of tests per status, e.g. `12 ok, 2 fail_ok, 1 todo`.
@@ -34,7 +46,7 @@ impl TestResultList {
                 let count = self
                     .results
                     .iter()
-                    .filter(|result| result.result == status)
+                    .filter(|result| result.status == status)
                     .count();
                 (count > 0).then(|| format!("{count} {status}"))
             })
@@ -60,7 +72,7 @@ impl TestResultList {
             .rows(
                 self.results
                     .iter()
-                    .map(|result| [result.result.to_string(), result.name.clone()]),
+                    .map(|result| [result.status.to_string(), result.name.clone()]),
             );
 
         let mut md = mu::md::Markdown::page(
@@ -71,11 +83,12 @@ impl TestResultList {
         let failures: Vec<_> = self
             .results
             .iter()
-            .filter(|result| !result.result.is_success())
+            .filter(|result| !result.status.is_success())
             .collect();
         if !failures.is_empty() {
             md.add_section(Section::new(2, "Failures", []));
             failures.into_iter().for_each(|result| {
+                let location = Block::Paragraph(format!("Location: {}", result.source.location));
                 let log = Block::CodeBlock(CodeBlock {
                     header: CodeBlockHeader {
                         lang: Some("text".into()),
@@ -86,7 +99,7 @@ impl TestResultList {
                     line_offset: 0,
                     path: None,
                 });
-                md.add_section(Section::new(3, &result.name, [log]));
+                md.add_section(Section::new(3, &result.name, [location, log]));
             });
         }
 
