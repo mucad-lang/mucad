@@ -141,7 +141,7 @@ impl TryFrom<ValueList> for List {
 impl FromIterator<Value> for List {
     fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
         let items: ValueList = iter.into_iter().collect();
-        let ty = items.types().common_type().expect("Common type");
+        let ty = items.types().common_type().unwrap_or_default();
         Self { ty, items }
     }
 }
