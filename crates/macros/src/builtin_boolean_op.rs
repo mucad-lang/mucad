@@ -84,31 +84,32 @@ fn builtin_boolean_op_struct(attr: TokenStream, input_struct: ItemStruct) -> Tok
             ));
         }
 
+        impl crate::BuiltinConstruct for #struct_name {
+            fn element() -> microcad_lang_types::model::Element {
+                use microcad_lang_types::model;
+                model::BuiltinWorkpiece::BooleanOp(
+                    model::BooleanOp::from(Self)
+                ).into()
+            }
+
+            fn from_model(model: &microcad_lang_types::Model) -> Result<Self, crate::BuiltinError> {
+                <Self as crate::BuiltinConstruct>::check_element(model)?;
+                Ok(Self)
+            }
+        }
+
         impl crate::BuiltinOperationCall for #struct_name {
             fn call(
                 args: microcad_lang_types::Arguments,
                 _ctx: &mut crate::BuiltinEvalContext,
             ) -> Result<microcad_lang_types::ModelTree, crate::BuiltinError> {
-                use microcad_lang_types::*;
-                let self_: std::rc::Rc<ModelTree> = args.try_get("self")?;
-                let op = model::BooleanOp::from(Self {
-                    #(#field_names: args.try_get(stringify!(#field_names))?,)*
-                });
-
-                // The operands are the children of a group, like `ModelTree::apply_boolean_op` builds.
-                let mut operands = std::rc::Rc::unwrap_or_clone(self_);
-                if !matches!(operands.root().element, microcad_lang_types::model::Element::Group) {
-                    let mut group = ModelTree::new(
-                        model::Element::Group,
-                    );
-                    group.append(operands);
-                    operands = group;
-                }
-
+                let self_: std::rc::Rc<microcad_lang_types::ModelTree> = args.try_get("self")?;
                 let mut tree = microcad_lang_types::ModelTree::new(
-                    Model::from(op).with_op_properties(args),
+                    microcad_lang_types::Model::new(
+                        <Self as crate::BuiltinConstruct>::element()
+                    ).with_op_properties(args),
                 );
-                tree.append(operands);
+                tree.append(std::rc::Rc::unwrap_or_clone(self_));
                 Ok(tree)
             }
         }
