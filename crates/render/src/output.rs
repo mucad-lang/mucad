@@ -44,6 +44,14 @@ impl GeometryOutput {
         }
     }
 
+    pub fn geo2d(geo2d: impl Into<core::Geometry2D>) -> Self {
+        Self::new(geo2d.into())
+    }
+
+    pub fn geo3d(geo3d: impl Into<core::Geometry3D>) -> Self {
+        Self::new(geo3d.into())
+    }
+
     pub fn with_id(mut self, id: String) -> Self {
         self.id = Some(id);
         self
