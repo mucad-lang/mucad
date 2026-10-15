@@ -332,6 +332,24 @@ pub mod debug {
         }
     }
 
+    #[builtin_fn(impure debug::assert_eq(a: Any, b: Any, message: String = "not equal"))]
+    pub fn assert_eq(args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult {
+        let a = args.get("a");
+        let b = args.get("b");
+        let message: String = args.try_get("message")?;
+
+        if a == b {
+            // assertion ok: return None.
+            Ok(Value::None)
+        } else {
+            // assertion failed: stop eval and return Err.
+            Err(BuiltinError::AssertionFailed {
+                message: format!("`{a} != {b}`: {message}"),
+                src_ref: ctx.src_ref,
+            })
+        }
+    }
+
     #[builtin_fn(impure debug::expect(cond: Bool, message: String))]
     pub fn expect(args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let cond = args.get_cond()?;
