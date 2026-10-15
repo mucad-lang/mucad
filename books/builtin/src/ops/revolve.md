@@ -1,5 +1,0 @@
-# revolve
-
-## Arguments
-
-- `angle: Angle`:
