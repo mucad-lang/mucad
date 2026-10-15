@@ -16,8 +16,6 @@ In this case the source code file itself:
 ```mu,assignment_value
 // source code file is the scope of a and b
 
-use std::debug::*;
-
 a = 5;
 b = a * 2;
 std::assert_eq(a, 5);
@@ -84,7 +82,7 @@ Even if using *anonymous scopes* this does not change.
 
 [![test](.test/assignment_shadow_scope.svg)](.test/assignment_shadow_scope.log)
 
-```mu,assignment_shadow_scope?mode=todo
+```mu,assignment_shadow_scope
 a = 5;
 {
     a = a * 2;

@@ -125,29 +125,29 @@ They cannot be placed below non constant assignments within in a workbench.
 
 [![test](.test/const_assignment_workbench_code_wrong.svg)](.test/const_assignment_workbench_code_wrong.log)
 
-```mu,const_assignment_workbench_code_wrong?mode=todo
+```mu,const_assignment_workbench_code_wrong
 sketch MySketch() {
     _i = 5; // any non const code
-    const MY_CONST = 1; // error: const not allowed then
+    const MY_CONST = 1;
 }
 MySketch();
 ```
 
 ### Not in function
 
-Constant assignments cannot be used in functions.
+Constants can be used in functions.
 
 [![test](.test/const_assignment_fn.svg)](.test/const_assignment_fn.log)
 
-```mu,const_assignment_fn?result=fail
+```mu,const_assignment_fn
 fn f() {
-    const MY_CONST = 1; // error: not allowed in functions
+    const MY_CONST = 1;
 }
 f();
 
 sketch MySketch() {
     fn f() {
-        const MY_CONST = 1; // error: not allowed in workbench functions
+        const MY_CONST = 1;
     }
     f();
 }
