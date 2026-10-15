@@ -30,17 +30,6 @@ pub mod helper {
         call_builtin!(geo2d::Circle(radius = radius)).into()
     }
 
-    /// call __mu::core::member_access
-    pub fn get<Expr: ExprSpec>(lhs: Expr, name: impl AsRef<str>) -> Expr
-    where
-        Expr: From<symbol::Call<Expr>>,
-    {
-        Expr::from(call_builtin!(core::member_access(
-            lhs = lhs,
-            name = Value::from(name.as_ref().to_string())
-        )))
-    }
-
     /// Input placeholder: @input
     /// TODO: Might be replaced with `self` in the future
     pub fn input() -> WorkbenchExpression {
