@@ -446,3 +446,18 @@ fn compile_symbol_name() {
         "Workbench `std::geo2d::Circle` cannot find initialization for those arguments"
     );
 }
+
+/// Quantities of different units are equal, if their values in the base unit are equal.
+#[test]
+fn compile_quantity_units() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile(
+            "std::assert_eq(6cm - 2cm, 0.04m);\n\
+            std::assert_eq(1in, 25.4mm);\n\
+            std::assert_eq(0.1m, 100mm);\n\
+            std::assert_eq(1ml, 1cm3);",
+        )
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}

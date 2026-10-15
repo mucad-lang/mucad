@@ -209,7 +209,12 @@ impl Unit {
     }
 
     pub fn factor(&self) -> Scalar {
-        Scalar::from_num(match &self {
+        Scalar::from_num(self.factor_f64())
+    }
+
+    /// The factor to the base unit, e.g. `1000.0` from `m` to `mm`.
+    fn factor_f64(&self) -> f64 {
+        match &self {
             // Scalar
             Self::None => 1.0,
             Self::Percent => 0.01_f64,
@@ -239,7 +244,7 @@ impl Unit {
             Self::Meter2 => 1_000_000_f64,
             Self::Centimeter2 => 100_f64,
             Self::Millimeter2 => 1.0,
-            Self::Micrometer2 => 0.000_000_1,
+            Self::Micrometer2 => 0.000_001,
             Self::Inch2 => 645.16_f64,
             Self::Foot2 => 92_903_043.04_f64,
             Self::Yard2 => 836_127.36_f64,
@@ -248,29 +253,45 @@ impl Unit {
             Self::Meter3 => 1_000_000_000_f64,
             Self::Centimeter3 => 1_000_f64,
             Self::Millimeter3 => 1.0,
-            Self::Micrometer3 => 0.000_000_000_1,
+            Self::Micrometer3 => 0.000_000_001,
             Self::Inch3 => 16_387.06_f64,
             Self::Foot3 => 28_316_846.592_f64,
             Self::Yard3 => 764_554_857.984_f64,
             Self::Liter => 1_000_000_f64,
             Self::Centiliter => 10_000_f64,
             Self::Milliliter => 1_000_f64,
-            Self::Microliter => 1_000_000.0_f64,
+            Self::Microliter => 1_f64,
 
             // Densities
-            Self::GramPerMeter3 => 1_000_000_000_f64,
+            Self::GramPerMeter3 => 0.000_000_001_f64,
             Self::GramPerMillimeter3 => 1_f64,
-        })
+        }
+    }
+
+    /// The number of decimals of a value in this unit within the resolution of a [`Scalar`],
+    /// e.g. 9 for `mm` and 7 for `°`.
+    pub fn decimals(&self) -> usize {
+        let resolution = Scalar::DELTA.to_num::<f64>() / self.factor_f64();
+        (-resolution.log10()).floor().max(0.0) as usize
+    }
+
+    /// Normalize a value, e.g. of a literal, to the base unit.
+    ///
+    /// The value is rounded to a [`Scalar`] after normalizing, e.g. `0.04m` becomes exactly `40mm`.
+    pub fn normalize_f64(self, x: f64) -> Scalar {
+        Scalar::from_num(x * self.factor_f64())
     }
 
     /// Normalize value to base unit.
     pub fn normalize(self, x: Scalar) -> Scalar {
-        x * self.factor()
+        self.normalize_f64(x.to_num())
     }
 
     /// Denormalize value to unit
+    ///
+    /// The exact inverse of [`Unit::normalize_f64`], e.g. `π/2` in degrees is `90°`.
     pub fn denormalize(self, x: Scalar) -> Scalar {
-        x / self.factor()
+        Scalar::from_num(x.to_num::<f64>() / self.factor_f64())
     }
 }
 

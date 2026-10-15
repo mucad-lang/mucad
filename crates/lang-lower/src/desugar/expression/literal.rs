@@ -29,7 +29,8 @@ impl Desugar<ast::Literal> for ir::ConstantValue {
                 let unit = ir::Unit::desugar(&lit.unit, context)?;
                 ir::ConstantValue::new(
                     Quantity::new(
-                        unit.normalize(Scalar::from_str(lit.value.as_str()).expect("No error expected, this string already has been checked in the parse stage.")),
+                        // Normalized before rounding to a `Scalar`, e.g. `0.04m` is exactly `40mm`.
+                        unit.normalize_f64(lit.value.parse::<f64>().expect("No error expected, this string already has been checked in the parse stage.")),
                         unit.quantity_type()).with_unit(unit)).with_src_ref(
                     context.span_to_src_ref(&lit.span),
                 )

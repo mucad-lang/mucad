@@ -210,7 +210,7 @@ impl std::ops::Mul<Unit> for Value {
         match (self, unit.ty()) {
             (value, Type::Quantity(QuantityType::Scalar)) | (value, Type::Integer) => Ok(value),
             (Value::Integer(i), Type::Quantity(quantity_type)) => Ok(Value::Quantity(
-                Quantity::new(unit.normalize(Scalar::from(i)), quantity_type),
+                Quantity::new(unit.normalize_f64(i.to_num::<f64>()), quantity_type),
             )),
             (Value::Quantity(quantity), Type::Quantity(quantity_type)) => {
                 quantity * Quantity::new(unit.factor(), quantity_type)

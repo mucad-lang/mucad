@@ -12,7 +12,7 @@ fn test_value_from_str_literals() {
         ), // Expecting a Quantity/Measurement
         (
             "42°",
-            Quantity::new(Scalar::from_num(0.73303829), QuantityType::Angle).into(),
+            Quantity::new(Scalar::from_num(42.0_f64.to_radians()), QuantityType::Angle).into(),
         ), // Expecting a Quantity/Angle
         ("\"Foo\"", "Foo".to_string().into()), // Expecting a String
         ("1", Value::from(1)),                 // Expecting an Integer

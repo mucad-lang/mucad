@@ -4,7 +4,7 @@ expression: model.to_string_with_ctx(&context)
 ---
 Multiplicity
 ├── Workpiece(op)
-│   │   - angle [in]: Angle = 119.999999333deg
+│   │   - angle [in]: Angle = 120deg
 │   │   - r [in]: Length = 10mm
 │   └── Builtin(RotateMatrix(Matrix3 [[-0.5, 0.8660254038404673, 0.0], [-0.8660254038404673, -0.5, 0.0], [0.0, 0.0, 1.0]]))
 │       │   - matrix: Matrix3x3 = Matrix3 [[-0.5, 0.8660254038, 0], [-0.8660254038, -0.5, 0], [0, 0, 1]]
@@ -15,7 +15,7 @@ Multiplicity
 │           └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
 │                   - radius [in]: Length = 4mm
 ├── Workpiece(op)
-│   │   - angle [in]: Angle = 239.9999986526deg
+│   │   - angle [in]: Angle = 240deg
 │   │   - r [in]: Length = 10mm
 │   └── Builtin(RotateMatrix(Matrix3 [[-0.5, -0.8660254038404673, 0.0], [0.8660254038404673, -0.5, 0.0], [0.0, 0.0, 1.0]]))
 │       │   - matrix: Matrix3x3 = Matrix3 [[-0.5, -0.8660254038, 0], [0.8660254038, -0.5, 0], [0, 0, 1]]
@@ -26,7 +26,7 @@ Multiplicity
 │           └── Builtin(__mu::geo2d::Circle[0x1801bf438d8b094])
 │                   - radius [in]: Length = 4mm
 └── Workpiece(op)
-    │   - angle [in]: Angle = 359.9999979855deg
+    │   - angle [in]: Angle = 360deg
     │   - r [in]: Length = 10mm
     └── Builtin(RotateMatrix(Matrix3 [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]))
         │   - matrix: Matrix3x3 = Matrix3 [[1, 0, 0], [0, 1, 0], [0, 0, 1]]

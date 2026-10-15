@@ -3,6 +3,6 @@ source: crates/lang-eval/tests/workbench.rs
 expression: model.to_string_with_ctx(&context)
 ---
 Group
-│   - a: [Angle] = [1.5707963267rad, 3.1415926535rad, 4.7123889802rad, 6.2831853072rad]
+│   - a: [Angle] = [1.570796327rad, 3.141592653rad, 4.71238898rad, 6.283185307rad]
 │   - n: Integer = 4
-└── Value([1.5707963267rad, 3.1415926535rad, 4.7123889802rad, 6.2831853072rad])
+└── Value([1.570796327rad, 3.141592653rad, 4.71238898rad, 6.283185307rad])

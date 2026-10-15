@@ -90,7 +90,18 @@ impl std::fmt::Display for Quantity {
         let display_value = self.unit.denormalize(self.value);
         let num_str = match f.precision() {
             Some(precision) => format!("{:.precision$}", display_value, precision = precision),
-            None => format!("{display_value}"),
+            // Only the decimals within the resolution, e.g. `90°` instead of `89.9999999965°`.
+            None => {
+                let decimals = self.unit.decimals();
+                let num_str = format!("{:.decimals$}", display_value.to_num::<f64>());
+                match num_str.contains('.') {
+                    true => num_str
+                        .trim_end_matches('0')
+                        .trim_end_matches('.')
+                        .to_string(),
+                    false => num_str,
+                }
+            }
         };
         let full_str = if self.unit.is_none() {
             num_str
@@ -238,9 +249,6 @@ impl<'de> serde::de::Visitor<'de> for QuantityVisitor {
             serde::de::Error::custom(format!("failed to parse float from '{num_str}'"))
         })?;
 
-        // Convert parsed value into your fixed-point Scalar
-        let raw_val = Scalar::from_num(num_f64);
-
         use std::str::FromStr;
 
         // 2. Parse Unit via FromStr (default to Unit::None if unit component is empty)
@@ -251,8 +259,8 @@ impl<'de> serde::de::Visitor<'de> for QuantityVisitor {
         // 3. Infer QuantityType from unit
         let quantity_type = unit.quantity_type();
 
-        // 4. Normalize value to standard base unit if needed
-        let value = unit.normalize(raw_val);
+        // 4. Normalize value to standard base unit if needed, before rounding to a `Scalar`
+        let value = unit.normalize_f64(num_f64);
 
         Ok(Quantity {
             value,
