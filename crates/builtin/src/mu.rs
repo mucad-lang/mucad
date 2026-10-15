@@ -805,17 +805,6 @@ pub mod ops {
     pub fn rotate(args: Arguments, ctx: &mut BuiltinEvalContext)
     -> Result<ModelTree, BuiltinError>;
 
-    /// Subtract all following child models from the first one.
-    #[builtin_op(Any -> Any)]
-    pub struct Difference;
-
-    /// Subtract all following child models from the first one.
-    #[builtin_op]
-    pub fn difference(
-        args: Arguments,
-        ctx: &mut BuiltinEvalContext,
-    ) -> Result<ModelTree, BuiltinError>;
-
     /// Linear extrusion of a 2D model.
     #[builtin_op(Geometry2D -> Geometry3D)]
     pub struct Extrude {
