@@ -4,20 +4,12 @@ With `microcad` comes with a *builtin* and a *standard* library.
 
 ## µcad Builtin Library
 
-The *µcad builtin library* is written in Rust (and still a little C) and brings
+The *µcad builtin library* is written in Rust and brings
 mathematical calculation functions, model processing and rendering capabilities
 into µcad.
 
-The µcad builtin library is available in the global module `__builtin` and is self
+The µcad builtin library is available in the global module `__mu` and is self
 documented in a [reference book](https://docs.microcad.xyz/builtin/book).
-
-[![test](.test/lib_builtin.svg)](.test/lib_builtin.log)
-
-```mu,lib_builtin
-use __builtin::print;
-
-print("Hello, µcad builtin library!");
-```
 
 ## µcad Standard Library
 
