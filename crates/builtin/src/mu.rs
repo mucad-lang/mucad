@@ -300,7 +300,7 @@ pub mod core {
             // Get an input or output property of a model tree.
             Value::Model(model) => match model.get_attribute(&name) {
                 Some(attr) => Ok(attr.clone()),
-                None => Err(BuiltinError::PropertyNotFound { name: name.clone() }),
+                None => Err(BuiltinError::AttributeNotFound { name: name.clone() }),
             },
             value => Err(BuiltinError::TypeError(TypeError::NoListType(value.ty()))),
         }

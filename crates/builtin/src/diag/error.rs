@@ -51,6 +51,9 @@ pub enum BuiltinError {
     #[error("Property not found: {name}")]
     PropertyNotFound { name: String },
 
+    #[error("Attribute not found: {name}")]
+    AttributeNotFound { name: String },
+
     #[error("Element mismatch: {expected} != {actual}")]
     ElementMismatch { expected: String, actual: String },
 
