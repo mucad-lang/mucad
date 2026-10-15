@@ -55,6 +55,19 @@ pub enum ArgumentMatchError {
     DuplicateArgument(Identifier),
 }
 
+/// The priority of a match of arguments to parameters, higher is better.
+///
+/// It chooses between overloaded initializers, e.g. of `std::ops::rotate`.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct MatchPriority {
+    /// The number of inline identifiers (e.g. `x` in `f(x)`), which match a parameter by name,
+    /// because matching by name has priority over matching by type.
+    pub inline_names: usize,
+    /// The number of positional arguments, which match a parameter without default value,
+    /// e.g. `rotate(45°)` matches `init(angle: Angle)` before `init(x = 0°, y = 0°, z = 0°)`.
+    pub required: usize,
+}
+
 pub trait ArgumentMatch {
     fn call_signature(&self) -> CallSignature;
 
@@ -98,16 +111,13 @@ pub trait ArgumentMatch {
         }
     }
 
-    /// The priority of the match of `arguments`, higher is better, or `None` if they don't match.
-    ///
-    /// Inline identifiers (e.g. `x` in `f(x)`) matching a parameter by name have priority over
-    /// matching by type, e.g. to choose between overloaded initializers.
-    fn match_priority(&self, arguments: &ArgumentValueList) -> Option<usize> {
+    /// The priority of the match of `arguments`, or `None` if they don't match.
+    fn match_priority(&self, arguments: &ArgumentValueList) -> Option<MatchPriority> {
         match self.call_signature().parameters {
             Some(parameters) => Matcher::new(&parameters, &self.default_values())
                 .match_priority(arguments)
                 .ok(),
-            None => Some(0),
+            None => Some(MatchPriority::default()),
         }
     }
 

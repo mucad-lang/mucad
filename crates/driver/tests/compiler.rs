@@ -498,7 +498,7 @@ fn compile_prelude() {
             "Circle(radius = 1mm).translate(x = 1mm).hull();\n\
             Rect(10mm).extrude(height = 1mm);\n\
             Circle(radius = 1mm).translate(x = 2mm).revolve(90°);\n\
-            Circle(radius = 1mm).rotate(angle = 45°).scale(s = 2.0);\n\
+            Circle(radius = 1mm).rotate(45°).scale(2.0);\n\
             Circle(radius = 1mm).extrude(height = 1mm).orient(v = (x = 1.0, y = 0.0, z = 0.0));\n\
             assert(true);\n\
             assert_eq(1, 1);\n\

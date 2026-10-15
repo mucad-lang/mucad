@@ -8,7 +8,7 @@ use microcad_lang_types::{
     ArgumentValue, ArgumentValueList, Arguments, CallParameters, Tuple, Type, Value,
 };
 
-use crate::ArgumentMatchError;
+use crate::{ArgumentMatchError, MatchPriority};
 
 /// A parameter with the value of its argument.
 struct MatchedParameter {
@@ -28,8 +28,7 @@ struct MatchedParameter {
 /// 3. Default values for parameters without arguments.
 pub(super) struct Matcher {
     params: Vec<MatchedParameter>,
-    /// The number of inline identifiers which match a parameter by name.
-    inline_names: usize,
+    priority: MatchPriority,
 }
 
 impl Matcher {
@@ -45,7 +44,7 @@ impl Matcher {
                     given: false,
                 })
                 .collect(),
-            inline_names: 0,
+            priority: MatchPriority::default(),
         }
     }
 
@@ -59,17 +58,14 @@ impl Matcher {
         self.finish()
     }
 
-    /// The priority of the match of `arguments`, higher is better.
-    ///
-    /// This is the number of inline identifiers (e.g. `x` in `f(x)`), which match a parameter by
-    /// name, because matching by name has priority over matching by type.
+    /// The priority of the match of `arguments`, see [`MatchPriority`].
     pub(super) fn match_priority(
         mut self,
         arguments: &ArgumentValueList,
-    ) -> Result<usize, ArgumentMatchError> {
+    ) -> Result<MatchPriority, ArgumentMatchError> {
         self.named(arguments)?;
         self.positional(arguments)?;
-        let priority = self.inline_names;
+        let priority = self.priority;
         self.finish().map(|_| priority)
     }
 
@@ -159,7 +155,7 @@ impl Matcher {
             match position {
                 Some(position) => {
                     self.give(position, &arg.value);
-                    self.inline_names += 1;
+                    self.priority.inline_names += 1;
                 }
                 None => by_type.push(&arg.value),
             }
@@ -182,9 +178,13 @@ impl Matcher {
                             .iter()
                             .position(|param| open(param, required) && ty.matches(&param.ty))
                     })
+                    .map(|position| (position, required))
             });
             match position {
-                Some(position) => self.give(position, value),
+                Some((position, required)) => {
+                    self.give(position, value);
+                    self.priority.required += usize::from(required);
+                }
                 // The type shows why the argument does not match, e.g. `1 (Scalar)`.
                 None => unexpected.push(format!("{value} ({ty})")),
             }

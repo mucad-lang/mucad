@@ -4,7 +4,7 @@
 //! Argument match tests
 
 use microcad_lang_base::Identifier;
-use microcad_lang_eval::ArgumentMatch;
+use microcad_lang_eval::{ArgumentMatch, MatchPriority};
 use microcad_lang_types::{
     ArgumentValue, ArgumentValueList, Arguments, CallSignature, Length, Tuple, Type, Value,
     argument_value, arguments, call_signature, list, tuple,
@@ -274,7 +274,35 @@ fn match_priority() {
         .into_iter()
         .collect();
 
-    assert_eq!(circle().match_priority(&arguments), Some(1));
-    assert_eq!(diameter.match_priority(&arguments), Some(0));
+    let by_name = circle().match_priority(&arguments);
+    let by_type = diameter.match_priority(&arguments);
+    assert_eq!(
+        by_name,
+        Some(MatchPriority {
+            inline_names: 1,
+            required: 0
+        })
+    );
+    assert_eq!(
+        by_type,
+        Some(MatchPriority {
+            inline_names: 0,
+            required: 1
+        })
+    );
+    assert!(by_name > by_type);
     assert_eq!(foo_foz().match_priority(&arguments), None);
+}
+
+/// Positional arguments for parameters without default value have priority,
+/// e.g. `rotate(45°)` is `init(angle: Angle)`, not `init(x = 0°, y = 0°, z = 0°)`.
+#[test]
+fn match_priority_required() {
+    let x_y_z = Signature {
+        signature: call_signature!(x: Type::length(), y: Type::length(), z: Type::length()),
+        default: tuple!(x = mm(0.0), y = mm(0.0), z = mm(0.0)),
+    };
+    let arguments: ArgumentValueList = [argument_value!(mm(1.0))].into_iter().collect();
+
+    assert!(circle().match_priority(&arguments) > x_y_z.match_priority(&arguments));
 }
