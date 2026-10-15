@@ -72,8 +72,11 @@ impl FromIterator<(Identifier, Value)> for Arguments {
 pub struct ArgumentValue {
     /// *value* of the argument.
     pub value: Value,
-    /// If expression of value is a single identifier, this item catches it.
+    /// The name of the argument, if given by the caller (e.g. `radius = 10mm`).
     pub id: Option<Identifier>,
+    /// The identifier of an argument without name, if its expression is a single identifier
+    /// (e.g. `x` in `f(x)`). It matches a parameter with the same name.
+    pub inline_id: Option<Identifier>,
 }
 
 impl std::fmt::Display for ArgumentValue {
@@ -94,6 +97,16 @@ impl ArgumentValue {
         Self {
             value: value.into(),
             id,
+            inline_id: None,
+        }
+    }
+
+    /// Create an argument without name from a single identifier (e.g. `x` in `f(x)`).
+    pub fn inline(id: impl Into<Identifier>, value: impl Into<Value>) -> Self {
+        Self {
+            value: value.into(),
+            id: None,
+            inline_id: Some(id.into()),
         }
     }
 
