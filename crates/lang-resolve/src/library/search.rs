@@ -20,8 +20,8 @@ pub struct Search<'a> {
     from_scope: SymbolNodeId,
     /// Looks up path parts inside a module of another library.
     external: &'a ExternalLookUp<'a>,
-    /// Wildcards searched already, to stop at cyclic wildcard imports.
-    visited_wildcards: HashSet<SymbolNodeId>,
+    /// Wildcards and aliases searched already, to stop at cyclic imports.
+    visited: HashSet<SymbolNodeId>,
 }
 
 impl<'a> Search<'a> {
@@ -34,7 +34,7 @@ impl<'a> Search<'a> {
             lib,
             from_scope,
             external,
-            visited_wildcards: HashSet::default(),
+            visited: HashSet::default(),
         }
     }
 
@@ -80,9 +80,40 @@ impl<'a> Search<'a> {
     /// Look up the `rest` of a path inside a `found` symbol.
     pub fn descend(&mut self, found: LookUp, rest: &[Identifier]) -> Option<LookUp> {
         match found {
-            LookUp::Local(id) => self.downwards(id, rest),
+            LookUp::Local(id) if rest.is_empty() => Some(LookUp::Local(id)),
+            LookUp::Local(id) => match &SymbolNodeRef::new(id, &self.lib.arena).get().def {
+                SymbolDef::Alias(alias) => self.in_alias(id, &alias.path, rest),
+                _ => self.downwards(id, rest),
+            },
             // A symbol of another library has been looked up with all parts.
             LookUp::External(_) => Some(found),
+        }
+    }
+
+    /// Look up the `rest` of a path inside the module the alias `node` stands for,
+    /// e.g. `space::Sphere` with `use std::geo3d as space;`.
+    fn in_alias(&mut self, node: SymbolNodeId, path: &Path, rest: &[Identifier]) -> Option<LookUp> {
+        // Each alias is followed once, to stop at cyclic imports.
+        if !self.visited.insert(node) {
+            return None;
+        }
+
+        let target = match path {
+            Path::Resolved(SymbolId::Item(module)) => LookUp::Local(*module),
+            Path::Resolved(module @ SymbolId::External(_)) => LookUp::External(module.clone()),
+            // Not resolved yet, e.g. while resolving other imports.
+            Path::Unresolved(path) => {
+                let scope = node.parent(&self.lib.arena)?;
+                self.with_scope(scope, |search| search.path(path))?
+            }
+            _ => return None,
+        };
+        match target {
+            LookUp::Local(module) => self.descend(LookUp::Local(module), rest),
+            LookUp::External(SymbolId::External(module)) => {
+                (self.external)(&module, rest).map(LookUp::External)
+            }
+            LookUp::External(_) => None,
         }
     }
 
@@ -118,8 +149,7 @@ impl<'a> Search<'a> {
             return None;
         };
         // Each wildcard is searched once, to stop at cyclic imports.
-        if !self.lib.is_visible(node.id, self.from_scope) || !self.visited_wildcards.insert(node.id)
-        {
+        if !self.lib.is_visible(node.id, self.from_scope) || !self.visited.insert(node.id) {
             return None;
         }
 

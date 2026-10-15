@@ -552,3 +552,31 @@ fn resolve_case_check_file_name() {
     };
     assert!(issues.is_empty(), "{issues:?}");
 }
+
+/// A path continues in the module an alias stands for, e.g. `c::X` with `use a::b as c;`.
+#[test_case::test_case(false, "mod a {\n    pub mod b {\n        pub const X = 1;\n    }\n}\nuse a::b as c;\nc::X;"
+    => Vec::<String>::new(); "module alias")]
+#[test_case::test_case(false, "mod a {\n    pub mod b {\n        pub const X = 1;\n    }\n}\nuse a::b as c;\nuse c as d;\nd::X;"
+    => Vec::<String>::new(); "alias of an alias")]
+#[test_case::test_case(false, "use d as c;\nuse c as d;\nc::X;"
+    => vec!["Unresolved symbol: c::X"]; "cyclic alias")]
+#[test_case::test_case(true, "use globlib::geo as g;\ng::Shape();"
+    => Vec::<String>::new(); "alias of an external module")]
+#[test_case::test_case(true, "use globlib::geo as g;\ng::Private();"
+    => vec!["Unresolved symbol: g::Private"]; "private symbol of an external module")]
+fn resolve_module_alias(external: bool, code: &str) -> Vec<String> {
+    let mut ctx = ResolveContext::new();
+    if external {
+        let (lib_id, _) = ctx
+            .load_external_library("tests/test_cases/glob_lib")
+            .expect("A library");
+        ctx.add_implicit_dependency("globlib", lib_id);
+    }
+    let issues = match microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(code),
+        &mut ctx,
+    ) {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+    issues.iter().map(|issue| issue.to_string()).collect()
+}
