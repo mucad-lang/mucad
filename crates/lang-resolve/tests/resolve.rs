@@ -559,7 +559,9 @@ fn resolve_case_check_file_name() {
 #[test_case::test_case(false, "mod a {\n    pub mod b {\n        pub const X = 1;\n    }\n}\nuse a::b as c;\nuse c as d;\nd::X;"
     => Vec::<String>::new(); "alias of an alias")]
 #[test_case::test_case(false, "use d as c;\nuse c as d;\nc::X;"
-    => vec!["Unresolved symbol: c::X"]; "cyclic alias")]
+    => vec!["Unresolved symbol: c::X", "Cyclic alias `c`", "Cyclic alias `d`"]; "cyclic alias")]
+#[test_case::test_case(false, "use b as a;\nuse c as b;\nuse a as c;"
+    => vec!["Cyclic alias `a`", "Cyclic alias `b`", "Cyclic alias `c`"]; "cyclic alias of three")]
 #[test_case::test_case(true, "use globlib::geo as g;\ng::Shape();"
     => Vec::<String>::new(); "alias of an external module")]
 #[test_case::test_case(true, "use globlib::geo as g;\ng::Private();"

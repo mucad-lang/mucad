@@ -12,7 +12,7 @@ use crate::{
     Manifest, ResolveError, ResolveErrorKind, ResolveLibraryContext, ResolveResult,
     library::{Symbol, SymbolNodeId},
     locate,
-    resolve::{case_check::CaseCheck, visitor::ResolveVisitor},
+    resolve::{alias_check::AliasCheck, case_check::CaseCheck, visitor::ResolveVisitor},
 };
 
 impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
@@ -53,9 +53,12 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         Ok(id)
     }
 
-    /// Resolve the paths of the loaded library, then check the case of its symbol names.
+    /// Resolve the paths of the loaded library, then check its aliases and the case of its symbol names.
     fn resolve(&mut self) {
         ResolveVisitor::new(self).visit();
+        AliasCheck::check(self.lib())
+            .into_iter()
+            .for_each(|err| self.push_err(err));
         CaseCheck::check(self.lib())
             .into_iter()
             .for_each(|warning| self.push_warn(warning));

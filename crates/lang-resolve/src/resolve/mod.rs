@@ -5,6 +5,7 @@
 //!
 //! TODO Doc
 
+mod alias_check;
 mod case_check;
 mod context;
 pub mod stack;

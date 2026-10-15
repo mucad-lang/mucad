@@ -77,6 +77,15 @@ pub enum ResolveErrorKind {
         src_ref: SrcRef,
     },
 
+    /// An alias stands for itself through other aliases, e.g. `use d as c; use c as d;`.
+    #[error("Cyclic alias `{name}`")]
+    #[diagnostic(help("The alias refers to itself through other aliases."))]
+    CyclicAlias {
+        name: String,
+        #[label("This alias does not refer to a symbol")]
+        src_ref: SrcRef,
+    },
+
     #[error("Library `{name}` not loaded")]
     LibraryNotLoaded { name: String },
 
@@ -176,7 +185,8 @@ impl SrcReferrer for ResolveError {
             } => *specified_src_ref,
             UnresolvedPath { src_ref, .. }
             | AmbiguousPath { src_ref, .. }
-            | PropertyAlreadyDefined { src_ref, .. } => *src_ref,
+            | PropertyAlreadyDefined { src_ref, .. }
+            | CyclicAlias { src_ref, .. } => *src_ref,
             ParseError(err) => err.src_ref,
             LowerError(err) => err.src_ref(),
             _ => SrcRef::none(),
