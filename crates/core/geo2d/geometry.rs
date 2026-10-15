@@ -5,7 +5,7 @@ use super::*;
 use crate::traits::{Center, TotalMemory, VertexCount};
 use derive_more::From;
 
-use geo::{ConvexHull, MultiPolygon};
+use geo::MultiPolygon;
 use strum::IntoStaticStr;
 
 /// A 2D Geometry which is independent from resolution.

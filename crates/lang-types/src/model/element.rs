@@ -20,6 +20,18 @@ pub enum BooleanOp {
     Intersect,
 }
 
+impl BooleanOp {
+    fn builtin_id(&self) -> BuiltinId {
+        // TODO This is a hack. Check if the BooleanOp variant can be removed eventually.
+        match self {
+            BooleanOp::Union => "__mu::ops::union",
+            BooleanOp::Difference => "__mu::ops::subtract",
+            BooleanOp::Intersect => "__mu::ops::intersect",
+        }
+        .into()
+    }
+}
+
 #[derive(Debug, Display, Clone, Hash, PartialEq, Serialize, Deserialize)]
 #[display("{kind}")]
 pub struct Workpiece {
@@ -80,6 +92,7 @@ impl BuiltinWorkpiece {
         match self {
             BuiltinWorkpiece::Primitive(builtin_id, _)
             | BuiltinWorkpiece::Operation(builtin_id, _) => Some(*builtin_id),
+            BuiltinWorkpiece::BooleanOp(op) => Some(op.builtin_id()),
             _ => None,
         }
     }
