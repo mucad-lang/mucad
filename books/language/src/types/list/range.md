@@ -1,4 +1,4 @@
-# Range Arrays
+# Range Expressions
 
 Alternatively a range expression can be used to generate an array with
 consecutive values.
