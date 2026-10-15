@@ -16,17 +16,16 @@ Output
   :![output](.test/model_expression-out.svg)
 
 Building a *group* (using curly braces) of both operands and applying the
-builtin method `subtract` to it is equivalent to the above code:
+operation `subtract` to it is equivalent to the above code:
 
 [![test](.test/model_expression_builtin.svg)](.test/model_expression_builtin.log)
 
-```mu,model_expression_builtin
-use __builtin::ops::subtract;
+```mu,model_expression_subtract
 
 {
     std::geo2d::Rect(1cm);
     std::geo2d::Circle(radius = 3mm);
-}.subtract();
+}.std::ops::subtract();
 ```
 
 Output

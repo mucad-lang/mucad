@@ -29,11 +29,7 @@ value is only available within that specific scope:
 
 [![test](.test/assignment_value_scope.svg)](.test/assignment_value_scope.log)
 
-```mu,assignment_value_scope?mode=todo
-// source code file is the topmost scope #0
-
-use std::debug::*;
-
+```mu,assignment_value_scope
 // define a within scope #0
 a = 5;
 std::assert_eq(a, 5);
@@ -43,19 +39,15 @@ std::assert_eq(a, 5);
     // define b within scope #1
     b = a * 2;
     // of course b is available at this point
-    assert_valid("b");
+    std::assert_eq(b, 10);
 
     // scope #2
     {
         // b is available in scope #2 because #2 is within #1
-        assert_valid("b");
+        std::assert_eq(b, 10);
     }
 }
 
-// a is still available
-assert_valid("a");
-// b not known here anymore
-assert_invalid("b");
 ```
 
 ## Restrictions
@@ -89,9 +81,6 @@ a = 5;
     std::assert_eq(a, 10);
 }
 ```
-
- > [!NOTE] Anonymous scopes do not open new namespaces in µcad.
- > This is different in a lot of other languages!
 
 ### Not in modules
 

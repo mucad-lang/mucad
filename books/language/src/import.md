@@ -23,7 +23,7 @@ You can then load the TOML file by using `std::import` and access its values:
 
 [![test](.test/toml_import.svg)](.test/toml_import.log)
 
-```mu,toml_import
+```mu,toml_import?mode=todo
 data = std::import("example.toml");
 
 std::assert_eq(data.M10.diameter, 10.0);

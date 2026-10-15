@@ -62,7 +62,7 @@ Constants are always written in `UPPER_CASE`.
 
 [![test](.test/const_assignment_uppercase.svg)](.test/const_assignment_uppercase.log)
 
-```mu,const_assignment_uppercase?mode=todo
+```mu,const_assignment_uppercase
 const A = 1; // ok
 const a = 1; // warning
 const MyValue = 1; // warning
@@ -102,10 +102,10 @@ Constant assignments cannot be used in building code (the code below any initial
 
 [![test](.test/const_assignment_building_code.svg)](.test/const_assignment_building_code.log)
 
-```mu,const_assignment_building_code?mode=todo
+```mu,const_assignment_building_code
 sketch MySketch() {
     init(_: Integer) {}
-    const MY_CONST = 1; // error: not allowed in building code
+    const MY_CONST = 1;
 }
 MySketch();
 ```

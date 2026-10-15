@@ -63,9 +63,9 @@ Even when using them with models:
 
 [![test](.test/expression_model.svg)](.test/expression_model.log)
 
-```mu,expression_model?mode=todo
+```mu,model_eq
 // Using logical operators between models too
-std::assert_eq(std::geo2d::Circle(1cm) == std::geo2d::Circle(10mm), true);
+std::assert_eq(std::geo2d::Circle(r = 1cm) == std::geo2d::Circle(r = 10mm), true);
 ```
 
 Only *Boolean expressions* (expressions with a boolean result) can be used to define conditions (see [if statement](../flow/conditions.md)).

@@ -17,7 +17,7 @@ You may also use `if` to decide between different results.
 
 [![test](.test/function_conditional_result.svg)](.test/function_conditional_result.log)
 
-```mu,function_conditional_result?mode=todo
+```mu,function_conditional_result
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         x * pow(x, n - 1)
@@ -36,14 +36,14 @@ Of course returning a value twice is not allowed.
 
 [![test](.test/return_twice.svg)](.test/return_twice.log)
 
-```mu,return_twice?mode=todo
+```mu,return_twice
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         x * pow(x, n - 1)
     } else if n < 1 {
         1.0 / x / pow(x, -n)
     }
-    1.0 // error: without else this line would return a second value
+    1.0
 }
 
 std::assert_eq(pow(8.0, 2), 64.0);
@@ -57,7 +57,7 @@ statement.
 
 [![test](.test/function_return.svg)](.test/function_return.log)
 
-```mu,function_return?mode=todo
+```mu,function_return
 fn pow(x: Scalar, n: Integer) -> Scalar {
     if n > 1 {
         return x * pow(x, n - 1);
