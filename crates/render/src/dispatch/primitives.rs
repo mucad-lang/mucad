@@ -41,3 +41,15 @@ impl RenderPolygon for mu::geo2d::Rect {
         core::Rect::new((x, y), (x + w, y + h)).to_polygon()
     }
 }
+
+impl RenderPrimitive for mu::geo3d::Sphere {
+    fn render_primitive(&self, resolution: &RenderResolution) -> core::Geometry {
+        let radius = self.radius.as_mm();
+
+        core::Geometry3D::from(core::geo3d::Manifold::sphere(
+            radius,
+            resolution.circular_segments(radius) as i32,
+        ))
+        .into()
+    }
+}
