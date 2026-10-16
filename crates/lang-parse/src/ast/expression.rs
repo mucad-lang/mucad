@@ -76,27 +76,54 @@ impl Expression {
         matches!(self, Expression::Body(_) | Expression::If(_))
     }
 
-    /// Returns a single identifier of an expression.
+    /// Returns the single identifier of an expression, e.g. `r` in `-r` or `r * 2%`,
+    /// but not in `r + w` or `[1..r] / r`, because the identifier must appear only once.
     pub fn single_identifier(&self) -> Option<Name> {
+        use ast::visitor::Visit;
+
+        let name = self.operand_identifier()?;
+        let mut symbol_paths = SymbolPaths::default();
+        let _ = self.visit(&mut symbol_paths);
+        let occurrences = symbol_paths
+            .0
+            .iter()
+            .filter(|symbol_path| matches!(symbol_path.parts.as_slice(), [id] if id.name == name))
+            .count();
+        (occurrences == 1).then_some(name)
+    }
+
+    /// The identifier, which is the only operand of operators with an identifier,
+    /// e.g. `r` in `-r` or `r * 2%`, but not in `r + w` or `r.x`.
+    fn operand_identifier(&self) -> Option<Name> {
         match self {
-            Expression::Bracketed(expression, _) => expression.single_identifier(),
+            Expression::Bracketed(expression, _) => expression.operand_identifier(),
             Expression::BinaryOperation(binary_operation) => match (
-                binary_operation.lhs.single_identifier(),
-                binary_operation.rhs.single_identifier(),
+                binary_operation.lhs.operand_identifier(),
+                binary_operation.rhs.operand_identifier(),
             ) {
                 (Some(id), None) | (None, Some(id)) => Some(id),
                 _ => None, // Both have identifiers (e.g., r + w) or neither does
             },
-            Expression::UnaryOperation(unary_operation) => unary_operation.rhs.single_identifier(),
-            Expression::SymbolPath(symbol_path) => {
-                if symbol_path.parts.len() == 1 {
-                    symbol_path.parts.first().map(|ident| &ident.name).cloned()
-                } else {
-                    None
-                }
-            }
+            Expression::UnaryOperation(unary_operation) => unary_operation.rhs.operand_identifier(),
+            Expression::SymbolPath(symbol_path) => match symbol_path.parts.as_slice() {
+                [identifier] => Some(identifier.name.clone()),
+                _ => None,
+            },
             _ => None,
         }
+    }
+}
+
+/// Collects the symbol paths of an expression, e.g. `n` twice in `[1..n] / n`.
+#[derive(Default)]
+struct SymbolPaths<'ast>(Vec<&'ast SymbolPath>);
+
+impl<'ast> ast::visitor::Visitor<'ast> for SymbolPaths<'ast> {
+    type BreakTy = ();
+
+    fn visit_symbol_path(&mut self, node: &'ast SymbolPath) -> std::ops::ControlFlow<()> {
+        self.0.push(node);
+        std::ops::ControlFlow::Continue(())
     }
 }
 
@@ -224,13 +251,22 @@ pub struct ListItem {
 }
 
 /// A qualified name, containing one or more [`Identifier`]s separated by `::`
-#[derive(Debug, Hash, PartialEq, Visit, Serialize)]
+#[derive(Debug, Hash, PartialEq, Serialize)]
 #[allow(missing_docs)]
 pub struct SymbolPath {
     pub span: Span,
     pub extras: ast::ItemExtras,
     pub prefix: Option<Span>,
     pub parts: Vec<ast::Identifier>,
+}
+
+impl ast::visitor::Visit for SymbolPath {
+    fn visit<'ast, V>(&'ast self, visitor: &mut V) -> std::ops::ControlFlow<V::BreakTy>
+    where
+        V: ast::visitor::Visitor<'ast> + ?Sized,
+    {
+        visitor.visit_symbol_path(self)
+    }
 }
 
 impl From<ast::Identifier> for SymbolPath {

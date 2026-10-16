@@ -66,3 +66,25 @@ fn expected_diagnostics_collector(name: &str, input: &str) {
 
     assert_debug_snapshot!(format!("visitor_{name}"), diags);
 }
+
+/// The single identifier of an expression is the only operand of operators with an identifier,
+/// which appears only once in the expression.
+#[test_case("r" => Some("r".into()); "identifier")]
+#[test_case("-r" => Some("r".into()); "unary operation")]
+#[test_case("r * 2%" => Some("r".into()); "binary operation")]
+#[test_case("std::math::PI * r" => Some("r".into()); "path")]
+#[test_case("r * sin(a)" => Some("r".into()); "call")]
+#[test_case("r + w" => None; "two identifiers")]
+#[test_case("[1..n] / n * 360°" => None; "identifier twice")]
+#[test_case("r * sin(r)" => None; "identifier twice in call")]
+#[test_case("[1..n] / 2" => None; "range")]
+#[test_case("m.radius" => None; "element access")]
+#[test_case("sqrt(r)" => None; "only call")]
+#[test_case("42mm" => None; "literal")]
+fn single_identifier(expr: &str) -> Option<String> {
+    let ast = microcad_lang_parse::parse(&microcad_lang_base::Source::from(expr))
+        .expect("No error")
+        .0;
+    let tail = ast.tree().statements.tail.as_ref().expect("An expression");
+    tail.expr.single_identifier().map(|name| name.to_string())
+}

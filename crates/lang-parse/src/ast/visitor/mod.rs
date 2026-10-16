@@ -13,6 +13,8 @@ pub use collector::{
     collect_expected_diagnostics,
 };
 
+use std::ops::ControlFlow;
+
 use crate::ast;
 
 /// Creates the default visit function implementation for a particular type
@@ -33,4 +35,10 @@ pub trait Visitor<'ast> {
     type BreakTy;
 
     define_visit!(visit_comment, ast::Comment);
+
+    /// Visits a `ast::SymbolPath` with this visitor, e.g. `foo::bar` or `x`.
+    fn visit_symbol_path(&mut self, node: &'ast ast::SymbolPath) -> ControlFlow<Self::BreakTy> {
+        node.extras.visit(self)?;
+        node.parts.visit(self)
+    }
 }
