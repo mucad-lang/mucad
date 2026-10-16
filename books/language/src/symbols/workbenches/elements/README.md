@@ -19,7 +19,6 @@ The following code demonstrates (on the basis of a `sketch`) most of these eleme
 // Sketch with a `radius` as building plan.
 // Which will automatically become a property.
 sketch Wheel(radius: Length) {
-    // Initialization code...
     const FACTOR = 2;
 
     // Initializer #1
@@ -46,7 +45,7 @@ sketch Wheel(radius: Length) {
     // Set a property which can be seen from outside.
     prop diameter = into_diameter(radius);
 
-    // Local variable `r`
+    // Hidden property `r`
     r = radius;
 
     // Create a circle.

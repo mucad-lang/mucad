@@ -18,9 +18,9 @@ fn f() {
 
 [![test](.test/function_function.svg)](.test/function_function.log)
 
-```mu,function_function?result=fail
+```mu,function_function
 fn f() {
-  fn f() {} // error
+  fn f() {} // works
 } f();
 ```
 
@@ -42,9 +42,9 @@ fn f() {
 
 [![test](.test/function_pub_use.svg)](.test/function_pub_use.log)
 
-```mu,function_pub_use?result=fail
+```mu,function_pub_use
 fn f() {
-  pub use std; // error
+  pub use std; // works, but 
 } f();
 ```
 
@@ -108,6 +108,6 @@ fn f() {
 
 ```mu,function_expression_model?result=fail
 fn f() {
-  Circle(radius=1mm);
+  Circle(radius=1mm); // A workbench cannot be called inside a function.
 } f();
 ```
