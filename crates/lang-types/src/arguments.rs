@@ -101,15 +101,6 @@ impl ArgumentValue {
         }
     }
 
-    /// Create an argument without name from a single identifier (e.g. `x` in `f(x)`).
-    pub fn inline(id: impl Into<Identifier>, value: impl Into<Value>) -> Self {
-        Self {
-            value: value.into(),
-            id: None,
-            inline_id: Some(id.into()),
-        }
-    }
-
     /// Create a positional argument (no name)
     pub fn positional(value: impl Into<Value>) -> Self {
         Self::new(value, None)

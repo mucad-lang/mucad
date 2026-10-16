@@ -115,10 +115,6 @@ impl Eval<ArgumentValue> for symbol::workbench::Argument {
                 let value: Value = expr.eval(context)?;
                 ArgumentValue::new(value, Some(name.clone()))
             }
-            symbol::workbench::Argument::AutoNamed { name, expr } => {
-                let value: Value = expr.eval(context)?;
-                ArgumentValue::inline(name.clone(), value)
-            }
         })
     }
 }

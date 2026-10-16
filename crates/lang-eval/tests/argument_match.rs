@@ -162,15 +162,6 @@ fn argument_match(
     => Ok(arguments!(any = mm(3.0), length = mm(2.0))); "positional any")]
 #[test_case(scalar(), vec![argument_value!(1)]
     => Ok(arguments!(x = 1)); "positional integer for scalar")]
-// Inline identifiers, e.g. `x` in `f(x)`
-#[test_case(x_y(), vec![ArgumentValue::inline("y", 2), argument_value!(1)]
-    => Ok(arguments!(x = 1, y = 2)); "inline identifier before type")]
-#[test_case(assert_eq(), vec![ArgumentValue::inline("v", mm(20.0)), argument_value!(mm(20.0))]
-    => Ok(arguments!(a = mm(20.0), b = mm(20.0), message = "default")); "inline identifier without parameter")]
-#[test_case(foo_foz(), vec![ArgumentValue::inline("f", 10), argument_value!(foz = 1)]
-    => Ok(arguments!(foo = 10, foz = 1)); "inline identifier is no short name")]
-#[test_case(circle(), vec![ArgumentValue::inline("radius", 1.0)]
-    => Ok(arguments!(radius = 1.0)); "inline identifier type checked later")]
 // Default values
 #[test_case(assert(), vec![argument_value!(true)]
     => Ok(arguments!(cond = true, message = "default")); "default")]
@@ -212,19 +203,6 @@ fn match_variadic() {
         Ok(Arguments::from(Tuple {
             positional: vec![1.0.into()],
             named: vec![(Identifier::no_ref("a"), 2.into())],
-        }))
-    );
-}
-
-/// A variadic signature names arguments with inline identifiers.
-#[test]
-fn match_variadic_inline() {
-    let arguments = vec![ArgumentValue::inline("x", 1.0)];
-    assert_eq!(
-        argument_match(variadic(), arguments),
-        Ok(Arguments::from(Tuple {
-            positional: vec![],
-            named: vec![(Identifier::no_ref("x"), 1.0.into())],
         }))
     );
 }
@@ -315,7 +293,7 @@ fn match_priority() {
         signature: call_signature!(diameter: Type::length()),
         default: tuple!(),
     };
-    let arguments: ArgumentValueList = [ArgumentValue::inline("radius", mm(1.0))]
+    let arguments: ArgumentValueList = [ArgumentValue::named("radius", mm(1.0))]
         .into_iter()
         .collect();
 
@@ -324,17 +302,11 @@ fn match_priority() {
     assert_eq!(
         by_name,
         Some(MatchPriority {
-            inline_names: 1,
+            inline_names: 0,
             required: 0
         })
     );
-    assert_eq!(
-        by_type,
-        Some(MatchPriority {
-            inline_names: 0,
-            required: 1
-        })
-    );
+    assert_eq!(by_type, None);
     assert!(by_name > by_type);
     assert_eq!(foo_foz().match_priority(&arguments), None);
 }

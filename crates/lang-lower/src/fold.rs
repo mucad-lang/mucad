@@ -42,7 +42,7 @@ impl<'a, 'source> Fold<'a, 'source> {
     {
         call.args.args.iter_mut().for_each(|arg| match arg {
             ir::Argument::Unnamed(expr) => f(self, expr),
-            ir::Argument::Named { expr, .. } | ir::Argument::AutoNamed { expr, .. } => {
+            ir::Argument::Named { expr, .. } => {
                 f(self, expr);
             }
         });
@@ -75,15 +75,13 @@ impl<'a, 'source> Fold<'a, 'source> {
 }
 
 impl<Expr: ir::ExprSpec> ir::ArgumentList<Expr> {
-    pub fn into_arguments(&self) -> Option<Arguments> {
+    pub(crate) fn into_arguments(&self) -> Option<Arguments> {
         let mut args = Vec::new();
 
         for arg in &self.args {
             let value = arg.expr().value()?;
             args.push(match arg {
-                ir::Argument::Named { name, .. } | ir::Argument::AutoNamed { name, .. } => {
-                    (name.clone(), value.clone())
-                }
+                ir::Argument::Named { name, .. } => (name.clone(), value.clone()),
                 _ => return None,
             })
         }

@@ -10,7 +10,7 @@ expression: "ir.to_ron().expect(\"No error\")"
     ),
     payload: (
         input_hash: "0xa18f78da53e23991",
-        output_hash: "0xccad832258739cf6",
+        output_hash: "0xe446157286e0b7a0",
         tree: (
             root: (
                 index1: 1,
@@ -397,7 +397,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             args: (
                                                                 src_ref: "11:25 @ 0xa5eb23e1ba0633ef (343..349)",
                                                                 args: [
-                                                                    AutoNamed(
+                                                                    Named(
                                                                         name: ((
                                                                             value: "radius",
                                                                             src_ref: "11:25 @ 0xa5eb23e1ba0633ef (343..349)",
@@ -412,6 +412,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                                             ],
                                                                             src_ref: "11:25 @ 0xa5eb23e1ba0633ef (343..349)",
                                                                         ))),
+                                                                        src_ref: "11:25 @ 0xa5eb23e1ba0633ef (343..349)",
                                                                     ),
                                                                 ],
                                                             ),

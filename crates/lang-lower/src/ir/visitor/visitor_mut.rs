@@ -43,7 +43,7 @@ pub trait ConstantVisitorMut: LeafVisitorMut {
         self.visit_path(&mut call.path);
         call.args.args.iter_mut().for_each(|arg| match arg {
             ir::Argument::Unnamed(expr) => self.visit_constant_expr(expr),
-            ir::Argument::Named { name, expr, .. } | ir::Argument::AutoNamed { name, expr } => {
+            ir::Argument::Named { name, expr, .. } => {
                 self.visit_name(name);
                 self.visit_constant_expr(expr);
             }
@@ -96,7 +96,7 @@ pub trait WorkbenchExpressionVisitorMut: ConstantVisitorMut {
         self.visit_path(&mut call.path);
         call.args.args.iter_mut().for_each(|arg| match arg {
             ir::Argument::Unnamed(expr) => self.visit_workbench_expr(expr),
-            ir::Argument::Named { name, expr, .. } | ir::Argument::AutoNamed { name, expr } => {
+            ir::Argument::Named { name, expr, .. } => {
                 self.visit_name(name);
                 self.visit_workbench_expr(expr);
             }
@@ -218,7 +218,7 @@ pub trait FnVisitorMut: ConstantVisitorMut {
         self.visit_path(&mut call.path);
         call.args.args.iter_mut().for_each(|arg| match arg {
             ir::Argument::Unnamed(expr) => self.visit_fn_expr(expr),
-            ir::Argument::Named { name, expr, .. } | ir::Argument::AutoNamed { name, expr } => {
+            ir::Argument::Named { name, expr, .. } => {
                 self.visit_name(name);
                 self.visit_fn_expr(expr);
             }

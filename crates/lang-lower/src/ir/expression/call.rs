@@ -22,8 +22,6 @@ pub enum Argument<Expr> {
         expr: Expr,
         src_ref: SrcRef,
     },
-    /// Auto-bind candidate identifier: `b` (needs resolver to check against ParameterList)
-    AutoNamed { name: Identifier, expr: Expr },
 }
 
 /// Builder methods for spec.
@@ -47,15 +45,13 @@ impl<Expr> Argument<Expr> {
     pub fn name(&self) -> Option<&Identifier> {
         match self {
             Argument::Unnamed(_) => None,
-            Argument::Named { name, .. } | Argument::AutoNamed { name, .. } => Some(name),
+            Argument::Named { name, .. } => Some(name),
         }
     }
 
     pub fn expr(&self) -> &Expr {
         match self {
-            Argument::Unnamed(expr)
-            | Argument::Named { expr, .. }
-            | Argument::AutoNamed { expr, .. } => expr,
+            Argument::Unnamed(expr) | Argument::Named { expr, .. } => expr,
         }
     }
 }
@@ -66,7 +62,7 @@ where
 {
     fn src_ref(&self) -> SrcRef {
         match self {
-            Argument::Unnamed(expr) | Argument::AutoNamed { expr, .. } => expr.src_ref(),
+            Argument::Unnamed(expr) => expr.src_ref(),
             Argument::Named { src_ref, .. } => *src_ref,
         }
     }
@@ -88,10 +84,6 @@ where
                 expr: expr.cast_into(),
                 src_ref,
             },
-            Argument::AutoNamed { name, expr } => Argument::AutoNamed {
-                name,
-                expr: expr.cast_into(),
-            },
         }
     }
 }
@@ -104,7 +96,6 @@ where
         match self {
             Argument::Unnamed(expr) => write!(f, "{expr}"),
             Argument::Named { name, expr, .. } => write!(f, "{name} = {expr}"),
-            Argument::AutoNamed { name, expr } => write!(f, "~{name} = {expr}"),
         }
     }
 }
@@ -112,8 +103,9 @@ where
 impl<Expr: ir::ExprSpec> From<Expr> for Argument<Expr> {
     fn from(expr: Expr) -> Self {
         match expr.single_identifier() {
-            Some(name) => Self::AutoNamed {
+            Some(name) => Self::Named {
                 name: name.clone(),
+                src_ref: expr.src_ref(),
                 expr,
             },
             None => Self::Unnamed(expr),
