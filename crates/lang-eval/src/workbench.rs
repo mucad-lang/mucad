@@ -111,7 +111,8 @@ impl Eval<ArgumentValue> for symbol::workbench::Argument {
                 let value: Value = expr.eval(context)?;
                 ArgumentValue::new(value, None)
             }
-            symbol::workbench::Argument::Named { name, expr, .. } => {
+            symbol::workbench::Argument::Named { name, expr, .. }
+            | symbol::workbench::Argument::Inline { name, expr, .. } => {
                 let value: Value = expr.eval(context)?;
                 ArgumentValue::new(value, Some(name.clone()))
             }

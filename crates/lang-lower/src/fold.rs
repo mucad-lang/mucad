@@ -42,7 +42,7 @@ impl<'a, 'source> Fold<'a, 'source> {
     {
         call.args.args.iter_mut().for_each(|arg| match arg {
             ir::Argument::Unnamed(expr) => f(self, expr),
-            ir::Argument::Named { expr, .. } => {
+            ir::Argument::Named { expr, .. } | ir::Argument::Inline { expr, .. } => {
                 f(self, expr);
             }
         });

@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::Spanned;
+use microcad_lang_base::{Name, Spanned};
 use microcad_macros::Visit;
 use serde::Serialize;
 
@@ -74,6 +74,29 @@ impl Expression {
     /// Can this expression also be used as a statement, without extra semicolon
     pub fn is_also_statement(&self) -> bool {
         matches!(self, Expression::Body(_) | Expression::If(_))
+    }
+
+    /// Returns a single identifier of an expression.
+    pub fn single_identifier(&self) -> Option<Name> {
+        match self {
+            Expression::Bracketed(expression, _) => expression.single_identifier(),
+            Expression::BinaryOperation(binary_operation) => match (
+                binary_operation.lhs.single_identifier(),
+                binary_operation.rhs.single_identifier(),
+            ) {
+                (Some(id), None) | (None, Some(id)) => Some(id),
+                _ => None, // Both have identifiers (e.g., r + w) or neither does
+            },
+            Expression::UnaryOperation(unary_operation) => unary_operation.rhs.single_identifier(),
+            Expression::SymbolPath(symbol_path) => {
+                if symbol_path.parts.len() == 1 {
+                    symbol_path.parts.first().map(|ident| &ident.name).cloned()
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 }
 

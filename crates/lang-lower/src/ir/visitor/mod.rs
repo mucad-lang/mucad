@@ -53,6 +53,10 @@ pub trait ConstantVisitor: LeafVisitor {
                 self.visit_name(name);
                 self.visit_constant_expr(expr);
             }
+            ir::Argument::Inline { name, expr, .. } => {
+                self.visit_name(name);
+                self.visit_constant_expr(expr);
+            }
         });
     }
 
@@ -103,6 +107,10 @@ pub trait WorkbenchExpressionVisitor: ConstantVisitor {
         call.args.args.iter().for_each(|arg| match arg {
             ir::Argument::Unnamed(expr) => self.visit_workbench_expr(expr),
             ir::Argument::Named { name, expr, .. } => {
+                self.visit_name(name);
+                self.visit_workbench_expr(expr);
+            }
+            ir::Argument::Inline { name, expr, .. } => {
                 self.visit_name(name);
                 self.visit_workbench_expr(expr);
             }
@@ -225,6 +233,10 @@ pub trait FnVisitor: ConstantVisitor {
         call.args.args.iter().for_each(|arg| match &arg {
             ir::Argument::Unnamed(expr) => self.visit_fn_expr(expr),
             ir::Argument::Named { name, expr, .. } => {
+                self.visit_name(name);
+                self.visit_fn_expr(expr);
+            }
+            ir::Argument::Inline { name, expr, .. } => {
                 self.visit_name(name);
                 self.visit_fn_expr(expr);
             }

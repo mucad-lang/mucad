@@ -23,17 +23,24 @@ impl<Expr: DesugarExpr> Desugar<Vec<ast::TupleItem>> for ir::ArgumentList<Expr> 
         let mut names: microcad_lang_base::HashSet<Identifier> =
             microcad_lang_base::HashSet::default();
 
-        node.iter().try_for_each(|arg| -> LowerResult<()> {
-            let expr = Expr::desugar(&arg.expr, context)?;
-            let src_ref = context.span_to_src_ref(&arg.span);
+        node.iter().try_for_each(|item| -> LowerResult<()> {
+            let expr = Expr::desugar(&item.expr, context)?;
+            let src_ref = context.span_to_src_ref(&item.span);
 
-            let arg = match &arg.id {
+            let arg = match &item.id {
                 Some(name) => ir::Argument::Named {
                     name: ir::Identifier::desugar(name, context)?,
                     expr,
                     src_ref,
                 },
-                None => ir::Argument::from(expr),
+                None => match item.expr.single_identifier() {
+                    Some(name) => ir::Argument::Named {
+                        name: name.into(),
+                        src_ref: expr.src_ref(),
+                        expr,
+                    },
+                    None => ir::Argument::Unnamed(expr),
+                },
             };
 
             if let Some(name) = arg.name() {
@@ -59,6 +66,30 @@ impl<Expr: DesugarExpr> Desugar<Vec<ast::TupleItem>> for ir::ArgumentList<Expr> 
     }
 }
 
+impl<Expr: DesugarExpr> Desugar<ast::Argument> for ir::Argument<Expr> {
+    fn desugar(arg: &ast::Argument, context: &mut LowerContext) -> LowerResult<Self> {
+        let arg_expr = arg.value();
+        Ok(match arg.name() {
+            Some(name) => ir::Argument::Named {
+                name: ir::Identifier::desugar(name, context)?,
+                expr: Expr::desugar(arg_expr, context)?,
+                src_ref: context.span_to_src_ref(arg.span()),
+            },
+            None => {
+                let expr = Expr::desugar(arg_expr, context)?;
+                match arg_expr.single_identifier() {
+                    Some(name) => Self::Inline {
+                        name: name.into(),
+                        src_ref: expr.src_ref(),
+                        expr,
+                    },
+                    None => Self::Unnamed(expr),
+                }
+            }
+        })
+    }
+}
+
 impl<Expr: DesugarExpr> Desugar<ast::ArgumentList> for ir::ArgumentList<Expr> {
     fn desugar(node: &ast::ArgumentList, context: &mut LowerContext) -> LowerResult<Self> {
         let mut args = Vec::new();
@@ -66,17 +97,7 @@ impl<Expr: DesugarExpr> Desugar<ast::ArgumentList> for ir::ArgumentList<Expr> {
         node.arguments
             .iter()
             .try_for_each(|arg| -> LowerResult<()> {
-                match arg.name() {
-                    Some(name) => args.push(ir::Argument::Named {
-                        name: ir::Identifier::desugar(name, context)?,
-                        expr: Expr::desugar(arg.value(), context)?,
-                        src_ref: context.span_to_src_ref(arg.span()),
-                    }),
-                    None => {
-                        let expr = Expr::desugar(arg.value(), context)?;
-                        args.push(ir::Argument::from(expr));
-                    }
-                }
+                args.push(ir::Argument::desugar(arg, context)?);
                 Ok(())
             })?;
 

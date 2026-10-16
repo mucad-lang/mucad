@@ -16,8 +16,14 @@ use serde::{Deserialize, Serialize};
 pub enum Argument<Expr> {
     /// Explicitly positional: `10` or `x + 1`
     Unnamed(Expr),
-    /// Explicitly named by caller: `b: 12`
+    /// Explicitly named by caller: `b = 12`
     Named {
+        name: Identifier,
+        expr: Expr,
+        src_ref: SrcRef,
+    },
+    /// Implicitly named by caller, if the expression contains a single identifier.
+    Inline {
         name: Identifier,
         expr: Expr,
         src_ref: SrcRef,
@@ -45,13 +51,15 @@ impl<Expr> Argument<Expr> {
     pub fn name(&self) -> Option<&Identifier> {
         match self {
             Argument::Unnamed(_) => None,
-            Argument::Named { name, .. } => Some(name),
+            Argument::Named { name, .. } | Argument::Inline { name, .. } => Some(name),
         }
     }
 
     pub fn expr(&self) -> &Expr {
         match self {
-            Argument::Unnamed(expr) | Argument::Named { expr, .. } => expr,
+            Argument::Unnamed(expr)
+            | Argument::Named { expr, .. }
+            | Argument::Inline { expr, .. } => expr,
         }
     }
 }
@@ -63,7 +71,7 @@ where
     fn src_ref(&self) -> SrcRef {
         match self {
             Argument::Unnamed(expr) => expr.src_ref(),
-            Argument::Named { src_ref, .. } => *src_ref,
+            Argument::Named { src_ref, .. } | Argument::Inline { src_ref, .. } => *src_ref,
         }
     }
 }
@@ -84,6 +92,15 @@ where
                 expr: expr.cast_into(),
                 src_ref,
             },
+            Argument::Inline {
+                name,
+                expr,
+                src_ref,
+            } => Argument::Inline {
+                name,
+                expr: expr.cast_into(),
+                src_ref,
+            },
         }
     }
 }
@@ -96,6 +113,7 @@ where
         match self {
             Argument::Unnamed(expr) => write!(f, "{expr}"),
             Argument::Named { name, expr, .. } => write!(f, "{name} = {expr}"),
+            Argument::Inline { name, expr, .. } => write!(f, "{name}? = {expr}"),
         }
     }
 }
