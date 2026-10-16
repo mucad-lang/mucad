@@ -44,15 +44,10 @@ impl FlowSignal {
 
 impl Eval<ArgumentValue> for symbol::function::Argument {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<ArgumentValue> {
-        Ok(match self {
-            symbol::function::Argument::Unnamed(expr) => {
-                ArgumentValue::new(expr.eval(context)?.into_value(), None)
-            }
-            symbol::function::Argument::Named { name, expr, .. }
-            | symbol::function::Argument::Inline { name, expr, .. } => {
-                ArgumentValue::new(expr.eval(context)?.into_value(), Some(name.clone()))
-            }
-        })
+        Ok(ArgumentValue::new(
+            self.expr().eval(context)?.into_value(),
+            self.argument_name(),
+        ))
     }
 }
 

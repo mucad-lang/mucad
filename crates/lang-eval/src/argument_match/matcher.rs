@@ -4,9 +4,7 @@
 //! Match the arguments of a call to parameters.
 
 use microcad_lang_base::{Identifier, IdentifierList};
-use microcad_lang_types::{
-    ArgumentValue, ArgumentValueList, Arguments, CallParameters, Tuple, Type, Value,
-};
+use microcad_lang_types::{ArgumentValueList, Arguments, CallParameters, Tuple, Type, Value};
 
 use crate::{ArgumentMatchError, MatchPriority};
 
@@ -74,7 +72,7 @@ impl Matcher {
         let mut unexpected = Vec::new();
         for (id, value) in arguments
             .iter()
-            .filter_map(|ArgumentValue { id, value, .. }| Some((id.as_ref()?, value)))
+            .filter_map(|arg| Some((arg.name.named()?, &arg.value)))
         {
             match self.find(id)? {
                 Some(param) if param.given => {
@@ -147,8 +145,8 @@ impl Matcher {
 
         // Inline identifiers first claim the parameter with the same name, e.g. `x` in `f(x)`.
         let mut by_type = Vec::new();
-        for arg in arguments.iter().filter(|arg| arg.id.is_none()) {
-            let position = arg.inline_id.as_ref().and_then(|id| {
+        for arg in arguments.iter().filter(|arg| arg.name.named().is_none()) {
+            let position = arg.name.inline().and_then(|id| {
                 self.params
                     .iter()
                     .position(|param| !param.given && &param.id == id)

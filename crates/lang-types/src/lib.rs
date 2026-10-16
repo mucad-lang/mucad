@@ -12,7 +12,7 @@ mod color;
 pub use color::Color;
 
 mod arguments;
-pub use arguments::{ArgumentValue, ArgumentValueList, Arguments};
+pub use arguments::{ArgumentName, ArgumentValue, ArgumentValueList, Arguments};
 
 use derive_more::Display;
 use serde::{Deserialize, Serialize};

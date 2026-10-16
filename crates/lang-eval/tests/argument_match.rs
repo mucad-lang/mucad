@@ -91,6 +91,14 @@ fn assert_eq() -> Signature {
     }
 }
 
+/// `(x: Integer, y: Integer)`
+fn x_y() -> Signature {
+    Signature {
+        signature: call_signature!(x: Type::Integer, y: Type::Integer),
+        default: tuple!(),
+    }
+}
+
 /// `(x: Integer, y: Integer = 0)`
 fn x_y_default() -> Signature {
     Signature {
@@ -172,6 +180,17 @@ fn argument_match(
     => Err("Missing arguments: radius".into()); "missing")]
 #[test_case(assert(), vec![argument_value!(message = "given")]
     => Err("Missing arguments: cond".into()); "missing without default")]
+// Inline identifiers, e.g. `r` in `f(r * 2)`
+#[test_case(x_y(), vec![ArgumentValue::inline("y", 2), argument_value!(1)]
+    => Ok(arguments!(x = 1, y = 2)); "inline identifier before type")]
+#[test_case(assert_eq(), vec![ArgumentValue::inline("v", mm(20.0)), argument_value!(mm(20.0))]
+    => Ok(arguments!(a = mm(20.0), b = mm(20.0), message = "default")); "inline identifier without parameter")]
+#[test_case(foo_foz(), vec![ArgumentValue::inline("f", 10), argument_value!(foz = 1)]
+    => Ok(arguments!(foo = 10, foz = 1)); "inline identifier is no short name")]
+#[test_case(circle(), vec![ArgumentValue::inline("radius", 1.0)]
+    => Ok(arguments!(radius = 1.0)); "inline identifier type checked later")]
+#[test_case(x_y(), vec![ArgumentValue::inline("x", 1), ArgumentValue::inline("x", 2)]
+    => Ok(arguments!(x = 1, y = 2)); "same inline identifier twice")]
 // Positional arguments without matching parameter
 #[test_case(circle(), vec![argument_value!(1.0)]
     => Err("Unexpected positional arguments: 1 (Scalar)".into()); "unexpected positional of other type")]
@@ -199,6 +218,19 @@ fn match_variadic() {
     );
 }
 
+/// A variadic signature names arguments with inline identifiers.
+#[test]
+fn match_variadic_inline() {
+    let arguments = vec![ArgumentValue::inline("x", 1.0)];
+    assert_eq!(
+        argument_match(variadic(), arguments),
+        Ok(Arguments::from(Tuple {
+            positional: vec![],
+            named: vec![(Identifier::no_ref("x"), 1.0.into())],
+        }))
+    );
+}
+
 /// A list argument for a non-list parameter results in one match per element.
 #[test]
 fn multi_match_cartesian_product() {
@@ -209,11 +241,8 @@ fn multi_match_cartesian_product() {
 
     // f(a = [1mm, 2mm], b = [10mm, 20mm, 30mm])
     let args: ArgumentValueList = [
-        ArgumentValue::new(list![mm(1.0), mm(2.0)], Some(Identifier::no_ref("a"))),
-        ArgumentValue::new(
-            list![mm(10.0), mm(20.0), mm(30.0)],
-            Some(Identifier::no_ref("b")),
-        ),
+        ArgumentValue::named("a", list![mm(1.0), mm(2.0)]),
+        ArgumentValue::named("b", list![mm(10.0), mm(20.0), mm(30.0)]),
     ]
     .into_iter()
     .collect();
@@ -285,7 +314,7 @@ fn match_priority() {
         signature: call_signature!(diameter: Type::length()),
         default: tuple!(),
     };
-    let arguments: ArgumentValueList = [ArgumentValue::named("radius", mm(1.0))]
+    let arguments: ArgumentValueList = [ArgumentValue::inline("radius", mm(1.0))]
         .into_iter()
         .collect();
 
@@ -294,11 +323,17 @@ fn match_priority() {
     assert_eq!(
         by_name,
         Some(MatchPriority {
-            inline_names: 0,
+            inline_names: 1,
             required: 0
         })
     );
-    assert_eq!(by_type, None);
+    assert_eq!(
+        by_type,
+        Some(MatchPriority {
+            inline_names: 0,
+            required: 1
+        })
+    );
     assert!(by_name > by_type);
     assert_eq!(foo_foz().match_priority(&arguments), None);
 }

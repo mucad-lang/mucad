@@ -106,17 +106,8 @@ impl Eval for symbol::Path {
 
 impl Eval<ArgumentValue> for symbol::workbench::Argument {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<ArgumentValue> {
-        Ok(match self {
-            symbol::workbench::Argument::Unnamed(expr) => {
-                let value: Value = expr.eval(context)?;
-                ArgumentValue::new(value, None)
-            }
-            symbol::workbench::Argument::Named { name, expr, .. }
-            | symbol::workbench::Argument::Inline { name, expr, .. } => {
-                let value: Value = expr.eval(context)?;
-                ArgumentValue::new(value, Some(name.clone()))
-            }
-        })
+        let value: Value = self.expr().eval(context)?;
+        Ok(ArgumentValue::new(value, self.argument_name()))
     }
 }
 

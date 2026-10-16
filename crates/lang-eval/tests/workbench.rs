@@ -79,7 +79,7 @@ pub fn call_op<T: Callable<ModelTree>>(
 ) -> ModelTree {
     let mut context = EvalContext::new();
     let input: Value = self_.eval(&mut context).expect("No error");
-    let args = std::iter::once(ArgumentValue::new(input, Some("self".into()))).chain(arg_iter);
+    let args = std::iter::once(ArgumentValue::named("self", input)).chain(arg_iter);
     let model: ModelTree = op
         .call(&ArgumentValueList::from_iter(args), &mut context)
         .expect("No error");

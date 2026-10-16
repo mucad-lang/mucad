@@ -67,16 +67,52 @@ impl FromIterator<(Identifier, Value)> for Arguments {
     }
 }
 
+/// How the caller names an argument.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum ArgumentName {
+    /// No name, e.g. `10mm` in `f(10mm)`. The argument is matched by type.
+    #[default]
+    None,
+    /// Named by the caller, e.g. `radius` in `f(radius = 10mm)`.
+    Named(Identifier),
+    /// The single identifier of the expression, e.g. `r` in `f(r * 2)`.
+    /// It matches a parameter with the same name, otherwise the argument is matched by type.
+    Inline(Identifier),
+}
+
+impl ArgumentName {
+    /// The name given by the caller, e.g. `radius` in `f(radius = 10mm)`.
+    pub fn named(&self) -> Option<&Identifier> {
+        match self {
+            Self::Named(id) => Some(id),
+            Self::None | Self::Inline(_) => None,
+        }
+    }
+
+    /// The single identifier of the expression, e.g. `r` in `f(r * 2)`.
+    pub fn inline(&self) -> Option<&Identifier> {
+        match self {
+            Self::Inline(id) => Some(id),
+            Self::None | Self::Named(_) => None,
+        }
+    }
+
+    /// The name given by the caller or the single identifier of the expression.
+    pub fn id(&self) -> Option<&Identifier> {
+        match self {
+            Self::Named(id) | Self::Inline(id) => Some(id),
+            Self::None => None,
+        }
+    }
+}
+
 /// Argument value.
 #[derive(Clone, Debug)]
 pub struct ArgumentValue {
     /// *value* of the argument.
     pub value: Value,
-    /// The name of the argument, if given by the caller (e.g. `radius = 10mm`).
-    pub id: Option<Identifier>,
-    /// The identifier of an argument without name, if its expression is a single identifier
-    /// (e.g. `x` in `f(x)`). It matches a parameter with the same name.
-    pub inline_id: Option<Identifier>,
+    /// How the caller names the argument.
+    pub name: ArgumentName,
 }
 
 impl std::fmt::Display for ArgumentValue {
@@ -93,22 +129,26 @@ impl Ty for ArgumentValue {
 
 impl ArgumentValue {
     /// Create new argument value
-    pub fn new(value: impl Into<Value>, id: Option<Identifier>) -> Self {
+    pub fn new(value: impl Into<Value>, name: ArgumentName) -> Self {
         Self {
             value: value.into(),
-            id,
-            inline_id: None,
+            name,
         }
     }
 
     /// Create a positional argument (no name)
     pub fn positional(value: impl Into<Value>) -> Self {
-        Self::new(value, None)
+        Self::new(value, ArgumentName::None)
     }
 
-    /// Create a named argument (e.g., `radius: 10.0`)
+    /// Create a named argument (e.g., `radius = 10.0`)
     pub fn named(id: impl Into<Identifier>, value: impl Into<Value>) -> Self {
-        Self::new(value, Some(id.into()))
+        Self::new(value, ArgumentName::Named(id.into()))
+    }
+
+    /// Create an argument with the single identifier of its expression (e.g. `r` in `r * 2`)
+    pub fn inline(id: impl Into<Identifier>, value: impl Into<Value>) -> Self {
+        Self::new(value, ArgumentName::Inline(id.into()))
     }
 }
 
@@ -125,15 +165,10 @@ pub struct ArgumentValueList {
 impl ArgumentValueList {
     pub fn get_named(&self, name: impl AsRef<str>) -> Option<&Value> {
         let this_name = Identifier::from(name.as_ref());
-        self.args.iter().find_map(|arg| {
-            if let Some(name) = &arg.id
-                && name == &this_name
-            {
-                Some(&arg.value)
-            } else {
-                None
-            }
-        })
+        self.args
+            .iter()
+            .find(|arg| arg.name.named() == Some(&this_name))
+            .map(|arg| &arg.value)
     }
 
     /// Remove a named argument and return its value.
@@ -142,7 +177,7 @@ impl ArgumentValueList {
         let index = self
             .args
             .iter()
-            .position(|arg| arg.id.as_ref() == Some(&this_name))?;
+            .position(|arg| arg.name.named() == Some(&this_name))?;
         Some(self.args.remove(index).value)
     }
 

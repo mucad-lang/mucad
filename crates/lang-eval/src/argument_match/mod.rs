@@ -10,7 +10,7 @@ use microcad_lang_base::{Identifier, IdentifierList};
 use microcad_lang_resolve::library::symbol::{
     Function, ParameterList, function::FunctionSignature, workbench::Init,
 };
-use microcad_lang_types::{ArgumentValue, ArgumentValueList, Arguments, CallSignature, Tuple};
+use microcad_lang_types::{ArgumentValueList, Arguments, CallSignature, Tuple};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -93,21 +93,17 @@ pub trait ArgumentMatch {
             }
             // A variadic function simply returns the arguments as tuple,
             // arguments with inline identifiers are named.
-            None => {
-                let name =
-                    |arg: &ArgumentValue| arg.id.as_ref().or(arg.inline_id.as_ref()).cloned();
-                Ok(Arguments::from(Tuple {
-                    named: arguments
-                        .iter()
-                        .filter_map(|arg| name(arg).map(|id| (id, arg.value.clone())))
-                        .collect(),
-                    positional: arguments
-                        .iter()
-                        .filter(|arg| name(arg).is_none())
-                        .map(|arg| arg.value.clone())
-                        .collect(),
-                }))
-            }
+            None => Ok(Arguments::from(Tuple {
+                named: arguments
+                    .iter()
+                    .filter_map(|arg| Some((arg.name.id()?.clone(), arg.value.clone())))
+                    .collect(),
+                positional: arguments
+                    .iter()
+                    .filter(|arg| arg.name.id().is_none())
+                    .map(|arg| arg.value.clone())
+                    .collect(),
+            })),
         }
     }
 

@@ -62,6 +62,15 @@ impl<Expr> Argument<Expr> {
             | Argument::Inline { expr, .. } => expr,
         }
     }
+    /// How the caller names the argument, e.g. `r` in `f(r * 2)` is an inline name.
+    pub fn argument_name(&self) -> microcad_lang_types::ArgumentName {
+        use microcad_lang_types::ArgumentName;
+        match self {
+            Argument::Unnamed(_) => ArgumentName::None,
+            Argument::Named { name, .. } => ArgumentName::Named(name.clone()),
+            Argument::Inline { name, .. } => ArgumentName::Inline(name.clone()),
+        }
+    }
 }
 
 impl<Expr> SrcReferrer for Argument<Expr>
