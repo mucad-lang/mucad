@@ -1,8 +1,6 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::geo2d::Circle;
-
 op polar_array(n: Integer, r: Length) {
     @input.translate(x = r)
         .rotate([1..n] / n * 360°)
@@ -26,5 +24,7 @@ sketch RustGear(r = 50mm) {
 
 RustGear().extrude(10mm);
 
+/*
 mod rust_r;
 rust_r::RustR().extrude(5mm);
+*/
