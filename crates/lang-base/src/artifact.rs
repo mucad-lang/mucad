@@ -165,12 +165,16 @@ pub trait Artifact: Sized + Serialize {
         envelope.unwrap(Self::kind())
     }
 
+    /// Write the artifact into `path` with the extension of its kind, e.g. `circle.mu.ast`.
+    ///
+    /// Returns the path of the written file.
     #[cfg(feature = "io")]
-    fn emit(&self, path: impl AsRef<std::path::Path>) -> miette::Result<()> {
+    fn emit(&self, path: impl AsRef<std::path::Path>) -> miette::Result<std::path::PathBuf> {
         use miette::IntoDiagnostic;
         let mut path = path.as_ref().to_path_buf();
         path.add_extension(Self::kind().ext());
-        std::fs::write(path, self.to_ron()?).into_diagnostic()
+        std::fs::write(&path, self.to_ron()?).into_diagnostic()?;
+        Ok(path)
     }
 }
 

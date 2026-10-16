@@ -77,6 +77,11 @@ fn from_code_block_parameters() {
     assert!((resolution.linear - 0.5).abs() < 1e-6);
     assert_eq!(path, Some("circle.svg".into()));
 
+    let test_case = test_case_from_header("mu,circle?emit=model,ir,ast")
+        .expect("Valid")
+        .expect("A test");
+    assert_eq!(test_case.emit, [Emit::Model, Emit::Ir, Emit::Ast]);
+
     for (header, mode) in [("mu,a?mode=todo", "todo"), ("mu,a?mode=compile", "compile")] {
         let test_case = test_case_from_header(header)
             .expect("Valid")
@@ -108,6 +113,7 @@ fn from_code_block_invalid() {
         "mu,circle?mode=foo",
         "mu,circle?result=maybe",
         "mu,circle?resolution=fine",
+        "mu,circle?emit=model,lib",
     ] {
         let err = test_case_from_header(header).expect_err(header);
         assert!(err.contains("intro::basics::circle"), "{err}");
@@ -124,7 +130,7 @@ fn run_modes() {
 
     let result = run("mu,a?mode=compile", CIRCLE);
     assert_eq!(result.status, TestStatus::Ok, "{}", result.log_output);
-    assert!(result.log_output.contains("-- Model --"));
+    assert!(!result.log_output.contains("-- Model --"));
 
     let dir = tempfile::tempdir().expect("temp dir");
     let svg = dir.path().join("circle.svg");
@@ -297,6 +303,66 @@ fn write_result_files() {
     assert!(log.contains("Expected result: ok"), "{log}");
     assert!(log.contains("test.md:5"), "{log}");
     assert!(log.contains(&format!("    5:   {CIRCLE}")), "{log}");
-    assert!(log.contains("-- Model --"), "{log}");
+    assert!(!log.contains("-- Model --"), "{log}");
     assert!(log.ends_with("-- Test Result --\nOK\n"), "{log}");
+}
+
+/// Run the test `header` of a markdown file in a temporary directory, returns the directory.
+fn run_in_dir(header: &str, code: &str) -> tempfile::TempDir {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let code_block = mu::md::CodeBlock {
+        header: header.parse().expect("A code block header"),
+        code: code.into(),
+        line_offset: 0,
+        path: Some(dir.path().join("test.md")),
+    };
+    let test_case = TestCase::from_code_block(std::path::Path::new("test.md"), &code_block)
+        .expect("Valid")
+        .expect("A test");
+    TestSuite {
+        name: None,
+        test_cases: vec![test_case],
+    }
+    .run(false, &no_std());
+    dir
+}
+
+/// Emitted artifacts are written into the test directory, the log contains their file names.
+#[test]
+fn emit_artifacts() {
+    let dir = run_in_dir("mu,circle?mode=compile&emit=model,ir,ast", CIRCLE);
+    let log = std::fs::read_to_string(dir.path().join(".test/circle.log")).expect("A log");
+    for ext in ["model", "ir", "ast"] {
+        assert!(
+            dir.path().join(format!(".test/circle.{ext}")).is_file(),
+            "{ext}"
+        );
+        assert!(log.contains(&format!("Emitted 'circle.{ext}'.")), "{log}");
+    }
+    assert!(log.ends_with("-- Test Result --\nOK\n"), "{log}");
+}
+
+/// Artifacts are only written if they are enabled.
+#[test]
+fn emit_nothing() {
+    let dir = run_in_dir("mu,circle?mode=compile", CIRCLE);
+    for ext in ["model", "ir", "ast"] {
+        assert!(
+            !dir.path().join(format!(".test/circle.{ext}")).exists(),
+            "{ext}"
+        );
+    }
+}
+
+/// A parse test emits only the AST.
+#[test]
+fn emit_when_parsing() {
+    let dir = run_in_dir("mu,circle?mode=parse&emit=ast,ir", CIRCLE);
+    let log = std::fs::read_to_string(dir.path().join(".test/circle.log")).expect("A log");
+    assert!(dir.path().join(".test/circle.ast").is_file());
+    assert!(log.contains("Emitted 'circle.ast'."), "{log}");
+    assert!(
+        log.contains("Only the AST is emitted when parsing"),
+        "{log}"
+    );
 }

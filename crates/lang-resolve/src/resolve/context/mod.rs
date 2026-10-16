@@ -74,13 +74,27 @@ impl ResolveContext {
         })
     }
 
-    pub fn emit_ast(&self, id: HashId, path: impl AsRef<std::path::Path>) -> miette::Result<()> {
+    /// Write the AST of the source `id` into `path` with the extension `ast`.
+    ///
+    /// Returns the path of the written file.
+    pub fn emit_ast(
+        &self,
+        id: HashId,
+        path: impl AsRef<std::path::Path>,
+    ) -> miette::Result<std::path::PathBuf> {
         self.with_ast(id, |ast| ast.emit(path))
             .transpose()?
             .ok_or_else(|| miette::miette!("No AST to emit"))
     }
 
-    pub fn emit_ir(&self, id: HashId, path: impl AsRef<std::path::Path>) -> miette::Result<()> {
+    /// Write the IR of the source `id` into `path` with the extension `ir`.
+    ///
+    /// Returns the path of the written file.
+    pub fn emit_ir(
+        &self,
+        id: HashId,
+        path: impl AsRef<std::path::Path>,
+    ) -> miette::Result<std::path::PathBuf> {
         self.with_ir(id, |ir| ir.emit(path))
             .transpose()?
             .ok_or_else(|| miette::miette!("No IR to emit"))

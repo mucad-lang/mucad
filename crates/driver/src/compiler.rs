@@ -143,6 +143,28 @@ impl Compiler {
         self.resolve_context.with_ir(id, f)
     }
 
+    /// Write the AST of the source `id` into `path` with the extension `ast`, e.g. `circle.mu.ast`.
+    ///
+    /// Returns the path of the written file.
+    pub fn emit_ast(
+        &self,
+        id: mu::HashId,
+        path: impl AsRef<std::path::Path>,
+    ) -> mu::Result<std::path::PathBuf> {
+        self.resolve_context.emit_ast(id, path)
+    }
+
+    /// Write the IR of the source `id` into `path` with the extension `ir`, e.g. `circle.mu.ir`.
+    ///
+    /// Returns the path of the written file.
+    pub fn emit_ir(
+        &self,
+        id: mu::HashId,
+        path: impl AsRef<std::path::Path>,
+    ) -> mu::Result<std::path::PathBuf> {
+        self.resolve_context.emit_ir(id, path)
+    }
+
     /// Load the standard library once and make it an implicit dependency of every library.
     fn load_std(&mut self) -> CompileResult<()> {
         if self.no_std || self.std.is_some() {

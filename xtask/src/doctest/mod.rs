@@ -15,6 +15,19 @@ pub use test_suite::TestSuite;
 #[cfg(test)]
 mod tests;
 
+/// An artifact, which a test writes into `.test/{test_name}.{ext}` next to the markdown file.
+///
+/// - `mu,test?emit=model,ir,ast`
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Emit {
+    /// The abstract syntax tree, `.ast`
+    Ast,
+    /// The intermediate representation, `.ir`
+    Ir,
+    /// The model tree, `.model`
+    Model,
+}
+
 /// Test mode
 ///
 /// The code block headers can look like this:

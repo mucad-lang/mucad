@@ -1,9 +1,9 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_driver::prelude as mu;
+use microcad_driver::prelude::{self as mu, Artifact};
 
-use crate::doctest::{ExpectedTestResult, Panic, TestMode, TestResult, TestStatus};
+use crate::doctest::{Emit, ExpectedTestResult, Panic, TestMode, TestResult, TestStatus};
 
 /// Directory, into which tests export their models.
 const OUTPUT_DIR: &str = "target/doctest";
@@ -20,6 +20,8 @@ pub struct TestCase {
     pub mode: TestMode,
     /// Expected test result
     pub result: ExpectedTestResult,
+    /// Artifacts to write into the test directory.
+    pub emit: Vec<Emit>,
     pub source: mu::Source,
 }
 
@@ -80,10 +82,24 @@ impl TestCase {
             Some(result) => return Err(invalid("result", result)),
         };
 
+        let emit = match param("emit") {
+            Some(emit) => emit
+                .split(',')
+                .map(|artifact| match artifact {
+                    "ast" => Ok(Emit::Ast),
+                    "ir" => Ok(Emit::Ir),
+                    "model" => Ok(Emit::Model),
+                    _ => Err(invalid("emit", &emit)),
+                })
+                .collect::<Result<_, _>>()?,
+            None => Vec::new(),
+        };
+
         Ok(Some(Self {
             name,
             mode,
             result,
+            emit,
             source: code_block.source(),
         }))
     }
@@ -119,10 +135,7 @@ impl TestCase {
         match &self.mode {
             TestMode::Todo => Ok(String::new()),
             TestMode::Parse => self.parse(),
-            TestMode::Compile => {
-                let (model, log) = self.compile(compiler)?;
-                Ok(format!("{log}\n-- Model --\n{model}"))
-            }
+            TestMode::Compile => self.compile(compiler).map(|(_, log)| log),
             TestMode::Export { resolution, path } => {
                 let (model, log) = self.compile(compiler)?;
 
@@ -150,18 +163,27 @@ impl TestCase {
         mu::md::CodeBlockHeader::test_banner_string(self.block_name())
     }
 
+    /// The directory `.test` next to the markdown file, which contains the test results.
+    ///
+    /// It is `None` if the source has no path, e.g. if it is not loaded from a markdown file.
+    fn test_dir(&self) -> Option<std::path::PathBuf> {
+        let md_file = self.source.path()?;
+        Some(
+            md_file
+                .parent()
+                .unwrap_or(std::path::Path::new(""))
+                .join(".test"),
+        )
+    }
+
     /// Write the files the banner links to into `.test` next to the markdown file:
     /// an image for the test status and the test log.
     ///
     /// Does nothing if the source has no path, e.g. if it is not loaded from a markdown file.
     pub fn write_result_files(&self, result: &TestResult) -> std::io::Result<()> {
-        let Some(md_file) = self.source.path() else {
+        let Some(dir) = self.test_dir() else {
             return Ok(());
         };
-        let dir = md_file
-            .parent()
-            .unwrap_or(std::path::Path::new(""))
-            .join(".test");
         std::fs::create_dir_all(&dir)?;
 
         // Link the image for the status, e.g. `xtask/images/ok.svg`.
@@ -217,33 +239,74 @@ impl TestCase {
         )
     }
 
-    /// Parse the source and return the diagnostics.
+    /// Parse the source and return the diagnostics and the emitted AST.
     fn parse(&self) -> Result<String, String> {
-        let diags = match mu::parse(&self.source) {
-            Ok((_, issues)) | Err(issues) => issues.into_diagnostics(),
+        let (ast, diags) = match mu::parse(&self.source) {
+            Ok((ast, issues)) => (Some(ast), issues.into_diagnostics()),
+            Err(issues) => (None, issues.into_diagnostics()),
         };
         let log = diags
             .render_to_string(&&self.source, &LOG_OPTIONS)
             .unwrap_or_default();
+        let log = log
+            + &self.emit_log(|emit, path| match (emit, &ast) {
+                (Emit::Ast, Some(ast)) => ast.emit(path),
+                (Emit::Ast, None) => Err(mu::report("No AST to emit")),
+                (Emit::Ir | Emit::Model, _) => {
+                    Err(mu::report("Only the AST is emitted when parsing"))
+                }
+            });
         match diags.has_errors() {
             true => Err(log),
             false => Ok(log),
         }
     }
 
-    /// Compile the source and return the model and the diagnostics.
+    /// Compile the source and return the model, the diagnostics and the emitted artifacts.
     ///
     /// Like in the CLI, a model with errors is a failure.
     fn compile(&self, compiler: &mut mu::Compiler) -> Result<(mu::ModelTree, String), String> {
-        match compiler.compile(self.source.clone()) {
-            Ok((model, diags)) if !diags.has_errors() => Ok((
-                model,
-                compiler.render_diag_to_string_with(&diags, &LOG_OPTIONS),
-            )),
-            Ok((_, diags)) | Err(diags) => {
-                Err(compiler.render_diag_to_string_with(&diags, &LOG_OPTIONS))
-            }
+        let (model, diags) = match compiler.compile(self.source.clone()) {
+            Ok((model, diags)) => (Some(model), diags),
+            Err(diags) => (None, diags),
+        };
+        let id = self.source.hash_id();
+        let log = compiler.render_diag_to_string_with(&diags, &LOG_OPTIONS)
+            + &self.emit_log(|emit, path| match (emit, &model) {
+                (Emit::Ast, _) => compiler.emit_ast(id, path),
+                (Emit::Ir, _) => compiler.emit_ir(id, path),
+                (Emit::Model, Some(model)) => model.emit(path),
+                (Emit::Model, None) => Err(mu::report("No model to emit")),
+            });
+        match model {
+            Some(model) if !diags.has_errors() => Ok((model, log)),
+            _ => Err(log),
         }
+    }
+
+    /// Write the artifacts of [`TestCase::emit`] with `emit` into the test directory,
+    /// e.g. `.test/circle.ast`, and return their file names for the log.
+    fn emit_log(
+        &self,
+        emit: impl Fn(Emit, &std::path::Path) -> mu::Result<std::path::PathBuf>,
+    ) -> String {
+        let Some(dir) = self.test_dir().filter(|_| !self.emit.is_empty()) else {
+            return String::new();
+        };
+        if let Err(err) = std::fs::create_dir_all(&dir) {
+            return format!("\nCannot create '{}': {err}", dir.display());
+        }
+        let path = dir.join(self.block_name());
+        self.emit
+            .iter()
+            .map(|artifact| match emit(*artifact, &path) {
+                Ok(path) => format!(
+                    "\nEmitted '{}'.",
+                    path.file_name().unwrap_or_default().to_string_lossy()
+                ),
+                Err(err) => format!("\n{err}"),
+            })
+            .collect()
     }
 
     /// Export the model into [`OUTPUT_DIR`] and return the path of the exported file.

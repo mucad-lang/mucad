@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_driver::prelude as mu;
+use microcad_driver::prelude::{self as mu, Artifact};
 use miette::IntoDiagnostic;
 
 use crate::{Cli, commands::RunCommand};
@@ -18,15 +18,12 @@ pub enum EmitTarget {
 }
 
 impl EmitTarget {
-    fn emit<T: mu::Artifact>(
-        &self,
-        artifact: &T,
-        default_path: impl AsRef<std::path::Path>,
-    ) -> mu::Result {
+    /// The path to emit an artifact to, or `None` if nothing shall be emitted.
+    fn path(&self, default_path: impl AsRef<std::path::Path>) -> Option<std::path::PathBuf> {
         match self {
-            EmitTarget::NoEmit => Ok(()), // Don't do anything.
-            EmitTarget::Auto => artifact.emit(default_path),
-            EmitTarget::Path(path_buf) => artifact.emit(path_buf),
+            EmitTarget::NoEmit => None,
+            EmitTarget::Auto => Some(default_path.as_ref().to_path_buf()),
+            EmitTarget::Path(path_buf) => Some(path_buf.clone()),
         }
     }
 }
@@ -71,7 +68,9 @@ impl RunCommand<()> for Compile {
             Ok((model, diag)) => {
                 eprintln!("{}", compiler.render_diag_to_string(&diag));
 
-                self.emit_model.emit(&model, &self.input)?;
+                if let Some(path) = self.emit_model.path(&self.input) {
+                    model.emit(path)?;
+                }
             }
             Err(err) => {
                 eprintln!(
@@ -85,8 +84,12 @@ impl RunCommand<()> for Compile {
             }
         }
 
-        compiler.with_ast(source.hash_id(), |ast| self.emit_ast.emit(ast, &self.input));
-        compiler.with_ir(source.hash_id(), |ir| self.emit_ir.emit(ir, &self.input));
+        if let Some(path) = self.emit_ast.path(&self.input) {
+            compiler.emit_ast(source.hash_id(), path)?;
+        }
+        if let Some(path) = self.emit_ir.path(&self.input) {
+            compiler.emit_ir(source.hash_id(), path)?;
+        }
 
         Ok(())
     }
