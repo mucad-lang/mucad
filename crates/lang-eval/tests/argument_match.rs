@@ -91,14 +91,6 @@ fn assert_eq() -> Signature {
     }
 }
 
-/// `(x: Integer, y: Integer)`
-fn x_y() -> Signature {
-    Signature {
-        signature: call_signature!(x: Type::Integer, y: Type::Integer),
-        default: tuple!(),
-    }
-}
-
 /// `(x: Integer, y: Integer = 0)`
 fn x_y_default() -> Signature {
     Signature {
