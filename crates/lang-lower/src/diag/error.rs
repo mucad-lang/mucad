@@ -169,10 +169,6 @@ pub enum LowerError {
         param_src_ref: SrcRef,
     },
 
-    #[error("This initializer is equivant to the default initializer and will not be called")]
-    #[diagnostic(code(lower::duplicated_default_initializer), severity = "Warning")]
-    DuplicatedDefaultInitializer { src_ref: SrcRef },
-
     #[error("Conflicting stability attributes found")]
     #[diagnostic(
         code(microcad::lower::conflicting_stability),
@@ -246,7 +242,6 @@ impl SrcReferrer for LowerError {
             InvalidInitStatement { src_ref, .. } => *src_ref,
             InputNotInitialized { src_ref, .. } => *src_ref,
             NotAnInputProperty { name, .. } => name.src_ref(),
-            DuplicatedDefaultInitializer { src_ref } => *src_ref,
             ConflictingStability { src_ref } => *src_ref,
             DuplicateAttribute { src_ref, .. } => *src_ref,
             InvalidVersionString { src_ref, .. } => *src_ref,

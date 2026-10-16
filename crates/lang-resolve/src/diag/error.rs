@@ -88,6 +88,20 @@ pub enum ResolveErrorKind {
         first_src_ref: SrcRef,
     },
 
+    /// An initializer is never chosen, because an earlier one matches the same arguments.
+    #[error("Initialization `{init}` is unreachable")]
+    #[diagnostic(help(
+        "The earlier initialization `{earlier}` matches the same arguments and is chosen first."
+    ))]
+    UnreachableInit {
+        init: String,
+        #[label("Unreachable")]
+        src_ref: SrcRef,
+        earlier: String,
+        #[label("Matches first")]
+        earlier_src_ref: SrcRef,
+    },
+
     /// An alias stands for itself through other aliases, e.g. `use d as c; use c as d;`.
     #[error("Cyclic alias `{name}`")]
     #[diagnostic(help("The alias refers to itself through other aliases."))]
@@ -198,7 +212,8 @@ impl SrcReferrer for ResolveError {
             | AmbiguousPath { src_ref, .. }
             | PropertyAlreadyDefined { src_ref, .. }
             | CyclicAlias { src_ref, .. }
-            | SymbolAlreadyDefined { src_ref, .. } => *src_ref,
+            | SymbolAlreadyDefined { src_ref, .. }
+            | UnreachableInit { src_ref, .. } => *src_ref,
             ParseError(err) => err.src_ref,
             LowerError(err) => err.src_ref(),
             _ => SrcRef::none(),

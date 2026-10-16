@@ -607,3 +607,32 @@ fn resolve_duplicate_symbol(code: &str) -> Vec<String> {
     };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
+
+/// An initializer is unreachable if an earlier one matches the same arguments.
+/// The building plan is checked last.
+#[test_case::test_case("sketch S(w: Length) {\n    init(a: Length) { w = a; }\n    init(a: Length) { w = a; }\n}"
+    => vec!["Initialization `init(a: Length)` is unreachable"]; "same initializer")]
+#[test_case::test_case("sketch S(w: Length) {\n    init(w: Length) { w = w; }\n}"
+    => vec!["Initialization `init(w: Length)` is unreachable"]; "building plan")]
+#[test_case::test_case("sketch S(w: Length) {\n    init(a: Length, b = 1mm) { w = a + b; }\n    init(a: Length) { w = a; }\n}"
+    => vec!["Initialization `init(a: Length)` is unreachable"]; "earlier with default value")]
+#[test_case::test_case("sketch S(w: Length) {\n    init(a: Length) { w = a; }\n    init(a: Length, b = 1mm) { w = a + b; }\n}"
+    => Vec::<String>::new(); "later with default value")]
+#[test_case::test_case("sketch S(w: Length) {\n    init(a = 1mm) { w = a; }\n    init() { w = 1mm; }\n}"
+    => vec!["Initialization `init()` is unreachable"]; "earlier without required parameter")]
+#[test_case::test_case("sketch S(w: Length) {\n    init() { w = 1mm; }\n    init(a = 1mm) { w = a; }\n}"
+    => Vec::<String>::new(); "earlier without parameter")]
+#[test_case::test_case("sketch S(w: Length) {\n    init(a: Length) { w = a; }\n    init(a: Angle) { w = 1mm; }\n}"
+    => Vec::<String>::new(); "different types")]
+#[test_case::test_case("sketch S(w: Length) {\n    init(a: Length, ab = 1mm) { w = a + ab; }\n    init(a: Length) { w = a; }\n}"
+    => Vec::<String>::new(); "short name ambiguous in earlier")]
+fn resolve_unreachable_init(code: &str) -> Vec<String> {
+    let mut ctx = ResolveContext::new();
+    let issues = match microcad_lang_resolve::resolve_source(
+        microcad_lang_base::Source::from(code),
+        &mut ctx,
+    ) {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+    issues.iter().map(|issue| issue.to_string()).collect()
+}

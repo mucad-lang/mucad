@@ -3,6 +3,8 @@
 
 //! Workbench evaluation
 
+use std::cmp::Reverse;
+
 use crate::{
     Callable, Eval, EvalContext, EvalError, EvalErrorKind, EvalResult,
     context::{
@@ -268,23 +270,18 @@ impl Callable for symbol::Workbench {
 
         use crate::ArgumentMatch;
 
-        // Only the inits with the highest match priority are candidates,
-        // e.g. `Circle(radius)` matches the parameter `radius` by name, not `diameter` by type.
-        let matches: Vec<_> = self
+        // The init with the highest match priority, the first of them in definition order,
+        // e.g. `Circle(r)` matches the parameter `radius` by short name, not `diameter` by type.
+        let Some(init) = self
             .signature
             .inits
             .iter()
-            .filter_map(|init| init.match_priority(args).map(|priority| (init, priority)))
-            .collect();
-        let best = matches.iter().map(|(_, priority)| *priority).max();
-        let matching_inits: Vec<_> = matches
-            .iter()
-            .filter(|(_, priority)| Some(*priority) == best)
-            .map(|(init, _)| *init)
-            .collect();
-
-        match matching_inits.len() {
-            0 => Err(EvalErrorKind::NoInitializationFound {
+            .enumerate()
+            .filter_map(|(index, init)| Some((init, init.match_priority(args)?, Reverse(index))))
+            .max_by_key(|(_, priority, index)| (*priority, *index))
+            .map(|(init, ..)| init)
+        else {
+            return Err(EvalErrorKind::NoInitializationFound {
                 src_ref: context.current_symbol_src_ref(),
                 path: context.current_symbol_name().unwrap_or_default(),
                 arguments: args.to_string(),
@@ -295,50 +292,35 @@ impl Callable for symbol::Workbench {
                     .map(|init| init.to_string())
                     .collect(),
             }
-            .into()),
-            1 => {
-                let init = matching_inits.first().unwrap();
-                let mut models = Vec::new();
+            .into());
+        };
 
-                match init.argument_multi_match(args) {
-                    Ok(arguments) => {
-                        for args in arguments {
-                            let properties = context.scope(
-                                WorkbenchInitFrame::new(args),
-                                |context| -> EvalResult<Properties> {
-                                    let mut properties = Properties::new();
-                                    init.statements.iter().try_for_each(
-                                        |stmt| -> EvalResult<()> {
-                                            let property: Property = stmt.eval(context)?;
-                                            properties.set_property(property);
-                                            Ok(())
-                                        },
-                                    )?;
-                                    Ok(properties)
-                                },
-                            )?;
+        let arguments = init.argument_multi_match(args).map_err(|err| {
+            EvalError::argument_match(
+                context.current_symbol_src_ref(),
+                context.current_symbol_name().unwrap_or_default(),
+                err,
+            )
+        })?;
 
-                            models.push(eval_to_model(self, properties, input.clone(), context)?);
-                        }
-                    }
-                    Err(err) => {
-                        return Err(EvalError::argument_match(
-                            context.current_symbol_src_ref(),
-                            context.current_symbol_name().unwrap_or_default(),
-                            err,
-                        ));
-                    }
-                }
-
-                Ok(ModelTree::to_multiplicity(models).into())
-            }
-            _n => Err(EvalErrorKind::AmbiguousInitialization {
-                src_ref: context.current_symbol_src_ref(),
-                path: context.current_symbol_name().unwrap_or_default(),
-                arguments: args.to_string(),
-                inits: matching_inits.iter().map(|init| init.to_string()).collect(),
-            }
-            .into()),
+        let mut models = Vec::new();
+        for args in arguments {
+            let properties = context.scope(
+                WorkbenchInitFrame::new(args),
+                |context| -> EvalResult<Properties> {
+                    let mut properties = Properties::new();
+                    init.statements
+                        .iter()
+                        .try_for_each(|stmt| -> EvalResult<()> {
+                            let property: Property = stmt.eval(context)?;
+                            properties.set_property(property);
+                            Ok(())
+                        })?;
+                    Ok(properties)
+                },
+            )?;
+            models.push(eval_to_model(self, properties, input.clone(), context)?);
         }
+        Ok(ModelTree::to_multiplicity(models).into())
     }
 }

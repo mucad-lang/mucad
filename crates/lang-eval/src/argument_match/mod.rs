@@ -58,14 +58,15 @@ pub enum ArgumentMatchError {
 /// The priority of a match of arguments to parameters, higher is better.
 ///
 /// It chooses between overloaded initializers, e.g. of `std::ops::rotate`.
+/// Initializers with the same priority are chosen by their definition order.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MatchPriority {
-    /// The number of inline identifiers (e.g. `x` in `f(x)`), which match a parameter by name,
-    /// because matching by name has priority over matching by type.
-    pub inline_names: usize,
-    /// The number of positional arguments, which match a parameter without default value,
-    /// e.g. `rotate(45°)` matches `init(angle: Angle)` before `init(x = 0°, y = 0°, z = 0°)`.
-    pub required: usize,
+    /// The number of named arguments and inline identifiers, which match a parameter by name,
+    /// e.g. `x = 1` matches `init(x, y, z)` before `init(xyz)`.
+    pub exact_names: usize,
+    /// The number of named arguments and inline identifiers, which match a parameter by short name,
+    /// e.g. `r` in `Circle(r)` matches `radius` before `diameter` by type.
+    pub short_names: usize,
 }
 
 pub trait ArgumentMatch {

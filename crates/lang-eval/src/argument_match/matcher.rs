@@ -18,9 +18,17 @@ struct MatchedParameter {
     given: bool,
 }
 
+/// How an argument name matches a parameter.
+enum NameMatch {
+    /// The parameter has the name, e.g. `radius` for `radius`.
+    Exact,
+    /// The name is the first letter of the parameter, e.g. `r` for `radius`.
+    Short,
+}
+
 /// Matches the arguments of a call to parameters in three steps:
 ///
-/// 1. Named arguments by the parameter name, or by an abbreviation (e.g. `r` for `radius`).
+/// 1. Named arguments by the parameter name, or by a short name (e.g. `r` for `radius`).
 /// 2. Positional arguments by inline identifier or by type,
 ///    an argument without matching parameter is an error.
 /// 3. Default values for parameters without arguments.
@@ -67,7 +75,7 @@ impl Matcher {
         self.finish().map(|_| priority)
     }
 
-    /// Match named arguments by the parameter name or an abbreviation.
+    /// Match named arguments by the parameter name or a short name.
     fn named(&mut self, arguments: &ArgumentValueList) -> Result<(), ArgumentMatchError> {
         let mut unexpected = Vec::new();
         for (id, value) in arguments
@@ -75,13 +83,12 @@ impl Matcher {
             .filter_map(|arg| Some((arg.name.named()?, &arg.value)))
         {
             match self.find(id)? {
-                Some(param) if param.given => {
-                    return Err(ArgumentMatchError::DuplicateArgument(param.id.clone()));
+                Some((position, _)) if self.params[position].given => {
+                    return Err(ArgumentMatchError::DuplicateArgument(
+                        self.params[position].id.clone(),
+                    ));
                 }
-                Some(param) => {
-                    param.value = Some(value.clone());
-                    param.given = true;
-                }
+                Some((position, name_match)) => self.give_by_name(position, name_match, value),
                 None => unexpected.push(id.clone()),
             }
         }
@@ -94,16 +101,13 @@ impl Matcher {
         }
     }
 
-    /// The parameter for the named argument `id`.
+    /// The position of the parameter for the argument name `id`.
     ///
     /// This is the parameter with the same name or, if `id` is a single letter,
     /// the only parameter starting with this letter, e.g. `r` for `radius`.
-    fn find(
-        &mut self,
-        id: &Identifier,
-    ) -> Result<Option<&mut MatchedParameter>, ArgumentMatchError> {
+    fn find(&self, id: &Identifier) -> Result<Option<(usize, NameMatch)>, ArgumentMatchError> {
         if let Some(position) = self.params.iter().position(|param| &param.id == id) {
-            return Ok(Some(&mut self.params[position]));
+            return Ok(Some((position, NameMatch::Exact)));
         }
 
         let mut letters = id.as_str().chars();
@@ -120,7 +124,7 @@ impl Matcher {
 
         match candidates.as_slice() {
             [] => Ok(None),
-            [position] => Ok(Some(&mut self.params[*position])),
+            [position] => Ok(Some((*position, NameMatch::Short))),
             _ => Err(ArgumentMatchError::AmbiguousArgument {
                 argument: id.clone(),
                 parameters: candidates
@@ -133,8 +137,9 @@ impl Matcher {
 
     /// Match positional arguments by type to parameters without an argument.
     ///
-    /// A single identifier as argument (e.g. `x` in `f(x)`) matches a parameter with the same
-    /// name, otherwise it is matched by type like any positional argument, but never as short name.
+    /// An inline identifier (e.g. `r` in `f(r * 2)`) matches a parameter like a named argument,
+    /// otherwise it is matched by type like any positional argument, e.g. if its short name
+    /// is ambiguous or its parameter is given already.
     /// Required parameters are filled before parameters with default values, e.g. in
     /// `assert_eq(a: Any, b: Any, message: String = "")` two strings are `a` and `b`.
     /// Within these, a parameter of exactly the argument type is preferred, e.g. to `Any`,
@@ -143,19 +148,16 @@ impl Matcher {
     fn positional(&mut self, arguments: &ArgumentValueList) -> Result<(), ArgumentMatchError> {
         use microcad_lang_types::Ty;
 
-        // Inline identifiers first claim the parameter with the same name, e.g. `x` in `f(x)`.
+        // Inline identifiers first claim the parameter with their name, e.g. `r` in `f(r * 2)`.
         let mut by_type = Vec::new();
         for arg in arguments.iter().filter(|arg| arg.name.named().is_none()) {
-            let position = arg.name.inline().and_then(|id| {
-                self.params
-                    .iter()
-                    .position(|param| !param.given && &param.id == id)
-            });
-            match position {
-                Some(position) => {
-                    self.give(position, &arg.value);
-                    self.priority.inline_names += 1;
-                }
+            let found = arg
+                .name
+                .inline()
+                .and_then(|id| self.find(id).ok().flatten())
+                .filter(|(position, _)| !self.params[*position].given);
+            match found {
+                Some((position, name_match)) => self.give_by_name(position, name_match, &arg.value),
                 None => by_type.push(&arg.value),
             }
         }
@@ -182,13 +184,9 @@ impl Matcher {
                             open(param, required) && ty.matches_multiplicity(&param.ty)
                         })
                     })
-                    .map(|position| (position, required))
             });
             match position {
-                Some((position, required)) => {
-                    self.give(position, value);
-                    self.priority.required += usize::from(required);
-                }
+                Some(position) => self.give(position, value),
                 // The type shows why the argument does not match, e.g. `1 (Scalar)`.
                 None => unexpected.push(format!("{value} ({ty})")),
             }
@@ -207,6 +205,15 @@ impl Matcher {
         let param = &mut self.params[position];
         param.value = Some(value.clone());
         param.given = true;
+    }
+
+    /// Give the argument `value` to the parameter at `position`, which matches its name.
+    fn give_by_name(&mut self, position: usize, name_match: NameMatch, value: &Value) {
+        self.give(position, value);
+        match name_match {
+            NameMatch::Exact => self.priority.exact_names += 1,
+            NameMatch::Short => self.priority.short_names += 1,
+        }
     }
 
     /// The arguments by parameter name, or an error for parameters without value.

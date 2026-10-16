@@ -62,14 +62,6 @@ impl ir::Init {
         inputs: &ir::ParameterList,
         context: &mut LowerContext,
     ) {
-        // Check if an initializer is equal to default initializer
-        if inputs == &self.parameters {
-            context.push_err(LowerError::DuplicatedDefaultInitializer {
-                src_ref: self.src_ref,
-            });
-            return;
-        }
-
         // Check for statements that
         self.statements.iter().for_each(|stmt| {
             if inputs.get_by_name(&stmt.name).is_none() {
@@ -400,6 +392,7 @@ impl Desugar<ast::def::Workbench> for ir::desugared::Workbench {
 
         // Add parameters as default initializer.
         // This makes evaluation easier, because then we can simply trait the workbench parameters as default initializer.
+        // It is checked last, because the first matching initializer in definition order is chosen.
         inits.push(ir::Init::default_init(parameters.clone()));
 
         Ok(Self {

@@ -57,17 +57,6 @@ pub enum EvalErrorKind {
         inits: Vec<String>,
     },
 
-    /// Workbench didn't find a initialization routine matching the given arguments
-    #[error("Workbench `{path}` has ambiguous initialization for those arguments")]
-    #[diagnostic(help("Ambiguous initializations:\n  {}", inits.join("\n  ")))]
-    AmbiguousInitialization {
-        #[label("Got: {path}( {arguments} )")]
-        src_ref: SrcRef,
-        path: String,
-        arguments: String,
-        inits: Vec<String>,
-    },
-
     #[error("This expression is expected to return a value.")]
     ExpectedExpression { src_ref: SrcRef },
 
@@ -158,7 +147,6 @@ impl SrcReferrer for EvalErrorKind {
             } => *context_src_ref,
             EvalErrorKind::IfConditionIsNotBool { src_ref, .. } => *src_ref,
             EvalErrorKind::NoInitializationFound { src_ref, .. } => *src_ref,
-            EvalErrorKind::AmbiguousInitialization { src_ref, .. } => *src_ref,
             EvalErrorKind::ExpectedExpression { src_ref } => *src_ref,
             EvalErrorKind::CallReturnValueIgnored(src_ref) => *src_ref,
             EvalErrorKind::SymbolCannotBeCalled { src_ref, .. } => *src_ref,

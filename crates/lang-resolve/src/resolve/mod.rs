@@ -9,6 +9,7 @@ mod alias_check;
 mod case_check;
 mod context;
 mod duplicate_check;
+mod init_check;
 pub mod stack;
 mod type_check;
 pub mod visitor;

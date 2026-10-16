@@ -14,7 +14,7 @@ use crate::{
     locate,
     resolve::{
         alias_check::AliasCheck, case_check::CaseCheck, duplicate_check::DuplicateCheck,
-        visitor::ResolveVisitor,
+        init_check::InitCheck, visitor::ResolveVisitor,
     },
 };
 
@@ -56,12 +56,13 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         Ok(id)
     }
 
-    /// Resolve the paths of the loaded library, then check its symbol names and aliases.
+    /// Resolve the paths of the loaded library, then check its symbol names, aliases and initializers.
     fn resolve(&mut self) {
         ResolveVisitor::new(self).visit();
         DuplicateCheck::check(self.lib())
             .into_iter()
             .chain(AliasCheck::check(self.lib()))
+            .chain(InitCheck::check(self.lib()))
             .for_each(|err| self.push_err(err));
         CaseCheck::check(self.lib())
             .into_iter()

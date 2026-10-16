@@ -185,8 +185,10 @@ fn argument_match(
     => Ok(arguments!(x = 1, y = 2)); "inline identifier before type")]
 #[test_case(assert_eq(), vec![ArgumentValue::inline("v", mm(20.0)), argument_value!(mm(20.0))]
     => Ok(arguments!(a = mm(20.0), b = mm(20.0), message = "default")); "inline identifier without parameter")]
+#[test_case(circle(), vec![ArgumentValue::inline("r", mm(1.0))]
+    => Ok(arguments!(radius = mm(1.0))); "inline short name")]
 #[test_case(foo_foz(), vec![ArgumentValue::inline("f", 10), argument_value!(foz = 1)]
-    => Ok(arguments!(foo = 10, foz = 1)); "inline identifier is no short name")]
+    => Ok(arguments!(foo = 10, foz = 1)); "ambiguous inline short name by type")]
 #[test_case(circle(), vec![ArgumentValue::inline("radius", 1.0)]
     => Ok(arguments!(radius = 1.0)); "inline identifier type checked later")]
 #[test_case(x_y(), vec![ArgumentValue::inline("x", 1), ArgumentValue::inline("x", 2)]
@@ -323,30 +325,59 @@ fn match_priority() {
     assert_eq!(
         by_name,
         Some(MatchPriority {
-            inline_names: 1,
-            required: 0
+            exact_names: 1,
+            short_names: 0
         })
     );
-    assert_eq!(
-        by_type,
-        Some(MatchPriority {
-            inline_names: 0,
-            required: 1
-        })
-    );
+    assert_eq!(by_type, Some(MatchPriority::default()));
     assert!(by_name > by_type);
     assert_eq!(foo_foz().match_priority(&arguments), None);
 }
 
-/// Positional arguments for parameters without default value have priority,
-/// e.g. `rotate(45°)` is `init(angle: Angle)`, not `init(x = 0°, y = 0°, z = 0°)`.
+/// A short name matches before a type, e.g. `r` in `Circle(r)` is the radius, not the diameter.
 #[test]
-fn match_priority_required() {
+fn match_priority_short_name() {
+    let diameter = Signature {
+        signature: call_signature!(diameter: Type::length()),
+        default: tuple!(),
+    };
+    let arguments: ArgumentValueList = [ArgumentValue::inline("r", mm(1.0))].into_iter().collect();
+
+    assert!(circle().match_priority(&arguments) > diameter.match_priority(&arguments));
+}
+
+/// An exact name matches before a short name, e.g. `x = 1°` is `init(x, y, z)`, not `init(xyz)`.
+#[test]
+fn match_priority_exact_name() {
+    let x_y_z = Signature {
+        signature: call_signature!(x: Type::angle(), y: Type::angle(), z: Type::angle()),
+        default: tuple!(
+            x = Value::deg(0.0),
+            y = Value::deg(0.0),
+            z = Value::deg(0.0)
+        ),
+    };
+    let xyz = Signature {
+        signature: call_signature!(xyz: Type::Any),
+        default: tuple!(xyz = Value::deg(0.0)),
+    };
+    let arguments: ArgumentValueList = [argument_value!(x = Value::deg(1.0))].into_iter().collect();
+
+    assert!(x_y_z.match_priority(&arguments) > xyz.match_priority(&arguments));
+}
+
+/// Positional arguments give no priority, the definition order of initializers decides,
+/// e.g. `rotate(45°)` matches `init(angle: Angle)` and `init(x = 0°, y = 0°, z = 0°)` equally.
+#[test]
+fn match_priority_positional() {
     let x_y_z = Signature {
         signature: call_signature!(x: Type::length(), y: Type::length(), z: Type::length()),
         default: tuple!(x = mm(0.0), y = mm(0.0), z = mm(0.0)),
     };
     let arguments: ArgumentValueList = [argument_value!(mm(1.0))].into_iter().collect();
 
-    assert!(circle().match_priority(&arguments) > x_y_z.match_priority(&arguments));
+    assert_eq!(
+        circle().match_priority(&arguments),
+        x_y_z.match_priority(&arguments)
+    );
 }
