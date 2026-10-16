@@ -34,9 +34,9 @@
 
 [![test](.test/body_use.svg)](.test/body_use.log)
 
-```mu,body_use
+```mu,body_use?result=fail
 {
-  use std;
+  use std; // Use statements are not allowed inside groups.
 }
 ```
 
@@ -66,7 +66,7 @@
 
 [![test](.test/body_marker.svg)](.test/body_marker.log)
 
-```mu,body_marker
+```mu,body_marker?result=fail
 {
   @input
 }
@@ -98,9 +98,9 @@
 
 [![test](.test/body_assignment_prop.svg)](.test/body_assignment_prop.log)
 
-```mu,body_assignment_prop?result=fail
+```mu,body_assignment_prop
 {
-  prop a = 1; // error
+  prop a = 1; // Properties are fine in groups.
 }
 ```
 
@@ -116,6 +116,6 @@
 
 ```mu,body_expression_model
 {
-  __builtin::geo2d::Circle(radius=1mm);
+  Circle(radius=1mm);
 }
 ```

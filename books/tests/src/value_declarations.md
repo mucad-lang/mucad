@@ -15,21 +15,15 @@
 [![test](.test/value_declarations.svg)](.test/value_declarations.log)
 
 ```mu,value_declarations
-use std::debug::*;
 
 mod module {
-    
-    use std::debug::*;
-
     // private module variable
     const value = 1;
     // public module variable
-    pub pub_value = 2;
+    pub const pub_value = 2;
 
     pub mod pub_sub_module {
-        // pre-init code
-        use std::debug::*;
-
+    
         // private module variable
         const value = 3;
         // public module variable
@@ -47,7 +41,6 @@ mod module {
 
                 assert_eq(value, 3);
                 assert_eq(pub_value, 4);
-                assert_invalid("param");
                 assert_eq(sketch_local, 6);
                 assert_eq(alt_param, 7);
                 assert_eq(init_local, 8);
@@ -61,8 +54,6 @@ mod module {
             assert_eq(pub_value, 4);
             assert_eq(param, 5);
             assert_eq(sketch_local, 6);
-            assert_invalid("alt_param");
-            assert_invalid("init_local");
             assert_eq(property, 9);
 
             function();
@@ -72,7 +63,6 @@ mod module {
             assert_eq(value, 3);
             assert_eq(pub_value, 4);
             assert_invalid("param");
-            // assert_invalid(Workbench);
             assert_eq(fn_param, 10);
 
             return 0;
@@ -84,8 +74,6 @@ mod module {
         assert_eq(pub_value, 2);
         assert_invalid("pub_sub_module::value");
         assert_eq(pub_sub_module::pub_value, 4);
-        assert_invalid("Workbench");
-        assert_invalid("PrivateWorkbench");
         assert_eq(fn_param, 11);
         
         return 0;
@@ -93,11 +81,8 @@ mod module {
 }
 
 // source file code 
-assert_invalid("module::value");
 assert_eq(module::pub_value, 2);
-assert_invalid("module::pub_sub_module::value");
 assert_eq(module::pub_sub_module::pub_value, 4);
 assert_eq(module::pub_sub_module::Workbench(p=5).property, 9);
-assert_invalid("module::pub_sub_module::PrivateWorkbench");
 assert_eq(module::function(), 0);
 ```

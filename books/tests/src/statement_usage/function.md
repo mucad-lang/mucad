@@ -60,23 +60,23 @@ fn f() {
 
 ```mu,function_if
 fn f() {
-  if std::math::PI == 3 { __builtin::geo2d::Circle(radius=1); }
+  if std::math::PI == 3 { Circle(radius=1); }
 } f();
 ```
 
 [![test](.test/function_assignment_const.svg)](.test/function_assignment_const.log)
 
-```mu,function_assignment_const?result=fail
+```mu,function_assignment_const
 fn f() {
-  const B = 1; // error
+  const B = 1;
 } f();
 ```
 
 [![test](.test/function_assignment_pub.svg)](.test/function_assignment_pub.log)
 
-```mu,function_assignment_pub?result=fail
+```mu,function_assignment_pub
 fn f() {
-  pub p = 1; // error
+  pub const p = 1; // ok, but useless.
 } f();
 ```
 
@@ -92,22 +92,22 @@ fn f() {
 
 ```mu,function_assignment_prop?result=fail
 fn f() {
-  prop a = 1; // error
+  prop a = 1; // Properties are only allowed in workbenches
 } f();
 ```
 
 [![test](.test/function_expression.svg)](.test/function_expression.log)
 
-```mu,function_expression
+```mu,function_expression?result=fail
 fn f() {
-  1 + 2;
+  1 + 2; // This function does not return anything.
 } f();
 ```
 
 [![test](.test/function_expression_model.svg)](.test/function_expression_model.log)
 
-```mu,function_expression_model
+```mu,function_expression_model?result=fail
 fn f() {
-  __builtin::geo2d::Circle(radius=1mm);
+  Circle(radius=1mm);
 } f();
 ```

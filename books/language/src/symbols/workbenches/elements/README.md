@@ -53,8 +53,6 @@ sketch Wheel(radius: Length) {
     Circle(r);
 }
 
-use std::debug::*;
-
 // Call sketch with diameter.
 d = Wheel(diameter = 2cm);
 // Check radius property.

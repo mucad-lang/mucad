@@ -48,17 +48,11 @@ std::geo2d::Circle(radius = 1cm);
 std::geo3d::Sphere(radius = 1cm);
 ```
 
-Statements within a source file can represent either a 2D or a 3D model — but
-not both at the same time.
-Mixing 2D and 3D statements in the same file will result in an error:
+Mixing 2D and 3D statements in the same file will work, but exporting to a file might not:
 
 [![test](.test/source_file_mixed.svg)](.test/source_file_mixed.log)
 
-```mu,source_file_mixed?result=fail
+```mu,source_file_mixed
 std::geo2d::Circle(radius = 1cm);
-std::geo3d::Sphere(radius = 1cm); // error: can't mix 2D and 3D
+std::geo3d::Sphere(radius = 1cm); // In a source workbench, you can mix 2D and 3D.
 ```
-
-However, µcad programs can also be split across multiple files.
-To include other files, the [`mod`](modules/external_modules.md)
-statement is used...

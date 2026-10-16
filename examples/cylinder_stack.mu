@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::geo3d::*;
-use std::debug::*;
 
 part CylinderStack(heights: [Length], radii: [Length], offset: Length = 0mm) {
     assert(
@@ -28,4 +27,3 @@ part CylinderStack(heights: [Length], radii: [Length], offset: Length = 0mm) {
 }
 
 CylinderStack(heights = [5, 15, 5]mm, radii = [6, 4, 4, 6]mm);
-

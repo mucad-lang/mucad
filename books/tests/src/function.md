@@ -17,7 +17,6 @@ fn f(n: Scalar) {
     // result value
     n+1
 }
-use std::debug::*;
 assert_eq(f(1), 2);
 assert_eq(f(4), 5);
 ```
@@ -28,7 +27,6 @@ assert_eq(f(4), 5);
 fn f(n: Scalar) {
     return n+1;
 }
-use std::debug::*;
 assert_eq(f(1), 2);
 assert_eq(f(4), 5);
 ```
@@ -43,7 +41,6 @@ fn f(n: Scalar) {
         n+1
     }
 }
-use std::debug::*;
 assert_eq(f(1), 2);
 assert_eq(f(4), 3);
 ```
@@ -57,7 +54,6 @@ fn f(n: Scalar) {
     }
     n+1
 }
-use std::debug::*;
 assert_eq(f(1), 2);
 assert_eq(f(4), 3);
 ```
@@ -71,7 +67,6 @@ fn f(n: Scalar) { // error: not all paths return a value
     }
 }
 
-use std::debug::*;
 assert_eq(f(1), 2);
 assert_eq(f(4), 3);
 ```

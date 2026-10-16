@@ -51,7 +51,6 @@ Circle(radius = 2mm) { Circle(radius = 1mm); } // parse_error: sketch with body
 
 ```mu,empty_op?result=fail
 translate(x = 3.0mm); // error: Cannot call operation without workpiece. 
-{}.translate(x = 3.0mm);
 ```
 
 [![test](.test/group.svg)](.test/group.log)
