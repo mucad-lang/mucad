@@ -160,3 +160,9 @@ impl From<std::path::PathBuf> for SourceLocation {
         Self::new(path)
     }
 }
+
+impl From<Url> for SourceLocation {
+    fn from(url: Url) -> Self {
+        Self::new(url)
+    }
+}
