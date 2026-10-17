@@ -918,11 +918,14 @@ pub mod ops {
         ctx: &mut BuiltinEvalContext,
     ) -> Result<ModelTree, BuiltinError>;
 
-    /// Combine each child model with each other child model.
+    /// Repeat a model `n` times, e.g. to distribute the copies with `distribute_grid`.
     #[builtin_op(Any -> Any)]
-    pub struct Multiply;
+    pub struct Multiply {
+        /// Number of copies.
+        pub n: Integer,
+    }
 
-    /// Combine each child model with each other child model.
+    /// Repeat a model `n` times, e.g. to distribute the copies with `distribute_grid`.
     #[builtin_op]
     pub fn multiply(
         args: Arguments,
