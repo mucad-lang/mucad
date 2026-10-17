@@ -8,8 +8,8 @@ use microcad_viewer::{
     processor::{ProcessorInterface, ProcessorRequest, ProcessorResponse},
 };
 
-/// The responses for the compilation of `source` until the model instances are spawned.
-fn responses(source: &str) -> Vec<ProcessorResponse> {
+/// A processor, which finds the standard library of this repository.
+fn processor() -> ProcessorInterface {
     let processor = ProcessorInterface::run();
     processor
         .send_request(ProcessorRequest::Initialize {
@@ -20,6 +20,12 @@ fn responses(source: &str) -> Vec<ProcessorResponse> {
             },
         })
         .expect("No error");
+    processor
+}
+
+/// The responses for the compilation of `source` until the model instances are spawned.
+fn responses(source: &str) -> Vec<ProcessorResponse> {
+    let processor = processor();
     processor
         .send_request(ProcessorRequest::CompileSource {
             path: None,
@@ -71,7 +77,7 @@ fn process_workpieces() {
 /// A source with errors spawns no models.
 #[test]
 fn process_errors() {
-    let processor = ProcessorInterface::run();
+    let processor = processor();
     processor
         .send_request(ProcessorRequest::CompileSource {
             path: None,
