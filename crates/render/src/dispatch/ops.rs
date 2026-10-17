@@ -29,7 +29,7 @@ impl Render for mu::ops::Union {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
-        context.update(|_node, context| boolean_op(tree, core::BooleanOp::Union, context))
+        boolean_op(tree, core::BooleanOp::Union, context)
     }
 }
 
@@ -39,7 +39,7 @@ impl Render for mu::ops::Subtract {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
-        context.update(|_node, context| boolean_op(tree, core::BooleanOp::Subtract, context))
+        boolean_op(tree, core::BooleanOp::Subtract, context)
     }
 }
 
@@ -49,7 +49,7 @@ impl Render for mu::ops::Intersect {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
-        context.update(|_node, context| boolean_op(tree, core::BooleanOp::Intersect, context))
+        boolean_op(tree, core::BooleanOp::Intersect, context)
     }
 }
 
@@ -59,12 +59,10 @@ impl Render for mu::ops::Hull {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
-        context.update(|_node, context| {
-            use core::geo2d::ConvexHull;
-            let multi_polygon = context.collect_outputs(tree).primary().to_2d().union();
+        use core::geo2d::ConvexHull;
+        let multi_polygon = context.collect_outputs(tree).primary().to_2d().union();
 
-            Ok(GeometryOutput::geo2d(multi_polygon.convex_hull()).into())
-        })
+        Ok(GeometryOutput::geo2d(multi_polygon.convex_hull()).into())
     }
 }
 
@@ -74,17 +72,15 @@ impl Render for mu::ops::Extrude {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
-        context.update(|_node, context| {
-            let multi_polygon = context.collect_outputs(tree).primary().to_2d().union();
+        let multi_polygon = context.collect_outputs(tree).primary().to_2d().union();
 
-            Ok(GeometryOutput::from(multi_polygon.linear_extrude(
-                microcad_core::Length::mm(self.height.as_mm()),
-                self.scale_x.into_float(),
-                self.scale_y.into_float(),
-                self.twist.into_float(),
-            ))
-            .into())
-        })
+        Ok(GeometryOutput::from(multi_polygon.linear_extrude(
+            microcad_core::Length::mm(self.height.as_mm()),
+            self.scale_x.into_float(),
+            self.scale_y.into_float(),
+            self.twist.into_float(),
+        ))
+        .into())
     }
 }
 

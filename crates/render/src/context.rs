@@ -3,7 +3,7 @@
 
 //! Render context
 
-use microcad_hash::ToHash;
+use microcad_hash::HashId;
 use microcad_lang_types::{ModelNodeRef, ModelTree};
 
 use crate::{
@@ -104,46 +104,27 @@ impl<'a, 'tree> RenderContext<'a, 'tree> {
         )
     }
 
-    /// Update a geometry if it is not in cache.
+    /// Return the outputs with the cache key `hash` from the render cache,
+    /// or compute them with `f` and insert them into the cache.
     pub fn update(
         &mut self,
+        hash: HashId,
         f: impl FnOnce(GeometryNodeId, &mut RenderContext) -> RenderResult<GeometryOutputs>,
     ) -> RenderResult<GeometryOutputs> {
         let geo = self.geo_node();
-        let hash = geo.to_hash();
-        self.stack.push(geo);
-
-        let result = match self.renderer.cache.clone() {
-            Some(cache) => {
-                // 1. Concurrent Read Check (Shared Lock)
-                {
-                    let mut cache_read = cache.write().unwrap();
-                    if let Some(geo) = cache_read.get(&hash) {
-                        return Ok(geo.clone());
-                    }
-                } // Read lock is automatically dropped here so other threads aren't blocked during expensive geometry computation
-
-                // 2. Compute Geometry Outside the Lock
-                let (geo, cost) = self.call_with_cost(geo, f)?;
-
-                // 3. Insert Result into Cache (Exclusive Write Lock)
-                {
-                    let mut cache_write = cache.write().unwrap();
-                    // Optional double-check: in case another thread evaluated the exact same hash while we were computing
-                    if let Some(cached_geo) = cache_write.get(&hash) {
-                        return Ok(cached_geo.clone());
-                    }
-
-                    cache_write.insert_with_cost(hash, geo.clone(), cost);
-                }
-
-                Ok(geo)
-            }
-            None => Ok(f(geo, self)?),
+        let Some(cache) = self.renderer.cache.clone() else {
+            return f(geo, self);
         };
 
-        self.stack.pop();
-        result
+        // The lock is not held while computing, which may take long.
+        if let Some(outputs) = cache.with_write(|cache| cache.get(&hash).cloned()) {
+            return Ok(outputs);
+        }
+        let (outputs, cost) = self.call_with_cost(geo, f)?;
+        cache.with_write(|cache| {
+            cache.insert_with_cost(hash, outputs.clone(), cost);
+        });
+        Ok(outputs)
     }
 
     /// Return current render resolution.

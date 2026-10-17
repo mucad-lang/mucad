@@ -297,11 +297,10 @@ pub struct GeometryNodeData {
 }
 
 impl GeometryNodeData {
-    /// Create new render output for model.
-    pub fn new<'tree>(model: ModelNodeRef<'tree>) -> Self {
+    /// Create new render output for a model with the `hash` of the model and its children.
+    pub fn new<'tree>(model: ModelNodeRef<'tree>, hash: HashId) -> Self {
         // Groups and operations like `difference` take the output type of their children.
         let output_type = model.deduce_output_type();
-        let hash = hash_id!(model);
         let local_matrix = model.local_matrix().into_float();
 
         GeometryNodeData {
@@ -322,6 +321,17 @@ impl GeometryNodeData {
     /// Get render resolution.
     pub fn resolution(&self) -> &Option<RenderResolution> {
         &self.resolution
+    }
+    /// The key of the outputs in the render cache.
+    ///
+    /// The same model and children at the same resolution have the same outputs.
+    pub fn cache_key(&self) -> HashId {
+        hash_id!(
+            self.hash,
+            self.resolution
+                .as_ref()
+                .map(|resolution| resolution.linear.to_bits())
+        )
     }
 }
 

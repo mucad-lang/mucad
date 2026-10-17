@@ -65,11 +65,9 @@ impl<T: RenderPrimitive> Render for T {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
-        context.update(|_, context| {
-            Ok(self
-                .render_primitive(&context.current_resolution(tree))
-                .into())
-        })
+        Ok(self
+            .render_primitive(&context.current_resolution(tree))
+            .into())
     }
 }
 
@@ -88,7 +86,7 @@ impl Render for GeometryNodeData {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
-        context.update(|_node, context| {
+        context.update(self.cache_key(), |_node, context| {
             let model = context.model(tree);
 
             let mut outputs = match model
