@@ -564,3 +564,24 @@ fn compile_no_initialization_found() {
     assert!(help.contains("init(a: Length)"), "{help}");
     assert!(help.contains("init(x: Integer)"), "{help}");
 }
+
+/// A local cannot be called, so it does not shadow the operation of a method call,
+/// e.g. `center` in the tutorial, which is also an argument of `Circle`.
+#[test]
+fn compile_local_does_not_shadow_method() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile("use std::ops::*;\ncenter = (x = 1mm, y = 0mm);\nCircle(radius = 1mm, center).center();")
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}
+
+/// A local cannot be called, so it does not shadow a called function, but is used as value.
+#[test]
+fn compile_local_does_not_shadow_function() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler
+        .compile("fn double(x: Integer) -> Integer { x * 2 }\ndouble = 3;\nassert_eq(double(double), 6);")
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}

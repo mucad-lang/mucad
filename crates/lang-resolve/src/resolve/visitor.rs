@@ -210,21 +210,43 @@ impl<'a, 'lib, 'ctx> visitor::VisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
 }
 
 impl<'a, 'lib, 'ctx> visitor::LeafVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
+    /// Locals shadow symbols.
     fn visit_path(&mut self, path: &mut symbol::Path) {
+        if !self.resolve_local(path) {
+            self.resolve_symbol(path);
+        }
+    }
+
+    /// Locals are values, which cannot be called, so they do not shadow a called symbol,
+    /// e.g. the operation `center` in `c.center()` with a local `center`.
+    fn visit_callee(&mut self, path: &mut symbol::Path) {
+        self.resolve_symbol(path);
+    }
+}
+
+impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
+    /// Resolve `path` to a local, e.g. `x` in `x + 1`, returns `true` if it is a local.
+    fn resolve_local(&mut self, path: &mut symbol::Path) -> bool {
+        let symbol::Path::Unresolved(unresolved_path) = path else {
+            return false;
+        };
+        match unresolved_path.single_identifier() {
+            Some(id) if self.stack.is_local(id) => {
+                *path = symbol::Path::Resolved(SymbolId::Local(id.to_compact_string()));
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Resolve `path` to a symbol of this library, of an external library or of the prelude.
+    fn resolve_symbol(&mut self, path: &mut symbol::Path) {
         let symbol::Path::Unresolved(unresolved_path) = path else {
             return;
         };
 
         // Known built-ins are resolved while lowering, unknown ones have been reported there.
         if unresolved_path.builtin_id().is_some() {
-            return;
-        }
-
-        // Locals shadow symbols.
-        if let Some(id) = unresolved_path.single_identifier()
-            && self.stack.is_local(id)
-        {
-            *path = symbol::Path::Resolved(SymbolId::Local(id.to_compact_string()));
             return;
         }
 
