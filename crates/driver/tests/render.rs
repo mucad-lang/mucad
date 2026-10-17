@@ -130,12 +130,23 @@ fn render_multiply_distribute_grid() {
     );
 }
 
-/// A profile is turned around and moved along the axis.
+/// A profile is turned around the axis at a distance and moved along the axis.
 #[test]
 fn render_spiralize() {
     assert_bounds(
-        "Circle(radius = 1mm).translate(x = 5mm).spiralize(inner_radius = 1mm, outer_radius = 1mm, angle = 360°, height = 10mm);",
+        "Circle(radius = 1mm).spiralize(inner_radius = 5mm, outer_radius = 5mm, angle = 360°, height = 10mm);",
         [-6.0, -6.0, -1.0],
         [6.0, 6.0, 11.0],
+    );
+    // The distance from the axis grows from the inner to the outer radius:
+    // after half a turn, the profile is at a distance of 4mm on the other side.
+    let bounds = ops_bounds(
+        "Circle(radius = 1mm).spiralize(inner_radius = 2mm, outer_radius = 4mm, angle = 180°, height = 4mm);",
+    );
+    let (min, max) = bounds.min_max();
+    assert!((min.x + 5.0).abs() < 1e-6, "{min:?}");
+    assert!(
+        (min.z + 1.0).abs() < 1e-6 && (max.z - 5.0).abs() < 1e-6,
+        "{min:?} {max:?}"
     );
 }

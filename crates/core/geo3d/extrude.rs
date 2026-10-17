@@ -119,8 +119,8 @@ pub trait Extrude {
     /// Perform a helix/spiral‐extrusion: rotate profile while translating upward,
     /// with varying radius from inner_radius to outer_radius and a given number of full turns.
     /// `height` = total vertical height of the helix.
-    /// `inner_radius` = radius at the start (bottom) of the helix.
-    /// `outer_radius` = radius at the end (top) of the helix.
+    /// `inner_radius` = distance of the profile from the axis at the start (bottom) of the helix.
+    /// `outer_radius` = distance of the profile from the axis at the end (top) of the helix.
     /// `turns` = number of full revolutions (2π each) over the height.
     /// `segments_per_turn` = subdivisions per turn.
     fn spiralize(
@@ -153,25 +153,19 @@ pub trait Extrude {
         // radius interpolation per segment
         let delta_radius = (outer_radius - inner_radius) / (total_segments as Scalar);
 
-        // Generate transforms (rotation + radius scale + translation along axis, e.g. Y axis)
+        // Generate transforms: move the profile away from the axis and upward, then rotate.
         let transforms: Vec<Mat4> = (0..=total_segments)
             .map(|i| {
                 let angle_i = delta_angle * (i as Scalar);
                 let height_i = delta_height * (i as Scalar);
                 let radius_i = inner_radius + delta_radius * (i as Scalar);
 
-                // Rotate around Y by angle_i
+                // Rotate around the Z axis like `revolve_extrude`,
+                // where the profile's X is the distance from the axis and its Y is the height.
                 let mut mat = Mat4::from_angle_y(cgmath::Rad(angle_i));
-                // You had a row‐swap to align to Z‐plane. Keep if needed.
                 mat.swap_rows(2, 1);
 
-                // Scale the profile to the appropriate radius
-                mat = mat * Mat4::from_scale(radius_i);
-
-                // Then translate upward (Y axis) by height_i
-                mat = mat * Mat4::from_translation(Vec3::new(0.0, height_i, 0.0));
-
-                mat
+                mat * Mat4::from_translation(Vec3::new(radius_i, height_i, 0.0))
             })
             .collect();
 

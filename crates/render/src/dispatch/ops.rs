@@ -270,19 +270,17 @@ impl Render for mu::ops::Spiralize {
         let multi_polygon = context.collect_outputs(tree).primary().to_2d().union();
         let mut bounds = multi_polygon.calc_bounds_2d();
         bounds.extend_by_point(core::Vec2::new(0.0, 0.0));
+        // The profile is moved away from the axis by up to the larger radius.
+        let radius = bounds.max_extent() + self.inner_radius.as_mm().max(self.outer_radius.as_mm());
         let angle: core::Angle = self.angle.into_float();
 
-        Ok(GeometryOutput::from(
-            multi_polygon.spiralize(
-                self.height.as_mm(),
-                self.inner_radius.as_mm(),
-                self.outer_radius.as_mm(),
-                angle.0 / std::f64::consts::TAU,
-                context
-                    .current_resolution(tree)
-                    .circular_segments(bounds.max_extent()) as usize,
-            ),
-        )
+        Ok(GeometryOutput::from(multi_polygon.spiralize(
+            self.height.as_mm(),
+            self.inner_radius.as_mm(),
+            self.outer_radius.as_mm(),
+            angle.0 / std::f64::consts::TAU,
+            context.current_resolution(tree).circular_segments(radius) as usize,
+        ))
         .into())
     }
 }
