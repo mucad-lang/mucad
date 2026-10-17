@@ -47,6 +47,8 @@ pub struct Model {
     /// Model element
     pub element: Element,
 
+    /// The hash of the element, properties, attributes and children,
+    /// see [`ModelTree::compute_hashes`].
     pub hash_id: HashId,
 
     /// The call that created this model

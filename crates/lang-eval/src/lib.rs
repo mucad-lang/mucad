@@ -26,7 +26,11 @@ use microcad_lang_types::{ArgumentValueList, ModelTree, Value};
 /// Recoverable errors are returned with the model, see [`IssueResult`].
 pub fn eval(mut context: EvalContext) -> IssueResult<ModelTree, EvalIssue> {
     match context.eval_library() {
-        Ok(value) => Ok((ModelTree::from(value), context.issues())),
+        Ok(value) => {
+            let mut model_tree = ModelTree::from(value);
+            model_tree.compute_hashes();
+            Ok((model_tree, context.issues()))
+        }
         Err(err) => {
             let mut issues = context.issues();
             issues.push_err(err);

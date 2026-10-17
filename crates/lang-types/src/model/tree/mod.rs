@@ -7,7 +7,7 @@ mod builder;
 mod node;
 mod ops;
 
-use microcad_lang_base::{DisplayWithCtx, LookUpName, tree};
+use microcad_lang_base::{DisplayWithCtx, HashId, LookUpName, hash_id, tree};
 pub use node::{ModelNodeId, Node, NodeExt, NodeMut, NodeRef};
 
 pub use builder::{BuildModelTreeError, ModelTreeBuilder, ModelTreeBuilderMut};
@@ -32,6 +32,26 @@ impl ModelTree {
         let mut arena = Arena::default();
         let root = arena.new_node(root.into());
         Self { root, arena }
+    }
+
+    /// Compute the hash of each model from its element, properties, attributes
+    /// and the hashes of its children, e.g. to cache its rendered geometry.
+    ///
+    /// Call it once the tree is final, e.g. after evaluation,
+    /// because combining trees (e.g. replacing `@input`) changes the hashes.
+    pub fn compute_hashes(&mut self) {
+        fn compute(id: ModelNodeId, arena: &mut Arena) -> HashId {
+            let children: Vec<_> = id.children(arena).collect();
+            let child_hashes: Vec<_> = children
+                .into_iter()
+                .map(|child| compute(child, arena))
+                .collect();
+
+            let model = arena[id].get_mut();
+            model.hash_id = hash_id!(model.element, model.properties, model.attr, child_hashes);
+            model.hash_id
+        }
+        compute(self.root, &mut self.arena);
     }
 
     /// Create a multiplicity node if there is more than one child in the list

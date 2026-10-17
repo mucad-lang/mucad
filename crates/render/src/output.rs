@@ -290,15 +290,17 @@ pub struct GeometryNodeData {
     pub resolution: Option<RenderResolution>,
     /// The output geometry.
     pub outputs: GeometryOutputs,
-    /// Computed model hash.
+    /// The model hash, which identifies the model's geometry.
     pub hash: HashId,
 
     pub model_node_id: ModelNodeId,
 }
 
 impl GeometryNodeData {
-    /// Create new render output for a model with the `hash` of the model and its children.
-    pub fn new<'tree>(model: ModelNodeRef<'tree>, hash: HashId) -> Self {
+    /// Create new render output for model.
+    ///
+    /// The hash is the model's hash, see [`ModelTree::compute_hashes`].
+    pub fn new<'tree>(model: ModelNodeRef<'tree>) -> Self {
         // Groups and operations like `difference` take the output type of their children.
         let output_type = model.deduce_output_type();
         let local_matrix = model.local_matrix().into_float();
@@ -309,7 +311,7 @@ impl GeometryNodeData {
             world_matrix: Mat4::identity(),
             resolution: None,
             outputs: Default::default(),
-            hash,
+            hash: model.hash_id,
             model_node_id: model.id,
         }
     }

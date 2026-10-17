@@ -16,7 +16,8 @@ fn circle(r: f64) -> Model {
 #[test]
 fn render_circle() {
     let circle = circle(42.0);
-    let model_tree = ModelTree::new(circle);
+    let mut model_tree = ModelTree::new(circle);
+    model_tree.compute_hashes();
 
     let geometry = Renderer::new()
         .render(&model_tree)
@@ -37,7 +38,8 @@ fn render_subtract() {
     let mut group = ModelTree::new(Element::Group);
     group.append(circle(42.0));
     group.append(circle(23.0));
-    let diff = mu::ops::subtract(arguments!(self = group), &mut ctx).expect("No error");
+    let mut diff = mu::ops::subtract(arguments!(self = group), &mut ctx).expect("No error");
+    diff.compute_hashes();
 
     let geometry = Renderer::new().render(&diff).expect("No render errors");
 
@@ -49,7 +51,7 @@ fn render_subtract() {
 fn render_extrude() {
     let mut ctx = BuiltinEvalContext::default();
 
-    let extrude = mu::ops::extrude(
+    let mut extrude = mu::ops::extrude(
         arguments!(
             self = circle(42.0),
             height = Value::mm(23.0),
@@ -60,6 +62,7 @@ fn render_extrude() {
         &mut ctx,
     )
     .expect("No error");
+    extrude.compute_hashes();
 
     let geometry = Renderer::new().render(&extrude).expect("No render errors");
 

@@ -3,7 +3,6 @@
 
 use cgmath::SquareMatrix;
 use microcad_core::{Bounds3D, Mat4};
-use microcad_hash::hash_id;
 use microcad_lang_types::{ModelNodeRef, ModelTree, math::ScalarF};
 
 use crate::{GeometryNodeData, RenderResolution};
@@ -65,27 +64,20 @@ impl GeometryTree {
     }
 
     /// Helper method to recursively transform ModelNodeRef into GeometryNodeId
-    ///
-    /// The children are built first, because the hash of a node contains the hashes of its
-    /// children, e.g. a group changes if one of its children changes.
     fn build_node(model_node: ModelNodeRef<'_>, arena: &mut GeometryArena) -> GeometryNodeId {
-        let children: Vec<_> = model_node
-            .children()
-            .map(|child| Self::build_node(child, arena))
-            .collect();
-        let child_hashes: Vec<_> = children
-            .iter()
-            .map(|child| arena[*child].get().hash)
-            .collect();
+        // 1. Transform the ModelOutput / Model data into a RenderOutput
+        let render_output = GeometryNodeData::new(model_node);
 
-        let node_id = arena.new_node(GeometryNodeData::new(
-            model_node,
-            hash_id!(model_node.get(), child_hashes),
-        ));
-        for child in children {
-            node_id.append(child, arena);
+        // 2. Insert the new node into the RenderArena
+        let current_node_id = arena.new_node(render_output);
+
+        // 3. Traverse and append all children recursively
+        for child_ref in model_node.children() {
+            let child_node_id = Self::build_node(child_ref, arena);
+            current_node_id.append(child_node_id, arena);
         }
-        node_id
+
+        current_node_id
     }
 
     pub fn root<'a>(&'a self) -> GeometryNodeRef<'a> {
