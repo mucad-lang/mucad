@@ -3,6 +3,7 @@
 
 //! Rendering of compiled sources with a render cache, e.g. in the viewer.
 
+use microcad_core::Vec3;
 use microcad_driver::{Compiler, prelude as mu};
 
 /// A compiler and a renderer with a render cache, which are kept between compilations.
@@ -65,5 +66,76 @@ fn render_changed_child() {
         (second.bounds().max.x - 1.5).abs() < 1e-6,
         "{:?}",
         second.bounds()
+    );
+}
+
+/// The bounds of the rendered geometry of `code`, which uses `std::ops`.
+fn ops_bounds(code: &str) -> microcad_core::Bounds3D {
+    let tree = Session::new().render(&format!("use std::ops::*;\n{code}"));
+    tree.bounds()
+}
+
+fn assert_bounds(code: &str, min: impl Into<Vec3>, max: impl Into<Vec3>) {
+    let bounds = ops_bounds(code);
+    let (actual_min, actual_max) = bounds.min_max();
+    let close = |a: &Vec3, b: Vec3| {
+        (a.x - b[0]).abs() < 1e-6 && (a.y - b[1]).abs() < 1e-6 && (a.z - b[2]).abs() < 1e-6
+    };
+    assert!(
+        close(actual_min, min.into()) && close(actual_max, max.into()),
+        "{code}: {actual_min:?} {actual_max:?}"
+    );
+}
+
+/// Models are aligned one after another with spacing.
+#[test]
+fn render_align() {
+    assert_bounds(
+        "Circle(radius = [1, 2]mm).align(std::math::X, 1mm);",
+        [0.0, -2.0, 0.0],
+        [7.0, 2.0, 0.0],
+    );
+}
+
+/// Mirror keeps the original, reflect only keeps the reflection.
+#[test]
+fn render_mirror_reflect() {
+    assert_bounds(
+        "Circle(radius = 1mm).translate(x = 3mm).mirror(n = std::math::X);",
+        [-4.0, -1.0, 0.0],
+        [4.0, 1.0, 0.0],
+    );
+    assert_bounds(
+        "Circle(radius = 1mm).translate(x = 3mm).reflect(n = std::math::X);",
+        [-4.0, -1.0, 0.0],
+        [-2.0, 1.0, 0.0],
+    );
+    assert_bounds(
+        "std::geo3d::Cube(2mm).translate(z = 3mm).mirror(n = std::math::Z);",
+        [-1.0, -1.0, -4.0],
+        [1.0, 1.0, 4.0],
+    );
+}
+
+/// Copies of a model are distributed in the cells of a grid.
+#[test]
+fn render_multiply_distribute_grid() {
+    let tree = Session::new().render("Circle(radius = 1mm).std::ops::multiply(3);");
+    assert_eq!(tree.root().outputs.len(), 3);
+
+    assert_bounds(
+        "Circle(radius = 1mm).multiply(4).distribute_grid(size = 10mm, rows = 2, columns = 2);",
+        [-3.5, -3.5, 0.0],
+        [3.5, 3.5, 0.0],
+    );
+}
+
+/// A profile is turned around and moved along the axis.
+#[test]
+fn render_spiralize() {
+    assert_bounds(
+        "Circle(radius = 1mm).translate(x = 5mm).spiralize(inner_radius = 1mm, outer_radius = 1mm, angle = 360°, height = 10mm);",
+        [-6.0, -6.0, -1.0],
+        [6.0, 6.0, 11.0],
     );
 }
