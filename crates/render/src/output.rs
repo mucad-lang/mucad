@@ -173,6 +173,20 @@ impl GeometryOutputs {
     pub fn bounds(&self) -> &Bounds3D {
         &self.bounds
     }
+
+    /// The radius of a centered circle that wraps the outputs bounds on the ground.
+    pub fn ground_radius(&self) -> core::Length {
+        let mut bounds = Bounds2D::new(self.bounds.min.truncate(), self.bounds.max.truncate());
+        bounds.extend_by_point(core::Vec2::new(0.0, 0.0));
+        core::Length::mm(bounds.radius())
+    }
+
+    /// The radius of a centered sphere, that wraps the outputs bounds.
+    pub fn scene_radius(&self) -> core::Length {
+        let mut bounds = self.bounds.clone();
+        bounds.extend_by_point(core::Vec3::new(0.0, 0.0, 0.0));
+        core::Length::mm(bounds.radius())
+    }
 }
 
 impl From<GeometryOutput> for GeometryOutputs {
