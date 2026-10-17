@@ -32,6 +32,12 @@ impl RenderHooks {
         hooks.insert::<mu::ops::Subtract>();
         hooks.insert::<mu::ops::Intersect>();
         hooks.insert::<mu::ops::Union>();
+        hooks.insert::<mu::ops::Align>();
+        hooks.insert::<mu::ops::DistributeGrid>();
+        hooks.insert::<mu::ops::Mirror>();
+        hooks.insert::<mu::ops::Reflect>();
+        hooks.insert::<mu::ops::Spiralize>();
+        hooks.insert::<mu::ops::Multiply>();
 
         hooks
     }

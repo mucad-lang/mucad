@@ -3,9 +3,11 @@
 
 use microcad_builtin::mu;
 use microcad_core::{self as core, CalcBounds2D, Extrude, Geometry, GeometryType, UnaryBooleanOp};
-use microcad_lang_types::math::IntoFloat;
+use microcad_lang_types::{math::IntoFloat, model::ModelType};
 
-use crate::{GeometryOutput, GeometryOutputs, GeometryTree, Render, RenderContext, RenderResult};
+use crate::{
+    GeometryOutput, GeometryOutputs, GeometryTree, Render, RenderContext, RenderError, RenderResult,
+};
 
 fn boolean_op(
     tree: &GeometryTree,
@@ -130,5 +132,172 @@ impl Render for mu::ops::Center {
             Empty => GeometryOutputs::default(),
             Mixed => todo!("Error handling: Mixed geometry"),
         })
+    }
+}
+
+/// Apply `geo2d` or `geo3d` to the geometries of the children, depending on their type.
+fn map_geometries(
+    tree: &GeometryTree,
+    context: &mut RenderContext,
+    geo2d: impl FnOnce(core::Geometries2D) -> core::Geometries2D,
+    geo3d: impl FnOnce(core::Geometries3D) -> core::Geometries3D,
+) -> RenderResult<GeometryOutputs> {
+    let outputs = context.collect_outputs(tree).primary();
+    use GeometryType::*;
+
+    match outputs.ty() {
+        Geometry2D => Ok(Geometry::geo2d(geo2d(outputs.to_2d())).into()),
+        Geometry3D => Ok(Geometry::geo3d(geo3d(outputs.to_3d())).into()),
+        Empty => Ok(GeometryOutputs::default()),
+        Mixed => Err(RenderError::InvalidOutputType(ModelType::Any)),
+    }
+}
+
+impl Render for mu::ops::Align {
+    fn render(
+        &self,
+        tree: &GeometryTree,
+        context: &mut RenderContext,
+    ) -> RenderResult<GeometryOutputs> {
+        use core::{Align2D, Align3D};
+        let (x, y, z) = (
+            self.x.into_float(),
+            self.y.into_float(),
+            self.z.into_float(),
+        );
+        let spacing = core::Length::mm(self.spacing.as_mm());
+
+        map_geometries(
+            tree,
+            context,
+            |geometries| geometries.align_2d(core::Vec2::new(x, y), spacing),
+            |geometries| geometries.align_3d(core::Vec3::new(x, y, z), spacing),
+        )
+    }
+}
+
+impl Render for mu::ops::DistributeGrid {
+    fn render(
+        &self,
+        tree: &GeometryTree,
+        context: &mut RenderContext,
+    ) -> RenderResult<GeometryOutputs> {
+        use core::traits::DistributeGrid;
+        let (x, y) = (self.x.as_mm(), self.y.as_mm());
+        let rect = core::Rect::new((x, y), (x + self.width.as_mm(), y + self.height.as_mm()));
+        let (rows, columns) = (self.rows.to_num(), self.columns.to_num());
+
+        map_geometries(
+            tree,
+            context,
+            |geometries| geometries.distribute_grid(rect, rows, columns),
+            |geometries| geometries.distribute_grid(rect, rows, columns),
+        )
+    }
+}
+
+/// The line (2D) or plane (3D) of a mirror or reflection through a point with a normal.
+fn mirror_plane(
+    (x, y, z): (core::Scalar, core::Scalar, core::Scalar),
+    (nx, ny, nz): (core::Scalar, core::Scalar, core::Scalar),
+) -> (core::geo2d::Line, core::geo3d::Plane) {
+    use core::geo2d::Point;
+    (
+        core::geo2d::Line(Point::new(x, y), Point::new(x - ny, y + nx)),
+        core::geo3d::Plane {
+            p: core::Vec3::new(x, y, z),
+            n: core::Vec3::new(nx, ny, nz),
+        },
+    )
+}
+
+impl Render for mu::ops::Mirror {
+    fn render(
+        &self,
+        tree: &GeometryTree,
+        context: &mut RenderContext,
+    ) -> RenderResult<GeometryOutputs> {
+        use core::{Mirror2D, Mirror3D};
+        let (line, plane) = mirror_plane(
+            (self.x.as_mm(), self.y.as_mm(), self.z.as_mm()),
+            (
+                self.nx.into_float(),
+                self.ny.into_float(),
+                self.nz.into_float(),
+            ),
+        );
+
+        map_geometries(
+            tree,
+            context,
+            |geometries| geometries.mirror_2d(&line),
+            |geometries| geometries.mirror_3d(&plane),
+        )
+    }
+}
+
+impl Render for mu::ops::Reflect {
+    fn render(
+        &self,
+        tree: &GeometryTree,
+        context: &mut RenderContext,
+    ) -> RenderResult<GeometryOutputs> {
+        use core::{Reflect2D, Reflect3D};
+        let (line, plane) = mirror_plane(
+            (self.x.as_mm(), self.y.as_mm(), self.z.as_mm()),
+            (
+                self.nx.into_float(),
+                self.ny.into_float(),
+                self.nz.into_float(),
+            ),
+        );
+
+        map_geometries(
+            tree,
+            context,
+            |geometries| geometries.reflect_2d(&line),
+            |geometries| geometries.reflect_3d(&plane),
+        )
+    }
+}
+
+impl Render for mu::ops::Spiralize {
+    fn render(
+        &self,
+        tree: &GeometryTree,
+        context: &mut RenderContext,
+    ) -> RenderResult<GeometryOutputs> {
+        let multi_polygon = context.collect_outputs(tree).primary().to_2d().union();
+        let mut bounds = multi_polygon.calc_bounds_2d();
+        bounds.extend_by_point(core::Vec2::new(0.0, 0.0));
+        let angle: core::Angle = self.angle.into_float();
+
+        Ok(GeometryOutput::from(
+            multi_polygon.spiralize(
+                self.height.as_mm(),
+                self.inner_radius.as_mm(),
+                self.outer_radius.as_mm(),
+                angle.0 / std::f64::consts::TAU,
+                context
+                    .current_resolution(tree)
+                    .circular_segments(bounds.max_extent()) as usize,
+            ),
+        )
+        .into())
+    }
+}
+
+impl Render for mu::ops::Multiply {
+    fn render(
+        &self,
+        tree: &GeometryTree,
+        context: &mut RenderContext,
+    ) -> RenderResult<GeometryOutputs> {
+        let outputs = context.collect_outputs(tree).primary();
+        let n: usize = self.n.to_num::<i64>().max(0) as usize;
+
+        Ok(GeometryOutputs::from_iter(
+            (0..n).flat_map(|_| outputs.iter().cloned()),
+        ))
     }
 }
