@@ -14,6 +14,10 @@ pub use human_readable::MakeHumanReadable;
 /// Visitor for IR leaf nodes.
 pub trait LeafVisitor: Sized {
     fn visit_path(&mut self, _path: &ir::Path) {}
+    /// Visit the path of a call, e.g. `f` in `f(x)` or `center` in `c.center()`.
+    fn visit_callee(&mut self, path: &ir::Path) {
+        self.visit_path(path)
+    }
     fn visit_name(&mut self, _name: &ir::Identifier) {}
 }
 
@@ -46,7 +50,7 @@ pub trait ConstantVisitor: LeafVisitor {
     }
 
     fn visit_constant_call(&mut self, call: &ir::Call<ir::ConstantExpression>) {
-        self.visit_path(&call.path);
+        self.visit_callee(&call.path);
         call.args.args.iter().for_each(|arg| match arg {
             ir::Argument::Unnamed(expr) => self.visit_constant_expr(expr),
             ir::Argument::Named { name, expr, .. } => {
@@ -103,7 +107,7 @@ pub trait WorkbenchExpressionVisitor: ConstantVisitor {
     }
 
     fn visit_workbench_call(&mut self, call: &ir::workbench::WorkbenchCall) {
-        self.visit_path(&call.path);
+        self.visit_callee(&call.path);
         call.args.args.iter().for_each(|arg| match arg {
             ir::Argument::Unnamed(expr) => self.visit_workbench_expr(expr),
             ir::Argument::Named { name, expr, .. } => {
@@ -229,7 +233,7 @@ pub trait FnVisitor: ConstantVisitor {
         }
     }
     fn visit_fn_call(&mut self, call: &ir::function::FunctionCall) {
-        self.visit_path(&call.path);
+        self.visit_callee(&call.path);
         call.args.args.iter().for_each(|arg| match &arg {
             ir::Argument::Unnamed(expr) => self.visit_fn_expr(expr),
             ir::Argument::Named { name, expr, .. } => {
