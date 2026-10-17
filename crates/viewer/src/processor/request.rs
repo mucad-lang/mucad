@@ -31,7 +31,7 @@ pub enum ProcessorRequest {
         source: String,
     },
     /// Render the geometry. This message should be sent when the source code has been modified.
-    Render(Option<mu::core::RenderResolution>),
+    Render(Option<mu::RenderResolution>),
     /// Export the geometry to a file.
     Export {
         /// File name.

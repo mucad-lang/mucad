@@ -61,7 +61,7 @@ impl Args {
                         let url = Url::parse("stdin://").into_diagnostic()?;
                         Ok(Some(url))
                     }
-                    "file" => Ok(Some(microcad_driver::locate::to_url(input)?)),
+                    "file" => Ok(Some(mu::locate::to_url(input)?)),
                     scheme => Err(miette::miette!("Unknown scheme: {scheme}")),
                 }
             }
@@ -105,17 +105,11 @@ fn main() {
         }
     };
 
-    let mut config = Config {
+    let config = Config {
         search_paths: args.search_paths,
         stay_on_top: args.stay_on_top,
         ..Default::default()
     };
-
-    if config.search_paths.is_empty() {
-        config
-            .search_paths
-            .append(&mut mu::builtin::dirs::default_search_paths())
-    }
 
     use microcad_viewer::plugin::MicrocadPluginInput;
 

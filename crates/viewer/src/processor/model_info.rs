@@ -9,17 +9,17 @@ use microcad_driver::prelude as mu;
 
 use crate::{ToBevy, processor::registry};
 
-/// Model info is a
+/// The information about a model with geometry, which is shown in the scene.
 #[derive(Clone, Default, TypePath)]
 pub struct ModelInfo {
     /// The uuid of the model.
     pub model_uuid: Uuid,
-    /// Geometry output uuid.
-    pub geometry_output_uuid: Uuid,
+    /// The uuids of the meshes of the model's geometry.
+    pub mesh_uuids: Vec<Uuid>,
     /// The original model hash.
     pub model_hash: u64,
     /// The output type for this model.
-    pub output_type: mu::OutputType,
+    pub output_type: mu::types::ModelType,
     /// The transform for this model.
     pub transform: Transform,
     /// An optional color retrieved from a color attribute for this model.
@@ -37,24 +37,44 @@ pub struct ModelInfo {
 }
 
 impl ModelInfo {
-    /// Create model info from a model.
-    pub fn from_model(model: &mu::Model) -> Self {
-        use mu::traits::*;
-        let model_ = model.borrow();
-        let output = model_.output();
+    /// Create model info from a geometry node, its model and the uuids of its meshes.
+    ///
+    /// The outputs of a node include its local transformation,
+    /// so they are placed into the scene with the world matrix of the parent.
+    pub fn new(
+        node: mu::render::GeometryNodeRef,
+        model: mu::types::ModelNodeRef,
+        mesh_uuids: Vec<Uuid>,
+    ) -> Self {
+        use cgmath::SquareMatrix;
+        use mu::types::model::attribute::Attribute;
+
+        let transform = node
+            .parent()
+            .map(|parent| parent.world_matrix)
+            .unwrap_or(mu::core::Mat4::identity());
+        let model = model.get();
+        let bounds_3d = node.outputs.bounds().clone();
 
         Self {
-            model_uuid: registry::generate_model_uuid(model),
-            model_hash: model.computed_hash(),
-            geometry_output_uuid: registry::generate_model_geometry_output_uuid(model),
-            output_type: model.render_output_type(),
-            transform: output.world_matrix.expect("Some matrix").to_bevy(),
-            color: output.attributes.get_color().map(|c| c.to_bevy()),
-            bounds_2d: output.calc_bounds_2d(),
-            bounds_3d: output.calc_bounds_3d(),
-            bounding_sphere_radius: output.scene_radius(),
-            ground_radius: output.ground_radius(),
-            src_ref: model.src_ref(),
+            model_uuid: registry::generate_model_uuid(node),
+            mesh_uuids,
+            model_hash: node.hash.raw(),
+            output_type: node.output_type,
+            transform: transform.to_bevy(),
+            color: model.attr.iter().find_map(|attr| match attr {
+                Attribute::Color(color) => Some(color.to_bevy()),
+                _ => None,
+            }),
+            bounds_2d: mu::core::Bounds2D::new(bounds_3d.min.truncate(), bounds_3d.max.truncate()),
+            bounds_3d,
+            bounding_sphere_radius: node.outputs.scene_radius(),
+            ground_radius: node.outputs.ground_radius(),
+            src_ref: model
+                .creator
+                .as_ref()
+                .map(|creator| creator.src_ref)
+                .unwrap_or_else(mu::SrcRef::none),
         }
     }
 }

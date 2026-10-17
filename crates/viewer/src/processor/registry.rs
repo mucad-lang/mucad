@@ -8,39 +8,39 @@ use microcad_driver::prelude as mu;
 
 const MODEL_UUID_SEED: u64 = 0xDEAD_BEEF_DEED_BEAF;
 
-const MODEL_GEOMETRY_OUTPUT_UUID_SEED: u64 = 0x4321_4321_4321_4321;
+const MESH_UUID_SEED: u64 = 0x4321_4321_4321_4321;
 
-/// Generate a Uuid for a model info.
-pub fn generate_model_uuid(model: &mu::Model) -> Uuid {
-    Uuid::from_u64_pair(MODEL_UUID_SEED, model.as_ptr() as u64)
+/// Generate a Uuid for the model info of a geometry node, which is unique within its geometry tree.
+pub fn generate_model_uuid(node: mu::render::GeometryNodeRef) -> Uuid {
+    Uuid::from_u64_pair(MODEL_UUID_SEED, usize::from(node.id) as u64)
 }
 
-/// Generate a Uuid for a model geometry output.
-pub fn generate_model_geometry_output_uuid(model: &mu::Model) -> Uuid {
-    use mu::traits::ComputedHash;
-    Uuid::from_u64_pair(MODEL_GEOMETRY_OUTPUT_UUID_SEED, model.computed_hash())
+/// Generate a Uuid for the mesh at `index` of the geometry outputs with `hash`.
+pub fn generate_mesh_uuid(hash: mu::HashId, index: usize) -> Uuid {
+    Uuid::from_u64_pair(MESH_UUID_SEED ^ index as u64, hash.raw())
 }
 
 /// The instance registry keeps track of all Uuid that already have been rendered, so we don't have have re-render things.
 #[derive(Default)]
 pub struct InstanceRegistry {
-    /// UUIDs of all geometry outputs (meshes and polygons)
-    geometry_output_uuids: mu::HashSet<Uuid>,
+    /// UUIDs of the meshes of geometry outputs by their hash.
+    mesh_uuids: mu::HashMap<mu::HashId, Vec<Uuid>>,
     /// UUIDs of all model infos.
     model_uuids: mu::HashSet<Uuid>,
 }
 
 impl InstanceRegistry {
-    pub fn contains_geometry_output(&self, uuid: &Uuid) -> bool {
-        self.geometry_output_uuids.contains(uuid)
+    /// The UUIDs of the meshes of the geometry outputs with `hash`, if they have been created.
+    pub fn mesh_uuids(&self, hash: &mu::HashId) -> Option<&Vec<Uuid>> {
+        self.mesh_uuids.get(hash)
     }
 
     pub fn contains_model(&self, uuid: &Uuid) -> bool {
         self.model_uuids.contains(uuid)
     }
 
-    pub fn insert_geometry_output(&mut self, uuid: Uuid) {
-        self.geometry_output_uuids.insert(uuid);
+    pub fn insert_mesh_uuids(&mut self, hash: mu::HashId, uuids: Vec<Uuid>) {
+        self.mesh_uuids.insert(hash, uuids);
     }
 
     pub fn insert_model(&mut self, uuid: Uuid) {

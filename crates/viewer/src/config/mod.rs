@@ -15,7 +15,9 @@ use microcad_driver::prelude as mu;
 /// Viewer configuration.
 #[derive(Resource, serde::Deserialize, Clone)]
 pub struct Config {
-    /// Additional search paths for microcad interpreter.
+    /// Additional search paths for libraries.
+    ///
+    /// The standard library is found in its global path.
     pub search_paths: Vec<std::path::PathBuf>,
 
     /// Delay when the input file is reloaded.
@@ -40,7 +42,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            search_paths: mu::builtin::dirs::default_search_paths(),
+            search_paths: Vec::new(),
             reload_delay: Duration::from_millis(100),
             stay_on_top: false,
             mesh_smoothness_angle: 20.0,

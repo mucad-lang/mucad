@@ -52,6 +52,7 @@ default-members = [
     "crates/macros",
     "crates/render",
     "crates/std",
+    "crates/viewer",
 
     "xtask",
 ]

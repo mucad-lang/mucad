@@ -7,16 +7,18 @@ use super::*;
 
 use microcad_driver::prelude as mu;
 
-/// Convert a microcad type into a Bevy with optional custom parameters.
+/// Convert a microcad type into Bevy meshes with optional custom parameters.
+///
+/// A geometry collection results in several meshes.
 pub trait ToBevyMesh {
     /// A custom parameter type to pass to the function.
     type Parameters: Default;
 
     /// The conversion function.
-    fn to_bevy_mesh(&self, parameters: Self::Parameters) -> Mesh;
+    fn to_bevy_mesh(&self, parameters: Self::Parameters) -> Vec<Mesh>;
 
     /// The conversion function with default parameters.
-    fn to_bevy_mesh_default(&self) -> Mesh {
+    fn to_bevy_mesh_default(&self) -> Vec<Mesh> {
         self.to_bevy_mesh(Self::Parameters::default())
     }
 }
@@ -24,7 +26,7 @@ pub trait ToBevyMesh {
 impl ToBevyMesh for mu::core::LineString {
     type Parameters = f32;
 
-    fn to_bevy_mesh(&self, z: f32) -> Mesh {
+    fn to_bevy_mesh(&self, z: f32) -> Vec<Mesh> {
         let mut mesh = Mesh::new(
             bevy::mesh::PrimitiveTopology::LineStrip,
             RenderAssetUsages::default(),
@@ -42,7 +44,7 @@ impl ToBevyMesh for mu::core::LineString {
 impl ToBevyMesh for mu::core::MultiLineString {
     type Parameters = f32;
 
-    fn to_bevy_mesh(&self, z: Self::Parameters) -> Mesh {
+    fn to_bevy_mesh(&self, z: Self::Parameters) -> Vec<Mesh> {
         let mut mesh = Mesh::new(
             bevy::mesh::PrimitiveTopology::LineList,
             RenderAssetUsages::default(),
@@ -117,22 +119,22 @@ impl Triangulation {
 impl ToBevyMesh for mu::core::Polygon {
     type Parameters = f32;
 
-    fn to_bevy_mesh(&self, z: Self::Parameters) -> Mesh {
-        Triangulation::from_polygon(self, z, 0).mesh()
+    fn to_bevy_mesh(&self, z: Self::Parameters) -> Vec<Mesh> {
+        vec![Triangulation::from_polygon(self, z, 0).mesh()]
     }
 }
 
 impl ToBevyMesh for mu::core::MultiPolygon {
     type Parameters = f32;
 
-    fn to_bevy_mesh(&self, z: Self::Parameters) -> Mesh {
-        Triangulation::from_multi_polygon(self, z).mesh()
+    fn to_bevy_mesh(&self, z: Self::Parameters) -> Vec<Mesh> {
+        vec![Triangulation::from_multi_polygon(self, z).mesh()]
     }
 }
 
 impl ToBevyMesh for mu::core::Geometry2D {
     type Parameters = f32;
-    fn to_bevy_mesh(&self, z: Self::Parameters) -> Mesh {
+    fn to_bevy_mesh(&self, z: Self::Parameters) -> Vec<Mesh> {
         use mu::core::Geometry2D;
         match self {
             Geometry2D::LineString(line_string) => line_string.to_bevy_mesh(z),
@@ -143,7 +145,10 @@ impl ToBevyMesh for mu::core::Geometry2D {
             Geometry2D::Polygon(polygon) => polygon.to_bevy_mesh(z),
             Geometry2D::Rect(rect) => rect.to_polygon().to_bevy_mesh(z),
             Geometry2D::MultiPolygon(multi_polygon) => multi_polygon.to_bevy_mesh(z),
-            Geometry2D::Collection(collection) => collection.to_multi_polygon().to_bevy_mesh(z),
+            Geometry2D::Collection(collection) => collection
+                .iter()
+                .flat_map(|geometry| geometry.to_bevy_mesh(z))
+                .collect(),
         }
     }
 }
@@ -153,7 +158,7 @@ impl ToBevyMesh for mu::core::Geometry2D {
 impl ToBevyMesh for mu::core::TriangleMesh {
     type Parameters = f32;
 
-    fn to_bevy_mesh(&self, threshold_degrees: Self::Parameters) -> Mesh {
+    fn to_bevy_mesh(&self, threshold_degrees: Self::Parameters) -> Vec<Mesh> {
         let cos_threshold = threshold_degrees.to_radians().cos();
         use cgmath::InnerSpace;
 
@@ -231,7 +236,7 @@ impl ToBevyMesh for mu::core::TriangleMesh {
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, new_positions);
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, new_normals);
         mesh.insert_indices(Indices::U32(new_indices));
-        mesh
+        vec![mesh]
     }
 }
 
@@ -239,12 +244,12 @@ impl ToBevyMesh for mu::core::TriangleMesh {
 impl ToBevyMesh for mu::core::Geometry3D {
     type Parameters = f32;
 
-    fn to_bevy_mesh(&self, threshold_angle: Self::Parameters) -> Mesh {
+    fn to_bevy_mesh(&self, threshold_angle: Self::Parameters) -> Vec<Mesh> {
         use mu::core::Geometry3D;
         match self {
             Geometry3D::Mesh(triangle_mesh) => triangle_mesh.to_bevy_mesh(threshold_angle),
             Geometry3D::Manifold(manifold) => {
-                mu::core::TriangleMesh::from(manifold.to_mesh()).to_bevy_mesh(threshold_angle)
+                mu::core::TriangleMesh::from(manifold.get_mesh_gl(0)).to_bevy_mesh(threshold_angle)
             }
             Geometry3D::Collection(collection) => {
                 let mesh: mu::core::TriangleMesh = collection.into();
@@ -258,7 +263,7 @@ impl ToBevyMesh for mu::core::Geometry3D {
 impl ToBevyMesh for mu::core::Bounds2D {
     type Parameters = ();
 
-    fn to_bevy_mesh(&self, _: Self::Parameters) -> Mesh {
+    fn to_bevy_mesh(&self, _: Self::Parameters) -> Vec<Mesh> {
         let mut mesh = Mesh::new(
             bevy::mesh::PrimitiveTopology::LineStrip,
             RenderAssetUsages::default(),
@@ -280,7 +285,7 @@ impl ToBevyMesh for mu::core::Bounds2D {
             .map(|p| [p.x, p.y, p.z])
             .collect::<Vec<_>>(),
         );
-        mesh
+        vec![mesh]
     }
 }
 
@@ -288,7 +293,7 @@ impl ToBevyMesh for mu::core::Bounds2D {
 impl ToBevyMesh for mu::core::Bounds3D {
     type Parameters = ();
 
-    fn to_bevy_mesh(&self, _: Self::Parameters) -> Mesh {
+    fn to_bevy_mesh(&self, _: Self::Parameters) -> Vec<Mesh> {
         let mut mesh = Mesh::new(
             bevy::mesh::PrimitiveTopology::LineStrip,
             RenderAssetUsages::default(),

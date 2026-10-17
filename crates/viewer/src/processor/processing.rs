@@ -3,6 +3,7 @@
 
 use crossbeam::channel::{Receiver, Sender};
 use microcad_driver::prelude as mu;
+use miette::IntoDiagnostic;
 
 use crate::{
     processor::{
@@ -35,12 +36,8 @@ impl Processor {
             .expect("No error")
     }
 
-    pub(crate) fn compile(
-        &mut self,
-        mut document: mu::document::SourceFile,
-    ) -> miette::Result<Vec<ProcessorResponse>> {
-        use microcad_driver::commands::{Compile, *};
-
+    /// Compile the source, render its model and generate the responses for the view.
+    pub(crate) fn compile(&mut self, source: mu::Source) -> miette::Result<Vec<ProcessorResponse>> {
         self.state_change(ProcessingState::Busy(0.0));
 
         let (tx, rx) = std::sync::mpsc::channel();
@@ -54,46 +51,25 @@ impl Processor {
                     .expect("No error");
             }
         });
+        self.context.renderer.progress_tx = Some(tx);
 
-        let compiler_params = CompileParameters {
-            resolve: compile::ResolveParameters {
-                search_paths: self.context.search_paths.clone(),
-                no_builtin: false,
-            },
-        };
-        let render_params = RenderParameters {
-            resolution: self.context.resolution.clone(),
-            cache: Some(self.context.render_cache.clone()),
-            progress_tx: Some(tx),
-        };
-
-        let responses = match document
-            .compile(compiler_params)
-            .and(document.render(render_params))
-        {
-            Ok(model) => self.respond(model),
-            Err(err) => {
-                eprintln!(
-                    "{}",
-                    document.diagnostics_string(&mu::base::DiagRenderOptions {
-                        color: true,
-                        ..Default::default()
-                    }),
-                );
-
-                log::error!("{err}");
+        let compiler = &mut self.context.compiler;
+        let responses = match compiler.compile(source) {
+            Ok((model_tree, diags)) if !diags.has_errors() => {
+                eprintln!("{}", compiler.render_diag_to_string(&diags));
+                self.respond(&model_tree)
+            }
+            Ok((_, diags)) | Err(diags) => {
+                eprintln!("{}", compiler.render_diag_to_string(&diags));
                 self.state_change(ProcessingState::Error);
                 Ok(vec![])
             }
         }?;
 
-        self.context.document = Some(document);
-
         // Remove unused cache items.
-        {
+        if let Some(cache) = &self.context.renderer.cache {
             log::info!("Render cache");
-            let mut cache = self.context.render_cache.borrow_mut();
-            cache.garbage_collection();
+            cache.with_write(|cache| cache.garbage_collection());
         }
 
         Ok(responses)
@@ -106,26 +82,29 @@ impl Processor {
     ) -> miette::Result<Vec<ProcessorResponse>> {
         match request {
             ProcessorRequest::Initialize { config } => {
-                self.context.search_paths = config.search_paths.clone();
+                self.context.compiler = mu::Compiler::from_config(&mu::DriverConfig {
+                    search_paths: config.search_paths.clone(),
+                    ..Default::default()
+                });
+                self.context.renderer.resolution = mu::RenderResolution {
+                    linear: config.render_resolution,
+                };
                 self.context.theme = config.theme;
                 self.context.initialized = true;
                 self.context.state = ProcessingState::Idle;
                 Ok(vec![])
             }
             ProcessorRequest::CompileFile(path) => {
-                self.compile(mu::document::SourceFile::from_file(path)?)
+                self.compile(mu::Source::load(path).into_diagnostic()?)
             }
             ProcessorRequest::CompileSource {
                 path,
                 name: _name,
                 source,
-            } => self.compile(mu::document::SourceFile::new(mu::Cached::new(
-                mu::base::Source {
-                    url: mu::locate::to_url(path.as_ref().unwrap().to_str().unwrap())?,
-                    line_offset: 0,
-                    code: mu::Hashed::new(source),
-                },
-            ))),
+            } => self.compile(match path {
+                Some(path) => mu::Source::new(path, source),
+                None => mu::Source::from(source.as_str()),
+            }),
             ProcessorRequest::Export { .. } => todo!(),
             ProcessorRequest::SetLineNumber(line_number) => {
                 self.state_change(ProcessingState::Busy(0.0));
@@ -137,15 +116,18 @@ impl Processor {
         }
     }
 
-    /// Update the model instances and generate processor responses.
-    fn respond(&mut self, model: mu::Model) -> miette::Result<Vec<ProcessorResponse>> {
+    /// Render the model tree, update the model instances and generate processor responses.
+    fn respond(&mut self, model_tree: &mu::ModelTree) -> miette::Result<Vec<ProcessorResponse>> {
+        // The geometry tree is temporary, its geometry is kept in the render cache.
+        let geometry_tree = self.context.renderer.render(model_tree)?;
+
         let mut responses = Vec::new();
         responses.push(ProcessorResponse::RemoveModelInstances(
             self.context.instance_registry.fetch_model_uuids(),
         ));
 
         self.context.instance_registry.clear_model_uuids();
-        self.generate_responses(&model, &mut responses);
+        self.generate_responses(geometry_tree.root(), model_tree, &mut responses);
         log::info!("{} responses", responses.len());
 
         responses.push(ProcessorResponse::UpdateMaterials(
@@ -161,69 +143,74 @@ impl Processor {
         Ok(responses)
     }
 
-    /// Generate mesh geometry output for model.
-    fn generate_responses(&mut self, model: &mu::Model, responses: &mut Vec<ProcessorResponse>) {
-        use mu::Element::*;
-        match model.render_output_type() {
-            mu::OutputType::Geometry2D | mu::OutputType::Geometry3D => {}
-            mu::OutputType::NotDetermined | mu::OutputType::InvalidMixed => return,
+    /// Generate meshes and model infos for the workpieces with geometry, starting at `node`.
+    ///
+    /// The geometry of a workpiece contains the geometry of its children,
+    /// so children are only visited if a node has no geometry.
+    fn generate_responses(
+        &mut self,
+        node: mu::render::GeometryNodeRef,
+        model_tree: &mu::ModelTree,
+        responses: &mut Vec<ProcessorResponse>,
+    ) {
+        use mu::types::{ModelType, model::Element};
+
+        if !matches!(
+            node.output_type,
+            ModelType::Geometry2D | ModelType::Geometry3D
+        ) {
+            return;
         }
 
-        let model_ = model.borrow();
-        // We only consider output geometries of workpieces and ignore the rest.
-        let recurse = match model_.element() {
-            Value(_) => true, // Values might produce geometries at some point (to draw Vec2, Vec3 etc. in the scene)
-            InputPlaceholder | Multiplicity | Group => true,
-            Workpiece(_) | BuiltinWorkpiece(_) => {
-                let uuid = crate::processor::registry::generate_model_geometry_output_uuid(model);
-                let output = model_.output();
-                let mut recurse = false;
+        let model = node.model(model_tree);
+        let is_workpiece = matches!(
+            model.get().element,
+            Element::Workpiece(_) | Element::BuiltinWorkpiece(_)
+        );
+        if !is_workpiece || node.outputs.is_empty() {
+            node.children()
+                .for_each(|child| self.generate_responses(child, model_tree, responses));
+            return;
+        }
 
-                // Add a new mesh asset, when we do not have geometry with a uuid in the cache.
-                if !self
-                    .context
+        // Add new mesh assets, if the geometry has no meshes yet.
+        let mesh_uuids = match self.context.instance_registry.mesh_uuids(&node.hash) {
+            Some(mesh_uuids) => mesh_uuids.clone(),
+            None => {
+                let mesh_uuids: Vec<_> = node
+                    .outputs
+                    .iter()
+                    .flat_map(|output| match &output.geometry {
+                        mu::core::Geometry::Geometry2D(geometry) => geometry.to_bevy_mesh_default(),
+                        mu::core::Geometry::Geometry3D(geometry) => geometry.to_bevy_mesh(30.0),
+                    })
+                    .enumerate()
+                    .map(|(index, mesh)| {
+                        let uuid = crate::processor::registry::generate_mesh_uuid(node.hash, index);
+                        responses.push(ProcessorResponse::NewMeshAsset(uuid, mesh));
+                        uuid
+                    })
+                    .collect();
+                self.context
                     .instance_registry
-                    .contains_geometry_output(&uuid)
-                {
-                    let mesh = match &output.geometry {
-                        Some(mu::GeometryOutput::Geometry2D(geometry)) => {
-                            Some(geometry.inner.to_bevy_mesh_default())
-                        }
-                        Some(mu::GeometryOutput::Geometry3D(geometry)) => {
-                            Some(geometry.inner.to_bevy_mesh(30.0))
-                        }
-                        None => None,
-                    };
-
-                    match mesh {
-                        Some(mesh) => {
-                            self.context.instance_registry.insert_geometry_output(uuid);
-                            responses.push(ProcessorResponse::NewMeshAsset(uuid, mesh));
-                        }
-                        None => {
-                            recurse = true;
-                        }
-                    }
-                }
-
-                let uuid = crate::processor::registry::generate_model_uuid(model);
-                if !self.context.instance_registry.contains_model(&uuid) {
-                    self.context.instance_registry.insert_model(uuid);
-
-                    responses.push(ProcessorResponse::NewModelInfo(
-                        uuid,
-                        ModelInfo::from_model(model),
-                    ));
-                }
-
-                recurse
+                    .insert_mesh_uuids(node.hash, mesh_uuids.clone());
+                mesh_uuids
             }
         };
 
-        if recurse {
-            model_
-                .children()
-                .for_each(|model| self.generate_responses(model, responses));
+        let model_info = ModelInfo::new(node, model, mesh_uuids);
+        if !self
+            .context
+            .instance_registry
+            .contains_model(&model_info.model_uuid)
+        {
+            self.context
+                .instance_registry
+                .insert_model(model_info.model_uuid);
+            responses.push(ProcessorResponse::NewModelInfo(
+                model_info.model_uuid,
+                model_info,
+            ));
         }
     }
 }

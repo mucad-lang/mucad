@@ -31,7 +31,7 @@ impl ModelViewState {
     pub fn new(info: processor::ModelInfo, state: &ViewModel) -> Self {
         Self {
             outline_volume: OutlineVolume {
-                visible: matches!(info.output_type, mu::OutputType::Geometry2D),
+                visible: matches!(info.output_type, mu::types::ModelType::Geometry2D),
                 colour: state.config.theme.darker.make_transparent(0.5).to_bevy(),
                 width: 4.0,
             },
@@ -45,8 +45,8 @@ impl ModelViewState {
     pub fn generate_material(&self) -> StandardMaterial {
         use crate::material::*;
         let mut material = match self.info.output_type {
-            mu::OutputType::Geometry2D => create_2d_material(self.base_color),
-            mu::OutputType::Geometry3D => create_3d_material(self.base_color),
+            mu::types::ModelType::Geometry2D => create_2d_material(self.base_color),
+            mu::types::ModelType::Geometry3D => create_3d_material(self.base_color),
             _ => unreachable!(),
         };
         if self.is_selected {

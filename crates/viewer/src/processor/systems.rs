@@ -170,29 +170,33 @@ pub fn handle_processor_responses(
                 });
             }
             ProcessorResponse::SpawnModelInstances(uuids) => {
-                entities.extend(uuids.iter().cloned().filter_map(|uuid| {
+                // A model is spawned as one entity per mesh, which share the model's material.
+                for (uuid, view_state) in uuids
+                    .iter()
+                    .filter_map(|uuid| Some((*uuid, model_view_states.get(*uuid)?)))
+                {
                     log::info!("Spawn model: {uuid}");
+                    ground_radius =
+                        mu::core::Length::mm(ground_radius.max(view_state.info().ground_radius.0));
 
-                    model_view_states.get(uuid).map(|view_state| {
-                        ground_radius = mu::core::Length::mm(
-                            ground_radius.max(view_state.info().ground_radius.0),
+                    for mesh_uuid in &view_state.info().mesh_uuids {
+                        entities.push(
+                            commands
+                                .spawn((
+                                    Mesh3d(Handle::Uuid(*mesh_uuid, PhantomData)),
+                                    MeshMaterial3d::<StandardMaterial>(Handle::Uuid(
+                                        uuid,
+                                        PhantomData,
+                                    )),
+                                    view_state.info().transform,
+                                    view_state.outline_volume.clone(),
+                                    OutlineMode::FloodFlat,
+                                    view_state.clone(),
+                                ))
+                                .id(),
                         );
-
-                        commands
-                            .spawn((
-                                Mesh3d(Handle::Uuid(
-                                    view_state.info().geometry_output_uuid,
-                                    PhantomData,
-                                )),
-                                MeshMaterial3d::<StandardMaterial>(Handle::Uuid(uuid, PhantomData)),
-                                view_state.info().transform,
-                                view_state.outline_volume.clone(),
-                                OutlineMode::FloodFlat,
-                                view_state.clone(),
-                            ))
-                            .id()
-                    })
-                }))
+                    }
+                }
             }
             ProcessorResponse::StateChanged(state) => {
                 events.write(ViewerEvent::ProcessingStateChanged(state));

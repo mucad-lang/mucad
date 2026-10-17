@@ -28,6 +28,13 @@ impl ToBevy<bevy::prelude::Color> for mu::core::Color {
     }
 }
 
+/// Convert the color of a model attribute (e.g. `#[color = "red"]`) into a bevy color.
+impl ToBevy<bevy::prelude::Color> for mu::types::Color {
+    fn to_bevy(self) -> bevy::prelude::Color {
+        bevy::prelude::Color::srgba(self.r.into(), self.g.into(), self.b.into(), self.a.into())
+    }
+}
+
 impl ToBevy<bevy::prelude::Vec3> for mu::core::Color {
     fn to_bevy(self) -> bevy::prelude::Vec3 {
         bevy::prelude::Vec3::new(self.r, self.g, self.b)

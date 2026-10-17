@@ -28,22 +28,19 @@ pub struct ProcessorContext {
     /// Flag to tell whether to initialize.
     pub(super) initialized: bool,
 
-    /// Search paths are set during initialization.
-    pub(super) search_paths: Vec<std::path::PathBuf>,
+    /// The compiler, which is created with the search paths during initialization.
+    pub(super) compiler: mu::Compiler,
 
-    pub(super) document: Option<microcad_driver::document::SourceFile>,
+    /// The renderer with the render resolution and the render cache,
+    /// which keeps the geometry of unchanged models between compilations.
+    pub(super) renderer: mu::render::Renderer,
 
-    /// The current render resolutions.
-    pub(super) resolution: mu::core::RenderResolution,
     pub(super) theme: config::Theme,
 
     pub(super) line_number: Option<u32>,
 
     /// Keeps a UUID register of all model instances that have been rendered.
     pub(super) instance_registry: InstanceRegistry,
-
-    /// µcad Render cache.
-    pub(super) render_cache: mu::RcMut<mu::RenderCache>,
 }
 
 impl Default for ProcessorContext {
@@ -51,13 +48,12 @@ impl Default for ProcessorContext {
         Self {
             state: Default::default(),
             initialized: false,
-            search_paths: Default::default(),
-            resolution: Default::default(),
+            compiler: mu::Compiler::new(),
+            renderer: mu::render::Renderer::new()
+                .with_cache(mu::SharedMut::new(mu::render::RenderCache::new())),
             theme: Default::default(),
-            document: None,
             line_number: None,
             instance_registry: Default::default(),
-            render_cache: mu::RcMut::new(mu::RenderCache::new()),
         }
     }
 }
