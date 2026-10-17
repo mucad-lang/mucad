@@ -37,7 +37,7 @@ impl ToBevyMesh for mu::core::LineString {
                 .map(|c| [c.x as f32, c.y as f32, z])
                 .collect::<Vec<_>>(),
         );
-        mesh
+        vec![mesh]
     }
 }
 
@@ -63,7 +63,7 @@ impl ToBevyMesh for mu::core::MultiLineString {
                 })
                 .collect::<Vec<_>>(),
         );
-        mesh
+        vec![mesh]
     }
 }
 
@@ -143,7 +143,6 @@ impl ToBevyMesh for mu::core::Geometry2D {
                 mu::core::LineString::new(vec![line.0.into(), line.1.into()]).to_bevy_mesh(z)
             }
             Geometry2D::Polygon(polygon) => polygon.to_bevy_mesh(z),
-            Geometry2D::Rect(rect) => rect.to_polygon().to_bevy_mesh(z),
             Geometry2D::MultiPolygon(multi_polygon) => multi_polygon.to_bevy_mesh(z),
             Geometry2D::Collection(collection) => collection
                 .iter()
@@ -330,6 +329,6 @@ impl ToBevyMesh for mu::core::Bounds3D {
             .map(|p| [p.x, p.y, p.z])
             .collect::<Vec<_>>(),
         );
-        mesh
+        vec![mesh]
     }
 }
