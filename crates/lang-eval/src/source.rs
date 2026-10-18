@@ -11,16 +11,21 @@ use mucad_lang_types::{
 
 use mucad_lang_base::PushIssue;
 
-use crate::{Eval, EvalContext, EvalErrorKind, EvalResult, context::SourceFrame};
+use crate::{
+    Eval, EvalContext, EvalErrorKind, EvalResult, attribute::attach_attributes,
+    context::SourceFrame,
+};
 
 impl Eval<()> for symbol::SourceStatement {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<()> {
+        let value = self.expression.eval(context)?;
+        let value = attach_attributes(&self.attr, value, context)?;
         match &self.name {
             // If we have an id, this becomes a property in the current model
             Some(name) => {
                 let property = Property {
                     name: name.clone(),
-                    value: self.expression.eval(context)?,
+                    value,
                     src_ref: self.src_ref,
                     ty: PropertyType::Hidden,
                 };
@@ -30,7 +35,6 @@ impl Eval<()> for symbol::SourceStatement {
             }
             // If we have no id, we have a child model.
             None => {
-                let value: Value = self.expression.eval(context)?;
                 // It might be that the value is none, because an if expression might not produce a model when its condition is not fulfilled
                 if !value.is_none() {
                     context

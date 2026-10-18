@@ -7,6 +7,7 @@ use std::cmp::Reverse;
 
 use crate::{
     Callable, Eval, EvalContext, EvalError, EvalErrorKind, EvalResult,
+    attribute::attach_attributes,
     context::{
         BuiltinItemFrame, ContextScope, WorkbenchGroupFrame, WorkbenchInitFrame, WorkpieceFrame,
     },
@@ -26,12 +27,13 @@ use mucad_lang_types::{
 
 impl Eval for symbol::workbench::Group {
     fn eval(&self, context: &mut EvalContext) -> EvalResult {
-        context.scope(WorkbenchGroupFrame::new(), |context| {
+        let value = context.scope(WorkbenchGroupFrame::new(), |context| -> EvalResult {
             self.statements
                 .iter()
                 .try_for_each(|stmt| stmt.eval(context))?;
             Ok(context.model_tree_builder_mut().build().into())
-        })
+        })?;
+        attach_attributes(&self.attr, value, context)
     }
 }
 
@@ -187,12 +189,14 @@ impl Eval for symbol::WorkbenchExpression {
 
 impl Eval<()> for symbol::WorkbenchStatement {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<()> {
+        let value = self.expression.eval(context)?;
+        let value = attach_attributes(&self.attr, value, context)?;
         match &self.name {
             // If we have an id, this becomes a property in the current model
             Some(name) => {
                 let property = Property {
                     name: name.clone(),
-                    value: self.expression.eval(context)?,
+                    value,
                     src_ref: self.src_ref,
                     ty: match &self.visibility {
                         Visibility::Public => PropertyType::Output,
@@ -205,7 +209,6 @@ impl Eval<()> for symbol::WorkbenchStatement {
             }
             // If we have no id, we have a child model.
             None => {
-                let value: Value = self.expression.eval(context)?;
                 // It might be that the value is none, because an if expression might not produce a model when its condition is not fulfilled
                 if !value.is_none() {
                     context

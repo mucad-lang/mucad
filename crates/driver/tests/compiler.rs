@@ -147,6 +147,72 @@ fn compile_twice() {
     assert_eq!(display(&first), display(&second));
 }
 
+/// The colors of the models in a model tree.
+fn colors(model: &mu::ModelTree) -> Vec<mu::types::Color> {
+    use mu::types::model::Attribute;
+    model
+        .root()
+        .descendants()
+        .flat_map(|node| node.attr.iter().cloned().collect::<Vec<_>>())
+        .filter_map(|attr| match attr {
+            Attribute::Color(color) => Some(color),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Model attributes of expression statements and assignments.
+#[test]
+fn compile_model_attributes() {
+    use mu::types::Color;
+
+    let mut compiler = compiler();
+    let (model, diags) = compiler
+        .compile(
+            r##"
+            #[color = "#FFFFFF"]
+            c = __mu::geo2d::Circle(radius = 1mm);
+            c;
+
+            #[color = (r = 1.0, g = 0.0, b = 0.0)]
+            #[resolution = 0.5mm]
+            #[name = "disc"]
+            __mu::geo2d::Circle(radius = 2mm);
+            "##,
+        )
+        .expect("A model");
+
+    assert!(!diags.has_errors(), "{diags:?}");
+    assert_eq!(
+        colors(&model),
+        [Color::rgb(1.0, 1.0, 1.0), Color::rgb(1.0, 0.0, 0.0)]
+    );
+
+    let disc = model.root().children().nth(1).expect("A disc");
+    assert_eq!(disc.name.as_ref().map(|name| name.as_str()), Some("disc"));
+    assert_eq!(
+        disc.resolution(),
+        Some(&mu::types::model::attribute::ResolutionAttribute::Absolute(
+            mu::types::Length::mm(0.5)
+        ))
+    );
+}
+
+/// Invalid attribute values and attributes of values without models are errors.
+#[test]
+fn compile_invalid_model_attributes() {
+    let mut compiler = compiler();
+    for source in [
+        "#[color = 42]\n__mu::geo2d::Circle(radius = 1mm);",
+        "#[color = \"no color\"]\n__mu::geo2d::Circle(radius = 1mm);",
+        "#[resolution = 10°]\n__mu::geo2d::Circle(radius = 1mm);",
+        "#[color = \"red\"]\nx = 42;",
+    ] {
+        let (_, diags) = compiler.compile(source).expect("A model, despite errors");
+        assert!(diags.has_errors(), "{source}");
+    }
+}
+
 /*
 
 

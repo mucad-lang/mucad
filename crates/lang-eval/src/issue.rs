@@ -135,6 +135,23 @@ pub enum EvalErrorKind {
 
     #[error("Library `{lib_id}` not loaded")]
     LibraryNotLoaded { lib_id: LibraryId },
+
+    /// Attributes, e.g. `#[color = "red"]`, are attached to a value which is not a model.
+    #[error("Attributes can only be attached to models, not to `{value}`")]
+    CannotAttachAttributes {
+        #[label("Attribute of a value")]
+        src_ref: SrcRef,
+        value: String,
+    },
+
+    /// The value of a model attribute is invalid, e.g. `#[color = 42]`.
+    #[error("Invalid value of attribute `{name}`: {err}")]
+    InvalidAttributeValue {
+        name: &'static str,
+        #[label("Invalid {name}")]
+        src_ref: SrcRef,
+        err: ValueError,
+    },
 }
 
 impl SrcReferrer for EvalErrorKind {
@@ -155,6 +172,8 @@ impl SrcReferrer for EvalErrorKind {
             EvalErrorKind::BuiltinConstantExpected { src_ref, .. } => *src_ref,
             EvalErrorKind::CannotCallOperationWithoutWorkpiece { src_ref, .. } => *src_ref,
             EvalErrorKind::InputNotAvailable { src_ref } => *src_ref,
+            EvalErrorKind::CannotAttachAttributes { src_ref, .. } => *src_ref,
+            EvalErrorKind::InvalidAttributeValue { src_ref, .. } => *src_ref,
             EvalErrorKind::BuiltinError(err) => err.src_ref(),
             _ => SrcRef::none(),
         }

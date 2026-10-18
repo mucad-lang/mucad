@@ -5,6 +5,7 @@
 
 mod argument_match;
 
+mod attribute;
 mod builtin;
 mod context;
 mod function;
