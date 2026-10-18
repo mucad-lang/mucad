@@ -181,9 +181,39 @@ impl FromStr for Color {
     }
 }
 
+impl TryFrom<Value> for Color {
+    type Error = ValueError;
+
+    /// A color from a name or hex string, e.g. `"red"` or `"#FF0000"`,
+    /// or from a tuple, e.g. `(r = 1.0, g = 0.0, b = 0.0)` with an optional alpha `a`.
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        match value {
+            Value::String(s) => {
+                Color::from_str(&s).map_err(|err| ValueError::CannotConvertToColor(err.to_string()))
+            }
+            Value::Tuple(tuple) => {
+                let channel = |name: &str| -> Result<Option<f32>, ValueError> {
+                    tuple
+                        .get_field(&Identifier::no_ref(name))
+                        .map(|value| Ok(Scalar::try_from(value.clone())?.to_num()))
+                        .transpose()
+                };
+                match (channel("r")?, channel("g")?, channel("b")?) {
+                    (Some(r), Some(g), Some(b)) => {
+                        Ok(Color::rgba(r, g, b, channel("a")?.unwrap_or(1.0)))
+                    }
+                    _ => Err(ValueError::CannotConvertToColor(tuple.to_string())),
+                }
+            }
+            value => Err(ValueError::CannotConvert(value.to_string(), "Color".into())),
+        }
+    }
+}
+
+use mucad_lang_base::Identifier;
 use thiserror::Error;
 
-use crate::Value;
+use crate::{Scalar, Value, ValueError};
 
 /// An error when parsing a color from a string
 #[derive(Error, Debug, Diagnostic)]

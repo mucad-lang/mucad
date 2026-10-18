@@ -69,6 +69,14 @@ impl Attributes {
         })
     }
 
+    /// Add an attribute, which replaces a unique attribute of the same kind, e.g. a color.
+    pub fn set(&mut self, attribute: Attribute) {
+        if attribute.is_unique() {
+            self.0.retain(|attr| attr.id() != attribute.id());
+        }
+        self.0.push(attribute);
+    }
+
     /// Iterator over properties
     pub fn iter(&self) -> impl Iterator<Item = &Attribute> {
         self.0.iter()

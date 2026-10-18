@@ -70,6 +70,11 @@ impl ModelTree {
         NodeRef::new(self.root, &self.arena)
     }
 
+    /// The model of the root node, e.g. to set its attributes.
+    pub fn root_model_mut(&mut self) -> &mut Model {
+        self.arena[self.root].get_mut()
+    }
+
     /// Returns `true` if the model contains primitives (e.g. a circle), which can be rendered.
     ///
     /// E.g. a sketch which only checks values has no primitives.

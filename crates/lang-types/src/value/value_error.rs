@@ -22,7 +22,7 @@ pub enum ValueError {
     InvalidOperator(String),
 
     /// Cannot convert to color.
-    #[error("Cannot convert named tuple to color: {0}")]
+    #[error("Cannot convert to color: {0}")]
     CannotConvertToColor(String),
 
     /// Cannot add unit to a value that has already a unit
