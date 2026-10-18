@@ -30,7 +30,7 @@ pub struct StdLib {
 impl StdLib {
     /// Try to reinstall into default path.
     pub fn reinstall(force: bool) -> Result<(), StdLibError> {
-        let path = Self::default_path();
+        let path = Self::default_path().ok_or_else(no_config_dir)?;
         if force {
             Self::uninstall(&path)?;
         }
@@ -118,25 +118,28 @@ impl StdLib {
         Ok(())
     }
 
-    /// Global library search path + `./std`.
-    pub fn default_path() -> std::path::PathBuf {
-        global_library_search_path().join(Self::info().path())
+    /// Global library search path + `./std`, or `None` without a config directory.
+    pub fn default_path() -> Option<std::path::PathBuf> {
+        global_library_search_path().map(|path| path.join(Self::info().path()))
     }
+}
+
+/// The error for a missing config directory, e.g. in a browser.
+fn no_config_dir() -> std::io::Error {
+    std::io::Error::new(std::io::ErrorKind::NotFound, "No config directory")
 }
 
 /// The global library search path.
 ///
-/// Use the config directory in home directory `.config/mucad` in Release mode.
+/// Use the config directory in home directory `.config/mucad` in Release mode,
+/// or `None` without a config directory, e.g. in a browser.
 /// In Debug mode, the local directory `./crates/std/lib` is used.
-pub fn global_library_search_path() -> std::path::PathBuf {
+pub fn global_library_search_path() -> Option<std::path::PathBuf> {
     #[cfg(not(debug_assertions))]
-    return dirs::config_dir()
-        .expect("config directory")
-        .join("mucad")
-        .join("lib");
+    return dirs::config_dir().map(|dir| dir.join("mucad").join("lib"));
 
     #[cfg(debug_assertions)]
-    return std::path::PathBuf::from("./crates/std/lib");
+    return Some(std::path::PathBuf::from("./crates/std/lib"));
 }
 
 /// Return the version number of this crate.

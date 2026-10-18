@@ -25,6 +25,7 @@ members = [
     "crates/std",
     "crates/viewer",
     "crates/viewer-ipc",
+    "crates/wasm",
     "crates/inspector",
 
     "editors/zed",
@@ -53,6 +54,7 @@ default-members = [
     "crates/render",
     "crates/std",
     "crates/viewer",
+    "crates/wasm",
 
     "xtask",
 ]

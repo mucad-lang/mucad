@@ -245,7 +245,7 @@ impl Compiler {
             .search_paths
             .iter()
             .cloned()
-            .chain(std::iter::once(mucad_std::global_library_search_path()))
+            .chain(mucad_std::global_library_search_path())
             .flat_map(|path| [path.join(info.path()), path.join(info.name.as_str())])
             .find(|path| {
                 let file_system = self.resolve_context.file_system();
@@ -256,7 +256,9 @@ impl Compiler {
             return Ok(path);
         }
 
-        let path = StdLib::default_path();
+        let path = StdLib::default_path().ok_or_else(|| {
+            std::io::Error::new(std::io::ErrorKind::NotFound, "Standard library not found")
+        })?;
         StdLib::install(&path).map_err(|StdLibError::InstallError(err)| err)?;
         Ok(path)
     }

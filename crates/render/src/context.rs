@@ -152,7 +152,8 @@ impl<'a, 'tree> RenderContext<'a, 'tree> {
         geo_node: GeometryNodeId,
         f: impl FnOnce(GeometryNodeId, &mut RenderContext) -> RenderResult<GeometryOutputs>,
     ) -> RenderResult<(GeometryOutputs, f64)> {
-        use std::time::Instant;
+        // `web_time` is `std::time` natively and also works in a browser.
+        use web_time::Instant;
         let start = Instant::now();
 
         let r = f(geo_node, self)?;

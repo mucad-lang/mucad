@@ -80,15 +80,17 @@ impl SourceKind {
     }
 
     /// Return the relative file path from current directory.
+    ///
+    /// Without a current directory (e.g. in a browser) or a local file, the path is returned.
     pub fn relative_path(&self) -> Option<std::path::PathBuf> {
-        self.path().map(|path| {
-            let current_dir = std::env::current_dir().expect("current dir");
-            if let Ok(path) = path.canonicalize() {
-                pathdiff::diff_paths(path, current_dir).unwrap_or_default()
-            } else {
-                path.to_path_buf()
-            }
-        })
+        self.path().map(
+            |path| match (std::env::current_dir(), path.canonicalize()) {
+                (Ok(current_dir), Ok(path)) => {
+                    pathdiff::diff_paths(path, current_dir).unwrap_or_default()
+                }
+                _ => path.to_path_buf(),
+            },
+        )
     }
 
     /// Helper to identify if the resource exists on disk.
