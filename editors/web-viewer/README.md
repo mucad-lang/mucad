@@ -7,8 +7,15 @@ WebAssembly (`crates/wasm`).
 - [three.js](https://threejs.org/) view of 3D models and 2D sketches
 - Examples from the repository's `examples` folder
 - Export of 3D models as STL and of 2D sketches as SVG
+- Dockable panels with [Dockview](https://dockview.dev/)
 
-The code is compiled again shortly after each edit, errors and warnings are shown below the editor.
+The code is compiled again shortly after each edit, errors and warnings are shown in the
+diagnostics panel.
+
+The panels *Code*, *View* and *Diagnostics* can be moved by dragging their tabs: into another
+panel's tabs, to a side of a panel to split it, or with <kbd>Shift</kbd> pressed into a floating
+panel above the others. The layout is saved in the browser and restored on the next visit.
+*Reset layout* restores the default layout.
 
 ## Build
 
@@ -47,6 +54,7 @@ export const examples: Example[] = [
 | File | Content |
 |---|---|
 | `src/main.ts` | Compiles the code, shows the model, the status and the diagnostics, exports |
+| `src/dock.ts` | Dockable panels, which save and restore their layout |
 | `src/editor.ts` | Monaco editor with the µcad language and theme |
 | `src/viewer.ts` | three.js scene with the model, a grid and orbit controls (Z axis up) |
 | `src/examples.ts` | The examples, which can be selected |

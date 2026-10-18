@@ -15,15 +15,18 @@
         <select id="examples"></select>
       </label>
       <span id="status"></span>
+      <button id="reset-layout" title="Restore the default arrangement of the panels">
+        Reset layout
+      </button>
       <button id="export" disabled>Export</button>
     </header>
-    <main>
-      <section id="code">
-        <div id="editor"></div>
-        <pre id="diagnostics"></pre>
-      </section>
-      <section id="view"></section>
-    </main>
+    <main id="dock"></main>
+    <!-- The panel contents, which are moved into the dock. -->
+    <div hidden>
+      <div id="editor" class="panel"></div>
+      <section id="view" class="panel"></section>
+      <pre id="diagnostics" class="panel"></pre>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

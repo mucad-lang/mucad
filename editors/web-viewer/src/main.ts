@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import init, { Mucad } from "mucad-wasm";
+import { Dock } from "./dock";
 import { createEditor } from "./editor";
 import { examples } from "./examples";
 import { Viewer } from "./viewer";
@@ -15,6 +16,13 @@ const select = element<HTMLSelectElement>("examples");
 const status = element<HTMLSpanElement>("status");
 const exportButton = element<HTMLButtonElement>("export");
 const diagnostics = element<HTMLPreElement>("diagnostics");
+
+const dock = new Dock(element("dock"), [
+  { id: "editor", title: "Code", element: element("editor") },
+  { id: "view", title: "View", element: element("view") },
+  { id: "diagnostics", title: "Diagnostics", element: diagnostics },
+]);
+element("reset-layout").addEventListener("click", () => dock.reset());
 
 await init();
 const mucad = new Mucad();

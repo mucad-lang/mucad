@@ -114,6 +114,8 @@ export class Viewer {
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    // Resizing clears the canvas, render at once to avoid flickering while a panel is resized.
+    this.renderer.render(this.scene, this.camera);
   }
 }
 
