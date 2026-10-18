@@ -57,7 +57,7 @@ fn builtin_boolean_op_struct(attr: TokenStream, input_struct: ItemStruct) -> Tok
         return helpers::missing_mod_error("builtin_boolean_op", struct_name);
     };
 
-    let (field_names, params) = match helpers::struct_params(&input_struct.fields) {
+    let (_, params) = match helpers::struct_params(&input_struct.fields) {
         Ok(fields) => fields,
         Err(err) => return err.to_compile_error().into(),
     };
