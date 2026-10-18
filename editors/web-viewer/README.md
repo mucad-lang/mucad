@@ -1,0 +1,53 @@
+# µcad web viewer
+
+Edit, display and export µcad models in a browser, with the µcad toolchain compiled to
+WebAssembly (`crates/wasm`).
+
+- [Monaco](https://microsoft.github.io/monaco-editor/) editor with µcad syntax highlighting
+- [three.js](https://threejs.org/) view of 3D models and 2D sketches
+- Examples from the repository's `examples` folder
+- Export of 3D models as STL and of 2D sketches as SVG
+
+The code is compiled again shortly after each edit, errors and warnings are shown below the editor.
+
+## Build
+
+Requirements: [Rust](https://rustup.rs/) with the target `wasm32-unknown-unknown`,
+[`wasm-pack`](https://rustwasm.github.io/wasm-pack/) and [Node.js](https://nodejs.org/).
+
+```sh
+cd editors/web-viewer
+npm run wasm     # Build the WebAssembly package into crates/wasm/pkg
+npm install
+npm run dev      # Development server, e.g. http://localhost:5173
+```
+
+`npm run build` type checks and builds a static site into `dist`, which can be served from any
+directory, e.g. with `npm run preview`.
+After changes in the Rust code, run `npm run wasm` again.
+
+An example can be opened directly with its index in the URL, e.g. `?example=1`.
+
+## Examples
+
+The examples are listed in `src/examples.ts` and imported from the `examples` folder.
+To add an example, import its file and add it to the list:
+
+```ts
+import torus from "../../../examples/torus.mu?raw";
+
+export const examples: Example[] = [
+  // ...
+  { name: "Torus (3D)", code: torus },
+];
+```
+
+## Structure
+
+| File | Content |
+|---|---|
+| `src/main.ts` | Compiles the code, shows the model, the status and the diagnostics, exports |
+| `src/editor.ts` | Monaco editor with the µcad language and theme |
+| `src/viewer.ts` | three.js scene with the model, a grid and orbit controls (Z axis up) |
+| `src/examples.ts` | The examples, which can be selected |
+| `src/theme.ts`, `src/style.css` | The µcad default theme |

@@ -1,0 +1,29 @@
+<!doctype html>
+<!-- Copyright © 2026 The µcad authors <info@mucad.org> -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>µcad web viewer</title>
+  </head>
+  <body>
+    <header>
+      <span class="logo">µcad</span>
+      <label>
+        Example
+        <select id="examples"></select>
+      </label>
+      <span id="status"></span>
+      <button id="export" disabled>Export</button>
+    </header>
+    <main>
+      <section id="code">
+        <div id="editor"></div>
+        <pre id="diagnostics"></pre>
+      </section>
+      <section id="view"></section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -2,6 +2,10 @@
 
 This folder contains integrations and plugins for various editors and IDEs.
 
+- [`vscode`](vscode): Visual Studio Code extension
+- [`zed`](zed): Zed extension
+- [`web-viewer`](web-viewer): web app to edit, display and export µcad models in a browser
+
 ## ❤️ Support the project
 
 This folder is part of the [mucad project](https://mucad.org).

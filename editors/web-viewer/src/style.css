@@ -1,0 +1,114 @@
+/* Copyright © 2026 The µcad authors <info@mucad.org> */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+:root {
+  --primary: #020d1a;
+  --bright: #e6f4ff;
+  --brighter: #82a8c4;
+  --darker: #33556d;
+  --complementary: #c5221f;
+  --signal: #ff9f0a;
+  --guide: #00b4d8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--primary);
+  color: var(--bright);
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--darker);
+}
+
+.logo {
+  color: var(--signal);
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+select,
+button {
+  margin-left: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--darker);
+  border-radius: 4px;
+  background: var(--primary);
+  color: var(--bright);
+  font: inherit;
+}
+
+button {
+  margin-left: auto;
+  border-color: var(--signal);
+  color: var(--signal);
+  cursor: pointer;
+}
+
+button:disabled {
+  border-color: var(--darker);
+  color: var(--darker);
+  cursor: default;
+}
+
+#status {
+  color: var(--guide);
+}
+
+#status.error,
+#diagnostics.error {
+  color: var(--complementary);
+}
+
+main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+#code {
+  display: flex;
+  flex-direction: column;
+  width: 45%;
+  border-right: 1px solid var(--darker);
+}
+
+#editor {
+  flex: 1;
+  min-height: 0;
+}
+
+#diagnostics {
+  max-height: 30%;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  overflow: auto;
+  border-top: 1px solid var(--darker);
+  color: var(--brighter);
+  font-size: 0.8rem;
+}
+
+#diagnostics:empty {
+  display: none;
+}
+
+#view {
+  flex: 1;
+  min-width: 0;
+}
