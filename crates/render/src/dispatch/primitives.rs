@@ -82,9 +82,7 @@ impl RenderPolygon for __mu::geo2d::Sector {
             start: self.start.into_float(),
             end: self.end.into_float(),
         };
-        let Sector {
-            radius: r, start, ..
-        } = &sector;
+        let Sector { radius: r, .. } = &sector;
 
         use std::f64::consts::PI;
 
