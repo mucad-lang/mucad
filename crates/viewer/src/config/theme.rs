@@ -58,13 +58,13 @@ impl Default for Theme {
 
         Self {
             name: Some("default".into()),
-            primary: hex("#001728"),
-            bright: hex("#DBF3FF"),
-            brighter: hex("#7CA0B1"),
-            darker: hex("#477991"),
-            complementary: hex("#7D0303"),
-            signal: hex("#FFA41C"),
-            guide: hex("#009CDE"),
+            primary: hex("#020D1A"),
+            bright: hex("#E6F4FF"),
+            brighter: hex("#82A8C4"),
+            darker: hex("#33556D"),
+            complementary: hex("#C5221F"),
+            signal: hex("#FF9F0A"),
+            guide: hex("#00B4D8"),
         }
     }
 }
