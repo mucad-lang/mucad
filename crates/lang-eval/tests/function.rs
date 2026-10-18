@@ -1,19 +1,19 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for evaluating functions.
 
-use microcad_builtin::__mu;
-use microcad_lang_base::{SrcRef, SymbolId, boxed};
-use microcad_lang_eval::{Callable, EvalContext};
-use microcad_lang_resolve::{
+use mucad_builtin::__mu;
+use mucad_lang_base::{SrcRef, SymbolId, boxed};
+use mucad_lang_eval::{Callable, EvalContext};
+use mucad_lang_resolve::{
     call_builtin, expr,
     library::symbol::{
         self, ConstantValue, Function, FunctionExpression, FunctionStatement, Parameter, function,
     },
 };
-use microcad_lang_types::{ArgumentValueList, Type, Value, argument_value};
-use microcad_macros::parameter_list;
+use mucad_lang_types::{ArgumentValueList, Type, Value, argument_value};
+use mucad_macros::parameter_list;
 
 fn scope(a: impl Iterator<Item = FunctionStatement>) -> function::Scope {
     function::Scope {
@@ -24,7 +24,7 @@ fn scope(a: impl Iterator<Item = FunctionStatement>) -> function::Scope {
 
 fn assert_eval(
     f: &impl Callable,
-    args: impl IntoIterator<Item = microcad_lang_types::ArgumentValue>,
+    args: impl IntoIterator<Item = mucad_lang_types::ArgumentValue>,
     expected: impl Into<Value>,
 ) {
     let mut context = EvalContext::new();

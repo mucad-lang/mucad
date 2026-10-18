@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Search for library symbols.
 
-use microcad_lang_base::{HashSet, Identifier, SymbolId};
-use microcad_lang_lower::ir::{Path, UnresolvedPath};
+use mucad_lang_base::{HashSet, Identifier, SymbolId};
+use mucad_lang_lower::ir::{Path, UnresolvedPath};
 
 use crate::{
     ExternalLookUp, Library, LookUp, SymbolDef, SymbolNodeExt, SymbolNodeRef, library::SymbolNodeId,

@@ -1,13 +1,13 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Library tests
 
 use std::str::FromStr;
 
-use microcad_lang_base::{DiagRenderOptions, Diagnostics};
-use microcad_lang_lower::ir::UnresolvedPath;
-use microcad_lang_resolve::{Library, ResolveContext, ResolveLibraryContext, SymbolNodeExt};
+use mucad_lang_base::{DiagRenderOptions, Diagnostics};
+use mucad_lang_lower::ir::UnresolvedPath;
+use mucad_lang_resolve::{Library, ResolveContext, ResolveLibraryContext, SymbolNodeExt};
 
 fn lib_ctx<'lib, 'ctx>(
     lib: &'lib mut Library,

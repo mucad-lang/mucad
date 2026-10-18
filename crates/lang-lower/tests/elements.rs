@@ -1,9 +1,9 @@
 // Copyright © 2026 The µcad authors <info@ucad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{self as base};
-use microcad_lang_lower::{Desugar, LowerContext, ir};
-use microcad_lang_parse::ast;
+use mucad_lang_base::{self as base};
+use mucad_lang_lower::{Desugar, LowerContext, ir};
+use mucad_lang_parse::ast;
 
 mod common;
 

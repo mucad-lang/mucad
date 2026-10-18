@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Scalable Vector Graphics (SVG) tag attributes
 
 use derive_more::Deref;
-use microcad_core::{Color, Mat3, Scalar};
-use microcad_render::RenderAttributes;
+use mucad_core::{Color, Mat3, Scalar};
+use mucad_render::RenderAttributes;
 
 /// An attribute for an SVG tag, e.g. `"style=fill:none"`.
 #[derive(Debug, Clone)]

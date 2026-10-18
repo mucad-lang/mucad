@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad viewer
@@ -17,7 +17,7 @@ use bevy::{
 use clap::Parser;
 use miette::IntoDiagnostic;
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
 /// µcad cli
 #[derive(Parser)]
@@ -45,7 +45,7 @@ pub struct Args {
 
     /// Paths to search for files.
     ///
-    /// By default, `./std/lib` (if it exists) and `~/.microcad/lib` are used.
+    /// By default, `./std/lib` (if it exists) and `~/.mucad/lib` are used.
     #[arg(short = 'P', long = "search-path", action = clap::ArgAction::Append, global = true)]
     pub search_paths: Vec<std::path::PathBuf>,
 }
@@ -70,9 +70,9 @@ impl Args {
     }
 }
 
-use microcad_viewer::Config;
+use mucad_viewer::Config;
 
-use microcad_viewer::MicrocadPlugin;
+use mucad_viewer::MicrocadPlugin;
 use url::Url;
 
 fn main() {
@@ -111,7 +111,7 @@ fn main() {
         ..Default::default()
     };
 
-    use microcad_viewer::plugin::MicrocadPluginInput;
+    use mucad_viewer::plugin::MicrocadPluginInput;
 
     let mut app = App::new();
     app

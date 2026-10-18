@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::Source;
+use mucad_lang_base::Source;
 
 fn _formatted_test_case(name: &str) {
-    use microcad_lang_format::{FormatConfig, format_ast};
+    use mucad_lang_format::{FormatConfig, format_ast};
     let source = Source::load(format!("tests/test_cases/formatted/{name}.mu")).expect("No errors");
-    let ast = microcad_lang_parse::parse(&source).expect("No errors").0;
+    let ast = mucad_lang_parse::parse(&source).expect("No errors").0;
 
     pretty_assertions::assert_eq!(
         source.code().trim(),
@@ -16,10 +16,10 @@ fn _formatted_test_case(name: &str) {
 }
 
 fn _unformatted_test_case(name: &str) {
-    use microcad_lang_format::{FormatConfig, format_ast};
+    use mucad_lang_format::{FormatConfig, format_ast};
     let source =
         Source::load(format!("tests/test_cases/unformatted/{name}.mu")).expect("no errors");
-    let ast = microcad_lang_parse::parse(&source).expect("No errors").0;
+    let ast = mucad_lang_parse::parse(&source).expect("No errors").0;
     insta::assert_snapshot!(name, format_ast(&ast, &FormatConfig::default()))
 }
 

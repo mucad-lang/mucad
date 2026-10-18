@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Unit tests
 
-use microcad_lang_types::{Scalar, Unit, value::approx_eq};
+use mucad_lang_types::{Scalar, Unit, value::approx_eq};
 
 /// Normalized literals are equal within the rounding errors, e.g. `0.04m` is `40mm`.
 #[test]

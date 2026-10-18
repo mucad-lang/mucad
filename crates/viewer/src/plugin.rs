@@ -1,7 +1,7 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! This module contains the microcad bevy plugin and its input interface.
+//! This module contains the mucad bevy plugin and its input interface.
 
 use std::{
     sync::{Arc, Mutex},
@@ -135,7 +135,7 @@ impl std::fmt::Display for MicrocadPluginInput {
     }
 }
 
-/// The microcad plugin.
+/// The mucad plugin.
 pub struct MicrocadPlugin {
     /// The input for the plugin (e.g. file or stdin).
     pub input: Option<MicrocadPluginInput>,

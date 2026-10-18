@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad markdown book support.
@@ -6,7 +6,7 @@
 mod config;
 mod summary;
 
-use microcad_lang_base::{HashMap, WriteToFile};
+use mucad_lang_base::{HashMap, WriteToFile};
 use miette::Diagnostic;
 use thiserror::Error;
 

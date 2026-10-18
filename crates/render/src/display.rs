@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Implementations of Display traits for render entities.
 
-use microcad_hash::ToHash;
-use microcad_lang_types::ModelType;
+use mucad_hash::ToHash;
+use mucad_lang_types::ModelType;
 
 use crate::{GeometryNodeData, GeometryOutput, GeometryTree};
 

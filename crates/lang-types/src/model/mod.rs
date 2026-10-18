@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Model tree module
@@ -19,7 +19,7 @@ pub use tree::{
     Node, NodeExt, NodeMut, NodeRef,
 };
 
-use microcad_lang_base::{BuiltinId, DisplayWithCtx, HashId, Identifier, LookUpName};
+use mucad_lang_base::{BuiltinId, DisplayWithCtx, HashId, Identifier, LookUpName};
 use serde::{Deserialize, Serialize};
 
 pub use attribute::{Attribute, AttributeAccess, Attributes};
@@ -177,7 +177,7 @@ impl<Ctx: LookUpName> DisplayWithCtx<Ctx> for Model {
 
 impl std::fmt::Display for Model {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.fmt_with_ctx(f, &microcad_lang_base::DefaultContext)
+        self.fmt_with_ctx(f, &mucad_lang_base::DefaultContext)
     }
 }
 

@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad inspector
@@ -6,10 +6,10 @@
 #![allow(missing_docs)]
 
 use clap::Parser;
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
 use crossbeam::channel::Sender;
-use microcad_viewer_ipc::{ViewerProcessInterface, ViewerRequest};
+use mucad_viewer_ipc::{ViewerProcessInterface, ViewerRequest};
 use miette::IntoDiagnostic;
 use std::sync::{Arc, RwLock};
 use std::thread;
@@ -54,7 +54,7 @@ struct Inspector {
 
     pub watcher: mu::Watcher,
 
-    pub viewer_process: Arc<RwLock<Option<microcad_viewer_ipc::ViewerProcessInterface>>>,
+    pub viewer_process: Arc<RwLock<Option<mucad_viewer_ipc::ViewerProcessInterface>>>,
 }
 
 impl Inspector {

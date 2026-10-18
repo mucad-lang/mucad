@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad driver config.
 
-use microcad_render::RenderResolution;
+use mucad_render::RenderResolution;
 use miette::IntoDiagnostic;
 use serde::Deserialize;
 
@@ -34,7 +34,7 @@ impl Default for DriverConfig {
             export: Default::default(),
             format: Default::default(),
             diagnostics: Default::default(),
-            search_paths: vec![/*microcad_std::global_library_search_path()*/],
+            search_paths: vec![/*mucad_std::global_library_search_path()*/],
         }
     }
 }
@@ -45,7 +45,7 @@ impl DriverConfig {
         let content = std::fs::read_to_string(filename).into_diagnostic()?;
         let mut config: DriverConfig = toml::from_str(&content).into_diagnostic()?;
 
-        if !microcad_lang_base::MUCAD_EXTENSIONS.contains(&config.default_extension.as_str()) {
+        if !mucad_lang_base::MUCAD_EXTENSIONS.contains(&config.default_extension.as_str()) {
             let fallback = DriverConfig::default().default_extension;
             log::warn!(
                 "`{}` is a valid µcad extension, switching to `{fallback}`.",
@@ -94,17 +94,17 @@ impl ExportConfig {
 #[derive(Deserialize, Clone, Default, Debug)]
 pub struct FormatConfig;
 
-impl From<&FormatConfig> for microcad_lang_format::FormatConfig {
+impl From<&FormatConfig> for mucad_lang_format::FormatConfig {
     fn from(_: &FormatConfig) -> Self {
-        microcad_lang_format::FormatConfig::default()
+        mucad_lang_format::FormatConfig::default()
     }
 }
 
 #[derive(Deserialize, Clone, Default, Debug)]
 pub struct DiagnosticsConfig;
 
-impl From<&DiagnosticsConfig> for microcad_lang_base::DiagRenderOptions {
+impl From<&DiagnosticsConfig> for mucad_lang_base::DiagRenderOptions {
     fn from(_: &DiagnosticsConfig) -> Self {
-        microcad_lang_base::DiagRenderOptions::default()
+        mucad_lang_base::DiagRenderOptions::default()
     }
 }

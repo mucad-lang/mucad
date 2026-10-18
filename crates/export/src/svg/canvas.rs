@@ -1,14 +1,14 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Canvas to draw geometry.
 
 use geo::{Coord, MultiPolygon};
-use microcad_core::{
+use mucad_core::{
     Bounds2D, Circle, Geometries2D, Geometry, Geometry2D, Line, LineString, MultiLineString, Point,
     Polygon, Rect, Scalar, Size2, Vec2, geo2d,
 };
-use microcad_render::{
+use mucad_render::{
     GeometryNodeData, GeometryNodeMut, GeometryOutput, GeometryOutputs, GeometryTree,
 };
 

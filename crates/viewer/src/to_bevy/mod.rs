@@ -1,7 +1,7 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Conversions from microcad core types to bevy types.
+//! Conversions from mucad core types to bevy types.
 
 pub mod to_mesh;
 
@@ -13,7 +13,7 @@ use bevy::{
     transform::components::Transform,
 };
 
-pub use microcad_driver::prelude as mu;
+pub use mucad_driver::prelude as mu;
 
 /// A trait to convert a µcad type into a bevy type.
 pub trait ToBevy<T> {

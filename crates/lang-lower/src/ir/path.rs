@@ -1,8 +1,8 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use derive_more::{Display, From};
-use microcad_lang_base::{
+use mucad_lang_base::{
     BuiltinId, Identifier, Name, SingleIdentifier, SrcRef, SrcReferrer, SymbolId, ToCompactString,
 };
 use miette::SourceSpan;

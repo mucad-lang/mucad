@@ -13,17 +13,17 @@ import * as net from 'net';
 let client: LanguageClient | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
-    const serverCommand = "microcad-lsp";
+    const serverCommand = "mucad-lsp";
     /*
         const serverOptions: ServerOptions = {
             run: {
                 command: serverCommand,
-                args: ["-l", "microcad-lsp.log"],
+                args: ["-l", "mucad-lsp.log"],
                 transport: TransportKind.socket
             },
             debug: {
                 command: serverCommand,
-                args: ["-l", "microcad-lsp-debug.log"],
+                args: ["-l", "mucad-lsp-debug.log"],
                 transport: TransportKind.socket
             }
         };
@@ -51,7 +51,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // 1. Encapsulate startup logic
     function startLanguageServer() {
         const clientOptions: LanguageClientOptions = {
-            documentSelector: [{ scheme: 'file', language: 'microcad' }],
+            documentSelector: [{ scheme: 'file', language: 'mucad' }],
             synchronize: {
                 fileEvents: vscode.workspace.createFileSystemWatcher('**/*.mu')
             }
@@ -60,18 +60,18 @@ export async function activate(context: vscode.ExtensionContext) {
         const serverOptions: ServerOptions = {
             run: {
                 command: serverCommand,
-                args: ["-l", "microcad-lsp.log"],
+                args: ["-l", "mucad-lsp.log"],
                 transport: TransportKind.stdio // Changed to stdio for reliable process lifecycle management
             },
             debug: {
                 command: serverCommand,
-                args: ["-l", "microcad-lsp-debug.log"],
+                args: ["-l", "mucad-lsp-debug.log"],
                 transport: TransportKind.stdio
             }
         };
 
         client = new LanguageClient(
-            'microcadLSP',
+            'mucadLSP',
             'Microcad Language Server',
             serverOptions,
             clientOptions
@@ -83,7 +83,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     const showPreviewCmd = vscode.commands.registerCommand(
-        "microcad.showPreview",
+        "mucad.showPreview",
         async () => {
             if (!client) { return; }
 
@@ -95,7 +95,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const uri = editor.document.uri;
             try {
                 const result = await client.sendRequest("workspace/executeCommand", {
-                    command: "microcad.showPreview",
+                    command: "mucad.showPreview",
                     arguments: [{ uri }]
                 });
 
@@ -107,12 +107,12 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     const minimizePreviewCmd = vscode.commands.registerCommand(
-        "microcad.minimizePreview",
+        "mucad.minimizePreview",
         async () => {
             if (!client) { return; }
             try {
                 const result = await client.sendRequest("workspace/executeCommand", {
-                    command: "microcad.minimizePreview",
+                    command: "mucad.minimizePreview",
                     arguments: []
                 });
 
@@ -124,7 +124,7 @@ export async function activate(context: vscode.ExtensionContext) {
     );
 
     // 2. Register the Restart Command
-    const restartCommand = vscode.commands.registerCommand('microcad.restartServer', async () => {
+    const restartCommand = vscode.commands.registerCommand('mucad.restartServer', async () => {
         if (!client) {
             vscode.window.showWarningMessage('Microcad server is not running.');
             startLanguageServer();

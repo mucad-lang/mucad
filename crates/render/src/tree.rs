@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use cgmath::SquareMatrix;
-use microcad_core::{Bounds3D, Mat4};
-use microcad_lang_types::{ModelNodeRef, ModelTree, math::ScalarF};
+use mucad_core::{Bounds3D, Mat4};
+use mucad_lang_types::{ModelNodeRef, ModelTree, math::ScalarF};
 
 use crate::{GeometryNodeData, RenderResolution};
 
@@ -42,7 +42,7 @@ impl GeometryTree {
         root_mut.resolution = Some(render_resolution);
         root_mut.transform(|node, output| {
             if let Some(parent) = node.parent() {
-                use microcad_lang_types::model::attribute::ResolutionAttribute;
+                use mucad_lang_types::model::attribute::ResolutionAttribute;
                 let parent_resolution = parent.resolution.clone().unwrap_or_default();
                 let resolution = match node.model(model_tree).resolution() {
                     Some(resolution_attribute) => RenderResolution {
@@ -93,8 +93,8 @@ impl GeometryTree {
     }
 }
 
-pub type GeometryArena = microcad_lang_base::tree::Arena<GeometryNodeData>;
-pub type GeometryNode = microcad_lang_base::tree::Node<GeometryNodeData>;
-pub type GeometryNodeRef<'a> = microcad_lang_base::tree::NodeRef<'a, GeometryNodeData>;
-pub type GeometryNodeMut<'a> = microcad_lang_base::tree::NodeMut<'a, GeometryNodeData>;
-pub type GeometryNodeId = microcad_lang_base::tree::NodeId;
+pub type GeometryArena = mucad_lang_base::tree::Arena<GeometryNodeData>;
+pub type GeometryNode = mucad_lang_base::tree::Node<GeometryNodeData>;
+pub type GeometryNodeRef<'a> = mucad_lang_base::tree::NodeRef<'a, GeometryNodeData>;
+pub type GeometryNodeMut<'a> = mucad_lang_base::tree::NodeMut<'a, GeometryNodeData>;
+pub type GeometryNodeId = mucad_lang_base::tree::NodeId;

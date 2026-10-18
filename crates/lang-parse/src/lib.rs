@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Syntax definitions and parser for µcad source code.
@@ -15,7 +15,7 @@ pub mod ast;
 pub mod token;
 
 #[cfg(feature = "parser")]
-use microcad_lang_base::{IssueList, ToHash};
+use mucad_lang_base::{IssueList, ToHash};
 #[cfg(feature = "parser")]
 pub use parse::{ParseAdvice, ParseContext, ParseError, ParseIssue, ParseWarning, parsers};
 
@@ -26,8 +26,8 @@ mod parse;
 /// Contains the lexer (aka tokenizer).
 mod lex;
 
-use microcad_lang_base::{HashId, IssueResult};
-use microcad_macros::Artifact;
+use mucad_lang_base::{HashId, IssueResult};
+use mucad_macros::Artifact;
 
 pub use lex::lex;
 

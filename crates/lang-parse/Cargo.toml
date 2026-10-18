@@ -1,10 +1,10 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-lang-parse"
+name = "mucad-lang-parse"
 description = "µcad language syntax lexer and parser"
-documentation = "https://docs.rs/microcad-lang-parse"
+documentation = "https://docs.rs/mucad-lang-parse"
 authors.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -23,8 +23,8 @@ miette = "7.6.0"
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "2.0.17"
 
-microcad-lang-base = { workspace = true }
-microcad-macros = { workspace = true }
+mucad-lang-base = { workspace = true }
+mucad-macros = { workspace = true }
 
 [dev-dependencies]
 insta = { version = "1.45.0" }

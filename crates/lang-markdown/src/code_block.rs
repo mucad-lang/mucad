@@ -3,7 +3,7 @@
 
 //! A markdown code block.
 
-use microcad_lang_base::{HashMap, Identifier, Source, SourceKind, SourceLocation};
+use mucad_lang_base::{HashMap, Identifier, Source, SourceKind, SourceLocation};
 
 use crate::ParseError;
 
@@ -39,7 +39,7 @@ impl CodeBlockHeader {
             .next()
             .unwrap_or_default()
             .trim();
-        microcad_lang_base::MUCAD_EXTENSIONS.contains(&language)
+        mucad_lang_base::MUCAD_EXTENSIONS.contains(&language)
     }
 }
 impl std::str::FromStr for CodeBlockHeader {

@@ -1,9 +1,9 @@
 // Copyright © 2026 The µcad authors <info@ucad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{Artifact, DiagRenderOptions};
-use microcad_lang_lower::{self as lower, Ir};
-use microcad_lang_parse::{
+use mucad_lang_base::{Artifact, DiagRenderOptions};
+use mucad_lang_lower::{self as lower, Ir};
+use mucad_lang_parse::{
     self as parse, Ast, Parse,
     ast::visitor::{ExpectedDiagnostic, ExpectedDiagnostics},
 };
@@ -39,14 +39,14 @@ macro_rules! snapshot_test {
             let source = common::source_from_test_file(name);
             match common::ir_from_source(&source) {
                 Ok((ir, errors)) => {
-                    let diags = microcad_lang_base::Diagnostics::from(errors);
+                    let diags = mucad_lang_base::Diagnostics::from(errors);
                     if diags.has_errors() || diags.has_warnings() {
                         panic!("{diags:?}");
                     }
                     insta::assert_snapshot!(name, ir.to_ron().expect("No error"));
                 }
                 Err(errors) => {
-                    let diags = microcad_lang_base::Diagnostics::from(errors);
+                    let diags = mucad_lang_base::Diagnostics::from(errors);
                     panic!(
                         "{}",
                         diags
@@ -85,9 +85,9 @@ macro_rules! test_diagnostic {
         fn $name() {
             let filename = stringify!($name);
             let source = common::source_from_test_file(filename);
-            let parse_context = microcad_lang_parse::ParseContext::from(&source);
+            let parse_context = mucad_lang_parse::ParseContext::from(&source);
             let ast = Ast::parse(&parse_context).unwrap();
-            let mut context = microcad_lang_lower::LowerContext::new(&source);
+            let mut context = mucad_lang_lower::LowerContext::new(&source);
             let expected = ast::visitor::collect_expected_diagnostics(&parse_context, &ast);
             let no_diagnostics_expected = expected.is_empty();
 
@@ -97,7 +97,7 @@ macro_rules! test_diagnostic {
                 Err(issues) => (None, issues),
             };
 
-            let diags = microcad_lang_base::Diagnostics::from(issues);
+            let diags = mucad_lang_base::Diagnostics::from(issues);
             let observed = ExpectedDiagnostics::new(
                 diags
                     .iter()
@@ -122,8 +122,8 @@ macro_rules! test_diagnostic {
             // Snapshot the IR of tests without expected diagnostics.
             if no_diagnostics_expected {
                 let mut ir = ir.unwrap_or_else(|| panic!("Test '{filename}' produced no IR"));
-                use microcad_lang_lower::ir::visitor::VisitorMut;
-                microcad_lang_lower::ir::visitor::MakeHumanReadable::new(&context).visit(&mut ir);
+                use mucad_lang_lower::ir::visitor::VisitorMut;
+                mucad_lang_lower::ir::visitor::MakeHumanReadable::new(&context).visit(&mut ir);
 
                 insta::assert_snapshot!(stringify!($name), ir);
             }
@@ -137,7 +137,7 @@ snapshot_test!(builtin => ok);
 /// An unknown built-in is reported, but the rest of the source is still lowered.
 #[test]
 fn unknown_builtin() {
-    let source = microcad_lang_base::Source::from(
+    let source = mucad_lang_base::Source::from(
         "__mu::geo2d::Unknown(radius = 1mm);\n__mu::geo2d::Circle(radius = 2mm);\n",
     );
     let (ir, issues) = common::ir_from_source(&source).expect("An IR despite the error");

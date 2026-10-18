@@ -7,7 +7,7 @@ mod generators;
 mod mdbook;
 
 pub use generators::{BuiltinLibraryDocGenerator, LibraryDocGenerator};
-use microcad_lang_markdown::{Markdown, MdBook, WriteToFile};
+use mucad_lang_markdown::{Markdown, MdBook, WriteToFile};
 
 use std::error::Error;
 

@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Lowering the AST.
@@ -16,9 +16,9 @@ mod workbench;
 #[cfg(test)]
 mod tests;
 
-use microcad_builtin::BuiltinError;
-use microcad_lang_base::{Identifiable, PushIssue, Refer, SpanToSrcRef, Spanned, SrcReferrer};
-use microcad_lang_parse::ast;
+use mucad_builtin::BuiltinError;
+use mucad_lang_base::{Identifiable, PushIssue, Refer, SpanToSrcRef, Spanned, SrcReferrer};
+use mucad_lang_parse::ast;
 
 use crate::{Desugar, LowerContext, LowerError, LowerResult, ir};
 

@@ -1,7 +1,7 @@
 # µcad viewer
 
-[![Crates.io](https://img.shields.io/crates/v/microcad-viewer.svg)](https://crates.io/crates/microcad-viewer)
-[![Documentation](https://docs.rs/microcad-viewer/badge.svg)](https://docs.rs/microcad-viewer/)
+[![Crates.io](https://img.shields.io/crates/v/mucad-viewer.svg)](https://crates.io/crates/mucad-viewer)
+[![Documentation](https://docs.rs/mucad-viewer/badge.svg)](https://docs.rs/mucad-viewer/)
 
 This crate provides the viewer application to view µcad files.
 
@@ -16,29 +16,29 @@ sudo apt install libwayland-dev
 ## Install via cargo
 
 ```sh
-cargo install microcad-viewer
+cargo install mucad-viewer
 ```
 
 ## Run
 
-After install, you can run the microcad viewer by typing `microcad-viewer` into your console.
+After install, you can run the mucad viewer by typing `mucad-viewer` into your console.
 
 ```sh
-microcad-viewer some_file.mu
+mucad-viewer some_file.mu
 ```
 
 ### Run in workspace root using Cargo
 
 ```sh
-RUST_LOG=info cargo run --bin microcad-viewer --package microcad-viewer -- examples/csg_cube
+RUST_LOG=info cargo run --bin mucad-viewer --package mucad-viewer -- examples/csg_cube
 ```
 
 ## ❤️ Support the project
 
-This crate is part of the [microcad project](https://microcad.xyz).
+This crate is part of the [mucad project](https://mucad.org).
 
 If you like this project, you can help us spend more time on it by donating:
 
-<a href="https://opencollective.com/microcad/donate" target="_blank">
-<img src="https://opencollective.com/microcad/donate/button@2x.png?color=blue" width=300 />
+<a href="https://opencollective.com/mucad/donate" target="_blank">
+<img src="https://opencollective.com/mucad/donate/button@2x.png?color=blue" width=300 />
 </a>

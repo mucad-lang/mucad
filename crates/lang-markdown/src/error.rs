@@ -3,7 +3,7 @@
 
 //! Markdown parse errors.
 
-use microcad_lang_base::Identifier;
+use mucad_lang_base::Identifier;
 use miette::Diagnostic;
 use thiserror::Error;
 

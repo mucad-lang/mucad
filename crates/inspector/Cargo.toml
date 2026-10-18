@@ -1,10 +1,10 @@
-# Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2025-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-inspector"
+name = "mucad-inspector"
 description = "µcad Inspector"
-documentation = "https://docs.rs/microcad-inspector"
+documentation = "https://docs.rs/mucad-inspector"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -12,10 +12,10 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
-default-run = "microcad-inspector"
+default-run = "mucad-inspector"
 
 [[bin]]
-name = "microcad-inspector"
+name = "mucad-inspector"
 path = "main.rs"
 
 [dependencies]
@@ -29,8 +29,8 @@ serde_derive = "1.0"
 toml = "1.1.2"
 slint = "1.13"
 
-microcad-driver = { workspace = true }
-microcad-viewer-ipc = { workspace = true }
+mucad-driver = { workspace = true }
+mucad-viewer-ipc = { workspace = true }
 
 
 [build-dependencies]

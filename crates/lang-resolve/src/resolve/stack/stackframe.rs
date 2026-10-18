@@ -1,7 +1,7 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{Identifier, SrcRef, SrcReferrer};
+use mucad_lang_base::{Identifier, SrcRef, SrcReferrer};
 
 use crate::library::SymbolNodeId;
 
@@ -9,7 +9,7 @@ use crate::library::SymbolNodeId;
 ///
 /// The `Vec<SrcRef>` represents the usages of this local.
 #[derive(Debug, Default)]
-pub struct LocalTable(microcad_lang_base::HashMap<Identifier, Vec<SrcRef>>);
+pub struct LocalTable(mucad_lang_base::HashMap<Identifier, Vec<SrcRef>>);
 
 impl LocalTable {
     pub fn exists(&self, id: &Identifier) -> bool {

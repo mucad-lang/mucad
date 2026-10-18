@@ -1,26 +1,26 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for evaluating workbenches.
 
-use microcad_builtin::__mu;
-use microcad_lang_base::{DisplayWithCtx, boxed};
-use microcad_lang_eval::{Callable, Eval, EvalContext};
-use microcad_lang_resolve::{
+use mucad_builtin::__mu;
+use mucad_lang_base::{DisplayWithCtx, boxed};
+use mucad_lang_eval::{Callable, Eval, EvalContext};
+use mucad_lang_resolve::{
     SymbolId, call_builtin, expr,
     library::symbol::{
         self, Parameter, Path, SourceStatement, WorkbenchExpression, WorkbenchStatement, workbench,
     },
 };
 
-use microcad_lang_types::{
+use mucad_lang_types::{
     ArgumentValue, ArgumentValueList, Length, ModelTree, Value, argument_value, list, tuple,
 };
-use microcad_macros::parameter_list;
+use mucad_macros::parameter_list;
 
 /// Expressions used for testing
 pub mod helper {
-    use microcad_lang_resolve::{call_builtin, expr};
+    use mucad_lang_resolve::{call_builtin, expr};
 
     use super::*;
 
@@ -266,7 +266,7 @@ fn op_rotate() {
         .with_inits([
             // init(angle: Angle, axis = __mu::math::Z)
             workbench::Init::new(
-                parameter_list!(angle: Angle, axis: Any = microcad_builtin::mu::math::Z.value()),
+                parameter_list!(angle: Angle, axis: Any = mucad_builtin::mu::math::Z.value()),
             )
             .with_statements([workbench::InitStatement::new(
                 "matrix",

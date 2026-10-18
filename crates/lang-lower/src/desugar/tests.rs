@@ -1,14 +1,14 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for desugaring
 
 use crate::{LowerContext, LowerResult, ir};
-use microcad_lang_base::Source;
-use microcad_lang_parse::parse;
+use mucad_lang_base::Source;
+use mucad_lang_parse::parse;
 
 mod common {
-    use microcad_lang_base::MUCAD_EXTENSION;
+    use mucad_lang_base::MUCAD_EXTENSION;
 
     use crate::Desugar;
 

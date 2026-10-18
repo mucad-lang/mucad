@@ -5,11 +5,11 @@
 
 use std::error::Error;
 
-use microcad_builtin::{
+use mucad_builtin::{
     BuiltinConstant, BuiltinFunction, BuiltinItem, BuiltinModule, BuiltinOperation,
     BuiltinPrimitive,
 };
-use microcad_lang_markdown::{
+use mucad_lang_markdown::{
     Block, ListItem, Markdown, MdBook, MdBookConfig, MdBookSummary, MdBookSummaryEntry, Section,
 };
 
@@ -87,7 +87,7 @@ impl ToMd for BuiltinModule {
         let mut md = Markdown::page(self.info.name, doc_block(self.info.doc));
 
         /// Link to the page of an item in this module.
-        fn item(info: &microcad_builtin::BuiltinInfo) -> ListItem {
+        fn item(info: &mucad_builtin::BuiltinInfo) -> ListItem {
             let name = info.item_name();
             link_item(name, &format!("{name}.md"), info.doc_summary())
         }
@@ -111,7 +111,7 @@ impl<'lib> BuiltinLibraryDocGenerator<'lib> {
     fn index(&self) -> Markdown {
         let mut md = Markdown::page(
             "`__mu`: µcad Compiler built-in library",
-            doc_block(Some(microcad_builtin::mu::__MU)),
+            doc_block(Some(mucad_builtin::mu::__MU)),
         );
 
         let modules = self.lib.modules().map(|module| {

@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use derive_more::From;
-use microcad_builtin::BuiltinItem;
-use microcad_lang_base::{HashMap, Name, SrcRef, SrcReferrer, ToCompactString};
-use microcad_lang_resolve::library::symbol;
-use microcad_lang_types::{
+use mucad_builtin::BuiltinItem;
+use mucad_lang_base::{HashMap, Name, SrcRef, SrcReferrer, ToCompactString};
+use mucad_lang_resolve::library::symbol;
+use mucad_lang_types::{
     Arguments, Value,
     model::{
         Element, GetProperty, ModelTreeBuilder, ModelTreeBuilderMut, Properties, Property,

@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use regex::Regex;
@@ -151,7 +151,7 @@ impl CopyrightUpdater {
                     .to_string()
             } else {
                 format!(
-                    "{prefix} Copyright © {formatted_years} The µcad authors <info@microcad.xyz>\n\
+                    "{prefix} Copyright © {formatted_years} The µcad authors <info@mucad.org>\n\
                      {prefix} SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
                      {content}"
                 )

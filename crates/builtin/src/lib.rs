@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad built-in crate.
@@ -15,13 +15,13 @@ pub use item::{
 mod library;
 pub mod mu;
 pub use library::BuiltinLibrary;
-use microcad_lang_base::{DisplayWithCtx, IssueList, PushIssue, SrcRef};
+use mucad_lang_base::{DisplayWithCtx, IssueList, PushIssue, SrcRef};
 
 use derive_more::Debug;
-use microcad_lang_types::{Arguments, Model, ModelTree, Value, model};
+use mucad_lang_types::{Arguments, Model, ModelTree, Value, model};
 
-pub use microcad_lang_base::{BuiltinId, BuiltinInfo, builtin_info};
-pub use microcad_macros::__mu;
+pub use mucad_lang_base::{BuiltinId, BuiltinInfo, builtin_info};
+pub use mucad_macros::__mu;
 
 #[derive(Debug, Default)]
 pub struct BuiltinEvalContext<'a> {
@@ -50,17 +50,17 @@ impl<'a> PushIssue<BuiltinIssue> for BuiltinEvalContext<'a> {
         self.issues.push_issue(issue);
     }
 
-    fn push_err(&mut self, err: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Error>) {
+    fn push_err(&mut self, err: impl Into<<BuiltinIssue as mucad_lang_base::Issue>::Error>) {
         self.issues.push_err(err);
     }
 
-    fn push_warn(&mut self, warn: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Warning>) {
+    fn push_warn(&mut self, warn: impl Into<<BuiltinIssue as mucad_lang_base::Issue>::Warning>) {
         self.issues.push_warn(warn);
     }
 
     fn push_advice(
         &mut self,
-        advice: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Advice>,
+        advice: impl Into<<BuiltinIssue as mucad_lang_base::Issue>::Advice>,
     ) {
         self.issues.push_advice(advice);
     }
@@ -87,7 +87,7 @@ pub trait BuiltinConstruct: Builtin + Sized {
         if model.element == Self::element() {
             Ok(())
         } else {
-            let default_ctx = microcad_lang_base::DefaultContext;
+            let default_ctx = mucad_lang_base::DefaultContext;
             Err(BuiltinError::ElementMismatch {
                 expected: Self::element().to_string_with_ctx(&default_ctx),
                 actual: model.element.clone().to_string_with_ctx(&default_ctx),

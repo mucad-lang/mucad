@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! `#[derive(SrcReferrer)]` implementation.
@@ -37,8 +37,8 @@ pub fn derive_src_referrer_impl(input: TokenStream) -> TokenStream {
     }
 
     quote! {
-        impl microcad_lang_base::SrcReferrer for #name {
-            fn src_ref(&self) -> microcad_lang_base::SrcRef {
+        impl mucad_lang_base::SrcReferrer for #name {
+            fn src_ref(&self) -> mucad_lang_base::SrcRef {
                 self.src_ref
             }
         }

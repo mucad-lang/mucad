@@ -1,10 +1,10 @@
-# Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2025-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-core"
+name = "mucad-core"
 description = "µcad core"
-documentation = "https://docs.rs/microcad-core"
+documentation = "https://docs.rs/mucad-core"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -31,7 +31,7 @@ miette = "7.6.0"
 bezier-rs = "0.5"
 serde = { version = "1.0", features = ["derive"] }
 
-microcad-hash = { workspace = true }
+mucad-hash = { workspace = true }
 
 [lints.rust]
 missing_docs = "warn"

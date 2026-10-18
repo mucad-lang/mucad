@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Render output type.
@@ -7,13 +7,13 @@ use std::sync::Arc;
 
 use cgmath::SquareMatrix;
 
-use microcad_core::{
+use mucad_core::{
     self as core, Bounds2D, Bounds3D, CalcBounds3D, Geometry3D, GeometryType, Mat4, Transformed3D,
     traits::TransformAffine,
 };
 
-use microcad_hash::{HashId, ToHash, hash_id};
-use microcad_lang_types::{
+use mucad_hash::{HashId, ToHash, hash_id};
+use mucad_lang_types::{
     ModelNodeRef, ModelTree,
     math::IntoFloat,
     model::{ModelNodeId, ModelType, NodeExt},

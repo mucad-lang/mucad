@@ -1,8 +1,8 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-lang-lower"
+name = "mucad-lang-lower"
 description = "µcad language lower compiler stage and intermediate representation (IR)"
 authors = ["Michael Winkelmann (michael@winkelmann.site)"]
 edition.workspace = true
@@ -28,11 +28,11 @@ ron = { version = "0.12", features = ["integer128"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_with = { version = "3.21", features = ["macros"] }
 
-microcad-lang-base = { workspace = true }
-microcad-macros = { workspace = true }
-microcad-lang-parse = { workspace = true }
-microcad-lang-types = { workspace = true }
-microcad-builtin = { workspace = true }
+mucad-lang-base = { workspace = true }
+mucad-macros = { workspace = true }
+mucad-lang-parse = { workspace = true }
+mucad-lang-types = { workspace = true }
+mucad-builtin = { workspace = true }
 
 
 [dev-dependencies]

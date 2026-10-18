@@ -1,7 +1,7 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! microcad Viewer settings.
+//! mucad Viewer settings.
 
 pub mod theme;
 
@@ -10,7 +10,7 @@ pub use theme::Theme;
 
 use bevy::ecs::resource::Resource;
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
 /// Viewer configuration.
 #[derive(Resource, serde::Deserialize, Clone)]

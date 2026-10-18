@@ -1,8 +1,8 @@
-# Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2025-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-viewer"
+name = "mucad-viewer"
 description = "µcad Viewer"
 authors.workspace = true
 edition.workspace = true
@@ -54,8 +54,8 @@ thiserror = "2.0"
 url = "2.5.7"
 wkt = "0.14"
 
-microcad-driver = { workspace = true }
-microcad-viewer-ipc = { workspace = true }
+mucad-driver = { workspace = true }
+mucad-viewer-ipc = { workspace = true }
 
 [lints.rust]
 missing_docs = "warn"

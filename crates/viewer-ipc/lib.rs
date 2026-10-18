@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Viewer IPC interface
@@ -80,7 +80,7 @@ impl ViewerProcessInterface {
         std::thread::spawn(move || {
             // Spawn slave process
             let mut command = std::process::Command::new(
-                std::env::var("MICROCAD_VIEWER_BIN").unwrap_or("microcad-viewer".to_string()),
+                std::env::var("MICROCAD_VIEWER_BIN").unwrap_or("mucad-viewer".to_string()),
             );
             // handle multiple search paths
             if !show_window {

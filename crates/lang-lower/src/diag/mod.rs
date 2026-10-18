@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Lower diagnostics.
 
 mod error;
 
-use microcad_lang_base::{SrcRef, SrcReferrer};
-use microcad_macros::Issue;
+use mucad_lang_base::{SrcRef, SrcReferrer};
+use mucad_macros::Issue;
 use miette::Diagnostic;
 use thiserror::Error;
 

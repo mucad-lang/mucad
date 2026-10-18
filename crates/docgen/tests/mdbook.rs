@@ -1,13 +1,13 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for the mdbook generators.
 
 use std::path::Path;
 
-use microcad_docgen::{BuiltinLibraryDocGenerator, GenerateDoc, LibraryDocGenerator};
-use microcad_lang_markdown::{Block, ListItem, MdBook, UnorderedList};
-use microcad_lang_resolve::ResolveContext;
+use mucad_docgen::{BuiltinLibraryDocGenerator, GenerateDoc, LibraryDocGenerator};
+use mucad_lang_markdown::{Block, ListItem, MdBook, UnorderedList};
+use mucad_lang_resolve::ResolveContext;
 
 /// Display of a markdown file of the book.
 fn md_file(mdbook: &MdBook, path: &str) -> String {
@@ -20,7 +20,7 @@ fn md_file(mdbook: &MdBook, path: &str) -> String {
 
 #[test]
 fn builtin_mdbook() {
-    let registry = microcad_builtin::BuiltinLibrary::new();
+    let registry = mucad_builtin::BuiltinLibrary::new();
     let mdbook = BuiltinLibraryDocGenerator::new(&registry)
         .generate_doc()
         .expect("No error");
@@ -57,7 +57,7 @@ fn builtin_mdbook() {
 fn library_mdbook() {
     let mut ctx = ResolveContext::new();
     let (lib, issues) =
-        microcad_lang_resolve::resolve("tests/test_cases/doc_lib.mu", &mut ctx).expect("No error");
+        mucad_lang_resolve::resolve("tests/test_cases/doc_lib.mu", &mut ctx).expect("No error");
     assert!(!issues.has_errors(), "{issues:?}");
 
     let mdbook = LibraryDocGenerator::new(&lib)
@@ -118,10 +118,10 @@ fn library_mdbook() {
 /// The book can be written and contains `book.toml` and the markdown files below `src`.
 #[test]
 fn write_builtin_mdbook() {
-    let dir = std::env::temp_dir().join("microcad-docgen-test-builtin");
+    let dir = std::env::temp_dir().join("mucad-docgen-test-builtin");
     let _ = std::fs::remove_dir_all(&dir);
 
-    let registry = microcad_builtin::BuiltinLibrary::new();
+    let registry = mucad_builtin::BuiltinLibrary::new();
     BuiltinLibraryDocGenerator::new(&registry)
         .write_doc(&dir)
         .expect("No error");

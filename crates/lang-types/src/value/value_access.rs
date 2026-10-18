@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Value access trait
 
 use crate::value::*;
 
-use microcad_lang_base::Identifier;
+use mucad_lang_base::Identifier;
 
 /// Trait for Value Lists
 pub trait ValueAccess {

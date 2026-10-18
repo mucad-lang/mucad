@@ -1,16 +1,16 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! STL test
 
-use microcad_builtin::{BuiltinEvalContext, mu};
-use microcad_core::Rect;
-use microcad_export::{
+use mucad_builtin::{BuiltinEvalContext, mu};
+use mucad_core::Rect;
+use mucad_export::{
     Export, Writer,
     stl::{AsciiStlWriter, StlExporter, WriteAsciiStl},
 };
-use microcad_lang_types::{ModelTree, Value, arguments, model::Element};
-use microcad_render::Renderer;
+use mucad_lang_types::{ModelTree, Value, arguments, model::Element};
+use mucad_render::Renderer;
 
 use crate::common::{rect, target_dir};
 mod common;

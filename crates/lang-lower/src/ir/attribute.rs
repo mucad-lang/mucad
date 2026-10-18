@@ -1,13 +1,13 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Attribute syntax entities.
 
 use crate::ir;
 
-use microcad_lang_base::{SingleIdentifier, SrcRef, SrcReferrer};
+use mucad_lang_base::{SingleIdentifier, SrcRef, SrcReferrer};
 
-use microcad_macros::SrcReferrer;
+use mucad_macros::SrcReferrer;
 use serde::{Deserialize, Serialize};
 
 /// Block of documentation comments, stripped of `/// `.

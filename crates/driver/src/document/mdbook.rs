@@ -1,8 +1,8 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{Diagnostics, SourceLocation, Url};
-use microcad_lang_markdown::MdBook;
+use mucad_lang_base::{Diagnostics, SourceLocation, Url};
+use mucad_lang_markdown::MdBook;
 use miette::IntoDiagnostic;
 
 use crate::{Result, commands, document};
@@ -40,7 +40,7 @@ impl commands::Format for document::MdBook {
             .code_blocks_mut()
             .filter(|(_, code_block)| code_block.can_format())
             .for_each(|(_, code_block)| {
-                match microcad_lang_format::format_code(&code_block.code, config) {
+                match mucad_lang_format::format_code(&code_block.code, config) {
                     Ok(code) => {
                         formatted |= code_block.code != code;
                         code_block.code = code;

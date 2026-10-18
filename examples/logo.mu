@@ -1,8 +1,8 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // file: logo.mu
 
-pub mod microcad {
+pub mod mucad {
     use std::geo2d::*;
     use std::ops::*;
 
@@ -88,4 +88,4 @@ use std::ops::*;
 
 pub const SIZE = 1cm;
 
-microcad::Logo(size = SIZE).extrude(4mm);
+mucad::Logo(size = SIZE).extrude(4mm);

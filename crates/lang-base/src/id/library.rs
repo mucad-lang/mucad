@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Module to handle IDs for any item used in µcad language.
 
 use compact_str::ToCompactString;
 use derive_more::Display;
-use microcad_hash::{HashId, hash_id};
+use mucad_hash::{HashId, hash_id};
 use serde::{Deserialize, Serialize};
 
 use crate::{Name, Version};

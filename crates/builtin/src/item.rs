@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad built-in items.
 
 use derive_more::{Debug, From};
 
-use microcad_lang_base::{BuiltinId, BuiltinInfo};
-use microcad_lang_types::{Arguments, FunctionType, Model, ModelTree, Tuple, Value};
+use mucad_lang_base::{BuiltinId, BuiltinInfo};
+use mucad_lang_types::{Arguments, FunctionType, Model, ModelTree, Tuple, Value};
 
 use crate::{BuiltinEvalContext, BuiltinEvalFn, BuiltinFn, BuiltinResult};
 
@@ -272,7 +272,7 @@ macro_rules! builtin_item {
                 || $func_ty,
                 $fn_name,
             )
-            .with_defaults(|| microcad_lang_types::tuple!($( $param = $value ),*)),
+            .with_defaults(|| mucad_lang_types::tuple!($( $param = $value ),*)),
         )
     };
     // Syntax: builtin_item!(

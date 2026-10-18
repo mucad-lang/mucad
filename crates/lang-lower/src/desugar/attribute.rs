@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::desugar::{extract_statements, for_each_statement};
 use crate::ir::source::ExportAttribute;
 use crate::{Desugar, LowerContext, LowerError, LowerResult, ir};
 
-use microcad_lang_base::{PushIssue, SingleIdentifier, SpanToSrcRef};
-use microcad_lang_parse::ast;
+use mucad_lang_base::{PushIssue, SingleIdentifier, SpanToSrcRef};
+use mucad_lang_parse::ast;
 
 /// Helper function to get outer attributes
 pub fn outer_with_doc(

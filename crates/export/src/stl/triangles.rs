@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use cgmath::Vector3;
-use microcad_core::{
+use mucad_core::{
     Geometries3D, Geometry, Geometry3D, Manifold, Triangle, TriangleMesh, UnaryBooleanOp,
 };
-use microcad_render::{GeometryNodeData, GeometryNodeRef, GeometryOutputs, GeometryTree};
+use mucad_render::{GeometryNodeData, GeometryNodeRef, GeometryOutputs, GeometryTree};
 
 pub type TriangleIter = Box<dyn Iterator<Item = Triangle<Vector3<f32>>>>;
 

@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Function to locate microcad documents.
+//! Function to locate mucad documents.
 
-use microcad_lang_base::{MUCAD_EXTENSIONS, Url};
+use mucad_lang_base::{MUCAD_EXTENSIONS, Url};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -13,7 +13,7 @@ use crate::Manifest;
 pub enum LocateError {
     #[error("No µcad file found at: {path}")]
     #[diagnostic(
-        code(microcad::locate::file_not_found),
+        code(mucad::locate::file_not_found),
         help(
             "Ensure the file exists or has a supported extension ({})",
             MUCAD_EXTENSIONS
@@ -26,15 +26,15 @@ pub enum LocateError {
     FileNotFound { path: std::path::PathBuf },
 
     #[error("Invalid file URL path: {url}")]
-    #[diagnostic(code(microcad::locate::invalid_file_url))]
+    #[diagnostic(code(mucad::locate::invalid_file_url))]
     InvalidFileUrl { url: Url },
 
     #[error("Failed to convert path '{path}' to a valid file URL")]
-    #[diagnostic(code(microcad::locate::url_conversion_failed))]
+    #[diagnostic(code(mucad::locate::url_conversion_failed))]
     UrlConversionFailed { path: std::path::PathBuf },
 
     #[error("Failed to find absolute path for: {path}")]
-    #[diagnostic(code(microcad::locate::canonicalize_failed))]
+    #[diagnostic(code(mucad::locate::canonicalize_failed))]
     CanonicalizeFailed {
         path: std::path::PathBuf,
         #[source]
@@ -42,8 +42,8 @@ pub enum LocateError {
     },
 }
 
-/// Return `true` if given path has a valid microcad extension
-pub fn is_microcad_file(path: impl AsRef<std::path::Path>) -> bool {
+/// Return `true` if given path has a valid mucad extension
+pub fn is_mucad_file(path: impl AsRef<std::path::Path>) -> bool {
     let path = path.as_ref();
     path.is_file()
         && path
@@ -66,7 +66,7 @@ pub fn resolved_path(path: impl AsRef<std::path::Path>) -> Result<std::path::Pat
     let path = path.as_ref();
 
     // If the path already has a supported extension, check if it exists.
-    if is_microcad_file(path) {
+    if is_mucad_file(path) {
         return Ok(path.to_path_buf());
     }
 

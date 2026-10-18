@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Parser tests
 #![cfg(feature = "parser")]
 
-use microcad_lang_base::Diagnostics;
+use mucad_lang_base::Diagnostics;
 use test_case::test_case;
 
 #[test_case("single int", "1")]
@@ -224,10 +224,10 @@ use test_case::test_case;
 fn test_parser(name: &str, input: &str) -> miette::Result<()> {
     use miette::IntoDiagnostic;
 
-    use microcad_lang_base::{Artifact, DiagRenderOptions, Source};
+    use mucad_lang_base::{Artifact, DiagRenderOptions, Source};
 
     let source = Source::from(input);
-    let result = microcad_lang_parse::parse(&source);
+    let result = mucad_lang_parse::parse(&source);
 
     // 1. Extract AST (or empty if failed)
     let ast_str = result.as_ref().map_or(String::default(), |(ast, _)| {

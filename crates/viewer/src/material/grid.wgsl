@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #import bevy_pbr::forward_io::{Vertex, VertexOutput};
@@ -7,7 +7,7 @@
 struct GridConfig {
     radius: f32,
     zoom_level: f32,
-    view_angle: vec3<f32>, 
+    view_angle: vec3<f32>,
     grid_color: vec3<f32>,
     x_axis_color: vec3<f32>,
     y_axis_color: vec3<f32>,
@@ -88,4 +88,3 @@ fn fragment(
     let fade = min(2.0 - length(p) / grid_config.radius, 1.0);
     return vec4(grid.xyz, grid.w * fade);
 }
-

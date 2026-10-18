@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use compact_str::{CompactString, ToCompactString};
@@ -261,7 +261,7 @@ impl AsRef<str> for Identifier {
 #[test]
 fn identifier_comparison() {
     use crate::{LineCol, SrcRef};
-    use microcad_hash::HashId;
+    use mucad_hash::HashId;
 
     // same id but different src refs
     let id1 = Identifier::no_ref("x");
@@ -276,7 +276,7 @@ fn identifier_comparison() {
 
 #[test]
 fn identifier_hash() {
-    use microcad_hash::HashId;
+    use mucad_hash::HashId;
 
     use crate::{LineCol, SrcRef};
     use std::hash::{Hash, Hasher};

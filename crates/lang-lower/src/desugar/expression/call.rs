@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{Desugar, LowerContext, LowerError, LowerResult, desugar::DesugarExpr, ir};
 
-use microcad_builtin::__mu;
-use microcad_lang_base::{Identifier, PushIssue, SpanToSrcRef, SrcRef};
-use microcad_lang_parse::ast;
+use mucad_builtin::__mu;
+use mucad_lang_base::{Identifier, PushIssue, SpanToSrcRef, SrcRef};
+use mucad_lang_parse::ast;
 
 impl<Expr: DesugarExpr> Desugar<ast::Call> for ir::Call<Expr> {
     fn desugar(node: &ast::Call, context: &mut LowerContext) -> LowerResult<Self> {
@@ -20,8 +20,8 @@ impl<Expr: DesugarExpr> Desugar<ast::Call> for ir::Call<Expr> {
 impl<Expr: DesugarExpr> Desugar<Vec<ast::TupleItem>> for ir::ArgumentList<Expr> {
     fn desugar(node: &Vec<ast::TupleItem>, context: &mut LowerContext) -> LowerResult<Self> {
         let mut args = Vec::new();
-        let mut names: microcad_lang_base::HashSet<Identifier> =
-            microcad_lang_base::HashSet::default();
+        let mut names: mucad_lang_base::HashSet<Identifier> =
+            mucad_lang_base::HashSet::default();
 
         node.iter().try_for_each(|item| -> LowerResult<()> {
             let expr = Expr::desugar(&item.expr, context)?;

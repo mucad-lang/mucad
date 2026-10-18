@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::geo2d::*;
@@ -6,7 +6,7 @@ use std::ops::*;
 
 mod logo;
 
-use logo::microcad::Logo;
+use logo::mucad::Logo;
 
 const TEETH_SIZE = 0.5mm;
 const THICKNESS = 2mm;
@@ -73,7 +73,7 @@ part PencilHoles(radius: Length, n = 4, start = 4, angle = 22.5°) {
         .extrude(THICKNESS)
         .translate(x = size * 35%, y = size * 43%, z = THICKNESS * 150%);
 
-    url = Text("microcad.xyz", BORDER_WIDTH * 150%)
+    url = Text("mucad.org", BORDER_WIDTH * 150%)
         .center()
         .extrude(THICKNESS)
         .translate(x = size * 32%, y = -size * 46%, z = THICKNESS * 150%);

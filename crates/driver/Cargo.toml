@@ -1,10 +1,10 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-driver"
+name = "mucad-driver"
 description = "µcad high-level API"
-documentation = "https://docs.rs/microcad-lang-base"
+documentation = "https://docs.rs/mucad-lang-base"
 authors = ["Michael Winkelmann (michael@winkelmann.site)"]
 version.workspace = true
 edition.workspace = true
@@ -24,20 +24,20 @@ thiserror = "2.0.17"
 toml = { version = "1.1.2", features = ["serde"] }
 url = "2.5.7"
 
-microcad-builtin = { workspace = true }
-microcad-core = { workspace = true }
-microcad-render = { workspace = true }
-microcad-docgen = { workspace = true }
-microcad-export = { workspace = true }
-microcad-lang-base = { workspace = true }
-microcad-lang-eval = { workspace = true }
-microcad-lang-format = { workspace = true }
-microcad-lang-lower = { workspace = true }
-microcad-lang-markdown = { workspace = true }
-microcad-lang-parse = { workspace = true }
-microcad-lang-resolve = { workspace = true }
-microcad-lang-types = { workspace = true }
-microcad-std = { workspace = true }
+mucad-builtin = { workspace = true }
+mucad-core = { workspace = true }
+mucad-render = { workspace = true }
+mucad-docgen = { workspace = true }
+mucad-export = { workspace = true }
+mucad-lang-base = { workspace = true }
+mucad-lang-eval = { workspace = true }
+mucad-lang-format = { workspace = true }
+mucad-lang-lower = { workspace = true }
+mucad-lang-markdown = { workspace = true }
+mucad-lang-parse = { workspace = true }
+mucad-lang-resolve = { workspace = true }
+mucad-lang-types = { workspace = true }
+mucad-std = { workspace = true }
 
 [dev-dependencies]
 insta = "1.48.0"

@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Proc macro helpers. These functions can be used in proc macros.
@@ -25,24 +25,24 @@ impl quote::ToTokens for BuiltinType {
         let ty = &self.0;
 
         let expanded = match ty.to_string().as_str() {
-            "Scalar" => quote! { microcad_lang_types::Type::scalar() },
-            "Angle" => quote! { microcad_lang_types::Type::angle() },
-            "Length" => quote! { microcad_lang_types::Type::length() },
-            "Color" => quote! { microcad_lang_types::Type::color() },
+            "Scalar" => quote! { mucad_lang_types::Type::scalar() },
+            "Angle" => quote! { mucad_lang_types::Type::angle() },
+            "Length" => quote! { mucad_lang_types::Type::length() },
+            "Color" => quote! { mucad_lang_types::Type::color() },
             "List" => {
-                quote! { microcad_lang_types::Type::list() }
+                quote! { mucad_lang_types::Type::list() }
             }
-            "Mat3" => quote! { microcad_lang_types::Type::matrix(3,3) },
+            "Mat3" => quote! { mucad_lang_types::Type::matrix(3,3) },
             "Model" => {
-                quote! { microcad_lang_types::Type::model() }
+                quote! { mucad_lang_types::Type::model() }
             }
             "Model2D" => {
-                quote! { microcad_lang_types::Type::model_2d() }
+                quote! { mucad_lang_types::Type::model_2d() }
             }
             "Model3D" => {
-                quote! { microcad_lang_types::Type::model_3d() }
+                quote! { mucad_lang_types::Type::model_3d() }
             }
-            _ => quote! { microcad_lang_types::Type::#ty },
+            _ => quote! { mucad_lang_types::Type::#ty },
         };
 
         // Append the expanded tokens into the mutable buffer
@@ -171,7 +171,7 @@ pub fn attr_exists(attrs: &[syn::Attribute], name: &str) -> bool {
 pub fn static_id_doc(mod_name: &syn::Ident, name: &syn::Ident) -> TokenStream2 {
     let id_doc = format!(
         "**Static ID:** `{}`",
-        microcad_hash::HashId::compile_time_hash(format!("__mu::{mod_name}::{name}").as_str())
+        mucad_hash::HashId::compile_time_hash(format!("__mu::{mod_name}::{name}").as_str())
     );
     quote! {
         #[doc = ""]

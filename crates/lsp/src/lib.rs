@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad lsp library
@@ -21,7 +21,7 @@ pub use lsp::Server;
 /// µcad lsp service
 pub fn build_lsp_service(
     config: Config,
-) -> microcad_driver::Result<(lsp::LspService<Service>, lsp::ClientSocket)> {
+) -> mucad_driver::Result<(lsp::LspService<Service>, lsp::ClientSocket)> {
     log::info!("Starting LSP server");
 
     let processor = processor::ProcessorController::run(config.driver)?;

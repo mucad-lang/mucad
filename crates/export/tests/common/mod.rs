@@ -1,13 +1,13 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Common exporter test functions
 
 use std::path::PathBuf;
 
-use microcad_builtin::{BuiltinEvalContext, BuiltinPrimitiveCall, mu};
-use microcad_core::Rect;
-use microcad_lang_types::{Model, Value, arguments};
+use mucad_builtin::{BuiltinEvalContext, BuiltinPrimitiveCall, mu};
+use mucad_core::Rect;
+use mucad_lang_types::{Model, Value, arguments};
 
 pub fn circle(r: f64) -> Model {
     let mut ctx = BuiltinEvalContext::default();

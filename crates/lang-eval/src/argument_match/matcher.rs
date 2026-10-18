@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Match the arguments of a call to parameters.
 
-use microcad_lang_base::{Identifier, IdentifierList};
-use microcad_lang_types::{ArgumentValueList, Arguments, CallParameters, Tuple, Type, Value};
+use mucad_lang_base::{Identifier, IdentifierList};
+use mucad_lang_types::{ArgumentValueList, Arguments, CallParameters, Tuple, Type, Value};
 
 use crate::{ArgumentMatchError, MatchPriority};
 
@@ -146,7 +146,7 @@ impl Matcher {
     /// and a list matches a parameter of its element type last (parameter multiplicity).
     /// Positional arguments, which match no parameter, are an error.
     fn positional(&mut self, arguments: &ArgumentValueList) -> Result<(), ArgumentMatchError> {
-        use microcad_lang_types::Ty;
+        use mucad_lang_types::Ty;
 
         // Inline identifiers first claim the parameter with their name, e.g. `r` in `f(r * 2)`.
         let mut by_type = Vec::new();

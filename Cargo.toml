@@ -1,4 +1,4 @@
-# Copyright © 2024-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2024-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [workspace]
@@ -63,35 +63,34 @@ resolver = "2"
 description = "µcad: A CAD system for the 21st century"
 authors = [
     "Michael Winkelmann (michael@winkelmann.site)",
-    "Patrick Hoffmann (p.hoffmann@berlin.de)",
 ]
 version = "0.6.0"
 edition = "2024"
-homepage = "https://microcad.xyz"
-repository = "https://codeberg.org/microcad/microcad"
+homepage = "https://mucad.org"
+repository = "https://codeberg.org/mucad/mucad"
 rust-version = "1.91"
 license = "AGPL-3.0-or-later"
 keywords = ["cad", "geometry", "3d", "cnc", "openscad"]
 
 [workspace.dependencies]
-microcad-builtin = { path = "crates/builtin", version = "0.6.0" }
-microcad-core = { path = "crates/core", version = "0.6.0" }
-microcad-docgen = { path = "crates/docgen", version = "0.6.0" }
-microcad-driver = { path = "crates/driver", version = "0.6.0" }
-microcad-export = { path = "crates/export", version = "0.6.0" }
-microcad-hash = { path = "crates/hash", version = "0.6.0" }
-microcad-import = { path = "crates/import", version = "0.6.0" }
-microcad-lang-base = { path = "crates/lang-base", version = "0.6.0" }
-microcad-lang-eval = { path = "crates/lang-eval", version = "0.6.0" }
-microcad-lang-format = { path = "crates/lang-format", version = "0.6.0" }
-microcad-lang-lower = { path = "crates/lang-lower", version = "0.6.0" }
-microcad-lang-markdown = { path = "crates/lang-markdown", version = "0.6.0" }
-microcad-lang-parse = { path = "crates/lang-parse", version = "0.6.0" }
-microcad-lang-resolve = { path = "crates/lang-resolve", version = "0.6.0" }
-microcad-lang-types = { path = "crates/lang-types", version = "0.6.0" }
-microcad-lsp = { path = "crates/lsp", version = "0.6.0" }
-microcad-macros = { path = "crates/macros", version = "0.6.0" }
-microcad-render = { path = "crates/render", version = "0.6.0" }
-microcad-std = { path = "crates/std", version = "0.6.0" }
-microcad-viewer-ipc = { path = "crates/viewer-ipc", version = "0.6.0" }
-microcad-viewer = { path = "crates/viewer", version = "0.6.0" }
+mucad-builtin = { path = "crates/builtin", version = "0.6.0" }
+mucad-core = { path = "crates/core", version = "0.6.0" }
+mucad-docgen = { path = "crates/docgen", version = "0.6.0" }
+mucad-driver = { path = "crates/driver", version = "0.6.0" }
+mucad-export = { path = "crates/export", version = "0.6.0" }
+mucad-hash = { path = "crates/hash", version = "0.6.0" }
+mucad-import = { path = "crates/import", version = "0.6.0" }
+mucad-lang-base = { path = "crates/lang-base", version = "0.6.0" }
+mucad-lang-eval = { path = "crates/lang-eval", version = "0.6.0" }
+mucad-lang-format = { path = "crates/lang-format", version = "0.6.0" }
+mucad-lang-lower = { path = "crates/lang-lower", version = "0.6.0" }
+mucad-lang-markdown = { path = "crates/lang-markdown", version = "0.6.0" }
+mucad-lang-parse = { path = "crates/lang-parse", version = "0.6.0" }
+mucad-lang-resolve = { path = "crates/lang-resolve", version = "0.6.0" }
+mucad-lang-types = { path = "crates/lang-types", version = "0.6.0" }
+mucad-lsp = { path = "crates/lsp", version = "0.6.0" }
+mucad-macros = { path = "crates/macros", version = "0.6.0" }
+mucad-render = { path = "crates/render", version = "0.6.0" }
+mucad-std = { path = "crates/std", version = "0.6.0" }
+mucad-viewer-ipc = { path = "crates/viewer-ipc", version = "0.6.0" }
+mucad-viewer = { path = "crates/viewer", version = "0.6.0" }

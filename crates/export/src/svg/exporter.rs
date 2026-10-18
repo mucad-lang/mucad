@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Scalable Vector Graphics (SVG) export
 
-use microcad_core::{Bounds2D, Color, Scalar};
-use microcad_lang_types::{ModelTree, ModelType, Value};
-use microcad_render::Renderer;
+use mucad_core::{Bounds2D, Color, Scalar};
+use mucad_lang_types::{ModelTree, ModelType, Value};
+use mucad_render::Renderer;
 
 use crate::{Export, ExportError, ExporterParameters, Writer};
 
@@ -13,7 +13,7 @@ use crate::{Export, ExportError, ExporterParameters, Writer};
 #[derive(Debug, Default)]
 pub struct SvgExporter {
     /// The render resolution.
-    pub resolution: microcad_render::RenderResolution,
+    pub resolution: mucad_render::RenderResolution,
     /// The theme
     pub theme: Theme,
 }

@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_builtin::{BuiltinConstruct, BuiltinId, mu};
+use mucad_builtin::{BuiltinConstruct, BuiltinId, mu};
 
 use crate::{GeometryOutputs, GeometryTree, Render, RenderContext, RenderError};
-use microcad_hash::HashMap;
+use mucad_hash::HashMap;
 
 mod ops;
 mod primitives;

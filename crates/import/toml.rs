@@ -1,9 +1,9 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Import values from TOML
 
-use microcad_lang_types::*;
+use mucad_lang_types::*;
 
 /// Import TOML files into a tuple.
 pub struct TomlImporter;

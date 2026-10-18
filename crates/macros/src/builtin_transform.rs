@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Implementation for the `#[builtin_transform]` attribute macro.
@@ -87,25 +87,25 @@ fn builtin_transform_struct(attr: TokenStream, input_struct: ItemStruct) -> Toke
         impl crate::Builtin for #struct_name {
             const ITEM: &'static crate::BuiltinItem = &crate::BuiltinItem::Operation(crate::BuiltinOperation::new(
                 crate::builtin_info!(#doc_comment #mod_name::#fn_name),
-                || microcad_lang_types::function_type!((
-                    self: microcad_lang_types::Type::model()
+                || mucad_lang_types::function_type!((
+                    self: mucad_lang_types::Type::model()
                     #(, #params)*
-                ) -> microcad_lang_types::Type::model()),
+                ) -> mucad_lang_types::Type::model()),
                 #fn_name,
             ));
         }
 
         impl crate::BuiltinOperationCall for #struct_name {
             fn call(
-                args: microcad_lang_types::Arguments,
+                args: mucad_lang_types::Arguments,
                 _ctx: &mut crate::BuiltinEvalContext,
-            ) -> Result<microcad_lang_types::ModelTree, crate::BuiltinError> {
-                let self_: std::rc::Rc<microcad_lang_types::ModelTree> = args.try_get("self")?;
-                let transform = microcad_lang_types::math::AffineTransform::from(Self {
+            ) -> Result<mucad_lang_types::ModelTree, crate::BuiltinError> {
+                let self_: std::rc::Rc<mucad_lang_types::ModelTree> = args.try_get("self")?;
+                let transform = mucad_lang_types::math::AffineTransform::from(Self {
                     #(#field_names: args.try_get(stringify!(#field_names))?,)*
                 });
-                let mut tree = microcad_lang_types::ModelTree::new(
-                    microcad_lang_types::Model::from(transform).with_op_properties(args),
+                let mut tree = mucad_lang_types::ModelTree::new(
+                    mucad_lang_types::Model::from(transform).with_op_properties(args),
                 );
                 tree.append(std::rc::Rc::unwrap_or_clone(self_));
                 Ok(tree)

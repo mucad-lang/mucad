@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for the conversion of geometries into bevy meshes.
 
-use microcad_driver::prelude as mu;
-use microcad_viewer::to_bevy::ToBevyMesh;
+use mucad_driver::prelude as mu;
+use mucad_viewer::to_bevy::ToBevyMesh;
 
 /// A geometry collection results in one mesh per geometry.
 #[test]

@@ -1,15 +1,15 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Source evaluation
 
-use microcad_lang_resolve::library::symbol;
-use microcad_lang_types::{
+use mucad_lang_resolve::library::symbol;
+use mucad_lang_types::{
     ModelTree, Value,
     model::{ModelTreeBuilderMut, Property, PropertyType},
 };
 
-use microcad_lang_base::PushIssue;
+use mucad_lang_base::PushIssue;
 
 use crate::{Eval, EvalContext, EvalErrorKind, EvalResult, context::SourceFrame};
 

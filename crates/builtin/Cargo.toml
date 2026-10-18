@@ -1,10 +1,10 @@
-# Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2025-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-builtin"
+name = "mucad-builtin"
 description = "Provides the built-in functionalities available in the µcad language."
-documentation = "https://docs.rs/microcad-std"
+documentation = "https://docs.rs/mucad-std"
 edition.workspace = true
 rust-version.workspace = true
 version.workspace = true
@@ -22,6 +22,6 @@ serde = { version = "1.0", features = ["derive"] }
 thiserror = "2.0"
 typetag = "0.2"
 
-microcad-lang-base = { workspace = true }
-microcad-lang-types = { workspace = true }
-microcad-macros = { workspace = true }
+mucad-lang-base = { workspace = true }
+mucad-lang-types = { workspace = true }
+mucad-macros = { workspace = true }

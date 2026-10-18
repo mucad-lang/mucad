@@ -1,10 +1,10 @@
-# Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2025-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-export"
+name = "mucad-export"
 description = "µcad export API"
-documentation = "https://docs.rs/microcad-export"
+documentation = "https://docs.rs/mucad-export"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -14,10 +14,10 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-microcad-core = { workspace = true }
-microcad-render = { workspace = true }
-microcad-lang-types = { workspace = true }
-microcad-lang-base = { workspace = true }
+mucad-core = { workspace = true }
+mucad-render = { workspace = true }
+mucad-lang-types = { workspace = true }
+mucad-lang-base = { workspace = true }
 
 log = "0.4"
 env_logger = "0.11"
@@ -33,7 +33,7 @@ thiserror = "2.0"
 [dev-dependencies]
 cargo_metadata = "0.23"
 insta = "1.45.0"
-microcad-builtin = { workspace = true }
+mucad-builtin = { workspace = true }
 
 [lints.rust]
 missing_docs = "warn"

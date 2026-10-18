@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Evaluation of symbols.
@@ -18,8 +18,8 @@ pub use issue::*;
 
 pub use context::{EvalContext, EvalContextBuilder};
 
-use microcad_lang_base::{IssueResult, PushIssue};
-use microcad_lang_types::{ArgumentValueList, ModelTree, Value};
+use mucad_lang_base::{IssueResult, PushIssue};
+use mucad_lang_types::{ArgumentValueList, ModelTree, Value};
 
 /// The eval compiler stage: evaluate the library of the context into a model tree.
 ///

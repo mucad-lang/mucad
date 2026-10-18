@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Load a library
 
-use microcad_lang_base::{
+use mucad_lang_base::{
     HashId, Identifier, PushIssue, Source, ToCompactString, element::Visibility, tree,
 };
-use microcad_lang_lower::ir;
+use mucad_lang_lower::ir;
 
 use crate::{
     Manifest, ResolveError, ResolveErrorKind, ResolveLibraryContext, ResolveResult,

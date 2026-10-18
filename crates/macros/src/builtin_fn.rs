@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Implementation for the `#[builtin_fn(...)` attribute macro.
@@ -138,7 +138,7 @@ pub(crate) fn builtin_fn_impl(attr: TokenStream, item: TokenStream) -> TokenStre
         // TODO: Move this block into a helper function.
         let id_doc = format!(
             "**Static ID:** `{}`",
-            microcad_hash::HashId::compile_time_hash(
+            mucad_hash::HashId::compile_time_hash(
                 format!("__mu::{mod_name}::{fn_name}").as_str()
             )
         );
@@ -160,9 +160,9 @@ pub(crate) fn builtin_fn_impl(attr: TokenStream, item: TokenStream) -> TokenStre
     let doc_comment = helpers::attr_fetch_doc(&input_fn.attrs);
 
     let fn_type = if is_impure {
-        quote! { microcad_lang_types::function_type!(#formatted_params #return_type).impure() }
+        quote! { mucad_lang_types::function_type!(#formatted_params #return_type).impure() }
     } else {
-        quote! { microcad_lang_types::function_type!(#formatted_params #return_type) }
+        quote! { mucad_lang_types::function_type!(#formatted_params #return_type) }
     };
 
     quote! {

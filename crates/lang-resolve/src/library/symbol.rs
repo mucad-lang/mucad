@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad resolved symbol tree (RST).
 
-use microcad_lang_base::VersionAnnotation;
-use microcad_lang_lower::ir;
+use mucad_lang_base::VersionAnnotation;
+use mucad_lang_lower::ir;
 use strum::IntoStaticStr;
 
 use std::hash::Hash;
@@ -13,11 +13,11 @@ use serde::{Deserialize, Serialize};
 
 use derive_more::From;
 
-pub use microcad_lang_base::{Identifier, SymbolId};
+pub use mucad_lang_base::{Identifier, SymbolId};
 
 /// Function definitions from IR.
 pub mod function {
-    use microcad_lang_lower::ir;
+    use mucad_lang_lower::ir;
 
     pub use ir::{
         Function, FunctionCall, FunctionExpression, FunctionIf, FunctionSignature,
@@ -31,7 +31,7 @@ pub use function::{Function, FunctionExpression, FunctionStatement};
 
 /// Workbench definitions from IR.
 pub mod workbench {
-    use microcad_lang_lower::ir;
+    use mucad_lang_lower::ir;
 
     pub use ir::{
         Group, Init, InitStatement, Marker, ModelAttributes, Workbench, WorkbenchCall,
@@ -46,7 +46,7 @@ pub use workbench::{
 };
 
 pub mod constant {
-    use microcad_lang_lower::ir;
+    use mucad_lang_lower::ir;
 
     pub use ir::{Constant, ConstantExpression, ConstantValue};
 
@@ -180,11 +180,11 @@ impl Symbol {
     }
 }
 
-pub type SymbolArena = microcad_lang_base::tree::Arena<Symbol>;
-pub type SymbolNode = microcad_lang_base::tree::Node<Symbol>;
-pub type SymbolNodeRef<'a> = microcad_lang_base::tree::NodeRef<'a, Symbol>;
-pub type SymbolNodeMut<'a> = microcad_lang_base::tree::NodeMut<'a, Symbol>;
-pub type SymbolNodeId = microcad_lang_base::tree::NodeId;
+pub type SymbolArena = mucad_lang_base::tree::Arena<Symbol>;
+pub type SymbolNode = mucad_lang_base::tree::Node<Symbol>;
+pub type SymbolNodeRef<'a> = mucad_lang_base::tree::NodeRef<'a, Symbol>;
+pub type SymbolNodeMut<'a> = mucad_lang_base::tree::NodeMut<'a, Symbol>;
+pub type SymbolNodeId = mucad_lang_base::tree::NodeId;
 
 /// Extension trait for [`SymbolNode`] .
 pub trait SymbolNodeExt {

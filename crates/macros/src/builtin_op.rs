@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Implementation for the `#[builtin_op(...)]` attribute macro.
@@ -103,23 +103,23 @@ fn builtin_op_struct(attr: TokenStream, input_struct: ItemStruct) -> TokenStream
         impl crate::Builtin for #struct_name {
             const ITEM: &'static crate::BuiltinItem = &crate::BuiltinItem::Operation(crate::BuiltinOperation::new(
                 crate::builtin_info!(#doc_comment #mod_name::#fn_name),
-                || microcad_lang_types::function_type!((
-                    self: microcad_lang_types::Type::Model(microcad_lang_types::ModelType::#input_type)
+                || mucad_lang_types::function_type!((
+                    self: mucad_lang_types::Type::Model(mucad_lang_types::ModelType::#input_type)
                     #(, #params)*
-                ) -> microcad_lang_types::Type::Model(microcad_lang_types::ModelType::#output_type)),
+                ) -> mucad_lang_types::Type::Model(mucad_lang_types::ModelType::#output_type)),
                 #fn_name,
             ));
         }
 
         impl crate::BuiltinConstruct for #struct_name {
-            fn element() -> microcad_lang_types::model::Element {
-                microcad_lang_types::model::BuiltinWorkpiece::Operation(
+            fn element() -> mucad_lang_types::model::Element {
+                mucad_lang_types::model::BuiltinWorkpiece::Operation(
                     <Self as crate::Builtin>::ITEM.id(),
-                    microcad_lang_types::ModelType::#element_output_type,
+                    mucad_lang_types::ModelType::#element_output_type,
                 ).into()
             }
 
-            fn from_model(model: &microcad_lang_types::Model) -> Result<Self, crate::BuiltinError> {
+            fn from_model(model: &mucad_lang_types::Model) -> Result<Self, crate::BuiltinError> {
                 <Self as crate::BuiltinConstruct>::check_element(model)?;
                 Ok(Self {
                     #(#field_names: model.get_property_as(stringify!(#field_names))?,)*
@@ -129,12 +129,12 @@ fn builtin_op_struct(attr: TokenStream, input_struct: ItemStruct) -> TokenStream
 
         impl crate::BuiltinOperationCall for #struct_name {
             fn call(
-                args: microcad_lang_types::Arguments,
+                args: mucad_lang_types::Arguments,
                 _ctx: &mut crate::BuiltinEvalContext,
-            ) -> Result<microcad_lang_types::ModelTree, crate::BuiltinError> {
-                let self_: std::rc::Rc<microcad_lang_types::ModelTree> = args.try_get("self")?;
-                let mut tree = microcad_lang_types::ModelTree::new(
-                    microcad_lang_types::Model::new(
+            ) -> Result<mucad_lang_types::ModelTree, crate::BuiltinError> {
+                let self_: std::rc::Rc<mucad_lang_types::ModelTree> = args.try_get("self")?;
+                let mut tree = mucad_lang_types::ModelTree::new(
+                    mucad_lang_types::Model::new(
                         <Self as crate::BuiltinConstruct>::element()
                     ).with_op_properties(args),
                 );

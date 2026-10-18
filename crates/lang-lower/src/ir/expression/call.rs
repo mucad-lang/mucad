@@ -1,14 +1,14 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Syntax elements related to calls.
 
 use crate::{CastInto, ir};
 use derive_more::Display;
-use microcad_builtin::BuiltinId;
-use microcad_lang_base::{Identifier, SrcRef, SrcReferrer, boxed};
+use mucad_builtin::BuiltinId;
+use mucad_lang_base::{Identifier, SrcRef, SrcReferrer, boxed};
 
-use microcad_lang_types::Value;
+use mucad_lang_types::Value;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Hash, Serialize, Deserialize)]
@@ -63,8 +63,8 @@ impl<Expr> Argument<Expr> {
         }
     }
     /// How the caller names the argument, e.g. `r` in `f(r * 2)` is an inline name.
-    pub fn argument_name(&self) -> microcad_lang_types::ArgumentName {
-        use microcad_lang_types::ArgumentName;
+    pub fn argument_name(&self) -> mucad_lang_types::ArgumentName {
+        use mucad_lang_types::ArgumentName;
         match self {
             Argument::Unnamed(_) => ArgumentName::None,
             Argument::Named { name, .. } => ArgumentName::Named(name.clone()),

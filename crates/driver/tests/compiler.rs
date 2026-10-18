@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for the high-level compiler API.
 
-use microcad_driver::{Compiler, prelude as mu};
+use mucad_driver::{Compiler, prelude as mu};
 use mu::base::DisplayWithCtx;
 
 /// A sketch and an operation, called as method on the sketch.

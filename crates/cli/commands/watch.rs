@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad CLI watch command
@@ -23,7 +23,7 @@ pub struct Watch {
 /// Run this command for a CLI.
 impl RunCommand for Watch {
     fn run(&self, cli: &Cli) -> miette::Result<()> {
-        use microcad_driver::prelude as mu;
+        use mucad_driver::prelude as mu;
 
         let mut watcher = mu::Watcher::new()?;
         // The compiler keeps the standard library and unchanged sources between compilations.

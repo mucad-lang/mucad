@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Symbols which can be used by name without `use`.
 
-use microcad_lang_base::{HashMap, Identifier, LibraryId, SymbolId};
+use mucad_lang_base::{HashMap, Identifier, LibraryId, SymbolId};
 
 /// Symbols of a library which can be used by name without `use`,
 /// e.g. `Circle` for `std::geo2d::Circle`.

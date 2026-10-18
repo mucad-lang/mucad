@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Implementation for the `#[builtin_primitive(...)]` attribute macro.
@@ -68,22 +68,22 @@ pub(crate) fn builtin_primitive_impl(attr: TokenStream, item: TokenStream) -> To
         impl crate::Builtin for #struct_name {
             const ITEM: &'static crate::BuiltinItem = &crate::BuiltinItem::Primitive(crate::BuiltinPrimitive::new(
                 crate::builtin_info!(#doc_comment #mod_name::#struct_name),
-                || microcad_lang_types::function_type!(
-                    (#(#params),*) -> microcad_lang_types::Type::Model(microcad_lang_types::ModelType::#model_type)
+                || mucad_lang_types::function_type!(
+                    (#(#params),*) -> mucad_lang_types::Type::Model(mucad_lang_types::ModelType::#model_type)
                 ),
                 <#struct_name as crate::BuiltinPrimitiveCall>::call,
             ));
         }
 
         impl crate::BuiltinConstruct for #struct_name {
-            fn element() -> microcad_lang_types::model::Element {
-                microcad_lang_types::model::BuiltinWorkpiece::Primitive(
+            fn element() -> mucad_lang_types::model::Element {
+                mucad_lang_types::model::BuiltinWorkpiece::Primitive(
                     <Self as crate::Builtin>::ITEM.id(),
-                    microcad_lang_types::ModelType::#model_type,
+                    mucad_lang_types::ModelType::#model_type,
                 ).into()
             }
 
-            fn from_model(model: &microcad_lang_types::Model) -> Result<Self, crate::BuiltinError> {
+            fn from_model(model: &mucad_lang_types::Model) -> Result<Self, crate::BuiltinError> {
                 <Self as crate::BuiltinConstruct>::check_element(model)?;
                 Ok(Self {
                     #(#field_names: model.get_property_as(stringify!(#field_names))?,)*

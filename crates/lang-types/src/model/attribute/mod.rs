@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Model attributes.
@@ -12,7 +12,7 @@ pub use export_command::ExportCommand;
 pub use layer::Layer;
 pub use resolution_attribute::ResolutionAttribute;
 
-use microcad_lang_base::Identifier;
+use mucad_lang_base::Identifier;
 use serde::{Deserialize, Serialize};
 
 /// An attribute for a model.

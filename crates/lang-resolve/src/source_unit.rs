@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! A source unit that can be compiled into an IR.
 
-use microcad_lang_base::{HashId, IssueList, Source, StageResult};
-use microcad_lang_lower::{Ir, LowerContext, LowerIssue};
-use microcad_lang_parse::{Ast, ParseIssue};
+use mucad_lang_base::{HashId, IssueList, Source, StageResult};
+use mucad_lang_lower::{Ir, LowerContext, LowerIssue};
+use mucad_lang_parse::{Ast, ParseIssue};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -59,7 +59,7 @@ impl SourceUnit {
     pub fn parse(self) -> Self {
         match self {
             Self::Loaded(source) => {
-                let ast = StageResult::from(microcad_lang_parse::parse(&source));
+                let ast = StageResult::from(mucad_lang_parse::parse(&source));
                 Self::Parsed { source, ast }
             }
             already_parsed => already_parsed,
@@ -73,7 +73,7 @@ impl SourceUnit {
                 let ir = match ast.artifact() {
                     Some(ast_artifact) => {
                         let mut lower_context = LowerContext::new(&source);
-                        StageResult::from(microcad_lang_lower::lower(
+                        StageResult::from(mucad_lang_lower::lower(
                             &mut lower_context,
                             ast_artifact,
                         ))

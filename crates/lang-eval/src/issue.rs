@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Evaluation error
 
-use microcad_builtin::{BuiltinAdvice, BuiltinError, BuiltinIssue, BuiltinWarning};
-use microcad_lang_base::{Identifier, LibraryId, Name, SrcRef, SrcReferrer, ToCompactString};
-use microcad_lang_types::{Value, ValueError};
+use mucad_builtin::{BuiltinAdvice, BuiltinError, BuiltinIssue, BuiltinWarning};
+use mucad_lang_base::{Identifier, LibraryId, Name, SrcRef, SrcReferrer, ToCompactString};
+use mucad_lang_types::{Value, ValueError};
 use miette::Diagnostic;
 
 use thiserror::Error;
@@ -83,7 +83,7 @@ pub enum EvalErrorKind {
     #[error("Constant expression expected")]
     ConstantExpressionExpected {
         #[label("This expression is not a constant")]
-        src_ref: microcad_lang_base::SrcRef,
+        src_ref: mucad_lang_base::SrcRef,
     },
 
     #[error("Unresolved symbol: {path}")]
@@ -247,7 +247,7 @@ pub enum EvalAdvice {
     Builtin(#[from] BuiltinAdvice),
 }
 
-#[derive(Debug, Error, microcad_macros::Issue)]
+#[derive(Debug, Error, mucad_macros::Issue)]
 #[issue(code = "eval")]
 pub enum EvalIssue {
     /// A eval error.

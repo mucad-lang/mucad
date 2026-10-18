@@ -1,7 +1,7 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! microcad viewer scene elements and routines.
+//! mucad viewer scene elements and routines.
 
 use crate::*;
 use bevy::prelude::*;

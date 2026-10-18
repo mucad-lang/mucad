@@ -1,8 +1,8 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-lang-resolve"
+name = "mucad-lang-resolve"
 description = "µcad language resolve compiler stage"
 authors = ["Michael Winkelmann (michael@winkelmann.site)"]
 edition.workspace = true
@@ -24,13 +24,13 @@ strum = { version = "0.28", features = ["derive"] }
 thiserror = "2.0"
 toml = { version = "1.1.4", optional = true }
 
-microcad-lang-base = { workspace = true }
-microcad-macros = { workspace = true }
-microcad-lang-lower = { workspace = true }
-microcad-lang-types = { workspace = true }
+mucad-lang-base = { workspace = true }
+mucad-macros = { workspace = true }
+mucad-lang-lower = { workspace = true }
+mucad-lang-types = { workspace = true }
 
 # Dependent on parse feature
-microcad-lang-parse = { workspace = true, optional = true }
+mucad-lang-parse = { workspace = true, optional = true }
 
 
 [dev-dependencies]
@@ -42,7 +42,7 @@ test-that = "0.6"
 [features]
 default = [
     "io",    # This feature is supposed to be removed once we have a file handling abstraction.
-    "parse", # This feature is supposed to removed once we have an abstraction in `microcad-driver`
+    "parse", # This feature is supposed to removed once we have an abstraction in `mucad-driver`
 ]
-parse = ["dep:microcad-lang-parse"]
+parse = ["dep:mucad-lang-parse"]
 io = ["dep:toml"]

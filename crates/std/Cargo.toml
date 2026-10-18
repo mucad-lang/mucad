@@ -1,10 +1,10 @@
-# Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2025-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-std"
+name = "mucad-std"
 description = "µcad Standard Library"
-documentation = "https://docs.rs/microcad-std"
+documentation = "https://docs.rs/mucad-std"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -24,4 +24,4 @@ semver = { version = "1.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "2.0"
 
-microcad-lang-base = { workspace = true }
+mucad-lang-base = { workspace = true }

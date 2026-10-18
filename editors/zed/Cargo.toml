@@ -1,8 +1,8 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-zed"
+name = "mucad-zed"
 edition = "2024"
 license = "MIT"
 publish = false
@@ -10,7 +10,7 @@ version = "0.0.1"
 
 [lib]
 crate-type = ["cdylib"]
-path = "src/microcad.rs"
+path = "src/mucad.rs"
 
 [dependencies]
 zed_extension_api  = "0.7.0"

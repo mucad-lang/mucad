@@ -1,10 +1,10 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad language server.
 
-use microcad_driver::prelude as mu;
-use microcad_lsp as mu_lsp;
+use mucad_driver::prelude as mu;
+use mucad_lsp as mu_lsp;
 
 use clap::Parser;
 #[derive(Parser)]

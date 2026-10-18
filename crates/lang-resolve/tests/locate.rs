@@ -1,8 +1,8 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::Url;
-use microcad_lang_resolve::locate;
+use mucad_lang_base::Url;
+use mucad_lang_resolve::locate;
 
 #[test]
 fn test_external_url_pass_through() {

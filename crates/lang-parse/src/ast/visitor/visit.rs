@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Default visit implementation for an abstract syntax nodes.
@@ -52,7 +52,7 @@ impl<T: Visit> Visit for Box<T> {
     }
 }
 
-impl<T: Visit> Visit for microcad_lang_base::Spanned<T> {
+impl<T: Visit> Visit for mucad_lang_base::Spanned<T> {
     fn visit<'ast, V>(&'ast self, visitor: &mut V) -> ControlFlow<V::BreakTy>
     where
         V: Visitor<'ast> + ?Sized,

@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod error;
@@ -7,8 +7,8 @@ mod rich;
 pub(crate) use rich::{Rich, RichError, RichPattern, RichReason};
 
 pub use error::{ParseError, ParseErrorKind};
-use microcad_lang_base::{SrcRef, SrcReferrer};
-use microcad_macros::Issue;
+use mucad_lang_base::{SrcRef, SrcReferrer};
+use mucad_macros::Issue;
 use miette::Diagnostic;
 use thiserror::Error;
 

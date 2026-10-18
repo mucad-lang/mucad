@@ -1,8 +1,8 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{DisplayOneLine, Stability};
-use microcad_lang_lower::ir::Visibility;
+use mucad_lang_base::{DisplayOneLine, Stability};
+use mucad_lang_lower::ir::Visibility;
 
 use crate::{
     Library, Manifest, SymbolDef,

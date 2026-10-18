@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{Desugar, LowerContext, LowerError, LowerResult, desugar::for_each_statement, ir};
 
-use microcad_lang_base::{Identifier, PushIssue, SpanToSrcRef, SrcRef, element::Visibility};
-use microcad_lang_parse::ast;
+use mucad_lang_base::{Identifier, PushIssue, SpanToSrcRef, SrcRef, element::Visibility};
+use mucad_lang_parse::ast;
 
 impl Desugar<ast::StatementList> for ir::desugared::SourceItems {
     fn desugar(statements: &ast::StatementList, context: &mut LowerContext) -> LowerResult<Self> {

@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_builtin::BuiltinError;
-use microcad_lang_base::{Identifier, IdentifierList, Refer, SrcRef, SrcReferrer};
-use microcad_lang_parse::ast;
-use microcad_lang_types::{TypeError, ValueError};
+use mucad_builtin::BuiltinError;
+use mucad_lang_base::{Identifier, IdentifierList, Refer, SrcRef, SrcReferrer};
+use mucad_lang_parse::ast;
+use mucad_lang_types::{TypeError, ValueError};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -155,7 +155,7 @@ pub enum LowerError {
     #[error("This is not a workbench input property: {name}")]
     #[diagnostic(code(lower::not_an_input_property))]
     NotAnInputProperty {
-        name: microcad_lang_base::Identifier,
+        name: mucad_lang_base::Identifier,
         #[help("Possible inputs")]
         possible_inputs: IdentifierList,
     },
@@ -171,7 +171,7 @@ pub enum LowerError {
 
     #[error("Conflicting stability attributes found")]
     #[diagnostic(
-        code(microcad::lower::conflicting_stability),
+        code(mucad::lower::conflicting_stability),
         help(
             "A symbol can only have one stability level (e.g., choose between #[stable], #[experimental], or #[deprecated])"
         )
@@ -182,7 +182,7 @@ pub enum LowerError {
     },
 
     #[error("Duplicate #[{attr}] attribute")]
-    #[diagnostic(code(microcad::lower::duplicate_attribute))]
+    #[diagnostic(code(mucad::lower::duplicate_attribute))]
     DuplicateAttribute {
         attr: String,
         #[label("duplicate attribute")]
@@ -191,7 +191,7 @@ pub enum LowerError {
 
     #[error("Invalid version format '{value}'")]
     #[diagnostic(
-        code(microcad::lower::invalid_version_string),
+        code(mucad::lower::invalid_version_string),
         help("Version must follow semantic versioning, e.g., \"0.2.0\"")
     )]
     InvalidVersionString {
@@ -202,7 +202,7 @@ pub enum LowerError {
 
     #[error("Attribute #[{attr}] requires a '{arg}' argument")]
     #[diagnostic(
-        code(microcad::lower::missing_attribute_argument),
+        code(mucad::lower::missing_attribute_argument),
         help("Provide the argument like #[{attr}({arg} = \"...\")]")
     )]
     MissingAttributeArgument {

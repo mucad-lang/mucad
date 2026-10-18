@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod doctest;
@@ -7,7 +7,7 @@ mod update_copyright;
 use clap::{Parser, Subcommand};
 use std::error::Error;
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
 use mu::traits::GenerateDoc;
 use mu::{MUCAD_EXTENSION, MUCAD_EXTENSIONS};
@@ -16,8 +16,8 @@ use crate::doctest::TestSuite;
 use crate::update_copyright::CopyrightUpdater;
 
 #[derive(Parser)]
-#[command(name = "microcad-xtask")]
-#[command(author, version, about = "microcad repo task executor", long_about = None)]
+#[command(name = "mucad-xtask")]
+#[command(author, version, about = "mucad repo task executor", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

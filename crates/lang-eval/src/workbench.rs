@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Workbench evaluation
@@ -12,14 +12,14 @@ use crate::{
     },
 };
 
-use microcad_builtin::BuiltinItem;
-use microcad_lang_base::{
+use mucad_builtin::BuiltinItem;
+use mucad_lang_base::{
     DisplayWithCtx, PushIssue, SrcReferrer,
     element::{Visibility, WorkbenchKind},
 };
-use microcad_lang_resolve::library::symbol;
+use mucad_lang_resolve::library::symbol;
 
-use microcad_lang_types::{
+use mucad_lang_types::{
     ArgumentValue, ArgumentValueList, ModelTree, Value,
     model::{Element, ModelTreeBuilderMut, Properties, Property, PropertyType, Workpiece},
 };

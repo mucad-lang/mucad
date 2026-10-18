@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Lowering compile step
@@ -12,8 +12,8 @@ mod desugar;
 mod fold;
 mod scaffold;
 
-use microcad_builtin::BuiltinLibrary;
-use microcad_lang_base::{
+use mucad_builtin::BuiltinLibrary;
+use mucad_lang_base::{
     HashId, IssueList, IssueResult, LookUpName, PushIssue, Shared, Source, Span, SpanToSrcRef,
     SrcRef, SymbolId, hash_id,
 };
@@ -21,8 +21,8 @@ use microcad_lang_base::{
 pub use ir::CastInto;
 
 /// Intermediate representation
-use microcad_lang_parse::Ast;
-use microcad_macros::Artifact;
+use mucad_lang_parse::Ast;
+use mucad_macros::Artifact;
 use serde::{Deserialize, Serialize};
 
 use crate::scaffold::Scaffold;
@@ -55,8 +55,8 @@ pub struct LowerContext<'source> {
 impl<'source> LookUpName for LowerContext<'source> {
     fn look_up_built_in_name(
         &self,
-        builtin_id: &microcad_builtin::BuiltinId,
-    ) -> Option<microcad_lang_base::Name> {
+        builtin_id: &mucad_builtin::BuiltinId,
+    ) -> Option<mucad_lang_base::Name> {
         self.builtins.look_up_built_in_name(builtin_id)
     }
 }

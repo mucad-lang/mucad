@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Export 2D models to Well-Known Text (WKT).
@@ -6,10 +6,10 @@
 use std::io::Write;
 
 use geo::line_string;
-use microcad_core::{Geometries2D, Geometry, Geometry2D};
-use microcad_lang_types::{ModelTree, ModelType, Value};
+use mucad_core::{Geometries2D, Geometry, Geometry2D};
+use mucad_lang_types::{ModelTree, ModelType, Value};
 
-use microcad_render::{
+use mucad_render::{
     GeometryNodeData, GeometryNodeRef, GeometryOutput, GeometryOutputs, GeometryTree, Renderer,
 };
 use wkt::ToWkt;

@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #![allow(missing_docs)]
 
 use insta::assert_debug_snapshot;
-use microcad_lang_parse::lex;
+use mucad_lang_parse::lex;
 use test_case::test_case;
 
 #[test_case("single int", "1")]

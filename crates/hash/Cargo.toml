@@ -1,10 +1,10 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-hash"
+name = "mucad-hash"
 description = "µcad hash utilities"
-documentation = "https://docs.rs/microcad-hash"
+documentation = "https://docs.rs/mucad-hash"
 authors = ["Michael Winkelmann (michael@winkelmann.site)"]
 version.workspace = true
 edition.workspace = true

@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad language base components for error handling etc.
@@ -25,7 +25,7 @@ pub use compact_str::{CompactString, ToCompactString};
 /// URL to locate sources.
 pub use url::Url;
 
-pub use microcad_hash::{HashMap, HashSet, Hashed, Hasher, ToHash};
+pub use mucad_hash::{HashMap, HashSet, Hashed, Hasher, ToHash};
 
 /// List of valid µcad extensions.
 pub const MUCAD_EXTENSIONS: &[&str] = &["mu", "µcad", "mcad", "ucad"];

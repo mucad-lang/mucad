@@ -1,7 +1,7 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! microcad State event.
+//! mucad State event.
 
 use bevy::{
     asset::{Assets, uuid::Uuid},
@@ -15,7 +15,7 @@ use bevy::{
     window::Window,
 };
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
 use crate::{
     ViewModel, material,

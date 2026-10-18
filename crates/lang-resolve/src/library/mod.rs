@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 pub mod manifest;
@@ -13,9 +13,9 @@ pub mod visitor;
 use std::collections::BTreeMap;
 
 pub use manifest::{Dependency, LibrarySection, Manifest, ManifestError};
-use microcad_lang_base::{ExternalId, LibraryId, LibraryInfo, Name, Version};
-use microcad_lang_lower::ir::UnresolvedPath;
-use microcad_macros::Artifact;
+use mucad_lang_base::{ExternalId, LibraryId, LibraryInfo, Name, Version};
+use mucad_lang_lower::ir::UnresolvedPath;
+use mucad_macros::Artifact;
 pub use search::Search;
 use serde::{Deserialize, Serialize};
 

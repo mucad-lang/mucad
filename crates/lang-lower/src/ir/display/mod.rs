@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Display implementations of IR items
 
-use microcad_lang_base::{DisplayOneLine, VersionAnnotation};
+use mucad_lang_base::{DisplayOneLine, VersionAnnotation};
 
 mod function;
 mod source;
@@ -24,10 +24,10 @@ impl DisplayOneLine for ir::DocBlock {}
 impl std::fmt::Display for ir::Meta {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.vis {
-            microcad_lang_base::element::Visibility::Public => {
+            mucad_lang_base::element::Visibility::Public => {
                 write!(f, "pub ")?;
             }
-            microcad_lang_base::element::Visibility::Private => {}
+            mucad_lang_base::element::Visibility::Private => {}
         };
 
         if let Some(name) = &self.name {

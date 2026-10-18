@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::ops::ControlFlow;
 
 use crate::{Ast, ParseContext, ast};
-use microcad_lang_base::{Severity, SpanToSrcRef};
+use mucad_lang_base::{Severity, SpanToSrcRef};
 
 /// This visitor collects all comments (*not* including doc comments).
 #[derive(Debug, derive_more::Deref, Default)]

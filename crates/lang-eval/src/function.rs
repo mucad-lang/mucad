@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Evaluate function
 
-use microcad_builtin::BuiltinItem;
-use microcad_lang_base::{DisplayWithCtx, PushIssue, SrcRef, SrcReferrer, ToCompactString};
-use microcad_lang_resolve::library::symbol;
-use microcad_lang_types::{ArgumentValue, ArgumentValueList, Value};
+use mucad_builtin::BuiltinItem;
+use mucad_lang_base::{DisplayWithCtx, PushIssue, SrcRef, SrcReferrer, ToCompactString};
+use mucad_lang_resolve::library::symbol;
+use mucad_lang_types::{ArgumentValue, ArgumentValueList, Value};
 
 use crate::{
     Callable, Eval, EvalContext, EvalError, EvalErrorKind, EvalResult,

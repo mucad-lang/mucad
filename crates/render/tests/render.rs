@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for rendering model trees.
 
-use microcad_builtin::{BuiltinEvalContext, BuiltinPrimitiveCall, mu};
-use microcad_lang_types::{Model, ModelTree, Value, arguments, model::Element};
-use microcad_render::Renderer;
+use mucad_builtin::{BuiltinEvalContext, BuiltinPrimitiveCall, mu};
+use mucad_lang_types::{Model, ModelTree, Value, arguments, model::Element};
+use mucad_render::Renderer;
 
 fn circle(r: f64) -> Model {
     let mut ctx = BuiltinEvalContext::default();

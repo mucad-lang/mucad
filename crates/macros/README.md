@@ -1,7 +1,7 @@
 # µcad Built-in Proc-Macros
 
-[![Crates.io](https://img.shields.io/crates/v/microcad-builtin-proc-macros.svg)](https://crates.io/crates/microcad-builtin-proc-macros)
-[![Documentation](https://docs.rs/microcad-builtin-proc-macros/badge.svg)](https://docs.rs/microcad-builtin-proc-macros/)
+[![Crates.io](https://img.shields.io/crates/v/mucad-builtin-proc-macros.svg)](https://crates.io/crates/mucad-builtin-proc-macros)
+[![Documentation](https://docs.rs/mucad-builtin-proc-macros/badge.svg)](https://docs.rs/mucad-builtin-proc-macros/)
 
 This crate provides procedural macros used to simplify the creation of built-in symbols for the µcad language.
 
@@ -19,13 +19,13 @@ The following derive macros are provided:
 
 ## Usage
 
-These macros are intended to be used within the `microcad-builtin` crate to define new built-in symbols.
+These macros are intended to be used within the `mucad-builtin` crate to define new built-in symbols.
 
 Here is an example of how to define a new 2D primitive:
 
 ```rust,ignore
-use microcad_builtin_proc_macros::BuiltinPrimitive2D;
-use microcad_lang::value::{Number, Integer};
+use mucad_builtin_proc_macros::BuiltinPrimitive2D;
+use mucad_lang::value::{Number, Integer};
 
 #[derive(BuiltinPrimitive2D)]
 struct MyCircle {

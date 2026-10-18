@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad syntax elements related to expressions
@@ -9,11 +9,11 @@ mod literal;
 pub use call::*;
 use derive_more::From;
 pub use literal::*;
-use microcad_lang_types::Value;
+use mucad_lang_types::Value;
 use strum::IntoStaticStr;
 
 use crate::{CastInto, ir};
-use microcad_lang_base::{SingleIdentifier, SrcRef, SrcReferrer};
+use mucad_lang_base::{SingleIdentifier, SrcRef, SrcReferrer};
 
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
@@ -78,7 +78,7 @@ pub enum ConstantExpression {
 }
 
 impl SingleIdentifier for ConstantExpression {
-    fn single_identifier(&self) -> Option<&microcad_lang_base::Identifier> {
+    fn single_identifier(&self) -> Option<&mucad_lang_base::Identifier> {
         match self {
             ConstantExpression::Path(name) => name.single_identifier(),
             _ => None,

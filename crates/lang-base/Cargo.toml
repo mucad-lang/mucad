@@ -1,10 +1,10 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-lang-base"
+name = "mucad-lang-base"
 description = "µcad language basics"
-documentation = "https://docs.rs/microcad-lang-base"
+documentation = "https://docs.rs/mucad-lang-base"
 authors.workspace = true
 version.workspace = true
 edition.workspace = true
@@ -40,7 +40,7 @@ strum = { version = "0.28", features = ["derive"] }
 thiserror = "2.0"
 url = { version = "2.5", features = ["serde"] }
 
-microcad-hash = { workspace = true }
+mucad-hash = { workspace = true }
 
 [features]
 default = ["ansi-color", "io"]

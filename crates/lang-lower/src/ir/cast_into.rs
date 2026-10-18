@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! CastInto Trait
 
-use microcad_lang_base::{Identifier, Refer, boxed};
+use mucad_lang_base::{Identifier, Refer, boxed};
 
 pub trait CastInto<T> {
     fn cast_into(self) -> T;

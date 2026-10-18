@@ -1,8 +1,8 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_builtin::mu;
-use microcad_core::{self as core, Polygon};
+use mucad_builtin::mu;
+use mucad_core::{self as core, Polygon};
 
 use crate::{RenderPrimitive, RenderResolution};
 

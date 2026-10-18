@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Model tree.
@@ -7,12 +7,12 @@ mod builder;
 mod node;
 mod ops;
 
-use microcad_lang_base::{DisplayWithCtx, HashId, LookUpName, hash_id, tree};
+use mucad_lang_base::{DisplayWithCtx, HashId, LookUpName, hash_id, tree};
 pub use node::{ModelNodeId, Node, NodeExt, NodeMut, NodeRef};
 
 pub use builder::{BuildModelTreeError, ModelTreeBuilder, ModelTreeBuilderMut};
 
-use microcad_macros::Artifact;
+use mucad_macros::Artifact;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -278,4 +278,4 @@ impl Extend<ModelTree> for ModelTree {
     }
 }
 
-pub type Arena = microcad_lang_base::tree::Arena<Model>;
+pub type Arena = mucad_lang_base::tree::Arena<Model>;

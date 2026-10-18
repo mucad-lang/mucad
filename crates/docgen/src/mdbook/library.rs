@@ -3,8 +3,8 @@
 
 //! Generate a markdown book from a symbol tree.
 
-use microcad_lang_markdown as md;
-use microcad_lang_resolve::{SymbolDef, SymbolNodeExt, SymbolNodeRef, library::symbol};
+use mucad_lang_markdown as md;
+use mucad_lang_resolve::{SymbolDef, SymbolNodeExt, SymbolNodeRef, library::symbol};
 
 use crate::{
     GenerateDoc, LibraryDocGenerator,
@@ -31,7 +31,7 @@ impl ToMd for symbol::ParameterList {
 
 impl<'a> ToMd for SymbolNodeRef<'a> {
     fn to_md(&self) -> md::Markdown {
-        use microcad_lang_resolve::library::WorkbenchKind;
+        use mucad_lang_resolve::library::WorkbenchKind;
 
         /// Link to the symbol's page with the first line of its documentation.
         fn list_item(symbol: SymbolNodeRef<'_>) -> Option<md::ListItem> {

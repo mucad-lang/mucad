@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Definition nodes in the AST that will eventually be resolved into Symbols.
@@ -16,10 +16,10 @@ use crate::ast::{
     Attributes, Body, DocBlock, Expression, Identifier, ItemExtras, ParameterList, Span, Type,
 };
 
-use microcad_lang_base::Spanned;
-pub use microcad_lang_base::element::WorkbenchKind;
+use mucad_lang_base::Spanned;
+pub use mucad_lang_base::element::WorkbenchKind;
 
-use microcad_macros::Visit;
+use mucad_macros::Visit;
 use serde::Serialize;
 
 /// An optional visibility modifier

@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad built-in registry.
 
-use microcad_lang_base::{BuiltinId, HashMap, LookUpName, ToCompactString};
+use mucad_lang_base::{BuiltinId, HashMap, LookUpName, ToCompactString};
 
 use crate::{BuiltinItem, BuiltinModule};
 
@@ -81,7 +81,7 @@ impl BuiltinLibrary {
 }
 
 impl LookUpName for BuiltinLibrary {
-    fn look_up_built_in_name(&self, id: &BuiltinId) -> Option<microcad_lang_base::Name> {
+    fn look_up_built_in_name(&self, id: &BuiltinId) -> Option<mucad_lang_base::Name> {
         self.get(*id)
             .map(|builtin| builtin.name().to_compact_string())
     }

@@ -1,11 +1,11 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! microcad Viewer processor request.
+//! mucad Viewer processor request.
 
 use crate::Config;
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
 /// A processor request.
 ///

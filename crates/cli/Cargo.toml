@@ -1,10 +1,10 @@
-# Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2025-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad"
+name = "mucad"
 description = "µcad Command Line Interface"
-documentation = "https://docs.rs/microcad"
+documentation = "https://docs.rs/mucad"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -12,10 +12,10 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
-default-run = "microcad"
+default-run = "mucad"
 
 [[bin]]
-name = "microcad"
+name = "mucad"
 path = "main.rs"
 
 [dependencies]
@@ -30,7 +30,7 @@ num-format = "0.4"
 rust-embed = "8.9"
 miette = { version = "7.6.0", features = ["fancy"] }
 
-microcad-driver = { workspace = true }
+mucad-driver = { workspace = true }
 
 [build-dependencies]
 walkdir = "2"

@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Chumsky parser functions for µcad syntax elements
@@ -31,7 +31,7 @@ impl_parser!(ast::Unit => {
 });
 
 impl_parser!(ast::Literal => {
-    use microcad_lang_base::ToCompactString;
+    use mucad_lang_base::ToCompactString;
     use std::str::FromStr;
 
     let single_value = select_ref! {

@@ -1,17 +1,17 @@
-# Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2025-2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-id = "microcad"
+id = "mucad"
 name = "Microcad"
 version = "0.0.1"
 schema_version = 1
 authors = ["Michael Winkelmann"]
 description = "Microcad Plugin for Zed"
-repository = "https://codeberg.org/microcad/microcad"
+repository = "https://codeberg.org/mucad/mucad"
 
-[grammars.microcad]
-repository = "https://codeberg.org/microcad/tree-sitter-microcad"
+[grammars.mucad]
+repository = "https://codeberg.org/mucad/tree-sitter-mucad"
 commit = "339420b9cfbb9d6e96ed1f881c1632af4c3fcd22"
 
-[language_servers.microcad-lsp]
+[language_servers.mucad-lsp]
 language = "Microcad"

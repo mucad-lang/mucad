@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 
@@ -10,7 +10,7 @@ export struct VM_Argument {
 export struct VM_SrcRef {
     line: int,
     col: int,
-    source_hash: string, 
+    source_hash: string,
 }
 
 
@@ -24,7 +24,7 @@ export struct VM_SymbolInfo {
     kind: string,
     doc: VM_DocBlock,
     // TODO: signatures: [VM_Signatures]
-    src_ref: VM_SrcRef, 
+    src_ref: VM_SrcRef,
 }
 
 export struct VM_Creator {

@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
 use cgmath::{ElementWise, Vector3};
 use manifold_rust::{manifold::Manifold, types::MeshGL};
 
-use microcad_hash::HashMap;
+use mucad_hash::HashMap;
 
 /// Triangle mesh
 #[derive(Default, Clone)]

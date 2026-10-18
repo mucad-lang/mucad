@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod diag;
@@ -28,7 +28,7 @@ use chumsky::{
 
 use std::str::FromStr;
 
-use microcad_lang_base::{Span, Spanned};
+use mucad_lang_base::{Span, Spanned};
 
 /// Extra error.
 pub type Extra<'tokens> = extra::Err<RichError<'tokens>>;

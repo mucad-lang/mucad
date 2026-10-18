@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad compiler built-in library.
@@ -7,10 +7,10 @@
 //!
 //! The built-ins are grouped into several submodules.
 
-use microcad_lang_types::{
+use mucad_lang_types::{
     Arguments, BinaryOperator, Identifier, Integer, List, Ty, TypeError, Value,
 };
-use microcad_macros::{builtin_constant, builtin_fn, builtin_mod, include_inner_docs};
+use mucad_macros::{builtin_constant, builtin_fn, builtin_mod, include_inner_docs};
 
 use crate::{BuiltinError, BuiltinEvalContext, BuiltinItem, BuiltinResult, builtin_item};
 
@@ -291,7 +291,7 @@ pub mod core {
     /// Access the attributes in a model tree.
     #[builtin_fn(core::attribute_access(lhs: Any, name: String) -> Any)]
     pub fn attribute_access(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
-        use microcad_lang_types::model::AttributeAccess;
+        use mucad_lang_types::model::AttributeAccess;
 
         let lhs = args.get("lhs");
         let name: String = args.try_get("name")?;
@@ -309,7 +309,7 @@ pub mod core {
 
 #[builtin_mod]
 pub mod debug {
-    use microcad_lang_base::PushIssue;
+    use mucad_lang_base::PushIssue;
 
     use crate::{BuiltinAdvice, diag::BuiltinWarning};
 
@@ -408,7 +408,7 @@ pub mod debug {
 #[builtin_mod]
 pub mod math {
     use super::*;
-    use microcad_lang_types::{Angle, MathOps, Scalar, tuple};
+    use mucad_lang_types::{Angle, MathOps, Scalar, tuple};
 
     /// Pi
     #[builtin_constant(math::PI)]
@@ -483,7 +483,7 @@ pub mod math {
         let x: Scalar = args.try_get("x")?;
         let y: Scalar = args.try_get("y")?;
         let z: Scalar = args.try_get("z")?;
-        Ok(microcad_lang_types::math::rotate_around_axis(angle, x, y, z).into())
+        Ok(mucad_lang_types::math::rotate_around_axis(angle, x, y, z).into())
     }
 
     #[builtin_fn(math::rotate_xyz(x: Angle, y: Angle, z: Angle) -> Mat3)]
@@ -491,7 +491,7 @@ pub mod math {
         let x: Angle = args.try_get("x")?;
         let y: Angle = args.try_get("y")?;
         let z: Angle = args.try_get("z")?;
-        Ok(microcad_lang_types::math::rotate_xyz(x, y, z).into())
+        Ok(mucad_lang_types::math::rotate_xyz(x, y, z).into())
     }
 
     #[builtin_fn(math::rotate_zyx(x: Angle, y: Angle, z: Angle) -> Mat3)]
@@ -499,7 +499,7 @@ pub mod math {
         let x: Angle = args.try_get("x")?;
         let y: Angle = args.try_get("y")?;
         let z: Angle = args.try_get("z")?;
-        Ok(microcad_lang_types::math::rotate_zyx(z, y, x).into())
+        Ok(mucad_lang_types::math::rotate_zyx(z, y, x).into())
     }
 }
 
@@ -597,7 +597,7 @@ pub mod list {
 pub mod color {
     use super::*;
 
-    use microcad_lang_types::{Scalar, tuple};
+    use mucad_lang_types::{Scalar, tuple};
 
     #[builtin_fn(color::rgb(r: Scalar, g: Scalar, b: Scalar) -> Color)]
     pub fn rgb(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
@@ -611,8 +611,8 @@ pub mod color {
 /// Built-in 2D primitives
 #[builtin_mod]
 pub mod geo2d {
-    use microcad_lang_types::{Angle, Integer, Length, Scalar};
-    use microcad_macros::builtin_primitive;
+    use mucad_lang_types::{Angle, Integer, Length, Scalar};
+    use mucad_macros::builtin_primitive;
 
     use super::*;
 
@@ -738,8 +738,8 @@ pub mod geo2d {
 /// Built-in 3D primitives
 #[builtin_mod]
 pub mod geo3d {
-    use microcad_lang_types::Length;
-    use microcad_macros::builtin_primitive;
+    use mucad_lang_types::Length;
+    use mucad_macros::builtin_primitive;
 
     use super::*;
 
@@ -755,11 +755,11 @@ pub mod geo3d {
 /// Built-in Operations
 #[builtin_mod]
 pub mod ops {
-    use microcad_lang_types::{
+    use mucad_lang_types::{
         Angle, Integer, Length, Mat3, ModelTree, Scalar, Vec3, math::AffineTransform,
         model::BooleanOp,
     };
-    use microcad_macros::{builtin_boolean_op, builtin_op, builtin_transform};
+    use mucad_macros::{builtin_boolean_op, builtin_op, builtin_transform};
 
     use super::*;
 
@@ -860,7 +860,7 @@ pub mod ops {
     impl From<Orient> for AffineTransform {
         fn from(Orient { x, y, z }: Orient) -> Self {
             AffineTransform::RotateMatrix {
-                m: microcad_lang_types::math::orient_to_z(Vec3::new(x, y, z)),
+                m: mucad_lang_types::math::orient_to_z(Vec3::new(x, y, z)),
             }
         }
     }

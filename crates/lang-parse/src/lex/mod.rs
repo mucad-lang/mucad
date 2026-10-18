@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{lex::from_logos::from_logos, token::Token};
 
 use ::logos::Lexer;
-use microcad_lang_base::{Span, Spanned};
+use mucad_lang_base::{Span, Spanned};
 use thiserror::Error;
 
 mod from_logos;

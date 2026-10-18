@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Fold constant values.
 
-use microcad_builtin::{BuiltinEvalContext, BuiltinItem};
-use microcad_lang_base::SymbolId;
-use microcad_lang_types::{Arguments, Value};
+use mucad_builtin::{BuiltinEvalContext, BuiltinItem};
+use mucad_lang_base::SymbolId;
+use mucad_lang_types::{Arguments, Value};
 
 use crate::{LowerContext, ir};
 
@@ -48,7 +48,7 @@ impl<'a, 'source> Fold<'a, 'source> {
         });
 
         let builtin_fn = match &call.path.symbol_id() {
-            Some(microcad_lang_base::SymbolId::Builtin(builtin_id)) => {
+            Some(mucad_lang_base::SymbolId::Builtin(builtin_id)) => {
                 match self.context.builtins.get(*builtin_id) {
                     Some(BuiltinItem::Function(builtin_fn)) if !builtin_fn.is_impure() => {
                         builtin_fn

@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Check for unreachable initializers.
 
-use microcad_lang_types::Ty;
+use mucad_lang_types::Ty;
 
 use crate::{
     Library, ResolveError, ResolveErrorKind, SymbolDef,

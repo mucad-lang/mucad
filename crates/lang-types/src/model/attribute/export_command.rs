@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Export attribute.
 
 use derive_more::Display;
-use microcad_lang_base::Name;
+use mucad_lang_base::Name;
 use serde::{Deserialize, Serialize};
 
 use crate::{Value, tuple};

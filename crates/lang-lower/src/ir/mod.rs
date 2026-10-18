@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad intermediate representation (IR) elements.
@@ -24,7 +24,7 @@ pub use attribute::*;
 pub use cast_into::*;
 pub use expression::*;
 pub use function::*;
-use microcad_lang_types::Value;
+use mucad_lang_types::Value;
 pub use parameter::*;
 pub use path::{Path, UnresolvedPath};
 use strum::IntoStaticStr;
@@ -32,11 +32,11 @@ pub use workbench::*;
 
 pub use source::{ExportAttribute, Source, SourceStatement};
 
-pub use microcad_lang_base::{Identifier, element::Visibility};
-pub use microcad_lang_types::ty::{MatrixType, QuantityType, TupleType, Ty, Unit};
+pub use mucad_lang_base::{Identifier, element::Visibility};
+pub use mucad_lang_types::ty::{MatrixType, QuantityType, TupleType, Ty, Unit};
 
 use derive_more::{Deref, Display, From};
-use microcad_lang_base::{CompactString, SrcRef, ToCompactString, VersionAnnotation};
+use mucad_lang_base::{CompactString, SrcRef, ToCompactString, VersionAnnotation};
 use serde::{Deserialize, Serialize};
 
 use crate::ir;
@@ -45,12 +45,12 @@ use crate::ir;
 #[display("{}", ty)]
 pub struct Type {
     #[deref]
-    pub ty: microcad_lang_types::Type,
+    pub ty: mucad_lang_types::Type,
     pub src_ref: SrcRef,
 }
 
-impl From<microcad_lang_types::Type> for Type {
-    fn from(ty: microcad_lang_types::Type) -> Self {
+impl From<mucad_lang_types::Type> for Type {
+    fn from(ty: mucad_lang_types::Type) -> Self {
         Self {
             ty,
             src_ref: SrcRef::none(),
@@ -193,8 +193,8 @@ impl Tree {
     }
 }
 
-pub type Arena = microcad_lang_base::tree::Arena<Item>;
-pub type Node = microcad_lang_base::tree::Node<Item>;
-pub type NodeRef<'a> = microcad_lang_base::tree::NodeRef<'a, Item>;
-pub type NodeMut<'a> = microcad_lang_base::tree::NodeMut<'a, Item>;
-pub type NodeId = microcad_lang_base::tree::NodeId;
+pub type Arena = mucad_lang_base::tree::Arena<Item>;
+pub type Node = mucad_lang_base::tree::Node<Item>;
+pub type NodeRef<'a> = mucad_lang_base::tree::NodeRef<'a, Item>;
+pub type NodeMut<'a> = mucad_lang_base::tree::NodeMut<'a, Item>;
+pub type NodeId = mucad_lang_base::tree::NodeId;

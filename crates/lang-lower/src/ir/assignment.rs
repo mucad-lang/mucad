@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad assignment syntax element
 
 use crate::{CastInto, ir};
 
-use microcad_lang_base::{Identifier, SrcRef};
+use mucad_lang_base::{Identifier, SrcRef};
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 

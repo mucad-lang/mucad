@@ -1,7 +1,7 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_driver::prelude::{self as mu, Artifact, traits::RenderDiag};
+use mucad_driver::prelude::{self as mu, Artifact, traits::RenderDiag};
 
 use crate::doctest::{Emit, ExpectedTestResult, Panic, TestMode, TestResult, TestStatus};
 
@@ -67,7 +67,7 @@ impl TestCase {
             Some("compile") => TestMode::Compile,
             None | Some("export") => TestMode::Export {
                 resolution: match param("resolution") {
-                    Some(resolution) => microcad_driver::resolution_from_str(&resolution)
+                    Some(resolution) => mucad_driver::resolution_from_str(&resolution)
                         .map_err(|_| invalid("resolution", &resolution))?,
                     None => Default::default(),
                 },

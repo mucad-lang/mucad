@@ -1,8 +1,8 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-lang-eval"
+name = "mucad-lang-eval"
 description = "µcad language eval compiler stage"
 authors = ["Michael Winkelmann (michael@winkelmann.site)"]
 edition.workspace = true
@@ -19,11 +19,11 @@ miette = { version = "7.6.0", features = ["derive", "fancy"] }
 rustc-hash = "2.1.1"
 thiserror = "2.0.17"
 
-microcad-lang-base = { workspace = true }
-microcad-macros = { workspace = true }
-microcad-lang-types = { workspace = true }
-microcad-lang-resolve = { workspace = true }
-microcad-builtin = { workspace = true }
+mucad-lang-base = { workspace = true }
+mucad-macros = { workspace = true }
+mucad-lang-types = { workspace = true }
+mucad-lang-resolve = { workspace = true }
+mucad-builtin = { workspace = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4"

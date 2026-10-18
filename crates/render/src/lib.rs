@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Model methods and trait implementations for rendering.
@@ -22,8 +22,8 @@ pub use context::*;
 pub use diag::{RenderAdvice, RenderIssue, RenderWarning};
 pub use tree::*;
 
-use microcad_core::{self as core, traits::TransformAffine};
-use microcad_lang_types::model::{ModelType, NodeExt};
+use mucad_core::{self as core, traits::TransformAffine};
+use mucad_lang_types::model::{ModelType, NodeExt};
 pub use output::*;
 pub use renderer::{ProgressTx, Renderer};
 pub use resolution::RenderResolution;
@@ -65,8 +65,8 @@ impl SrcReferrer for RenderError {
     }
 }
 
-use microcad_builtin::BuiltinError;
-use microcad_lang_base::{LookUpName, SrcRef, SrcReferrer};
+use mucad_builtin::BuiltinError;
+use mucad_lang_base::{LookUpName, SrcRef, SrcReferrer};
 
 /// A trait that renders something with a reslution
 pub trait RenderPrimitive<T = core::Geometry> {
@@ -115,7 +115,7 @@ impl Render for GeometryNodeData {
             .map(|builtin_id| (builtin_id, context.renderer.hooks.get(builtin_id)));
         if let Some((builtin_id, None)) = hook {
             context.push_error(RenderError::MissingRenderHook {
-                builtin: microcad_builtin::BuiltinLibrary::new()
+                builtin: mucad_builtin::BuiltinLibrary::new()
                     .look_up_built_in_name(&builtin_id)
                     .map(|name| name.to_string())
                     .unwrap_or_else(|| builtin_id.to_string()),

@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad language markdown support library.
@@ -28,4 +28,4 @@ macro_rules! md {
     };
 }
 
-pub use microcad_lang_base::WriteToFile;
+pub use mucad_lang_base::WriteToFile;

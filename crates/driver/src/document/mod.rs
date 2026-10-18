@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod markdown;
@@ -8,7 +8,7 @@ mod stdin;
 
 use derive_more::From;
 
-use microcad_lang_base::{DiagRenderOptions, SourceKind, Url};
+use mucad_lang_base::{DiagRenderOptions, SourceKind, Url};
 pub use source_file::SourceFile;
 pub use stdin::Stdin;
 

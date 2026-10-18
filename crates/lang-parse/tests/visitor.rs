@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for visitor pattern.
 
 use insta::assert_debug_snapshot;
-use microcad_lang_parse::{
+use mucad_lang_parse::{
     Ast, Parse, ParseContext,
     ast::visitor::{CommentCollector, ExpectedDiagnostic, ExpectedDiagnosticsCollector, Visit},
 };
@@ -23,7 +23,7 @@ use test_case::test_case;
     "
 )]
 fn comment_collector(name: &str, input: &str) {
-    let ast = microcad_lang_parse::parse(&microcad_lang_base::Source::from(input))
+    let ast = mucad_lang_parse::parse(&mucad_lang_base::Source::from(input))
         .expect("No error")
         .0;
     let mut comment_collector = CommentCollector::default();
@@ -55,7 +55,7 @@ fn expected_diagnostic_from_comment() {
     "
 )]
 fn expected_diagnostics_collector(name: &str, input: &str) {
-    let source = microcad_lang_base::Source::from(input);
+    let source = mucad_lang_base::Source::from(input);
     let context = ParseContext::from(&source);
     let ast = Ast::parse(&context).expect("No parse errors");
 
@@ -82,7 +82,7 @@ fn expected_diagnostics_collector(name: &str, input: &str) {
 #[test_case("sqrt(r)" => None; "only call")]
 #[test_case("42mm" => None; "literal")]
 fn single_identifier(expr: &str) -> Option<String> {
-    let ast = microcad_lang_parse::parse(&microcad_lang_base::Source::from(expr))
+    let ast = mucad_lang_parse::parse(&mucad_lang_base::Source::from(expr))
         .expect("No error")
         .0;
     let tail = ast.tree().statements.tail.as_ref().expect("An expression");

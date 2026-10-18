@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests of the CLI commands `check`, `compile` and `format`.
@@ -23,13 +23,13 @@ const UNFORMATTED: &str = "std::geo2d::Circle( radius=1mm );\n";
 /// The formatted version of [`UNFORMATTED`].
 const FORMATTED: &str = "std::geo2d::Circle(radius = 1mm);";
 
-/// The `microcad` binary.
+/// The `mucad` binary.
 ///
 /// In debug builds, the standard library is searched relative to the working directory
 /// (`./crates/std/lib`), so the binary runs in the workspace root.
-fn microcad() -> Command {
+fn mucad() -> Command {
     let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("microcad"));
+    let mut cmd = Command::new(assert_cmd::cargo::cargo_bin!("mucad"));
     cmd.current_dir(workspace_root);
     cmd
 }
@@ -50,7 +50,7 @@ fn check_valid() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "valid.mu", VALID);
 
-    microcad()
+    mucad()
         .arg("check")
         .arg(&input)
         .assert()
@@ -67,7 +67,7 @@ fn check_glob_import() {
         "use std::geo2d::*;\nCircle(radius = 1mm);\n",
     );
 
-    microcad()
+    mucad()
         .arg("check")
         .arg(&input)
         .assert()
@@ -80,7 +80,7 @@ fn check_glob_import() {
 fn check_example() {
     let example = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples/hello.mu");
 
-    microcad()
+    mucad()
         .arg("check")
         .arg(&example)
         .assert()
@@ -93,7 +93,7 @@ fn check_unresolved() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "unresolved.mu", UNRESOLVED);
 
-    microcad()
+    mucad()
         .arg("check")
         .arg(&input)
         .assert()
@@ -107,7 +107,7 @@ fn check_parse_error() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "parse_error.mu", PARSE_ERROR);
 
-    microcad()
+    mucad()
         .arg("check")
         .arg(&input)
         .assert()
@@ -122,7 +122,7 @@ fn check_parse_error() {
 fn check_missing_file() {
     let dir = tempfile::tempdir().expect("temp dir");
 
-    microcad()
+    mucad()
         .arg("check")
         .arg(dir.path().join("missing.mu"))
         .assert()
@@ -135,7 +135,7 @@ fn compile_emits_nothing_by_default() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "valid.mu", VALID);
 
-    microcad().arg("compile").arg(&input).assert().success();
+    mucad().arg("compile").arg(&input).assert().success();
 
     let files = std::fs::read_dir(dir.path()).expect("read dir").count();
     assert_eq!(files, 1, "only the source file is expected");
@@ -146,7 +146,7 @@ fn compile_emits_artifacts() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "valid.mu", VALID);
 
-    microcad()
+    mucad()
         .arg("compile")
         .arg(&input)
         .args(["--emit-ast", "--emit-ir", "--emit-model"])
@@ -165,7 +165,7 @@ fn compile_emits_model_to_path() {
     let input = source_file(&dir, "valid.mu", VALID);
     let output = dir.path().join("out");
 
-    microcad()
+    mucad()
         .arg("compile")
         .arg(&input)
         .arg("--emit-model")
@@ -182,7 +182,7 @@ fn compile_parse_error_emits_no_model() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "parse_error.mu", PARSE_ERROR);
 
-    microcad()
+    mucad()
         .arg("compile")
         .arg(&input)
         .arg("--emit-model")
@@ -197,7 +197,7 @@ fn format_file() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "unformatted.mu", UNFORMATTED);
 
-    microcad()
+    mucad()
         .arg("format")
         .arg(&input)
         .assert()
@@ -206,7 +206,7 @@ fn format_file() {
 
     assert_eq!(read(&input).trim_end(), FORMATTED);
 
-    microcad()
+    mucad()
         .arg("format")
         .arg(&input)
         .assert()
@@ -219,14 +219,14 @@ fn format_alias() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "unformatted.mu", UNFORMATTED);
 
-    microcad().arg("fmt").arg(&input).assert().success();
+    mucad().arg("fmt").arg(&input).assert().success();
 
     assert_eq!(read(&input).trim_end(), FORMATTED);
 }
 
 #[test]
 fn format_stdin() {
-    microcad()
+    mucad()
         .arg("format")
         .write_stdin(UNFORMATTED)
         .assert()
@@ -239,7 +239,7 @@ fn format_parse_error_keeps_file() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "parse_error.mu", PARSE_ERROR);
 
-    microcad()
+    mucad()
         .arg("format")
         .arg(&input)
         .assert()
@@ -253,7 +253,7 @@ fn export_default_path() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "valid.mu", VALID);
 
-    microcad()
+    mucad()
         .arg("export")
         .arg(&input)
         .assert()
@@ -268,7 +268,7 @@ fn export_errors_exports_nothing() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "unresolved.mu", UNRESOLVED);
 
-    microcad()
+    mucad()
         .arg("export")
         .arg(&input)
         .assert()
@@ -284,7 +284,7 @@ fn export_dry_run() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "valid.mu", VALID);
 
-    microcad()
+    mucad()
         .arg("export")
         .arg("--dry-run")
         .arg(&input)
@@ -300,14 +300,14 @@ fn export_resolution() {
     let dir = tempfile::tempdir().expect("temp dir");
     let input = source_file(&dir, "valid.mu", VALID);
 
-    microcad()
+    mucad()
         .arg("export")
         .args(["--resolution", "0.05mm"])
         .arg(&input)
         .assert()
         .success();
 
-    microcad()
+    mucad()
         .arg("export")
         .args(["--resolution", "2"])
         .arg(&input)

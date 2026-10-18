@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Evaluation entities.
@@ -21,7 +21,7 @@ use std::rc::Rc;
 use fixed::traits::ToFixed;
 pub use list::*;
 pub use matrix::*;
-use microcad_lang_base::{CompactString, ToCompactString};
+use mucad_lang_base::{CompactString, ToCompactString};
 pub use quantity::*;
 pub use tuple::*;
 pub use value_access::*;

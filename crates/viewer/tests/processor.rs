@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for the geometry processor, which runs without a window.
 
-use microcad_viewer::{
+use mucad_viewer::{
     Config,
     processor::{ProcessorInterface, ProcessorRequest, ProcessorResponse},
 };
@@ -92,7 +92,7 @@ fn process_errors() {
         .take_while(|response| {
             !matches!(
                 response,
-                ProcessorResponse::StateChanged(microcad_viewer::processor::ProcessingState::Error)
+                ProcessorResponse::StateChanged(mucad_viewer::processor::ProcessingState::Error)
             )
         })
         .collect();

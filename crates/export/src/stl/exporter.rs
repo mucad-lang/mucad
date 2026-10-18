@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! STL exporter.
 
-use microcad_lang_types::{ModelTree, ModelType, Value};
-use microcad_render::Renderer;
+use mucad_lang_types::{ModelTree, ModelType, Value};
+use mucad_render::Renderer;
 
 use crate::{
     Export, ExportError, ExporterParameters, Writer,
@@ -18,7 +18,7 @@ use crate::{
 #[derive(Debug, Default)]
 pub struct StlExporter {
     /// The render resolution.
-    pub resolution: microcad_render::RenderResolution,
+    pub resolution: mucad_render::RenderResolution,
     /// If true, the STL will be written binary format.
     pub binary: bool,
 }

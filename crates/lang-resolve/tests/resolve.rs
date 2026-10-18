@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! resolve tests
 
 use std::str::FromStr;
 
-use microcad_lang_lower::ir::UnresolvedPath;
-use microcad_lang_resolve::{ResolveContext, SymbolNodeRef};
+use mucad_lang_lower::ir::UnresolvedPath;
+use mucad_lang_resolve::{ResolveContext, SymbolNodeRef};
 
 fn path(name: &str) -> UnresolvedPath {
     UnresolvedPath::from_str(name).expect("A valid path")
@@ -16,7 +16,7 @@ fn path(name: &str) -> UnresolvedPath {
 fn resolve() {
     let mut ctx = ResolveContext::new();
     let (lib, _diags) =
-        microcad_lang_resolve::resolve("tests/test_cases/resolve.mu", &mut ctx).expect("No error");
+        mucad_lang_resolve::resolve("tests/test_cases/resolve.mu", &mut ctx).expect("No error");
 
     let symbol = lib
         .look_up(lib.root, &path("::resolve"))
@@ -31,7 +31,7 @@ fn resolve() {
 fn resolve_single_identifier() {
     let mut ctx = ResolveContext::new();
     let (_lib, issues) =
-        microcad_lang_resolve::resolve("tests/test_cases/single_identifier.mu", &mut ctx)
+        mucad_lang_resolve::resolve("tests/test_cases/single_identifier.mu", &mut ctx)
             .expect("No error");
 
     assert!(!issues.has_errors(), "{issues:?}");
@@ -41,7 +41,7 @@ fn resolve_single_identifier() {
 #[test]
 fn resolve_self_reference() {
     let mut ctx = ResolveContext::new();
-    let (lib, issues) = microcad_lang_resolve::resolve("tests/test_cases/self_reference", &mut ctx)
+    let (lib, issues) = mucad_lang_resolve::resolve("tests/test_cases/self_reference", &mut ctx)
         .expect("No fatal error");
 
     assert!(!issues.has_errors(), "{issues:?}");
@@ -56,7 +56,7 @@ fn resolve_self_reference() {
 fn resolve_unknown_builtin() {
     let mut ctx = ResolveContext::new();
     let (lib, issues) =
-        microcad_lang_resolve::resolve("tests/test_cases/unknown_builtin.mu", &mut ctx)
+        mucad_lang_resolve::resolve("tests/test_cases/unknown_builtin.mu", &mut ctx)
             .expect("No fatal error");
 
     let errors: Vec<_> = issues.iter().map(|issue| issue.to_string()).collect();
@@ -82,7 +82,7 @@ fn resolve_unknown_builtin() {
 fn resolve_unresolved_path() {
     let mut ctx = ResolveContext::new();
     let (_lib, issues) =
-        microcad_lang_resolve::resolve("tests/test_cases/unresolved_path.mu", &mut ctx)
+        mucad_lang_resolve::resolve("tests/test_cases/unresolved_path.mu", &mut ctx)
             .expect("No fatal error");
 
     assert!(
@@ -98,7 +98,7 @@ fn resolve_unresolved_path() {
 fn resolve_glob() {
     let mut ctx = ResolveContext::new();
     let (_lib, issues) =
-        microcad_lang_resolve::resolve("tests/test_cases/glob.mu", &mut ctx).expect("No error");
+        mucad_lang_resolve::resolve("tests/test_cases/glob.mu", &mut ctx).expect("No error");
 
     assert!(!issues.has_errors(), "{issues:?}");
 }
@@ -113,8 +113,8 @@ fn resolve_glob_external() {
     assert!(!issues.has_errors(), "{issues:?}");
     ctx.add_implicit_dependency("globlib", lib_id);
 
-    let (_lib, issues) = microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(
+    let (_lib, issues) = mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(
             r#"
             use globlib::geo::*;
 
@@ -142,8 +142,8 @@ fn resolve_glob_external_private() {
         .expect("A library");
     ctx.add_implicit_dependency("globlib", lib_id);
 
-    let (_lib, issues) = microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from("use globlib::geo::*;\nPrivate();\n"),
+    let (_lib, issues) = mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from("use globlib::geo::*;\nPrivate();\n"),
         &mut ctx,
     )
     .expect("No fatal error");
@@ -160,8 +160,8 @@ fn resolve_glob_external_private() {
 #[test]
 fn resolve_glob_reexport() {
     let mut ctx = ResolveContext::new();
-    let (_lib, issues) = microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(
+    let (_lib, issues) = mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(
             r#"
             pub mod a {
                 pub use b::*;
@@ -185,8 +185,8 @@ fn resolve_glob_reexport() {
 #[test]
 fn resolve_glob_private_no_reexport() {
     let mut ctx = ResolveContext::new();
-    let (_lib, issues) = microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(
+    let (_lib, issues) = mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(
             r#"
             pub mod a {
                 use b::*;
@@ -215,8 +215,8 @@ fn resolve_glob_private_no_reexport() {
 #[test]
 fn resolve_super() {
     let mut ctx = ResolveContext::new();
-    let (_lib, issues) = microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(
+    let (_lib, issues) = mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(
             r#"
             const R = 1mm;
 
@@ -253,8 +253,8 @@ fn resolve_super() {
 #[test]
 fn resolve_super_beyond_root() {
     let mut ctx = ResolveContext::new();
-    let (_lib, issues) = microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(
+    let (_lib, issues) = mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(
             "const R = 1mm;\n__mu::geo2d::Circle(radius = super::super::R);\n",
         ),
         &mut ctx,
@@ -280,8 +280,8 @@ fn resolve_glob_chain() {
     assert!(!issues.has_errors(), "{issues:?}");
     ctx.add_implicit_dependency("chain_outer", lib_id);
 
-    let (_lib, issues) = microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(
+    let (_lib, issues) = mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(
             r#"
             use chain_outer::geo::*;
 
@@ -301,14 +301,14 @@ fn resolve_glob_chain() {
 #[test]
 fn resolve_source_files() {
     let mut ctx = ResolveContext::new();
-    let (lib, _) = microcad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
+    let (lib, _) = mucad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
         .expect("No error");
     let files = lib.source_files();
     assert_eq!(files.len(), 4, "{files:?}");
 
     let mut ctx = ResolveContext::new();
     let (lib, issues) =
-        microcad_lang_resolve::resolve("tests/test_cases/broken_module.mu", &mut ctx)
+        mucad_lang_resolve::resolve("tests/test_cases/broken_module.mu", &mut ctx)
             .expect("No fatal error");
     assert!(issues.has_errors(), "{issues:?}");
     assert!(
@@ -345,7 +345,7 @@ fn resolve_library_source_files() {
 
     // From a file module of a single file.
     let mut ctx = ResolveContext::new();
-    let (files, _) = microcad_lang_resolve::library_source_files(
+    let (files, _) = mucad_lang_resolve::library_source_files(
         "tests/test_cases/file_module/foo/bar.mu",
         &mut ctx,
     )
@@ -355,7 +355,7 @@ fn resolve_library_source_files() {
 
     // From a source file of a library with a dependency.
     let mut ctx = ResolveContext::new();
-    let (files, _) = microcad_lang_resolve::library_source_files(
+    let (files, _) = mucad_lang_resolve::library_source_files(
         "tests/test_cases/chain_outer/lib.mu",
         &mut ctx,
     )
@@ -368,7 +368,7 @@ fn resolve_library_source_files() {
 #[test]
 fn resolve_source_file_dependencies() {
     let mut ctx = ResolveContext::new();
-    let (lib, _) = microcad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
+    let (lib, _) = mucad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
         .expect("No error");
     let file = |name: &str| std::path::PathBuf::from(format!("tests/test_cases/{name}"));
 
@@ -400,7 +400,7 @@ fn resolve_source_file_dependencies() {
 #[test]
 fn resolve_failed_source_file() {
     let mut ctx = ResolveContext::new();
-    let (lib, _) = microcad_lang_resolve::resolve("tests/test_cases/broken_module.mu", &mut ctx)
+    let (lib, _) = mucad_lang_resolve::resolve("tests/test_cases/broken_module.mu", &mut ctx)
         .expect("No fatal error");
 
     let broken = lib
@@ -410,8 +410,8 @@ fn resolve_failed_source_file() {
     assert!(
         matches!(
             broken.def,
-            microcad_lang_resolve::SymbolDef::SourceFile(
-                microcad_lang_resolve::library::symbol::SourceFile::Failed { .. }
+            mucad_lang_resolve::SymbolDef::SourceFile(
+                mucad_lang_resolve::library::symbol::SourceFile::Failed { .. }
             )
         ),
         "{:?}",
@@ -451,8 +451,8 @@ fn resolve_cyclic_dependency() {
     => Vec::<String>::new(); "different names")]
 fn resolve_property_assignment(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(code),
+    let issues = match mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(code),
         &mut ctx,
     ) {
         Ok((_, issues)) | Err(issues) => issues,
@@ -463,7 +463,7 @@ fn resolve_property_assignment(code: &str) -> Vec<String> {
 /// A context with a prelude with `Shape` and `R` of the library `globlib`,
 /// which is an implicit dependency, if `dependency` is `true`.
 fn prelude_context(dependency: bool) -> ResolveContext {
-    use microcad_lang_base::{ExternalId, SymbolId};
+    use mucad_lang_base::{ExternalId, SymbolId};
 
     let mut ctx = ResolveContext::new();
     let (lib_id, _) = ctx
@@ -477,7 +477,7 @@ fn prelude_context(dependency: bool) -> ResolveContext {
         .lib_cache()
         .with_read(|lib_cache| lib_cache.get(&lib_id))
         .expect("The library");
-    let mut prelude = microcad_lang_resolve::Prelude::new(lib_id);
+    let mut prelude = mucad_lang_resolve::Prelude::new(lib_id);
     for name in ["Shape", "R"] {
         let id = lib
             .look_up(lib.root, &path(&format!("::globlib::geo::{name}")))
@@ -503,8 +503,8 @@ fn prelude_context(dependency: bool) -> ResolveContext {
     => vec!["Unresolved symbol: geo::Shape"]; "prelude only for names")]
 fn resolve_prelude(dependency: bool, code: &str) -> Vec<String> {
     let mut ctx = prelude_context(dependency);
-    let issues = match microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(code),
+    let issues = match mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(code),
         &mut ctx,
     ) {
         Ok((_, issues)) | Err(issues) => issues,
@@ -530,8 +530,8 @@ fn resolve_prelude(dependency: bool, code: &str) -> Vec<String> {
     "wrong functions and modules")]
 fn resolve_case_check(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(code),
+    let issues = match mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(code),
         &mut ctx,
     ) {
         Ok((_, issues)) | Err(issues) => issues,
@@ -543,11 +543,11 @@ fn resolve_case_check(code: &str) -> Vec<String> {
 #[test]
 fn resolve_case_check_file_name() {
     let mut ctx = ResolveContext::new();
-    let source = microcad_lang_base::Source::new(
+    let source = mucad_lang_base::Source::new(
         std::path::PathBuf::from("README.mu"),
         "const A = 1;".into(),
     );
-    let issues = match microcad_lang_resolve::resolve_source(source, &mut ctx) {
+    let issues = match mucad_lang_resolve::resolve_source(source, &mut ctx) {
         Ok((_, issues)) | Err(issues) => issues,
     };
     assert!(issues.is_empty(), "{issues:?}");
@@ -574,8 +574,8 @@ fn resolve_module_alias(external: bool, code: &str) -> Vec<String> {
             .expect("A library");
         ctx.add_implicit_dependency("globlib", lib_id);
     }
-    let issues = match microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(code),
+    let issues = match mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(code),
         &mut ctx,
     ) {
         Ok((_, issues)) | Err(issues) => issues,
@@ -599,8 +599,8 @@ fn resolve_module_alias(external: bool, code: &str) -> Vec<String> {
     => Vec::<String>::new(); "different scopes")]
 fn resolve_duplicate_symbol(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(code),
+    let issues = match mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(code),
         &mut ctx,
     ) {
         Ok((_, issues)) | Err(issues) => issues,
@@ -628,8 +628,8 @@ fn resolve_duplicate_symbol(code: &str) -> Vec<String> {
     => Vec::<String>::new(); "short name ambiguous in earlier")]
 fn resolve_unreachable_init(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match microcad_lang_resolve::resolve_source(
-        microcad_lang_base::Source::from(code),
+    let issues = match mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(code),
         &mut ctx,
     ) {
         Ok((_, issues)) | Err(issues) => issues,

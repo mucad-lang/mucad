@@ -2,6 +2,6 @@
 /tree/*.svg
 /tests/.test
 *.stl
-/microcad-lsp.log
+/mucad-lsp.log
 node_modules
 /scripts/.env

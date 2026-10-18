@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{FormatConfig, node};
 
-use microcad_lang_base::{CompactString, ToCompactString};
+use mucad_lang_base::{CompactString, ToCompactString};
 
 /// How to perform a line break
 pub enum BreakMode {

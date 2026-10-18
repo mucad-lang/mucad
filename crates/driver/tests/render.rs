@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Rendering of compiled sources with a render cache, e.g. in the viewer.
 
-use microcad_core::Vec3;
-use microcad_driver::{Compiler, prelude as mu};
+use mucad_core::Vec3;
+use mucad_driver::{Compiler, prelude as mu};
 
 /// A compiler and a renderer with a render cache, which are kept between compilations.
 struct Session {
@@ -91,7 +91,7 @@ fn render_changed_child() {
 }
 
 /// The bounds of the rendered geometry of `code`, which uses `std::ops`.
-fn ops_bounds(code: &str) -> microcad_core::Bounds3D {
+fn ops_bounds(code: &str) -> mucad_core::Bounds3D {
     let tree = Session::new().render(&format!("use std::ops::*;\n{code}"));
     tree.bounds()
 }

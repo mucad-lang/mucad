@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Render context
 
-use microcad_hash::HashId;
-use microcad_lang_base::{IssueList, PushIssue};
-use microcad_lang_types::{ModelNodeRef, ModelTree};
+use mucad_hash::HashId;
+use mucad_lang_base::{IssueList, PushIssue};
+use mucad_lang_types::{ModelNodeRef, ModelTree};
 
 use crate::{
     GeometryNodeId, GeometryNodeRef, GeometryOutputs, GeometryTree, Render, RenderError,

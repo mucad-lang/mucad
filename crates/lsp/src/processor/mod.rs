@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad language server processor.
@@ -7,7 +7,7 @@
 //! It runs in a separate thread and communication is handled via
 //! crossbeam channels with requests and responses.
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 use mu::traits::*;
 
 use crossbeam::channel::{Receiver, Sender};

@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Code block tests
 
 use std::str::FromStr;
 
-use microcad_lang_markdown::{CodeBlockHeader, Markdown};
+use mucad_lang_markdown::{CodeBlockHeader, Markdown};
 
 /// The source of a code block in a loaded markdown file has the location of the code block.
 #[test]

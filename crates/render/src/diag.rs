@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Render issues, which are collected while rendering continues.
 
-use microcad_lang_base::{SrcRef, SrcReferrer};
+use mucad_lang_base::{SrcRef, SrcReferrer};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -18,7 +18,7 @@ pub enum RenderWarning {}
 pub enum RenderAdvice {}
 
 /// An issue that occurred during rendering.
-#[derive(Debug, Error, microcad_macros::Issue)]
+#[derive(Debug, Error, mucad_macros::Issue)]
 #[issue(code = "render")]
 pub enum RenderIssue {
     /// A render error.

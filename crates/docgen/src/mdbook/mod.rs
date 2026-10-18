@@ -6,7 +6,7 @@
 mod builtin;
 mod library;
 
-use microcad_lang_markdown::{Block, Markdown};
+use mucad_lang_markdown::{Block, Markdown};
 
 /// Trait to fetch markdown from a symbol definition.
 pub(crate) trait ToMd {

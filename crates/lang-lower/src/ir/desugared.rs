@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Item desugared from AST. These items will be scaffolded into the IR.
@@ -6,7 +6,7 @@
 //! All these items are crate-internal, because they further processed during the scaffolding step.
 //! E.g., the attributes and meta will be further processed into item-specific structs.
 
-use microcad_macros::Scaffold;
+use mucad_macros::Scaffold;
 use serde::{Deserialize, Serialize};
 
 use crate::ir;

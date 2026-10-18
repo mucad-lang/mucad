@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Various type conversion from µcad to tower_lsp's types.
 
 use tower_lsp::lsp_types as lsp;
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 use mu::traits::*;
 
 pub trait ToLsp {

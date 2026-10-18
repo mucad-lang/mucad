@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad language types and values.
@@ -29,7 +29,7 @@ pub use model::{Model, ModelTree, ModelType, NodeMut as ModelNodeMut, NodeRef as
 
 pub use math::MathOps;
 
-pub use microcad_lang_base::{
+pub use mucad_lang_base::{
     Identifier,
     element::{BinaryOperator, UnaryOperator},
 };

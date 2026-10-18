@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 pub mod def;
@@ -8,11 +8,11 @@ mod statement;
 mod ty;
 pub mod visitor;
 
-use microcad_lang_base::{Name, Span};
+use mucad_lang_base::{Name, Span};
 
 pub use expression::*;
 pub use literal::*;
-use microcad_macros::Visit;
+use mucad_macros::Visit;
 use serde::Serialize;
 pub use statement::*;
 pub use ty::*;

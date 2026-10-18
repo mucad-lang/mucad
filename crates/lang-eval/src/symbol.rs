@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{DisplayWithCtx, PushIssue, SrcRef, SrcReferrer};
-use microcad_lang_resolve::library::symbol;
-use microcad_lang_types::{ArgumentValueList, Value};
+use mucad_lang_base::{DisplayWithCtx, PushIssue, SrcRef, SrcReferrer};
+use mucad_lang_resolve::library::symbol;
+use mucad_lang_types::{ArgumentValueList, Value};
 
 use crate::{
     Callable, Eval, EvalContext, EvalErrorKind, EvalResult,

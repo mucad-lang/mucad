@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Match the arguments of a call to parameters.
@@ -6,11 +6,11 @@
 mod matcher;
 mod multi_match;
 
-use microcad_lang_base::{Identifier, IdentifierList};
-use microcad_lang_resolve::library::symbol::{
+use mucad_lang_base::{Identifier, IdentifierList};
+use mucad_lang_resolve::library::symbol::{
     Function, ParameterList, function::FunctionSignature, workbench::Init,
 };
-use microcad_lang_types::{ArgumentValueList, Arguments, CallSignature, Tuple};
+use mucad_lang_types::{ArgumentValueList, Arguments, CallSignature, Tuple};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -131,7 +131,7 @@ pub trait ArgumentMatch {
 impl ArgumentMatch for ParameterList {
     /// Return default values for this parameters, assuming all constant expression have been folded into values.
     fn default_values(&self) -> Tuple {
-        use microcad_lang_resolve::library::symbol::ExprSpec;
+        use mucad_lang_resolve::library::symbol::ExprSpec;
         Tuple::from_iter(self.parameters.iter().filter_map(|param| {
             param
                 .default_value
@@ -143,7 +143,7 @@ impl ArgumentMatch for ParameterList {
 
     /// Parameters call signature
     fn call_signature(&self) -> CallSignature {
-        use microcad_lang_types::Ty;
+        use mucad_lang_types::Ty;
         CallSignature::new(
             self.iter()
                 .map(|param| (param.id.clone(), param.ty()))
@@ -182,7 +182,7 @@ impl ArgumentMatch for Function {
     }
 }
 
-impl ArgumentMatch for microcad_builtin::BuiltinFunction {
+impl ArgumentMatch for mucad_builtin::BuiltinFunction {
     fn call_signature(&self) -> CallSignature {
         self.ty().call_ty.clone()
     }
@@ -192,13 +192,13 @@ impl ArgumentMatch for microcad_builtin::BuiltinFunction {
     }
 }
 
-impl ArgumentMatch for microcad_builtin::BuiltinPrimitive {
+impl ArgumentMatch for mucad_builtin::BuiltinPrimitive {
     fn call_signature(&self) -> CallSignature {
         self.ty().call_ty.clone()
     }
 }
 
-impl ArgumentMatch for microcad_builtin::BuiltinOperation {
+impl ArgumentMatch for mucad_builtin::BuiltinOperation {
     fn call_signature(&self) -> CallSignature {
         (self.ty)().call_ty.clone()
     }

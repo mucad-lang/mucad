@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! A compiler artifact to be persisted, e.g. an IR written and read from file.
 
-use microcad_lang_base::{Identifier, SrcRef};
+use mucad_lang_base::{Identifier, SrcRef};
 use serde::{Deserialize, Serialize};
 
 use crate::ir;

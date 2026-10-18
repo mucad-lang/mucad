@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_builtin::mu;
-use microcad_core::{self as core, CalcBounds2D, Extrude, Geometry, GeometryType, UnaryBooleanOp};
-use microcad_lang_types::{math::IntoFloat, model::ModelType};
+use mucad_builtin::mu;
+use mucad_core::{self as core, CalcBounds2D, Extrude, Geometry, GeometryType, UnaryBooleanOp};
+use mucad_lang_types::{math::IntoFloat, model::ModelType};
 
 use crate::{
     GeometryOutput, GeometryOutputs, GeometryTree, Render, RenderContext, RenderError, RenderResult,
@@ -77,7 +77,7 @@ impl Render for mu::ops::Extrude {
         let multi_polygon = context.collect_outputs(tree).primary().to_2d().union();
 
         Ok(GeometryOutput::from(multi_polygon.linear_extrude(
-            microcad_core::Length::mm(self.height.as_mm()),
+            mucad_core::Length::mm(self.height.as_mm()),
             self.scale_x.into_float(),
             self.scale_y.into_float(),
             self.twist.into_float(),

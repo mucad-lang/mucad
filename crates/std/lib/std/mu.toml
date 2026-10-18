@@ -1,11 +1,11 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [library]
 name = "std"
 description = "The µcad standard library"
 version = "0.6.0"
-documentation = "https://docs.microcad.xyz/std"
+documentation = "https://docs.mucad.org/std"
 authors = ["Michael Winkelmann"]
 license = "GPLv3"
 no_std = true # Do not load standard library

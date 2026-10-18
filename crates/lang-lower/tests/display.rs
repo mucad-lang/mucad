@@ -3,7 +3,7 @@
 
 //! Display snapshot tests for IR
 
-use microcad_lang_base::DiagRenderOptions;
+use mucad_lang_base::DiagRenderOptions;
 mod common;
 
 macro_rules! snapshot_test_display {
@@ -15,7 +15,7 @@ macro_rules! snapshot_test_display {
             let source = common::source_from_test_file(name);
             match common::ir_from_source(&source) {
                 Ok((ir, errors)) => {
-                    let diags = microcad_lang_base::Diagnostics::from(errors);
+                    let diags = mucad_lang_base::Diagnostics::from(errors);
                     if diags.has_errors() || diags.has_warnings() {
                         panic!("{diags:?}");
                     }
@@ -23,7 +23,7 @@ macro_rules! snapshot_test_display {
                 }
                 Err(errors) => panic!(
                     "{}",
-                    microcad_lang_base::Diagnostics::from(errors)
+                    mucad_lang_base::Diagnostics::from(errors)
                         .render_to_string(&&source, &DiagRenderOptions::default())
                         .expect("No error")
                 ),

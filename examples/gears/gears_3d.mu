@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::geo2d::*;
@@ -17,7 +17,7 @@ part Gear(teeth: Integer) {
     n_holes = 5;
 
     bearing_hole = Circle(radius = gear_profile.pitch_radius / 8);
-    
+
     hole_radius = pitch_radius / n_holes;
     holes = Circle(radius = pitch_radius / n_holes)
                 .translate(x = outer_radius - hole_radius * 2)
@@ -25,15 +25,15 @@ part Gear(teeth: Integer) {
 
     inner = Circle(radius = pitch_radius - 3mm);
 
-    bearing = (Circle(radius = pitch_radius / 4) - bearing_hole).extrude(8mm) 
+    bearing = (Circle(radius = pitch_radius / 4) - bearing_hole).extrude(8mm)
             - Circle(radius = gear_profile.module)
                 .extrude(pitch_radius / 4)
                 .translate(z = -pitch_radius / 4)
                 .rotate(x = 90°)
                 .translate(z = 5mm);
 
-    bearing 
-    | (inner - holes - Circle(radius = pitch_radius / 4)).extrude(2mm) 
+    bearing
+    | (inner - holes - Circle(radius = pitch_radius / 4)).extrude(2mm)
     | (gear_profile - inner).extrude(4mm);
 }
 
@@ -57,4 +57,3 @@ gear2
 gear3
     .rotate(-angle / gear3.teeth)
     .translate(gear1.outer_radius + gear3.pitch_radius, 45°);
-

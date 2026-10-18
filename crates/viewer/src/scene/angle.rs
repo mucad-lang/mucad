@@ -1,7 +1,7 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! microcad Angle measure scene item.
+//! mucad Angle measure scene item.
 
 use bevy::mesh::{Mesh, Mesh3d};
 use bevy::{

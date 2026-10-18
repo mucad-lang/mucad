@@ -1,7 +1,7 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_types::{Quantity, QuantityType, Scalar, Value};
+use mucad_lang_types::{Quantity, QuantityType, Scalar, Value};
 
 #[test]
 fn test_value_from_str_literals() {
@@ -23,7 +23,7 @@ fn test_value_from_str_literals() {
     ];
 
     for (input, output) in cases {
-        let result = microcad_driver::value_from_str(input).unwrap();
+        let result = mucad_driver::value_from_str(input).unwrap();
         assert_eq!(result, output);
     }
 }
@@ -32,6 +32,6 @@ fn test_value_from_str_literals() {
 fn test_parse_errors() {
     // Test an invalid literal to ensure your ParseErrors/miette setup works
     let input = "[foo]";
-    let result = microcad_driver::value_from_str(input);
+    let result = mucad_driver::value_from_str(input);
     assert!(result.is_err());
 }

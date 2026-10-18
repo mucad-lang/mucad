@@ -1,62 +1,62 @@
 {
-    "scopeName": "source.microcad",
-    "name": "microcad",
+    "scopeName": "source.mucad",
+    "name": "mucad",
     "patterns": [
         {
             "match": "//.*",
-            "name": "comment.line.microcad"
+            "name": "comment.line.mucad"
         },
         {
             "match": "\\b(pub|sketch|part|op|mod|use|fn|const|prop|init|return|if|else|mat|__builtin|or|and|not|as)\\b",
-            "name": "keyword.control.microcad"
+            "name": "keyword.control.mucad"
         },
         {
             "match": "\\b(Integer|Scalar|String|Color|Length|Area|Volume|Angle|Weight|Density|Bool|Matrix[0-9])\\b",
-            "name": "storage.type.microcad"
+            "name": "storage.type.mucad"
         },
         {
             "match": "\\b([a-z_][a-zA-Z0-9_]*)\\s*(?=\\()",
-            "name": "entity.name.function.microcad"
+            "name": "entity.name.function.mucad"
         },
         {
             "match": "\\+|-|\\*|/| %|\\=|\\==|\\!=|\\<|\\>|\\<=|\\>=|\\||:",
-            "name": "keyword.operator.microcad"
+            "name": "keyword.operator.mucad"
         },
         {
             "match": "\\b(([0-9]+(\\.[0-9]+)?)(%|m²|cm²|mm²|µm²|in²|ft²|yd²|m³|cm³|mm³|µm³|in³|ft³|yd³|ml|cl|l|µl|cm|mm|m|µm|in|ft|yd|deg|°|grad|turn|rad|g|kg|lb|oz)?)|true|false\\b",
-            "name": "constant.numeric.microcad"
+            "name": "constant.numeric.mucad"
         },
         {
             "match": "([a-z_][a-z0-9_]*)(::)",
             "captures": {
                 "1": {
-                    "name": "entity.name.namespace.microcad"
+                    "name": "entity.name.namespace.mucad"
                 },
                 "2": {
-                    "name": "keyword.operator.namespace.microcad"
+                    "name": "keyword.operator.namespace.mucad"
                 }
             }
         },
         {
             "match": "\\b([a-z_][a-zA-Z0-9_]*)\\b",
-            "name": "variable.other.microcad"
+            "name": "variable.other.mucad"
         },
         {
             "match": "\\b([A-Z_][A-Z0-9_]*)\\b",
-            "name": "constant.other.caps.microcad"
+            "name": "constant.other.caps.mucad"
         },
         {
             "match": "\\b([A-Z_][a-zA-Z0-9_]*)\\b",
-            "name": "entity.name.type.microcad"
+            "name": "entity.name.type.mucad"
         },
         {
             "match": "\"[^\"]*\"",
-            "name": "string.quoted.single.microcad"
+            "name": "string.quoted.single.mucad"
         },
         {
             "begin": "\\(",
             "end": "\\)",
-            "name": "meta.brace.round.microcad",
+            "name": "meta.brace.round.mucad",
             "patterns": [
                 {
                     "include": "#code"
@@ -66,7 +66,7 @@
         {
             "begin": "\\{",
             "end": "\\}",
-            "name": "meta.brace.curly.microcad",
+            "name": "meta.brace.curly.mucad",
             "patterns": [
                 {
                     "include": "#code"
@@ -114,54 +114,54 @@
         },
         "comments": {
             "match": "//.*",
-            "name": "comment.line.microcad"
+            "name": "comment.line.mucad"
         },
         "keywords": {
             "match": "\\b(pub|sketch|part|op|mod|use|fn|const|prop|init|return|if|else|mat|__builtin|or|and|not|as)\\b",
-            "name": "keyword.control.microcad"
+            "name": "keyword.control.mucad"
         },
         "functions": {
             "match": "\\b([a-z_][a-zA-Z0-9_]*)\\s*(?=\\()",
-            "name": "entity.name.function.microcad"
+            "name": "entity.name.function.mucad"
         },
         "operators": {
             "match": "\\+|-|\\*|/| %|\\=|\\==|\\!=|\\<|\\>|\\<=|\\>=|\\&&|\\||:",
-            "name": "keyword.operator.microcad"
+            "name": "keyword.operator.mucad"
         },
         "numbers": {
             "match": "\\b(([0-9]+(\\.[0-9]+)?)(%|m²|cm²|mm²|µm²|in²|ft²|yd²|m³|cm³|mm³|µm³|in³|ft³|yd³|ml|cl|l|µl|cm|mm|m|µm|in|ft|yd|deg|°|grad|turn|rad|g|kg|lb|oz)?)|true|false\\b",
-            "name": "constant.numeric.microcad"
+            "name": "constant.numeric.mucad"
         },
         "namespaces": {
             "match": "([a-z_][a-z0-9_]*)(::)",
             "captures": {
                 "1": {
-                    "name": "entity.name.namespace.microcad"
+                    "name": "entity.name.namespace.mucad"
                 },
                 "2": {
-                    "name": "keyword.operator.namespace.microcad"
+                    "name": "keyword.operator.namespace.mucad"
                 }
             }
         },
         "variables": {
             "match": "\\b([a-z_][a-zA-Z0-9_]*)\\b",
-            "name": "variable.other.microcad"
+            "name": "variable.other.mucad"
         },
         "constants": {
             "match": "\\b([A-Z_][A-Z0-9_]*)\\b",
-            "name": "constant.other.caps.microcad"
+            "name": "constant.other.caps.mucad"
         },
         "custom_types": {
             "match": "\\b([A-Z_][a-zA-Z0-9_]*)\\b",
-            "name": "entity.name.type.microcad"
+            "name": "entity.name.type.mucad"
         },
         "types": {
             "match": "\\b(Integer|Scalar|String|Color|Length|Area|Volume|Angle|Weight|Density|Bool)\\b",
-            "name": "storage.type.microcad"
+            "name": "storage.type.mucad"
         },
         "strings": {
             "match": "\"[^\"]*\"",
-            "name": "string.quoted.single.microcad"
+            "name": "string.quoted.single.mucad"
         }
     }
 }

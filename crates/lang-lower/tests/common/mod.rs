@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{IssueResult, MUCAD_EXTENSION, Source};
-use microcad_lang_lower::{self as lower, Ir, LowerContext, LowerIssue, ir};
-use microcad_lang_parse as parse;
+use mucad_lang_base::{IssueResult, MUCAD_EXTENSION, Source};
+use mucad_lang_lower::{self as lower, Ir, LowerContext, LowerIssue, ir};
+use mucad_lang_parse as parse;
 
 /// Get intermediate representation and diagnostics.
 #[allow(unused)]
@@ -12,7 +12,7 @@ pub fn ir_from_source(source: &Source) -> IssueResult<Ir, LowerIssue> {
     let mut context = LowerContext::from(source);
     let (mut ir, issues) = lower::lower(&mut context, &ast)?;
 
-    use microcad_lang_lower::ir::visitor::VisitorMut;
+    use mucad_lang_lower::ir::visitor::VisitorMut;
     ir::visitor::MakeHumanReadable::new(&context).visit(&mut ir);
 
     Ok((ir, issues))

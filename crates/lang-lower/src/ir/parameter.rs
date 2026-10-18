@@ -1,13 +1,13 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad parameter syntax elements
 
 use crate::ir;
 
-use microcad_lang_base::{Identifier, SrcRef, boxed};
-use microcad_lang_types::Ty;
-use microcad_macros::{Identifiable, SrcReferrer};
+use mucad_lang_base::{Identifier, SrcRef, boxed};
+use mucad_lang_types::Ty;
+use mucad_macros::{Identifiable, SrcReferrer};
 
 use serde::{Deserialize, Serialize};
 
@@ -52,7 +52,7 @@ impl Parameter {
 
 /// Returns the type for this parameter (assuming the default value has been evaluated).
 impl Ty for Parameter {
-    fn ty(&self) -> microcad_lang_types::Type {
+    fn ty(&self) -> mucad_lang_types::Type {
         use crate::ir::ExprSpec;
         self.default_value
             .as_ref()

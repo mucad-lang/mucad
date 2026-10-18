@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! `#[derive(Issue)]` implementation.
@@ -72,7 +72,7 @@ fn derive_issue(input: &DeriveInput) -> Result<TokenStream2> {
 
     Ok(quote! {
         const _: () = {
-            use microcad_lang_base::Issue;
+            use mucad_lang_base::Issue;
             use miette::{Diagnostic, LabeledSpan, Severity, SourceCode};
 
             impl Issue for #name {

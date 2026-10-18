@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{Desugar, LowerContext, LowerError, LowerResult, desugar::DesugarExpr, ir};
@@ -6,10 +6,10 @@ use crate::{Desugar, LowerContext, LowerError, LowerResult, desugar::DesugarExpr
 mod call;
 mod literal;
 
-use microcad_builtin::{__mu, BuiltinError};
-use microcad_lang_base::{Identifier, PushIssue, SpanToSrcRef};
-use microcad_lang_parse::ast;
-use microcad_lang_types::{Scalar, Value};
+use mucad_builtin::{__mu, BuiltinError};
+use mucad_lang_base::{Identifier, PushIssue, SpanToSrcRef};
+use mucad_lang_parse::ast;
+use mucad_lang_types::{Scalar, Value};
 
 impl Desugar<ast::Identifier> for ir::Marker {
     fn desugar(node: &ast::Identifier, context: &mut LowerContext) -> LowerResult<Self> {

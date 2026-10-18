@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::{path::PathBuf, rc::Rc};
@@ -8,13 +8,13 @@ use crate::{
     config::{self, ExportConfig},
 };
 
-use microcad_builtin::{Exporter, ExporterRegistry};
-use microcad_lang::{
+use mucad_builtin::{Exporter, ExporterRegistry};
+use mucad_lang::{
     model::{Model, OutputType},
     value::Value,
 };
 
-pub use microcad_lang::model::ExportCommand;
+pub use mucad_lang::model::ExportCommand;
 
 pub struct ExportTargets(Vec<(Model, ExportCommand)>);
 
@@ -98,7 +98,7 @@ impl ExportParameters {
         output_type: &OutputType,
         exporters: &ExporterRegistry,
     ) -> Result<Rc<dyn Exporter>> {
-        use microcad_builtin::ExporterAccess;
+        use mucad_builtin::ExporterAccess;
 
         match output_type {
             OutputType::NotDetermined => Err(miette::miette!("Could not determine output type.")),
@@ -115,7 +115,7 @@ impl ExportParameters {
         exporters: &ExporterRegistry,
         default_exporter: Rc<dyn Exporter>,
     ) -> Result<ExportCommand> {
-        use microcad_builtin::ExporterAccess;
+        use mucad_builtin::ExporterAccess;
 
         Ok(match &self.output_path {
             Some(filename) => ExportCommand {
@@ -146,7 +146,7 @@ impl ExportParameters {
         model: &Model,
         default_command: ExportCommand,
     ) -> miette::Result<ExportTargets> {
-        use microcad_lang::model::AttributesAccess;
+        use mucad_lang::model::AttributesAccess;
         let mut models = model
             .source_file_descendants()
             .fold(Vec::new(), |mut models, model| {

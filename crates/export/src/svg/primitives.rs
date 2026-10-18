@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Scalable Vector Graphics (SVG) primitives ([`WriteSvg`] trait implementations).
@@ -7,8 +7,8 @@ use std::io::Write;
 
 use cgmath::{Deg, InnerSpace, SquareMatrix};
 use geo::{CoordsIter as _, Point, Rect, Translate};
-use microcad_core::*;
-use microcad_render::{
+use mucad_core::*;
+use mucad_render::{
     GeometryNodeData, GeometryNodeRef, GeometryOutput, GeometryOutputs, GeometryTree,
 };
 

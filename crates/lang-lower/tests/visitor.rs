@@ -1,15 +1,15 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod common;
 
-use microcad_lang_base::SymbolId;
-use microcad_lang_lower::ir;
-use microcad_lang_lower::ir::visitor::{
+use mucad_lang_base::SymbolId;
+use mucad_lang_lower::ir;
+use mucad_lang_lower::ir::visitor::{
     ConstantVisitor, FnVisitor, LeafVisitor, SourceVisitor, Visitor, WorkbenchExpressionVisitor,
     WorkbenchVisitor,
 };
-use microcad_macros::__mu;
+use mucad_macros::__mu;
 use std::collections::HashSet;
 
 /// A visitor that collects references to all `ir::Path` instances found in the IR tree.

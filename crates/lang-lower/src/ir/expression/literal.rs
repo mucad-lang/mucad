@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad literal syntax elements
 
 use derive_more::Display;
-use microcad_lang_base::SrcRef;
-use microcad_lang_types::{Type, Value, ty};
-use microcad_macros::SrcReferrer;
+use mucad_lang_base::SrcRef;
+use mucad_lang_types::{Type, Value, ty};
+use mucad_macros::SrcReferrer;
 use serde::{Deserialize, Serialize};
 
 /// A constant value lowered from a ast::Literal.

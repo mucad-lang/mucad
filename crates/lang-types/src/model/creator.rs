@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Creator of work pieces.
 
-//use microcad_package::SymbolId;
+//use mucad_package::SymbolId;
 
 use crate::Arguments;
-use microcad_lang_base::{BuiltinId, HashId, SrcRef, SymbolId, hash_id};
+use mucad_lang_base::{BuiltinId, HashId, SrcRef, SymbolId, hash_id};
 use serde::{Deserialize, Serialize};
 
 /// A creator is the symbol

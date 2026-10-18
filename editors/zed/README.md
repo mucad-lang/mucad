@@ -4,10 +4,10 @@ This extension provides support for the µcad in the Zed editor, including synta
 
 ## Installation
 
-### 1. Install the `microcad-lsp`
+### 1. Install the `mucad-lsp`
 
 ```sh
-cargo install --path crates/lsp microcad-lsp
+cargo install --path crates/lsp mucad-lsp
 ```
 
 ### 2. Install into Zed

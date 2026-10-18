@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! The resolve compiler stage.
@@ -14,7 +14,7 @@ pub mod stack;
 mod type_check;
 pub mod visitor;
 
-use microcad_lang_base::{HashSet, IssueResult, PushIssue, Source};
+use mucad_lang_base::{HashSet, IssueResult, PushIssue, Source};
 
 use crate::{Library, ResolveIssue, ResolveResult, library::SymbolNodeId, locate};
 

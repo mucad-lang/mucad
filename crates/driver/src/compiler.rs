@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Compiler High-level API
 
 pub use crate::prelude as mu;
 
-use microcad_lang_base::{DiagRenderOptions, Diagnostics, Issue, PushIssue, RenderDiag};
-use microcad_std::{StdLib, StdLibError};
+use mucad_lang_base::{DiagRenderOptions, Diagnostics, Issue, PushIssue, RenderDiag};
+use mucad_std::{StdLib, StdLibError};
 
 /// Result of the compiler: the output bundled with the diagnostics of all stages run so far.
 ///
@@ -235,7 +235,7 @@ impl Compiler {
             .search_paths
             .iter()
             .cloned()
-            .chain(std::iter::once(microcad_std::global_library_search_path()))
+            .chain(std::iter::once(mucad_std::global_library_search_path()))
             .flat_map(|path| [path.join(info.path()), path.join(info.name.as_str())])
             .find(|path| path.join(mu::resolve::Manifest::MU_TOML).is_file());
 

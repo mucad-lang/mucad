@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Tests for the high-level exporter API.
 
-use microcad_driver::{Compiler, prelude as mu};
+use mucad_driver::{Compiler, prelude as mu};
 
 const SKETCH: &str = "__mu::geo2d::Circle(radius = 2mm);";
 
@@ -79,7 +79,7 @@ fn export_wrong_type() {
 #[test]
 fn resolution_from_str() {
     let linear = |s: &str| {
-        microcad_driver::resolution_from_str(s)
+        mucad_driver::resolution_from_str(s)
             .expect("A resolution")
             .linear
     };
@@ -93,7 +93,7 @@ fn resolution_from_str() {
 
     for invalid in ["2", "0mm", "1°", "foo"] {
         assert!(
-            microcad_driver::resolution_from_str(invalid).is_err(),
+            mucad_driver::resolution_from_str(invalid).is_err(),
             "{invalid}"
         );
     }
@@ -107,7 +107,7 @@ fn export_resolution() {
         let path = dir.path().join(format!("{resolution}.stl"));
         mu::Exporter::new()
             .with_resolution(
-                microcad_driver::resolution_from_str(resolution).expect("A resolution"),
+                mucad_driver::resolution_from_str(resolution).expect("A resolution"),
             )
             .export(&compile(PART), "model.mu", Some(&path))
             .expect("An STL");

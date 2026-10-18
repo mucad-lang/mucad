@@ -1,13 +1,13 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Conversions from microcad types into bevy meshes.
+//! Conversions from mucad types into bevy meshes.
 
 use super::*;
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
-/// Convert a microcad type into Bevy meshes with optional custom parameters.
+/// Convert a mucad type into Bevy meshes with optional custom parameters.
 ///
 /// A geometry collection results in several meshes.
 pub trait ToBevyMesh {

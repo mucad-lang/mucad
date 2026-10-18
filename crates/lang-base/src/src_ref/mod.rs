@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Source code references.
@@ -24,7 +24,7 @@ pub use refer::*;
 pub use src_referrer::*;
 
 use derive_more::Deref;
-use microcad_hash::HashId;
+use mucad_hash::HashId;
 use miette::SourceSpan;
 use serde::{Deserialize, Serialize};
 
@@ -406,7 +406,7 @@ impl<'de> Deserialize<'de> for SrcRef {
 
 #[test]
 fn merge_all() {
-    use microcad_hash::HashId;
+    use mucad_hash::HashId;
     let hash = HashId::new(13);
 
     assert_eq!(
@@ -445,7 +445,7 @@ fn merge_all() {
 
 #[test]
 fn test_src_ref() {
-    use microcad_hash::Hashed;
+    use mucad_hash::Hashed;
     let input = Hashed::new("geo3d::Cube(size_x = 3.0, size_y = 3.0, size_z = 3.0);");
 
     let cube = 7..11;

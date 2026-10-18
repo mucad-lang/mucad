@@ -1,15 +1,15 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{Name, Spanned};
-use microcad_macros::Visit;
+use mucad_lang_base::{Name, Spanned};
+use mucad_macros::Visit;
 use serde::Serialize;
 
 use crate::ast;
 use crate::ast::Span;
 use std::num::ParseIntError;
 
-pub use microcad_lang_base::element::{BinaryOperator, UnaryOperator};
+pub use mucad_lang_base::element::{BinaryOperator, UnaryOperator};
 
 impl ast::visitor::Visit for BinaryOperator {}
 impl ast::visitor::Visit for UnaryOperator {}

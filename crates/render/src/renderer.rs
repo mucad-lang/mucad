@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::{
+use mucad_lang_base::{
     DiagRenderOptions, Diagnostics, IssueResult, PushIssue, RenderDiag, SharedMut,
 };
-use microcad_lang_types::ModelTree;
+use mucad_lang_types::ModelTree;
 
 use crate::{
     GeometryTree, RenderCache, RenderContext, RenderIssue, RenderResolution, dispatch::RenderHooks,

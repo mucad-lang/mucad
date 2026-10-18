@@ -5655,445 +5655,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "microcad"
-version = "0.6.0"
-dependencies = [
- "assert_cmd",
- "clap",
- "clap_complete",
- "dirs",
- "env_logger",
- "lazy_static",
- "log",
- "microcad-driver",
- "miette",
- "num-format",
- "predicates",
- "rust-embed",
- "tempfile",
- "toml",
- "walkdir",
-]
-
-[[package]]
-name = "microcad-builtin"
-version = "0.6.0"
-dependencies = [
- "cgmath",
- "derive_more",
- "dirs",
- "geo",
- "log",
- "microcad-lang-base",
- "microcad-lang-types",
- "microcad-macros",
- "miette",
- "phf 0.14.0",
- "serde",
- "thiserror 2.0.20",
- "typetag",
-]
-
-[[package]]
-name = "microcad-core"
-version = "0.6.0"
-dependencies = [
- "bezier-rs",
- "bytemuck",
- "cgmath",
- "derive_more",
- "geo",
- "log",
- "manifold-rust",
- "microcad-hash",
- "miette",
- "rustc-hash 2.1.3",
- "serde",
- "strum 0.28.0",
- "thiserror 2.0.20",
- "toml",
-]
-
-[[package]]
-name = "microcad-docgen"
-version = "0.6.0"
-dependencies = [
- "clap",
- "derive_more",
- "log",
- "microcad-builtin",
- "microcad-lang-markdown",
- "microcad-lang-resolve",
- "miette",
- "serde",
- "thiserror 2.0.20",
- "toml",
-]
-
-[[package]]
-name = "microcad-driver"
-version = "0.6.0"
-dependencies = [
- "derive_more",
- "insta",
- "log",
- "microcad-builtin",
- "microcad-core",
- "microcad-docgen",
- "microcad-export",
- "microcad-lang-base",
- "microcad-lang-eval",
- "microcad-lang-format",
- "microcad-lang-lower",
- "microcad-lang-markdown",
- "microcad-lang-parse",
- "microcad-lang-resolve",
- "microcad-lang-types",
- "microcad-render",
- "microcad-std",
- "miette",
- "notify",
- "serde",
- "tempfile",
- "thiserror 2.0.20",
- "toml",
- "url",
-]
-
-[[package]]
-name = "microcad-export"
-version = "0.6.0"
-dependencies = [
- "cargo_metadata",
- "cgmath",
- "derive_more",
- "env_logger",
- "geo",
- "insta",
- "log",
- "microcad-builtin",
- "microcad-core",
- "microcad-lang-base",
- "microcad-lang-types",
- "microcad-render",
- "miette",
- "serde_json",
- "thiserror 2.0.20",
- "wkt",
-]
-
-[[package]]
-name = "microcad-hash"
-version = "0.6.0"
-dependencies = [
- "derive_more",
- "rustc-hash 2.1.3",
- "serde",
-]
-
-[[package]]
-name = "microcad-import"
-version = "0.6.0"
-dependencies = [
- "microcad-lang-base",
- "microcad-lang-types",
- "miette",
- "serde",
- "thiserror 2.0.20",
- "toml",
-]
-
-[[package]]
-name = "microcad-inspector"
-version = "0.6.0"
-dependencies = [
- "clap",
- "crossbeam",
- "env_logger",
- "log",
- "microcad-driver",
- "microcad-viewer-ipc",
- "miette",
- "serde",
- "serde_derive",
- "slint",
- "slint-build",
- "toml",
-]
-
-[[package]]
-name = "microcad-lang-base"
-version = "0.6.0"
-dependencies = [
- "bytemuck",
- "color-print",
- "compact_str",
- "derive_more",
- "dissimilar",
- "indextree",
- "indextree-macros",
- "log",
- "microcad-hash",
- "miette",
- "pathdiff",
- "postcard",
- "ron",
- "semver",
- "serde",
- "strum 0.28.0",
- "thiserror 2.0.20",
- "url",
-]
-
-[[package]]
-name = "microcad-lang-eval"
-version = "0.6.0"
-dependencies = [
- "derive_more",
- "insta",
- "log",
- "microcad-builtin",
- "microcad-lang-base",
- "microcad-lang-resolve",
- "microcad-lang-types",
- "microcad-macros",
- "miette",
- "pretty_assertions",
- "rustc-hash 2.1.3",
- "test-case",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "microcad-lang-format"
-version = "0.6.0"
-dependencies = [
- "insta",
- "microcad-lang-base",
- "microcad-lang-parse",
- "pretty_assertions",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "microcad-lang-lower"
-version = "0.6.0"
-dependencies = [
- "derive_more",
- "insta",
- "log",
- "microcad-builtin",
- "microcad-lang-base",
- "microcad-lang-parse",
- "microcad-lang-types",
- "microcad-macros",
- "miette",
- "pretty_assertions",
- "ron",
- "rustc-hash 2.1.3",
- "serde",
- "serde_with",
- "strum 0.28.0",
- "test-that",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "microcad-lang-markdown"
-version = "0.6.0"
-dependencies = [
- "clap",
- "derive_more",
- "insta",
- "microcad-lang-base",
- "miette",
- "pulldown-cmark",
- "tempfile",
- "thiserror 2.0.20",
- "toml_edit 0.25.13+spec-1.1.0",
-]
-
-[[package]]
-name = "microcad-lang-parse"
-version = "0.6.0"
-dependencies = [
- "chumsky",
- "derive_more",
- "either",
- "insta",
- "logos",
- "microcad-lang-base",
- "microcad-macros",
- "miette",
- "serde",
- "test-case",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "microcad-lang-resolve"
-version = "0.6.0"
-dependencies = [
- "custom_debug",
- "derive_more",
- "insta",
- "log",
- "microcad-lang-base",
- "microcad-lang-lower",
- "microcad-lang-parse",
- "microcad-lang-types",
- "microcad-macros",
- "miette",
- "postcard",
- "semver",
- "serde",
- "strum 0.28.0",
- "tempfile",
- "test-case",
- "test-that",
- "thiserror 2.0.20",
- "toml",
-]
-
-[[package]]
-name = "microcad-lang-types"
-version = "0.6.0"
-dependencies = [
- "bytemuck",
- "cgmath",
- "derive_more",
- "fixed",
- "insta",
- "log",
- "microcad-lang-base",
- "microcad-macros",
- "miette",
- "pretty_assertions",
- "round",
- "rustc-hash 2.1.3",
- "serde",
- "strum 0.28.0",
- "thiserror 2.0.20",
- "typetag",
-]
-
-[[package]]
-name = "microcad-lsp"
-version = "0.6.0"
-dependencies = [
- "clap",
- "crossbeam",
- "dirs",
- "dissimilar",
- "env_logger",
- "log",
- "microcad-driver",
- "microcad-viewer-ipc",
- "miette",
- "serde",
- "serde_json",
- "test-that",
- "tokio",
- "tower-lsp",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "microcad-macros"
-version = "0.6.0"
-dependencies = [
- "microcad-hash",
- "proc-macro-crate",
- "proc-macro2",
- "quote",
- "syn 3.0.4",
-]
-
-[[package]]
-name = "microcad-render"
-version = "0.6.0"
-dependencies = [
- "cgmath",
- "derive_more",
- "insta",
- "log",
- "microcad-builtin",
- "microcad-core",
- "microcad-hash",
- "microcad-lang-base",
- "microcad-lang-types",
- "microcad-macros",
- "miette",
- "pretty_assertions",
- "rustc-hash 2.1.3",
- "thiserror 2.0.20",
-]
-
-[[package]]
-name = "microcad-std"
-version = "0.6.0"
-dependencies = [
- "dirs",
- "microcad-lang-base",
- "rust-embed",
- "semver",
- "serde",
- "thiserror 2.0.20",
- "toml",
-]
-
-[[package]]
-name = "microcad-viewer"
-version = "0.6.0"
-dependencies = [
- "bevy",
- "bevy_mod_outline",
- "bytemuck",
- "cgmath",
- "clap",
- "crossbeam",
- "dirs",
- "env_logger",
- "geo",
- "log",
- "microcad-driver",
- "microcad-viewer-ipc",
- "miette",
- "notify",
- "percent-encoding",
- "rustc-hash 2.1.3",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "url",
- "wkt",
-]
-
-[[package]]
-name = "microcad-viewer-ipc"
-version = "0.6.0"
-dependencies = [
- "crossbeam",
- "env_logger",
- "log",
- "microcad-builtin",
- "microcad-core",
- "miette",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "wkt",
-]
-
-[[package]]
-name = "microcad-zed"
-version = "0.0.1"
-dependencies = [
- "zed_extension_api",
-]
-
-[[package]]
 name = "miette"
 version = "7.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6185,6 +5746,445 @@ checksum = "bb85c154ba489f01b25c0d36ae69a87e4a1c73a72631fc6c0eb6dde34a73e44b"
 dependencies = [
  "num-traits",
  "pxfm",
+]
+
+[[package]]
+name = "mucad"
+version = "0.6.0"
+dependencies = [
+ "assert_cmd",
+ "clap",
+ "clap_complete",
+ "dirs",
+ "env_logger",
+ "lazy_static",
+ "log",
+ "miette",
+ "mucad-driver",
+ "num-format",
+ "predicates",
+ "rust-embed",
+ "tempfile",
+ "toml",
+ "walkdir",
+]
+
+[[package]]
+name = "mucad-builtin"
+version = "0.6.0"
+dependencies = [
+ "cgmath",
+ "derive_more",
+ "dirs",
+ "geo",
+ "log",
+ "miette",
+ "mucad-lang-base",
+ "mucad-lang-types",
+ "mucad-macros",
+ "phf 0.14.0",
+ "serde",
+ "thiserror 2.0.20",
+ "typetag",
+]
+
+[[package]]
+name = "mucad-core"
+version = "0.6.0"
+dependencies = [
+ "bezier-rs",
+ "bytemuck",
+ "cgmath",
+ "derive_more",
+ "geo",
+ "log",
+ "manifold-rust",
+ "miette",
+ "mucad-hash",
+ "rustc-hash 2.1.3",
+ "serde",
+ "strum 0.28.0",
+ "thiserror 2.0.20",
+ "toml",
+]
+
+[[package]]
+name = "mucad-docgen"
+version = "0.6.0"
+dependencies = [
+ "clap",
+ "derive_more",
+ "log",
+ "miette",
+ "mucad-builtin",
+ "mucad-lang-markdown",
+ "mucad-lang-resolve",
+ "serde",
+ "thiserror 2.0.20",
+ "toml",
+]
+
+[[package]]
+name = "mucad-driver"
+version = "0.6.0"
+dependencies = [
+ "derive_more",
+ "insta",
+ "log",
+ "miette",
+ "mucad-builtin",
+ "mucad-core",
+ "mucad-docgen",
+ "mucad-export",
+ "mucad-lang-base",
+ "mucad-lang-eval",
+ "mucad-lang-format",
+ "mucad-lang-lower",
+ "mucad-lang-markdown",
+ "mucad-lang-parse",
+ "mucad-lang-resolve",
+ "mucad-lang-types",
+ "mucad-render",
+ "mucad-std",
+ "notify",
+ "serde",
+ "tempfile",
+ "thiserror 2.0.20",
+ "toml",
+ "url",
+]
+
+[[package]]
+name = "mucad-export"
+version = "0.6.0"
+dependencies = [
+ "cargo_metadata",
+ "cgmath",
+ "derive_more",
+ "env_logger",
+ "geo",
+ "insta",
+ "log",
+ "miette",
+ "mucad-builtin",
+ "mucad-core",
+ "mucad-lang-base",
+ "mucad-lang-types",
+ "mucad-render",
+ "serde_json",
+ "thiserror 2.0.20",
+ "wkt",
+]
+
+[[package]]
+name = "mucad-hash"
+version = "0.6.0"
+dependencies = [
+ "derive_more",
+ "rustc-hash 2.1.3",
+ "serde",
+]
+
+[[package]]
+name = "mucad-import"
+version = "0.6.0"
+dependencies = [
+ "miette",
+ "mucad-lang-base",
+ "mucad-lang-types",
+ "serde",
+ "thiserror 2.0.20",
+ "toml",
+]
+
+[[package]]
+name = "mucad-inspector"
+version = "0.6.0"
+dependencies = [
+ "clap",
+ "crossbeam",
+ "env_logger",
+ "log",
+ "miette",
+ "mucad-driver",
+ "mucad-viewer-ipc",
+ "serde",
+ "serde_derive",
+ "slint",
+ "slint-build",
+ "toml",
+]
+
+[[package]]
+name = "mucad-lang-base"
+version = "0.6.0"
+dependencies = [
+ "bytemuck",
+ "color-print",
+ "compact_str",
+ "derive_more",
+ "dissimilar",
+ "indextree",
+ "indextree-macros",
+ "log",
+ "miette",
+ "mucad-hash",
+ "pathdiff",
+ "postcard",
+ "ron",
+ "semver",
+ "serde",
+ "strum 0.28.0",
+ "thiserror 2.0.20",
+ "url",
+]
+
+[[package]]
+name = "mucad-lang-eval"
+version = "0.6.0"
+dependencies = [
+ "derive_more",
+ "insta",
+ "log",
+ "miette",
+ "mucad-builtin",
+ "mucad-lang-base",
+ "mucad-lang-resolve",
+ "mucad-lang-types",
+ "mucad-macros",
+ "pretty_assertions",
+ "rustc-hash 2.1.3",
+ "test-case",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "mucad-lang-format"
+version = "0.6.0"
+dependencies = [
+ "insta",
+ "mucad-lang-base",
+ "mucad-lang-parse",
+ "pretty_assertions",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "mucad-lang-lower"
+version = "0.6.0"
+dependencies = [
+ "derive_more",
+ "insta",
+ "log",
+ "miette",
+ "mucad-builtin",
+ "mucad-lang-base",
+ "mucad-lang-parse",
+ "mucad-lang-types",
+ "mucad-macros",
+ "pretty_assertions",
+ "ron",
+ "rustc-hash 2.1.3",
+ "serde",
+ "serde_with",
+ "strum 0.28.0",
+ "test-that",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "mucad-lang-markdown"
+version = "0.6.0"
+dependencies = [
+ "clap",
+ "derive_more",
+ "insta",
+ "miette",
+ "mucad-lang-base",
+ "pulldown-cmark",
+ "tempfile",
+ "thiserror 2.0.20",
+ "toml_edit 0.25.13+spec-1.1.0",
+]
+
+[[package]]
+name = "mucad-lang-parse"
+version = "0.6.0"
+dependencies = [
+ "chumsky",
+ "derive_more",
+ "either",
+ "insta",
+ "logos",
+ "miette",
+ "mucad-lang-base",
+ "mucad-macros",
+ "serde",
+ "test-case",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "mucad-lang-resolve"
+version = "0.6.0"
+dependencies = [
+ "custom_debug",
+ "derive_more",
+ "insta",
+ "log",
+ "miette",
+ "mucad-lang-base",
+ "mucad-lang-lower",
+ "mucad-lang-parse",
+ "mucad-lang-types",
+ "mucad-macros",
+ "postcard",
+ "semver",
+ "serde",
+ "strum 0.28.0",
+ "tempfile",
+ "test-case",
+ "test-that",
+ "thiserror 2.0.20",
+ "toml",
+]
+
+[[package]]
+name = "mucad-lang-types"
+version = "0.6.0"
+dependencies = [
+ "bytemuck",
+ "cgmath",
+ "derive_more",
+ "fixed",
+ "insta",
+ "log",
+ "miette",
+ "mucad-lang-base",
+ "mucad-macros",
+ "pretty_assertions",
+ "round",
+ "rustc-hash 2.1.3",
+ "serde",
+ "strum 0.28.0",
+ "thiserror 2.0.20",
+ "typetag",
+]
+
+[[package]]
+name = "mucad-lsp"
+version = "0.6.0"
+dependencies = [
+ "clap",
+ "crossbeam",
+ "dirs",
+ "dissimilar",
+ "env_logger",
+ "log",
+ "miette",
+ "mucad-driver",
+ "mucad-viewer-ipc",
+ "serde",
+ "serde_json",
+ "test-that",
+ "tokio",
+ "tower-lsp",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "mucad-macros"
+version = "0.6.0"
+dependencies = [
+ "mucad-hash",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 3.0.4",
+]
+
+[[package]]
+name = "mucad-render"
+version = "0.6.0"
+dependencies = [
+ "cgmath",
+ "derive_more",
+ "insta",
+ "log",
+ "miette",
+ "mucad-builtin",
+ "mucad-core",
+ "mucad-hash",
+ "mucad-lang-base",
+ "mucad-lang-types",
+ "mucad-macros",
+ "pretty_assertions",
+ "rustc-hash 2.1.3",
+ "thiserror 2.0.20",
+]
+
+[[package]]
+name = "mucad-std"
+version = "0.6.0"
+dependencies = [
+ "dirs",
+ "mucad-lang-base",
+ "rust-embed",
+ "semver",
+ "serde",
+ "thiserror 2.0.20",
+ "toml",
+]
+
+[[package]]
+name = "mucad-viewer"
+version = "0.6.0"
+dependencies = [
+ "bevy",
+ "bevy_mod_outline",
+ "bytemuck",
+ "cgmath",
+ "clap",
+ "crossbeam",
+ "dirs",
+ "env_logger",
+ "geo",
+ "log",
+ "miette",
+ "mucad-driver",
+ "mucad-viewer-ipc",
+ "notify",
+ "percent-encoding",
+ "rustc-hash 2.1.3",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "url",
+ "wkt",
+]
+
+[[package]]
+name = "mucad-viewer-ipc"
+version = "0.6.0"
+dependencies = [
+ "crossbeam",
+ "env_logger",
+ "log",
+ "miette",
+ "mucad-builtin",
+ "mucad-core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "wkt",
+]
+
+[[package]]
+name = "mucad-zed"
+version = "0.0.1"
+dependencies = [
+ "zed_extension_api",
 ]
 
 [[package]]
@@ -11073,7 +11073,7 @@ dependencies = [
  "clap",
  "env_logger",
  "glob",
- "microcad-driver",
+ "mucad-driver",
  "regex",
  "tempfile",
  "walkdir",

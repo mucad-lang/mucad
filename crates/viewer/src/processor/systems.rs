@@ -1,7 +1,7 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! microcad Viewer bevy systems
+//! mucad Viewer bevy systems
 
 use std::marker::PhantomData;
 
@@ -22,7 +22,7 @@ use crate::{
     view_model::ViewerEvent,
 };
 
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
 /// Whether a kind of watch event is relevant for compilation.
 fn is_relevant_event_kind(kind: &notify::EventKind) -> bool {

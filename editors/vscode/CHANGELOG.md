@@ -1,6 +1,6 @@
 # Change Log
 
-All notable changes to the "microcad" extension will be documented in this file.
+All notable changes to the "mucad" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
@@ -10,4 +10,4 @@ Rebuild extension with updated configuration and dependencies.
 
 ## 0.0.1
 
-Initial release of microcad-syntax.
+Initial release of mucad-syntax.

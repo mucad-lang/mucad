@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad language types and values.
 
-use microcad_lang_base::element::BinaryOperator;
+use mucad_lang_base::element::BinaryOperator;
 
 use crate::{
     List, ModelTree, Quantity, QuantityType, Scalar, Ty, Type, Unit, Value, ValueError,

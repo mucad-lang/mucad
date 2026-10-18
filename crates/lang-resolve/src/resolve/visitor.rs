@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Resolve locals.
@@ -11,7 +11,7 @@ use crate::{
     resolve::context::LibraryCache,
     resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
-use microcad_lang_base::{
+use mucad_lang_base::{
     ExternalId, HashSet, Identifier, LibraryId, PushIssue, SharedMut, SingleIdentifier,
     SrcReferrer, SymbolId, ToCompactString,
 };
@@ -310,8 +310,8 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
 
 impl<'a, 'lib, 'ctx> visitor::ConstantVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {}
 impl<'a, 'lib, 'ctx> visitor::WorkbenchVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
-    fn visit_workbench(&mut self, workbench: &mut microcad_lang_lower::ir::workbench::Workbench) {
-        use microcad_lang_lower::ir::visitor::WorkbenchExpressionVisitorMut;
+    fn visit_workbench(&mut self, workbench: &mut mucad_lang_lower::ir::workbench::Workbench) {
+        use mucad_lang_lower::ir::visitor::WorkbenchExpressionVisitorMut;
 
         // Workbench parameters are locals of the workbench body.
         self.scope(stack::WorkbenchFrame::default(), |visitor| {
@@ -326,9 +326,9 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchVisitorMut for ResolveVisitor<'a, 'lib, '
 
     fn visit_workbench_signature(
         &mut self,
-        signature: &mut microcad_lang_lower::ir::workbench::WorkbenchSignature,
+        signature: &mut mucad_lang_lower::ir::workbench::WorkbenchSignature,
     ) {
-        use microcad_lang_lower::ir::visitor::ConstantVisitorMut;
+        use mucad_lang_lower::ir::visitor::ConstantVisitorMut;
 
         self.visit_parameter_list(&mut signature.parameters);
         signature
@@ -342,8 +342,8 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchVisitorMut for ResolveVisitor<'a, 'lib, '
             .for_each(|init| self.visit_workbench_init(init));
     }
 
-    fn visit_workbench_init(&mut self, init: &mut microcad_lang_lower::ir::workbench::Init) {
-        use microcad_lang_lower::ir::visitor::{
+    fn visit_workbench_init(&mut self, init: &mut mucad_lang_lower::ir::workbench::Init) {
+        use mucad_lang_lower::ir::visitor::{
             ConstantVisitorMut, LeafVisitorMut, WorkbenchExpressionVisitorMut,
         };
 
@@ -365,16 +365,16 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchVisitorMut for ResolveVisitor<'a, 'lib, '
 
     fn visit_workbench_init_attr(
         &mut self,
-        _attr: &mut microcad_lang_lower::ir::workbench::InitAttributes,
+        _attr: &mut mucad_lang_lower::ir::workbench::InitAttributes,
     ) {
     }
 }
 impl<'a, 'lib, 'ctx> visitor::WorkbenchExpressionVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
     fn visit_workbench_statement(
         &mut self,
-        statement: &mut microcad_lang_lower::ir::workbench::WorkbenchStatement,
+        statement: &mut mucad_lang_lower::ir::workbench::WorkbenchStatement,
     ) {
-        use microcad_lang_lower::ir::visitor::LeafVisitorMut;
+        use mucad_lang_lower::ir::visitor::LeafVisitorMut;
 
         self.visit_model_attributes(&mut statement.attr);
         if let Some(name) = &mut statement.name {
@@ -386,7 +386,7 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchExpressionVisitorMut for ResolveVisitor<'
         }
     }
 
-    fn visit_workbench_group(&mut self, group: &mut microcad_lang_lower::ir::workbench::Group) {
+    fn visit_workbench_group(&mut self, group: &mut mucad_lang_lower::ir::workbench::Group) {
         self.visit_model_attributes(&mut group.attr);
         self.scope(stack::WorkbenchGroupFrame::default(), |visitor| {
             group
@@ -398,7 +398,7 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchExpressionVisitorMut for ResolveVisitor<'
 }
 
 impl<'a, 'lib, 'ctx> visitor::SourceVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
-    fn visit_source(&mut self, source: &mut microcad_lang_lower::ir::Source) {
+    fn visit_source(&mut self, source: &mut mucad_lang_lower::ir::Source) {
         self.scope(stack::SourceFrame::default(), |visitor| {
             source
                 .statements
@@ -409,7 +409,7 @@ impl<'a, 'lib, 'ctx> visitor::SourceVisitorMut for ResolveVisitor<'a, 'lib, 'ctx
     }
 
     fn visit_source_statement(&mut self, statement: &mut symbol::SourceStatement) {
-        use microcad_lang_lower::ir::visitor::{LeafVisitorMut, WorkbenchExpressionVisitorMut};
+        use mucad_lang_lower::ir::visitor::{LeafVisitorMut, WorkbenchExpressionVisitorMut};
         if let Some(name) = &mut statement.name {
             self.visit_name(name);
         }
@@ -436,9 +436,9 @@ impl<'a, 'lib, 'ctx> visitor::FnVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
 
     fn visit_fn_signature(
         &mut self,
-        signature: &mut microcad_lang_lower::ir::function::FunctionSignature,
+        signature: &mut mucad_lang_lower::ir::function::FunctionSignature,
     ) {
-        use microcad_lang_lower::ir::visitor::ConstantVisitorMut;
+        use mucad_lang_lower::ir::visitor::ConstantVisitorMut;
         self.visit_parameter_list(&mut signature.parameters);
         signature
             .parameters
@@ -446,7 +446,7 @@ impl<'a, 'lib, 'ctx> visitor::FnVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
             .for_each(|param| self.declare_local(param.id.clone()));
     }
 
-    fn visit_fn_scope(&mut self, scope: &mut microcad_lang_lower::ir::function::Scope) {
+    fn visit_fn_scope(&mut self, scope: &mut mucad_lang_lower::ir::function::Scope) {
         self.scope(stack::FunctionScopeFrame::default(), |ctx| {
             scope
                 .statements
@@ -459,9 +459,9 @@ impl<'a, 'lib, 'ctx> visitor::FnVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
 
     fn visit_fn_local_assignment(
         &mut self,
-        local_assignment: &mut microcad_lang_lower::ir::function::FunctionLocalAssignment,
+        local_assignment: &mut mucad_lang_lower::ir::function::FunctionLocalAssignment,
     ) {
-        use microcad_lang_lower::ir::visitor::LeafVisitorMut;
+        use mucad_lang_lower::ir::visitor::LeafVisitorMut;
 
         self.visit_name(&mut local_assignment.id);
         self.visit_fn_expr(&mut local_assignment.expression);

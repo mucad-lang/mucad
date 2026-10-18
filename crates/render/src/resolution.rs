@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Render trait.
 
 use cgmath::InnerSpace;
 
-use microcad_core as core;
+use mucad_core as core;
 
 /// Render resolution when rendering things to polygons or meshes.
 #[derive(Debug, Clone)]

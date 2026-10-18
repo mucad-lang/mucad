@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::geo2d::*;
@@ -25,7 +25,7 @@ pub part Brick(rows = 2, columns = 4, base_height = BASE_HEIGHT) {
                 .distribute_grid(
                     width = width - width / columns,
                     height = height - height / rows,
-                    rows = r, 
+                    rows = r,
                     columns = c
                 );
         }
@@ -45,11 +45,11 @@ pub part Brick(rows = 2, columns = 4, base_height = BASE_HEIGHT) {
 n = 4;
 
 Brick(
-    rows = [1..n], 
-    columns = [1..n], 
+    rows = [1..n],
+    columns = [1..n],
     base_height = BASE_HEIGHT * [1 / 3, 100%, 200%, 300%]
 )
-.distribute_grid(cell_size = n * 10mm, 
-    rows = 2*n, 
+.distribute_grid(cell_size = n * 10mm,
+    rows = 2*n,
     columns = 2*n,
 );

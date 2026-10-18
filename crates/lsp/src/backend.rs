@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad language server backend
@@ -11,7 +11,7 @@ use crate::{
     semantic_tokens::{LEGEND_MODIFIERS, LEGEND_TYPES},
 };
 
-use microcad_viewer_ipc::{ViewerProcessInterface, ViewerRequest};
+use mucad_viewer_ipc::{ViewerProcessInterface, ViewerRequest};
 use tower_lsp::{
     Client, LanguageServer, async_trait,
     jsonrpc::Result,
@@ -241,7 +241,7 @@ impl LanguageServer for Service {
     ) -> Result<Option<serde_json::Value>> {
         log::trace!("execute_command: {params:?}");
         match params.command.as_str() {
-            "microcad.showPreview" => {
+            "mucad.showPreview" => {
                 if let Some(arg) = params.arguments.first() {
                     let uri = match uri_obj_to_lsp_url(match arg.get("uri") {
                         Some(v) => v,
@@ -281,7 +281,7 @@ impl LanguageServer for Service {
                     return Ok(Some(serde_json::json!({ "ok": true })));
                 }
             }
-            "microcad.minimizePreview" => {
+            "mucad.minimizePreview" => {
                 log::info!("MinimizePreview received");
                 if let Err(err) = self.send_viewer(ViewerRequest::Minimize) {
                     log::error!("Could not send request ViewerRequest::Minimize: {err}");

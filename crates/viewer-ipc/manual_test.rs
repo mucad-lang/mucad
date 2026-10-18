@@ -1,9 +1,9 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad viewer ipc manual test
 
-use microcad_viewer_ipc::*;
+use mucad_viewer_ipc::*;
 
 fn prompt_for_confirmation(prompt: &str) -> std::io::Result<bool> {
     loop {
@@ -24,7 +24,7 @@ fn example_files() -> miette::Result<Vec<std::path::PathBuf>> {
         .filter_map(|entry| {
             // entry? inside filter_map must be handled manually
             let path = entry.ok()?.path();
-            microcad_lang::resolve::is_microcad_file(&path).then_some(path)
+            mucad_lang::resolve::is_mucad_file(&path).then_some(path)
         })
         .collect())
 }
@@ -48,7 +48,7 @@ fn test_minimize_restore() -> miette::Result<()> {
                 path: None,
                 name: Some("Test".to_string()),
                 code: format!(
-                    r#" 
+                    r#"
                 use std::geo2d::Text;
                 Text("{cycle}", height = 10mm);
             "#

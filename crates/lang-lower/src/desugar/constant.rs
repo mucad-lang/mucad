@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{Desugar, LowerContext, LowerResult, ir};
 
-use microcad_lang_base::SpanToSrcRef;
-use microcad_lang_parse::ast;
+use mucad_lang_base::SpanToSrcRef;
+use mucad_lang_parse::ast;
 
 impl Desugar<ast::def::Constant> for ir::desugared::Constant {
     fn desugar(node: &ast::def::Constant, context: &mut LowerContext) -> LowerResult<Self> {

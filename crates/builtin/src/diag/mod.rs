@@ -1,11 +1,11 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod error;
 
 pub use error::BuiltinError;
-use microcad_lang_base::{SrcRef, SrcReferrer};
-use microcad_lang_types::Value;
+use mucad_lang_base::{SrcRef, SrcReferrer};
+use mucad_lang_types::Value;
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -26,7 +26,7 @@ pub enum BuiltinAdvice {
 }
 
 /// An issue occurred during parsing.
-#[derive(Clone, Debug, Error, microcad_macros::Issue)]
+#[derive(Clone, Debug, Error, mucad_macros::Issue)]
 #[issue(code = "builtin")]
 pub enum BuiltinIssue {
     #[error(transparent)]

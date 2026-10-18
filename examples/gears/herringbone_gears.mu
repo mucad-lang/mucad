@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use std::ops::*;
@@ -38,5 +38,3 @@ gear1.reflect(X);
 gear2
     .rotate(gear2.tooth_angle * 50%)
     .translate(gear1.outer_radius + gear2.pitch_radius, [1..3] * 360° / 3);
-
-

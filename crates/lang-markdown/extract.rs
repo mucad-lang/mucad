@@ -3,12 +3,12 @@
 
 //! A tool to extract snippets from a markdown or mdbook into a list of µcad source files.
 //!
-//! This tool is also supposed to be an example on how to use the microcad-lang-markdown API.
-//! Hence, we intentionally do *NOT* use the microcad-driver API here.
+//! This tool is also supposed to be an example on how to use the mucad-lang-markdown API.
+//! Hence, we intentionally do *NOT* use the mucad-driver API here.
 
 use clap::Parser;
 
-use microcad_lang_markdown as md;
+use mucad_lang_markdown as md;
 use miette::IntoDiagnostic;
 
 /// µcad md extractor command line interface
@@ -43,7 +43,7 @@ pub fn mu_base_path(input_path: impl AsRef<std::path::Path>, name: &str) -> std:
             .replace('/', "_")
             .replace('.', "_")
             .replace('#', "_"),
-        ext = microcad_lang_base::MUCAD_EXTENSION,
+        ext = mucad_lang_base::MUCAD_EXTENSION,
     )
     .into()
 }

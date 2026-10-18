@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-docgen"
+name = "mucad-docgen"
 description = "µcad Documentation Generators"
-documentation = "https://docs.rs/microcad-docgen"
+documentation = "https://docs.rs/mucad-docgen"
 authors.workspace = true
 edition.workspace = true
 homepage.workspace = true
@@ -24,12 +24,12 @@ toml = { version = "1.1.2", features = ["serde"] }
 # Used by bin_builtin
 clap = { version = "4", features = ["derive"], optional = true }
 
-microcad-builtin = { workspace = true }
-microcad-lang-markdown = { workspace = true }
-microcad-lang-resolve = { workspace = true }
+mucad-builtin = { workspace = true }
+mucad-lang-markdown = { workspace = true }
+mucad-lang-resolve = { workspace = true }
 
 [[bin]]
-name = "microcad-docgen-builtin"
+name = "mucad-docgen-builtin"
 path = "builtin.rs"
 required-features = ["bin_builtin"]
 

@@ -1,8 +1,8 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{GetSourceByHash, LineCol, LineIndex, Name, SpanToSrcRef, SrcRef, SrcReferrer};
-use microcad_hash::{HashId, Hashed, ToHash, hash_id};
+use mucad_hash::{HashId, Hashed, ToHash, hash_id};
 use serde::Serialize;
 
 mod location;

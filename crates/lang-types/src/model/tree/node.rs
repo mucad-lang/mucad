@@ -1,16 +1,16 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Model node.
 
-use microcad_lang_base::{BuiltinId, Identifier};
+use mucad_lang_base::{BuiltinId, Identifier};
 
 use crate::{Model, ModelType, model};
 
-pub type Node = microcad_lang_base::tree::Node<Model>;
-pub type NodeRef<'a> = microcad_lang_base::tree::NodeRef<'a, Model>;
-pub type NodeMut<'a> = microcad_lang_base::tree::NodeMut<'a, Model>;
-pub type ModelNodeId = microcad_lang_base::tree::NodeId;
+pub type Node = mucad_lang_base::tree::Node<Model>;
+pub type NodeRef<'a> = mucad_lang_base::tree::NodeRef<'a, Model>;
+pub type NodeMut<'a> = mucad_lang_base::tree::NodeMut<'a, Model>;
+pub type ModelNodeId = mucad_lang_base::tree::NodeId;
 
 /// Extension trait for [`SymbolNode`] .
 pub trait NodeExt<'a> {

@@ -1,8 +1,8 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::BuiltinId;
-use microcad_lang_types::{
+use mucad_lang_base::BuiltinId;
+use mucad_lang_types::{
     Arguments, Identifier, Length, Model, ModelTree, ModelType, Value, arguments,
     math::AffineTransform,
     model::{
@@ -230,7 +230,7 @@ fn test_subtree_adoption_preserves_hierarchy() {
 
 #[test]
 fn test_replace_input_placeholders_multiplicity() {
-    use microcad_lang_types::model::GetProperty;
+    use mucad_lang_types::model::GetProperty;
 
     // 1. Build Multiplicity template tree:
     // Multiplicity

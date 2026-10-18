@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Check for cyclic aliases.
 
-use microcad_lang_base::{HashSet, SymbolId};
-use microcad_lang_lower::ir::Path;
+use mucad_lang_base::{HashSet, SymbolId};
+use mucad_lang_lower::ir::Path;
 
 use crate::{
     Library, ResolveError, ResolveErrorKind, SymbolDef, SymbolNodeRef,

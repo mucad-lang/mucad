@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad driver is a high-level API to be integrated in LSP, CLI or Viewer.
@@ -12,9 +12,9 @@ pub mod prelude;
 //mod session;
 mod watcher;
 
-use microcad_lang_base::{DiagRenderOptions, IssueList, ToDiagnostics};
-use microcad_lang_parse::ParseIssue;
-use microcad_lang_types::Value;
+use mucad_lang_base::{DiagRenderOptions, IssueList, ToDiagnostics};
+use mucad_lang_parse::ParseIssue;
+use mucad_lang_types::Value;
 
 pub use compiler::Compiler;
 pub use exporter::Exporter;

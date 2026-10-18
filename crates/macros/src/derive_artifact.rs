@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Implementation for the `#[derive(Artifact)]` derive macro.
@@ -12,9 +12,9 @@ pub fn derive_artifact_impl(input: TokenStream) -> TokenStream {
     let name = input.ident;
 
     quote! {
-        impl microcad_lang_base::Artifact for #name {
-            fn kind() -> microcad_lang_base::ArtifactKind {
-                microcad_lang_base::ArtifactKind::#name
+        impl mucad_lang_base::Artifact for #name {
+            fn kind() -> mucad_lang_base::ArtifactKind {
+                mucad_lang_base::ArtifactKind::#name
             }
         }
     }

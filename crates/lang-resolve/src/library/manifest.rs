@@ -1,9 +1,9 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Data structure for the package manifest, saved as `mu.toml`.
 
-use microcad_lang_base::{Name, Url};
+use mucad_lang_base::{Name, Url};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

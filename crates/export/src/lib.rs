@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Export models to files
 
-use microcad_lang_types::{ModelTree, ModelType, Value};
-use microcad_render::{RenderError, RenderIssue, Renderer};
+use mucad_lang_types::{ModelTree, ModelType, Value};
+use mucad_render::{RenderError, RenderIssue, Renderer};
 use miette::Diagnostic;
 use thiserror::Error;
 
@@ -66,7 +66,7 @@ pub enum ExportError {
 fn render(
     mut renderer: Renderer,
     model: &ModelTree,
-) -> Result<microcad_render::GeometryTree, ExportError> {
+) -> Result<mucad_render::GeometryTree, ExportError> {
     match renderer.render(model) {
         Ok((geometry, issues)) if !issues.has_errors() => Ok(geometry),
         Ok((_, issues)) | Err(issues) => Err(ExportError::RenderErrors(

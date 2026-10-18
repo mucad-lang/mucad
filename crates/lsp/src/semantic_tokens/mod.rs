@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod expression;
 mod statement;
 
-use microcad_driver::prelude as mu;
-use microcad_driver::prelude::Diagnostics;
-use microcad_driver::prelude::base::LineCol;
+use mucad_driver::prelude as mu;
+use mucad_driver::prelude::Diagnostics;
+use mucad_driver::prelude::base::LineCol;
 
 use mu::ast;
 use mu::traits::*;

@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! `#[derive(Identifiable)]` implementation.
@@ -37,8 +37,8 @@ pub fn derive_identifiable_impl(input: TokenStream) -> TokenStream {
     }
 
     quote! {
-        impl microcad_lang_base::Identifiable for #name {
-            fn id_ref(&self) -> &microcad_lang_base::Identifier  {
+        impl mucad_lang_base::Identifiable for #name {
+            fn id_ref(&self) -> &mucad_lang_base::Identifier  {
                 &self.id
             }
         }

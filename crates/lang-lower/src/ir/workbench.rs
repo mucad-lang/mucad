@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Workbench definition syntax element
@@ -9,13 +9,13 @@ use crate::{
 };
 
 use derive_more::{Display, From};
-use microcad_lang_base::{
+use mucad_lang_base::{
     Identifier, SingleIdentifier, SrcRef, SrcReferrer, VersionAnnotation, boxed,
     element::Visibility,
 };
 
-pub use microcad_lang_base::element::WorkbenchKind;
-use microcad_lang_types::Value;
+pub use mucad_lang_base::element::WorkbenchKind;
+use mucad_lang_types::Value;
 use serde::{Deserialize, Serialize};
 use strum::IntoStaticStr;
 
@@ -173,7 +173,7 @@ impl Init {
             .map(|parameter| {
                 ir::InitStatement::new(
                     parameter.id.clone(),
-                    ir::Path::Resolved(microcad_lang_base::SymbolId::Local(
+                    ir::Path::Resolved(mucad_lang_base::SymbolId::Local(
                         parameter.id.id().clone(),
                     )),
                 )
@@ -228,7 +228,7 @@ pub enum WorkbenchExpression {
 
 impl WorkbenchExpression {
     pub(crate) fn local(id: &str) -> Self {
-        Self::Path(ir::Path::Resolved(microcad_lang_base::SymbolId::Local(
+        Self::Path(ir::Path::Resolved(mucad_lang_base::SymbolId::Local(
             id.into(),
         )))
     }
@@ -267,7 +267,7 @@ impl ir::ExprSpec for WorkbenchExpression {
 }
 
 impl SingleIdentifier for WorkbenchExpression {
-    fn single_identifier(&self) -> Option<&microcad_lang_base::Identifier> {
+    fn single_identifier(&self) -> Option<&mucad_lang_base::Identifier> {
         match self {
             WorkbenchExpression::Path(path) => path.single_identifier(),
             _ => None,

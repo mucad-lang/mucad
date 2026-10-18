@@ -1,10 +1,10 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! microcad Model Registry.
+//! mucad Model Registry.
 
 use bevy::asset::uuid::Uuid;
-use microcad_driver::prelude as mu;
+use mucad_driver::prelude as mu;
 
 const MODEL_UUID_SEED: u64 = 0xDEAD_BEEF_DEED_BEAF;
 

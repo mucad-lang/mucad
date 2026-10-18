@@ -1,8 +1,8 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-lang-types"
+name = "mucad-lang-types"
 description = "µcad language types"
 authors = ["Michael Winkelmann (michael@winkelmann.site)"]
 edition.workspace = true
@@ -31,8 +31,8 @@ serde = { version = "1.0", features = ["derive", "rc"] }
 thiserror = "2.0.17"
 typetag = "0.2"
 
-microcad-lang-base = { workspace = true }
-microcad-macros = { workspace = true }
+mucad-lang-base = { workspace = true }
+mucad-macros = { workspace = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4"

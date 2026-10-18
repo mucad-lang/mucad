@@ -6,15 +6,15 @@ Currently, only the generation of mdbook documentation is supported.
 To check out the API and test the built-in documentation generation, run the following command:
 
 ```sh
-cargo run --bin microcad-docgen-builtin --package microcad-docgen --features="bin_builtin"  -- target/builtin
+cargo run --bin mucad-docgen-builtin --package mucad-docgen --features="bin_builtin"  -- target/builtin
 ```
 
  ## ❤️ Support the project
 
-This crate is part of the [microcad project](https://microcad.xyz).
+This crate is part of the [mucad project](https://mucad.org).
 
 If you like this project, you can help us spend more time on it by donating:
 
-<a href="https://opencollective.com/microcad/donate" target="_blank">
-<img src="https://opencollective.com/microcad/donate/button@2x.png?color=blue" width=300 />
+<a href="https://opencollective.com/mucad/donate" target="_blank">
+<img src="https://opencollective.com/mucad/donate/button@2x.png?color=blue" width=300 />
 </a>

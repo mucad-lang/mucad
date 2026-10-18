@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Implementation for the `#[builtin_boolean_op]` attribute macro.
@@ -76,23 +76,23 @@ fn builtin_boolean_op_struct(attr: TokenStream, input_struct: ItemStruct) -> Tok
         impl crate::Builtin for #struct_name {
             const ITEM: &'static crate::BuiltinItem = &crate::BuiltinItem::Operation(crate::BuiltinOperation::new(
                 crate::builtin_info!(#doc_comment #mod_name::#fn_name),
-                || microcad_lang_types::function_type!((
-                    self: microcad_lang_types::Type::model()
+                || mucad_lang_types::function_type!((
+                    self: mucad_lang_types::Type::model()
                     #(, #params)*
-                ) -> microcad_lang_types::Type::model()),
+                ) -> mucad_lang_types::Type::model()),
                 #fn_name,
             ));
         }
 
         impl crate::BuiltinConstruct for #struct_name {
-            fn element() -> microcad_lang_types::model::Element {
-                use microcad_lang_types::model;
+            fn element() -> mucad_lang_types::model::Element {
+                use mucad_lang_types::model;
                 model::BuiltinWorkpiece::BooleanOp(
                     model::BooleanOp::from(Self)
                 ).into()
             }
 
-            fn from_model(model: &microcad_lang_types::Model) -> Result<Self, crate::BuiltinError> {
+            fn from_model(model: &mucad_lang_types::Model) -> Result<Self, crate::BuiltinError> {
                 <Self as crate::BuiltinConstruct>::check_element(model)?;
                 Ok(Self)
             }
@@ -100,12 +100,12 @@ fn builtin_boolean_op_struct(attr: TokenStream, input_struct: ItemStruct) -> Tok
 
         impl crate::BuiltinOperationCall for #struct_name {
             fn call(
-                args: microcad_lang_types::Arguments,
+                args: mucad_lang_types::Arguments,
                 _ctx: &mut crate::BuiltinEvalContext,
-            ) -> Result<microcad_lang_types::ModelTree, crate::BuiltinError> {
-                let self_: std::rc::Rc<microcad_lang_types::ModelTree> = args.try_get("self")?;
-                let mut tree = microcad_lang_types::ModelTree::new(
-                    microcad_lang_types::Model::new(
+            ) -> Result<mucad_lang_types::ModelTree, crate::BuiltinError> {
+                let self_: std::rc::Rc<mucad_lang_types::ModelTree> = args.try_get("self")?;
+                let mut tree = mucad_lang_types::ModelTree::new(
+                    mucad_lang_types::Model::new(
                         <Self as crate::BuiltinConstruct>::element()
                     ).with_op_properties(args),
                 );

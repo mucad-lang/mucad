@@ -29,7 +29,7 @@ fi
 # --- Configuration (Ensure these match your script) ---
 DEST_DIR="${DEST_DIR:-./target/docs}" # The local folder containing /v1.0.0/ etc.
 ZIP_FILE="docs.zip"
-FTP_REMOTE_PATH="${FTP_REMOTE_PATH:-/docs.microcad.xyz/httpdocs}"
+FTP_REMOTE_PATH="${FTP_REMOTE_PATH:-/docs.mucad.org/httpdocs}"
 
 # Safety validation
 if [ ! -d "$DEST_DIR" ]; then
@@ -74,14 +74,14 @@ lftp -e "$LFTP_COMMANDS" sftp://"$FTP_USER":"$FTP_PW"@"$FTP_HOST":"$FTP_PORT"
 # 5. Step B: Remote extraction via sshpass + SSH
 if [ -z "$DRY_RUN" ]; then
     echo "🔓 Extracting archive remotely using sshpass..."
-    
+
     # sshpass -e flags instructs it to read the password directly from $SSHPASS.
     # We pass our $FTP_PW value directly into it for this step.
     export SSHPASS="$FTP_PW"
-    
+
     sshpass -e ssh -o StrictHostKeyChecking=no -p "$FTP_PORT" "$FTP_USER@$FTP_HOST" \
         "cd $FTP_REMOTE_PATH && unzip -o $ZIP_FILE && rm $ZIP_FILE"
-        
+
     # Unset immediately after execution to keep environment pristine
     unset SSHPASS
 fi

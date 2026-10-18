@@ -1,12 +1,12 @@
 # µcad
 
 [![CI](https://ci.codeberg.org/api/badges/15446/status.svg)](https://ci.codeberg.org/repos/15446)
-[![Crates.io](https://img.shields.io/crates/v/microcad.svg)](https://crates.io/crates/microcad)
-[![Dependency status](https://deps.rs/repo/codeberg/microcad/microcad/status.svg)](https://deps.rs/repo/codeberg/microcad/microcad)
+[![Crates.io](https://img.shields.io/crates/v/mucad.svg)](https://crates.io/crates/mucad)
+[![Dependency status](https://deps.rs/repo/codeberg/mucad/mucad/status.svg)](https://deps.rs/repo/codeberg/mucad/mucad)
 
 ![µcad Logo](images/logo.png)
 
-µcad (pronounced *microcad*) is a description language for modeling parameterizable geometric objects.
+µcad (pronounced *mucad*) is a description language for modeling parameterizable geometric objects.
 
 Simple basic shapes can be composed to create complex geometries which then can be rendered into STL
 or SVG files for 3D printing or CNC milling.
@@ -31,12 +31,12 @@ Feel free to [contribute](CONTRIBUTE.md) by opening issues or pull requests.
 
 *µcad* is programmed in [Rust](https://www.rust-lang.org/) which easily can be
 [installed](https://www.rust-lang.org/tools/install) on several operating systems.
-You can try it out with an example by using the command line tool `microcad`
-which can be installed from [crates.io](https://crates.io/crates/microcad) by using
+You can try it out with an example by using the command line tool `mucad`
+which can be installed from [crates.io](https://crates.io/crates/mucad) by using
 the following command line:
 
 ```sh
-cargo install microcad
+cargo install mucad
 ```
 
 **Note**: Currently µcad has no binary install packages so the only ways to install
@@ -68,7 +68,7 @@ CsgCube(50mm);
 To install the latest release of *µcad* via *cargo*, type:
 
 ```sh
-cargo install microcad
+cargo install mucad
 ```
 
 ## Command line usage
@@ -76,7 +76,7 @@ cargo install microcad
 After installing, you can run a basic example by typing:
 
 ```sh
-microcad check ./examples/bricks/brick
+mucad check ./examples/bricks/brick
 ```
 
 This will *check* the input file and will output the model tree.
@@ -85,7 +85,7 @@ The *check* command will not export the output geometry.
 To generate an STL model file use the `export` command with an additional output file name:
 
 ```sh
-microcad export ./examples/bricks/brick
+mucad export ./examples/bricks/brick
 ```
 
 The file [`brick.µcad`](examples/bricks/brick.µcad) generate a file called`brick.stl`
@@ -100,32 +100,32 @@ The resulting STL mesh looks like this:
 To install the latest release of the µcad viewer via *cargo*, type:
 
 ```sh
-cargo install microcad-viewer
+cargo install mucad-viewer
 ```
 
 You can run the viewer with a file:
 
 ```sh
-microcad-viewer ./examples/bricks/brick
+mucad-viewer ./examples/bricks/brick
 ```
 
 ## Documentation
 
-- [Language reference](http://docs.microcad.xyz/latest/language)
+- [Language reference](http://docs.mucad.org/latest/language)
 - [Contribute Documentation](CONTRIBUTE.md)
 
 ## ❤️ Support the project
 
 If you like this project, you can help us spend more time on it by donating:
 
-<a href="https://opencollective.com/microcad/donate" target="_blank">
-<img src="https://opencollective.com/microcad/donate/button@2x.png?color=blue" width=300 />
+<a href="https://opencollective.com/mucad/donate" target="_blank">
+<img src="https://opencollective.com/mucad/donate/button@2x.png?color=blue" width=300 />
 </a>
 
 ## 💚 Funded by
 
 Thanks to the [Prototype Fund](https://www.prototypefund.de/) and the [Federal Ministry of Research, Technology and Space](https://www.bmbf.de/EN/) for funding this project in 2025.
 
-![https://prototypefund.de/en/](https://codeberg.org/microcad/microcad/raw/branch/main/images/Prototype_Fund_Logo_2025.svg)
-![https://okfn.de/en/](https://codeberg.org/microcad/microcad/raw/branch/main/images/Open_Knowledge_Foundation_Deutschland_Logo.svg)
+![https://prototypefund.de/en/](https://codeberg.org/mucad/mucad/raw/branch/main/images/Prototype_Fund_Logo_2025.svg)
+![https://okfn.de/en/](https://codeberg.org/mucad/mucad/raw/branch/main/images/Open_Knowledge_Foundation_Deutschland_Logo.svg)
 ![https://www.bmbf.de/EN/](https://upload.wikimedia.org/wikipedia/commons/d/df/BMFTR_Logo.svg)

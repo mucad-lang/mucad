@@ -1,10 +1,10 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Render cache.
 
 use crate::GeometryOutputs;
-use microcad_hash::{HashId, HashMap};
+use mucad_hash::{HashId, HashMap};
 
 /// An item in the [`RenderCache`].
 pub struct RenderCacheItem<T> {

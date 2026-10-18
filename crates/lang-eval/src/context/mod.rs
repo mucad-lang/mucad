@@ -1,20 +1,20 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod stack;
 
-use microcad_lang_resolve::{
+use mucad_lang_resolve::{
     Library, LibraryCache,
     library::symbol::{self, SymbolNodeId, SymbolNodeRef},
 };
 pub use stack::*;
 
-use microcad_builtin::{BuiltinEvalContext, BuiltinLibrary};
-use microcad_lang_base::{
+use mucad_builtin::{BuiltinEvalContext, BuiltinLibrary};
+use mucad_lang_base::{
     ExternalId, IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut, SrcRef,
     SymbolId, ToCompactString,
 };
-use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
+use mucad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
 use crate::{
     Callable, Eval, EvalAdvice, EvalError, EvalErrorKind, EvalIssue, EvalResult, EvalWarning,
@@ -187,7 +187,7 @@ impl EvalContext {
 }
 
 impl LookUpName for EvalContext {
-    fn look_up_built_in_name(&self, builtin_id: &microcad_builtin::BuiltinId) -> Option<Name> {
+    fn look_up_built_in_name(&self, builtin_id: &mucad_builtin::BuiltinId) -> Option<Name> {
         self.builtins.look_up_built_in_name(builtin_id)
     }
 
@@ -206,7 +206,7 @@ impl EvalContext {
     ///
     /// Items refer to the current library.
     pub fn symbol_name(&self, id: &SymbolId) -> Option<Name> {
-        use microcad_lang_resolve::SymbolNodeExt;
+        use mucad_lang_resolve::SymbolNodeExt;
 
         let (lib_id, node_id) = match id {
             SymbolId::Builtin(builtin_id) => {
@@ -275,7 +275,7 @@ impl StackWrite for EvalContext {
 }
 
 impl ModelTreeBuilderMut for EvalContext {
-    fn model_tree_builder_mut(&mut self) -> &mut microcad_lang_types::model::ModelTreeBuilder {
+    fn model_tree_builder_mut(&mut self) -> &mut mucad_lang_types::model::ModelTreeBuilder {
         self.top_mut().model_tree_builder_mut()
     }
 }

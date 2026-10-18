@@ -1,8 +1,8 @@
-# Copyright © 2026 The µcad authors <info@microcad.xyz>
+# Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 [package]
-name = "microcad-render"
+name = "mucad-render"
 description = "µcad render utilities"
 authors = ["Michael Winkelmann (michael@winkelmann.site)"]
 edition.workspace = true
@@ -20,12 +20,12 @@ miette = { version = "7.6.0", features = ["derive", "fancy"] }
 rustc-hash = "2.1.1"
 thiserror = "2.0.17"
 
-microcad-core = { workspace = true }
-microcad-hash = { workspace = true }
-microcad-lang-base = { workspace = true }
-microcad-macros = { workspace = true }
-microcad-lang-types = { workspace = true }
-microcad-builtin = { workspace = true }
+mucad-core = { workspace = true }
+mucad-hash = { workspace = true }
+mucad-lang-base = { workspace = true }
+mucad-macros = { workspace = true }
+mucad-lang-types = { workspace = true }
+mucad-builtin = { workspace = true }
 
 [dev-dependencies]
 pretty_assertions = "1.4"

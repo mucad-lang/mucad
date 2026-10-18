@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Binary STL writer
@@ -6,7 +6,7 @@
 use std::io::Write;
 
 use cgmath::{InnerSpace, Vector3};
-use microcad_core::Triangle;
+use mucad_core::Triangle;
 
 use crate::{Writer, stl::triangles::AsTriangleIterator};
 

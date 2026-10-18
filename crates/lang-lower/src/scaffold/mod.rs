@@ -1,12 +1,12 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! Scaffolding builds the tree from desugared IR items.
 
-use microcad_lang_base::{
+use mucad_lang_base::{
     PushIssue, SingleIdentifier, SrcReferrer, Stability, Version, VersionAnnotation,
 };
-use microcad_lang_types::Value;
+use mucad_lang_types::Value;
 
 use crate::{LowerContext, LowerError, ir};
 

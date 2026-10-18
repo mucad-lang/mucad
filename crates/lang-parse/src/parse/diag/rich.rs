@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! A copy of Rich, but with a generic `Custom` error type instead of a string
@@ -12,7 +12,7 @@ use chumsky::error::{Error, LabelError};
 use chumsky::input::Input;
 use chumsky::util::MaybeRef;
 use chumsky::{DefaultExpected, text};
-use microcad_lang_base::Span;
+use mucad_lang_base::Span;
 use std::borrow::Cow;
 
 use crate::parse::ParseErrorKind;

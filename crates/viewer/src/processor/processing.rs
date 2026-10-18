@@ -1,8 +1,8 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crossbeam::channel::{Receiver, Sender};
-use microcad_driver::prelude::{self as mu, traits::RenderDiag};
+use mucad_driver::prelude::{self as mu, traits::RenderDiag};
 use miette::IntoDiagnostic;
 
 use crate::{

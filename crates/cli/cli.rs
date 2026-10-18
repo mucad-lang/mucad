@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad CLI.
@@ -6,7 +6,7 @@
 use clap::Parser;
 
 use crate::commands::*;
-use microcad_driver::prelude::{self as mu, traits::RenderDiag};
+use mucad_driver::prelude::{self as mu, traits::RenderDiag};
 
 /// µcad cli
 #[derive(Parser)]
@@ -93,7 +93,7 @@ impl Cli {
     pub(crate) fn exporter(&self, resolution: &str) -> miette::Result<mu::Exporter> {
         Ok(mu::Exporter::new()
             .with_config(self.config.export.clone())
-            .with_resolution(microcad_driver::resolution_from_str(resolution)?))
+            .with_resolution(mucad_driver::resolution_from_str(resolution)?))
     }
 
     /// Compile `input` and print the diagnostics.

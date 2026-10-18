@@ -1,4 +1,4 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad CLI install command.
@@ -6,7 +6,7 @@
 use rust_embed::RustEmbed;
 use thiserror::Error;
 
-use microcad_lang_base::{LibraryId, LibraryInfo};
+use mucad_lang_base::{LibraryId, LibraryInfo};
 
 /// Standard library error.
 #[derive(Debug, Error)]
@@ -113,13 +113,13 @@ impl StdLib {
 
 /// The global library search path.
 ///
-/// Use the config directory in home directory `.config/microcad` in Release mode.
+/// Use the config directory in home directory `.config/mucad` in Release mode.
 /// In Debug mode, the local directory `./crates/std/lib` is used.
 pub fn global_library_search_path() -> std::path::PathBuf {
     #[cfg(not(debug_assertions))]
     return dirs::config_dir()
         .expect("config directory")
-        .join("microcad")
+        .join("mucad")
         .join("lib");
 
     #[cfg(debug_assertions)]

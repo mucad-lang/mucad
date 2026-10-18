@@ -1,13 +1,13 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod error;
 
 pub use error::{ResolveError, ResolveErrorKind};
-use microcad_lang_base::{Identifier, SrcRef, SrcReferrer, element::Case};
-use microcad_lang_lower::{LowerAdvice, LowerIssue, LowerWarning};
-use microcad_lang_parse::{ParseAdvice, ParseIssue, ParseWarning};
-use microcad_macros::Issue;
+use mucad_lang_base::{Identifier, SrcRef, SrcReferrer, element::Case};
+use mucad_lang_lower::{LowerAdvice, LowerIssue, LowerWarning};
+use mucad_lang_parse::{ParseAdvice, ParseIssue, ParseWarning};
+use mucad_macros::Issue;
 use miette::Diagnostic;
 use thiserror::Error;
 

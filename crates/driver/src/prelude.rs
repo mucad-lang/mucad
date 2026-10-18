@@ -1,18 +1,18 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 //! µcad driver prelude
 //!
-//! Preferably include with: `use microcad_driver::prelude as mu;`
+//! Preferably include with: `use mucad_driver::prelude as mu;`
 //! To use the traits: `use mu::traits::*;`
 
 // =========================================================================
 // --- Core & Geometry ---
 // =========================================================================
 
-/// Symbols from `microcad_core`
+/// Symbols from `mucad_core`
 pub mod core {
-    pub use microcad_core::*;
+    pub use mucad_core::*;
 }
 
 pub use core::{Color, Scalar};
@@ -21,9 +21,9 @@ pub use core::{Color, Scalar};
 // --- Language Infrastructure & Pipeline ---
 // =========================================================================
 
-/// Symbols from `microcad_base`
+/// Symbols from `mucad_base`
 pub mod base {
-    pub use microcad_lang_base::*;
+    pub use mucad_lang_base::*;
 }
 
 pub use base::{
@@ -32,37 +32,37 @@ pub use base::{
     Source, SourceKind, SourceLocation, SrcRef, StageResult, TextEdit, Url,
 };
 
-/// Symbols from `microcad_lang_parse`
+/// Symbols from `mucad_lang_parse`
 pub mod parse {
-    pub use microcad_lang_parse::*;
+    pub use mucad_lang_parse::*;
 }
 
 pub use parse::{Ast, ast, parse};
 
-/// Symbols from `microcad_lang_lower`
+/// Symbols from `mucad_lang_lower`
 pub mod lower {
-    pub use microcad_lang_lower::*;
+    pub use mucad_lang_lower::*;
 }
 
 pub use lower::{Ir, ir, lower};
 
-/// Symbols from `microcad_lang_resolve`
+/// Symbols from `mucad_lang_resolve`
 pub mod resolve {
-    pub use microcad_lang_resolve::*;
+    pub use mucad_lang_resolve::*;
 }
 
 pub use resolve::{Library, ResolveContext, ResolveLibraryContext, locate};
 
-/// Symbols from `microcad_lang_eval`
+/// Symbols from `mucad_lang_eval`
 pub mod eval {
-    pub use microcad_lang_eval::*;
+    pub use mucad_lang_eval::*;
 }
 
 pub use eval::EvalContext;
 
-/// Symbols from `microcad_lang_types`
+/// Symbols from `mucad_lang_types`
 pub mod types {
-    pub use microcad_lang_types::*;
+    pub use mucad_lang_types::*;
 }
 
 pub use types::{ModelTree, Value};
@@ -71,15 +71,15 @@ pub use types::{ModelTree, Value};
 // --- Built-in and standard library & Documentation Generation ---
 // =========================================================================
 
-/// Symbols from `microcad_builtin`
+/// Symbols from `mucad_builtin`
 pub mod builtin {
-    pub use microcad_builtin::*;
+    pub use mucad_builtin::*;
 }
 
 pub use builtin::BuiltinLibrary;
 
 pub mod stdlib {
-    pub use microcad_std::*;
+    pub use mucad_std::*;
 
     use super::{Library, ResolveContext, Shared};
 
@@ -97,13 +97,13 @@ pub mod stdlib {
     }
 }
 
-/// Symbols from `microcad_docgen`
+/// Symbols from `mucad_docgen`
 pub mod docgen {
-    pub use microcad_docgen::*;
+    pub use mucad_docgen::*;
 }
 
 pub mod md {
-    pub use microcad_lang_markdown::*;
+    pub use mucad_lang_markdown::*;
 }
 
 // =========================================================================
@@ -117,22 +117,22 @@ pub use crate::{Compiler, compiler::CompileResult};
 pub use crate::{Report, Result, report};
 
 pub mod format {
-    pub use microcad_lang_format::*;
+    pub use mucad_lang_format::*;
 }
 
 pub use crate::Formatter;
 pub use format::{FormatConfig, Formatted, format};
 
-/// Symbols from `microcad_render`
+/// Symbols from `mucad_render`
 pub mod render {
-    pub use microcad_render::*;
+    pub use mucad_render::*;
 }
 
 pub use render::RenderResolution;
 
-/// Symbols from `microcad_export`
+/// Symbols from `mucad_export`
 pub mod export {
-    pub use microcad_export::*;
+    pub use mucad_export::*;
 }
 
 pub use crate::{Exporter, config::ExportConfig};
@@ -143,7 +143,7 @@ pub use crate::{Exporter, config::ExportConfig};
 
 /// Common traits across all µcad layers.
 ///
-/// Import with: `use microcad_driver::prelude::traits::*;`
+/// Import with: `use mucad_driver::prelude::traits::*;`
 pub mod traits {
     pub use super::{
         base::{Identifiable, RenderDiag, SrcReferrer, ToHash},

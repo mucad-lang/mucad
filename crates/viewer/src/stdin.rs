@@ -1,7 +1,7 @@
-// Copyright © 2025-2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2025-2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! microcad Viewer Standard input interface.
+//! mucad Viewer Standard input interface.
 
 use std::{io::BufRead, time::Duration};
 
@@ -12,7 +12,7 @@ use crossbeam::channel::Receiver;
 use bevy::ecs::resource::Resource;
 use bevy::prelude::{AppExit, MessageWriter};
 
-use microcad_viewer_ipc::ViewerRequest;
+use mucad_viewer_ipc::ViewerRequest;
 
 use crate::plugin::MicrocadPluginInput;
 use crate::processor::ProcessorRequest;
@@ -80,7 +80,7 @@ pub fn handle_stdin_messages(
         for viewer_request in stdin.receiver.try_iter() {
             log::info!("{viewer_request:?}");
 
-            use microcad_viewer_ipc::ViewerRequest::*;
+            use mucad_viewer_ipc::ViewerRequest::*;
             match viewer_request {
                 ShowSourceCodeFromFile { path } => {
                     stdin.current_path = Some(path.clone());

@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run microcad Extension",
+            "name": "Run mucad Extension",
             "type": "extensionHost",
             "request": "launch",
             "args": [
@@ -19,16 +19,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'microcad_core'",
+            "name": "Debug unit tests in library 'mucad_core'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=microcad-core"
+                    "--package=mucad-core"
                 ],
                 "filter": {
-                    "name": "microcad_core",
+                    "name": "mucad_core",
                     "kind": "lib"
                 }
             },
@@ -52,16 +52,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'microcad_export'",
+            "name": "Debug unit tests in library 'mucad_export'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=microcad-export"
+                    "--package=mucad-export"
                 ],
                 "filter": {
-                    "name": "microcad_export",
+                    "name": "mucad_export",
                     "kind": "lib"
                 }
             },
@@ -71,16 +71,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'microcad_render'",
+            "name": "Debug unit tests in library 'mucad_render'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=microcad-render"
+                    "--package=mucad-render"
                 ],
                 "filter": {
-                    "name": "microcad_render",
+                    "name": "mucad_render",
                     "kind": "lib"
                 }
             },
@@ -90,16 +90,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'microcad_lang'",
+            "name": "Debug unit tests in library 'mucad_lang'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=microcad-lang"
+                    "--package=mucad-lang"
                 ],
                 "filter": {
-                    "name": "microcad_lang",
+                    "name": "mucad_lang",
                     "kind": "lib"
                 }
             },
@@ -109,16 +109,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'microcad_std'",
+            "name": "Debug unit tests in library 'mucad_std'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=microcad-std"
+                    "--package=mucad-std"
                 ],
                 "filter": {
-                    "name": "microcad_std",
+                    "name": "mucad_std",
                     "kind": "lib"
                 }
             },
@@ -128,16 +128,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'microcad_tests'",
+            "name": "Debug unit tests in library 'mucad_tests'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=microcad-tests"
+                    "--package=mucad-tests"
                 ],
                 "filter": {
-                    "name": "microcad_tests",
+                    "name": "mucad_tests",
                     "kind": "lib"
                 }
             },
@@ -147,16 +147,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'microcad_markdown_test'",
+            "name": "Debug unit tests in library 'mucad_markdown_test'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=microcad_markdown_test"
+                    "--package=mucad_markdown_test"
                 ],
                 "filter": {
-                    "name": "microcad_markdown_test",
+                    "name": "mucad_markdown_test",
                     "kind": "lib"
                 }
             },
@@ -185,16 +185,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'microcad_pest_test'",
+            "name": "Debug unit tests in library 'mucad_pest_test'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=microcad_pest_test"
+                    "--package=mucad_pest_test"
                 ],
                 "filter": {
-                    "name": "microcad_pest_test",
+                    "name": "mucad_pest_test",
                     "kind": "lib"
                 }
             },
@@ -209,7 +209,7 @@
                 "args": [
                     "build",
                     "--bin=µcad",
-                    "--package=microcad-cli"
+                    "--package=mucad-cli"
                 ],
                 "filter": {
                     "name": "µcad",
@@ -228,7 +228,7 @@
                     "test",
                     "--no-run",
                     "--bin=µcad",
-                    "--package=microcad-cli"
+                    "--package=mucad-cli"
                 ],
                 "filter": {
                     "name": "µcad",

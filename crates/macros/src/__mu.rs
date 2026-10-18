@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use proc_macro2::Span;
@@ -17,9 +17,9 @@ impl Parse for MuInput {
     }
 }
 
-/// Path to the `microcad-builtin` crate root.
+/// Path to the `mucad-builtin` crate root.
 fn get_builtin_crate() -> syn::Result<TokenStream2> {
-    match proc_macro_crate::crate_name("microcad-builtin") {
+    match proc_macro_crate::crate_name("mucad-builtin") {
         Ok(proc_macro_crate::FoundCrate::Itself) => Ok(quote! { crate }),
         Ok(proc_macro_crate::FoundCrate::Name(name)) => {
             let ident = Ident::new(&name, Span::call_site());
@@ -27,7 +27,7 @@ fn get_builtin_crate() -> syn::Result<TokenStream2> {
         }
         Err(err) => Err(syn::Error::new(
             Span::call_site(),
-            format!("`__mu!` requires the crate `microcad-builtin`: {err}"),
+            format!("`__mu!` requires the crate `mucad-builtin`: {err}"),
         )),
     }
 }

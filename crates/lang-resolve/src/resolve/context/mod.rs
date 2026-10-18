@@ -1,4 +1,4 @@
-// Copyright © 2026 The µcad authors <info@microcad.xyz>
+// Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod cache;
@@ -8,14 +8,14 @@ mod prelude;
 
 pub use cache::{LibraryCache, SourceCache};
 pub use lib_ctx::ResolveLibraryContext;
-use microcad_lang_parse::Ast;
+use mucad_lang_parse::Ast;
 pub use prelude::Prelude;
 use std::collections::BTreeMap;
 
-use microcad_lang_base::{
+use mucad_lang_base::{
     Artifact, HashId, IssueList, IssueResult, LibraryId, Name, PushIssue, SharedMut,
 };
-use microcad_lang_lower::Ir;
+use mucad_lang_lower::Ir;
 
 use crate::{Library, ResolveErrorKind, ResolveIssue};
 
