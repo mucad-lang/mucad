@@ -4,8 +4,8 @@
 use microcad_lang_base::{Identifier, IssueList, PushIssue, SharedMut, SymbolId};
 
 use crate::{
-    Library, LibraryCache, ResolveContext, ResolveError, ResolveInfo, ResolveIssue, ResolveWarning,
-    library::SymbolArena,
+    Library, LibraryCache, ResolveAdvice, ResolveContext, ResolveError, ResolveIssue,
+    ResolveWarning, library::SymbolArena,
 };
 
 /// A Resolve Context to resolve exactly one library at a time.
@@ -109,7 +109,7 @@ impl<'ctx, 'lib> PushIssue<ResolveIssue> for ResolveLibraryContext<'ctx, 'lib> {
         self.issues.push_warn(warn);
     }
 
-    fn push_info(&mut self, info: impl Into<ResolveInfo>) {
-        self.issues.push_info(info);
+    fn push_advice(&mut self, advice: impl Into<ResolveAdvice>) {
+        self.issues.push_advice(advice);
     }
 }

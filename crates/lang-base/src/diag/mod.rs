@@ -6,7 +6,6 @@
 mod diagnostic;
 mod diagnostics;
 mod issue;
-mod issue_diagnostic;
 
 pub use diagnostic::Diagnostic;
 pub use diagnostics::{DiagRenderOptions, Diagnostics};

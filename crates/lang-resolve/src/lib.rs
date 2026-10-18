@@ -14,7 +14,7 @@ pub mod locate;
 pub use source_unit::SourceUnit;
 
 pub use diag::{
-    ResolveError, ResolveErrorKind, ResolveInfo, ResolveIssue, ResolveResult, ResolveWarning,
+    ResolveAdvice, ResolveError, ResolveErrorKind, ResolveIssue, ResolveResult, ResolveWarning,
 };
 
 pub use resolve::{

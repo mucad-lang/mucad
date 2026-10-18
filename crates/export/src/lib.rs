@@ -73,8 +73,8 @@ fn render(
             issues
                 .into_iter()
                 .filter_map(|issue| match issue {
-                    RenderIssue::Err(err) => Some(err),
-                    RenderIssue::Warn(_) | RenderIssue::Info(_) => None,
+                    RenderIssue::Error(err) => Some(err),
+                    RenderIssue::Warning(_) | RenderIssue::Advice(_) => None,
                 })
                 .collect(),
         )),

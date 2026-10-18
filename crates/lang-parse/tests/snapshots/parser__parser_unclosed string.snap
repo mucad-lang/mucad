@@ -4,6 +4,8 @@ expression: output
 ---
 
 ---
+parse::error
+
   x unclosed string
    ,-[/:1:5]
  1 | a = "unclosed string;

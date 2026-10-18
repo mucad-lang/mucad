@@ -385,7 +385,7 @@ pub mod debug {
     #[builtin_fn(impure debug::info(message: String))]
     pub fn info(args: Arguments, ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let message: String = args.try_get("message")?;
-        ctx.push_info(BuiltinAdvice::Custom(message));
+        ctx.push_advice(BuiltinAdvice::Custom(message));
         Ok(Value::None)
     }
 

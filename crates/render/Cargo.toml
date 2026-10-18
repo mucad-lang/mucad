@@ -23,6 +23,7 @@ thiserror = "2.0.17"
 microcad-core = { workspace = true }
 microcad-hash = { workspace = true }
 microcad-lang-base = { workspace = true }
+microcad-macros = { workspace = true }
 microcad-lang-types = { workspace = true }
 microcad-builtin = { workspace = true }
 

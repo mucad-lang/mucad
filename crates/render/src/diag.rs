@@ -3,8 +3,8 @@
 
 //! Render issues, which are collected while rendering continues.
 
-use microcad_lang_base::{Issue, SrcRef, SrcReferrer};
-use miette::{Diagnostic, Severity};
+use microcad_lang_base::{SrcRef, SrcReferrer};
+use miette::Diagnostic;
 use thiserror::Error;
 
 use crate::RenderError;
@@ -13,56 +13,32 @@ use crate::RenderError;
 #[derive(Debug, Error, Diagnostic)]
 pub enum RenderWarning {}
 
-/// An info that occurred during rendering.
+/// An advice that occurred during rendering.
 #[derive(Debug, Error, Diagnostic)]
-pub enum RenderInfo {}
+pub enum RenderAdvice {}
 
 /// An issue that occurred during rendering.
-#[derive(Debug, Error, Diagnostic)]
+#[derive(Debug, Error, microcad_macros::Issue)]
+#[issue(code = "render")]
 pub enum RenderIssue {
     /// A render error.
     #[error(transparent)]
-    #[diagnostic(code(render::error))]
-    Err(#[from] RenderError),
+    Error(#[from] RenderError),
 
     /// A render warning.
     #[error(transparent)]
-    #[diagnostic(code(render::warning))]
-    Warn(#[from] RenderWarning),
+    Warning(#[from] RenderWarning),
 
-    /// A render info.
+    /// A render advice.
     #[error(transparent)]
-    #[diagnostic(code(render::info))]
-    Info(#[from] RenderInfo),
-}
-
-impl Issue for RenderIssue {
-    type Err = RenderError;
-    type Warn = RenderWarning;
-    type Info = RenderInfo;
-
-    fn severity(&self) -> Severity {
-        match self {
-            Self::Err(_) => Severity::Error,
-            Self::Warn(_) => Severity::Warning,
-            Self::Info(_) => Severity::Advice,
-        }
-    }
-
-    fn diagnostic(&self) -> &dyn Diagnostic {
-        match self {
-            Self::Err(err) => err,
-            Self::Warn(warn) => warn,
-            Self::Info(info) => info,
-        }
-    }
+    Advice(#[from] RenderAdvice),
 }
 
 impl SrcReferrer for RenderIssue {
     fn src_ref(&self) -> SrcRef {
         match self {
-            Self::Err(err) => err.src_ref(),
-            Self::Warn(_) | Self::Info(_) => SrcRef::none(),
+            Self::Error(err) => err.src_ref(),
+            Self::Warning(_) | Self::Advice(_) => SrcRef::none(),
         }
     }
 }

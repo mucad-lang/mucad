@@ -6,7 +6,7 @@
 pub mod ir;
 
 mod diag;
-pub use diag::{LowerError, LowerInfo, LowerIssue, LowerResult, LowerWarning};
+pub use diag::{LowerAdvice, LowerError, LowerIssue, LowerResult, LowerWarning};
 
 mod desugar;
 mod fold;
@@ -115,8 +115,8 @@ impl<'source> PushIssue<LowerIssue> for LowerContext<'source> {
         self.issues.push_warn(warn);
     }
 
-    fn push_info(&mut self, info: impl Into<LowerInfo>) {
-        self.issues.push_info(info);
+    fn push_advice(&mut self, advice: impl Into<LowerAdvice>) {
+        self.issues.push_advice(advice);
     }
 }
 

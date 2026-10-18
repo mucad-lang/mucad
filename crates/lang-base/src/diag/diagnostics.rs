@@ -124,7 +124,7 @@ impl Diagnostics {
 
     pub fn push<I: Issue>(&mut self, issue: I) {
         let src_ref = issue.src_ref();
-        let report = miette::Report::new(issue_diagnostic::IssueDiagnostic(issue));
+        let report = miette::Report::new(issue);
 
         match report.severity() {
             Some(Severity::Error) | None => self.error_count += 1,

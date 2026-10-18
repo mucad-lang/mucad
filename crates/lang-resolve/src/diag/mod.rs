@@ -4,10 +4,11 @@
 mod error;
 
 pub use error::{ResolveError, ResolveErrorKind};
-use microcad_lang_base::{Identifier, Issue, SrcRef, SrcReferrer, element::Case};
-use microcad_lang_lower::{LowerInfo, LowerIssue, LowerWarning};
-use microcad_lang_parse::{ParseInfo, ParseIssue, ParseWarning};
-use miette::{Diagnostic, Severity};
+use microcad_lang_base::{Identifier, SrcRef, SrcReferrer, element::Case};
+use microcad_lang_lower::{LowerAdvice, LowerIssue, LowerWarning};
+use microcad_lang_parse::{ParseAdvice, ParseIssue, ParseWarning};
+use microcad_macros::Issue;
+use miette::Diagnostic;
 use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]
@@ -37,59 +38,35 @@ impl SrcReferrer for ResolveWarning {
 }
 
 #[derive(Debug, Error, Diagnostic)]
-pub enum ResolveInfo {
+pub enum ResolveAdvice {
     #[error("{0}")]
-    Parse(#[from] ParseInfo),
+    Parse(#[from] ParseAdvice),
     #[error("{0}")]
-    Lower(#[from] LowerInfo),
+    Lower(#[from] LowerAdvice),
 }
 
-#[derive(Debug, Error, Diagnostic)]
+#[derive(Debug, Error, Issue)]
+#[issue(code = "resolve")]
 pub enum ResolveIssue {
-    /// A parse error.
+    /// A resolve error.
     #[error(transparent)]
-    #[diagnostic(severity(Error), code(resolve::error))]
-    Err(#[from] ResolveError),
+    Error(#[from] ResolveError),
 
-    /// A warning from the parser.
+    /// A resolve warning.
     #[error(transparent)]
-    #[diagnostic(severity(Warning), code(resolve::warning))]
-    Warn(#[from] ResolveWarning),
+    Warning(#[from] ResolveWarning),
 
-    /// An info from the parser.
+    /// A resolve advice.
     #[error(transparent)]
-    #[diagnostic(severity(Advice), code(resolve::info))]
-    Info(#[from] ResolveInfo),
-}
-
-impl Issue for ResolveIssue {
-    type Err = ResolveError;
-    type Warn = ResolveWarning;
-    type Info = ResolveInfo;
-
-    fn severity(&self) -> Severity {
-        match self {
-            Self::Err(_) => Severity::Error,
-            Self::Warn(_) => Severity::Warning,
-            Self::Info(_) => Severity::Advice,
-        }
-    }
-
-    fn diagnostic(&self) -> &dyn Diagnostic {
-        match self {
-            Self::Err(err) => err,
-            Self::Warn(warn) => warn,
-            Self::Info(info) => info,
-        }
-    }
+    Advice(#[from] ResolveAdvice),
 }
 
 impl From<ParseIssue> for ResolveIssue {
     fn from(issue: ParseIssue) -> Self {
         match issue {
-            ParseIssue::Err(err) => ResolveIssue::Err(err.into()),
-            ParseIssue::Warn(warn) => ResolveIssue::Warn(warn.into()),
-            ParseIssue::Info(info) => ResolveIssue::Info(info.into()),
+            ParseIssue::Error(err) => ResolveIssue::Error(err.into()),
+            ParseIssue::Warning(warn) => ResolveIssue::Warning(warn.into()),
+            ParseIssue::Advice(advice) => ResolveIssue::Advice(advice.into()),
         }
     }
 }
@@ -97,9 +74,9 @@ impl From<ParseIssue> for ResolveIssue {
 impl From<LowerIssue> for ResolveIssue {
     fn from(issue: LowerIssue) -> Self {
         match issue {
-            LowerIssue::Err(err) => ResolveIssue::Err(err.into()),
-            LowerIssue::Warn(warn) => ResolveIssue::Warn(warn.into()),
-            LowerIssue::Info(info) => ResolveIssue::Info(info.into()),
+            LowerIssue::Error(err) => ResolveIssue::Error(err.into()),
+            LowerIssue::Warning(warn) => ResolveIssue::Warning(warn.into()),
+            LowerIssue::Advice(advice) => ResolveIssue::Advice(advice.into()),
         }
     }
 }
@@ -109,9 +86,9 @@ pub type ResolveResult<T> = Result<T, ResolveError>;
 impl SrcReferrer for ResolveIssue {
     fn src_ref(&self) -> SrcRef {
         match self {
-            Self::Err(err) => err.src_ref(),
-            Self::Warn(warn) => warn.src_ref(),
-            Self::Info(_) => SrcRef::none(),
+            Self::Error(err) => err.src_ref(),
+            Self::Warning(warn) => warn.src_ref(),
+            Self::Advice(_) => SrcRef::none(),
         }
     }
 }

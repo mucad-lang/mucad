@@ -4,9 +4,9 @@
 mod error;
 
 pub use error::BuiltinError;
-use microcad_lang_base::{Issue, SrcRef, SrcReferrer};
+use microcad_lang_base::{SrcRef, SrcReferrer};
 use microcad_lang_types::Value;
-use miette::{Diagnostic, Severity};
+use miette::Diagnostic;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Error, Diagnostic)]
@@ -19,48 +19,24 @@ pub enum BuiltinWarning {
 
 #[derive(Clone, Debug, Error, Diagnostic)]
 pub enum BuiltinAdvice {
-    /// A custom info message.
+    /// A custom advice message.
     #[error("{0}")]
     #[diagnostic(severity(Advice))]
     Custom(String),
 }
 
 /// An issue occurred during parsing.
-#[derive(Clone, Debug, Error, Diagnostic)]
+#[derive(Clone, Debug, Error, microcad_macros::Issue)]
+#[issue(code = "builtin")]
 pub enum BuiltinIssue {
     #[error(transparent)]
-    #[diagnostic(transparent)]
-    Err(#[from] BuiltinError),
+    Error(#[from] BuiltinError),
 
     #[error(transparent)]
-    #[diagnostic(transparent)]
-    Warn(#[from] BuiltinWarning),
+    Warning(#[from] BuiltinWarning),
 
     #[error(transparent)]
-    #[diagnostic(transparent)]
-    Info(#[from] BuiltinAdvice),
-}
-
-impl Issue for BuiltinIssue {
-    type Err = BuiltinError;
-    type Warn = BuiltinWarning;
-    type Info = BuiltinAdvice;
-
-    fn severity(&self) -> Severity {
-        match self {
-            Self::Err(_) => Severity::Error,
-            Self::Warn(_) => Severity::Warning,
-            Self::Info(_) => Severity::Advice,
-        }
-    }
-
-    fn diagnostic(&self) -> &dyn Diagnostic {
-        match self {
-            Self::Err(err) => err,
-            Self::Warn(warn) => warn,
-            Self::Info(info) => info,
-        }
-    }
+    Advice(#[from] BuiltinAdvice),
 }
 
 impl SrcReferrer for BuiltinIssue {

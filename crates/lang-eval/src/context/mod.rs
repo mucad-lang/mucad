@@ -17,7 +17,7 @@ use microcad_lang_base::{
 use microcad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
 use crate::{
-    Callable, Eval, EvalError, EvalErrorKind, EvalInfo, EvalIssue, EvalResult, EvalWarning,
+    Callable, Eval, EvalAdvice, EvalError, EvalErrorKind, EvalIssue, EvalResult, EvalWarning,
 };
 
 #[derive(Debug)]
@@ -309,8 +309,8 @@ impl PushIssue<EvalIssue> for EvalContext {
         self.issues.push_warn(warn)
     }
 
-    fn push_info(&mut self, info: impl Into<EvalInfo>) {
-        self.issues.push_info(info)
+    fn push_advice(&mut self, advice: impl Into<EvalAdvice>) {
+        self.issues.push_advice(advice)
     }
 }
 

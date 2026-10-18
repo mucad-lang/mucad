@@ -6,7 +6,7 @@ mod helpers;
 mod parse_context;
 pub mod parsers;
 
-pub use diag::{ParseError, ParseErrorKind, ParseInfo, ParseIssue, ParseWarning};
+pub use diag::{ParseAdvice, ParseError, ParseErrorKind, ParseIssue, ParseWarning};
 pub use parse_context::ParseContext;
 
 use crate::{

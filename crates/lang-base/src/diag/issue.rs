@@ -4,7 +4,7 @@
 //! Issues are pieces of information that record what happened during execution.
 //!
 //! Unlike fatal errors returned via `Result<T, E>`, an `Issue` is non-blocking.
-//! It captures domain occurrences (errors, warnings, informational messages)
+//! It captures domain occurrences (errors, warnings, advices)
 //! and accumulates them inside an [`IssueList`] without interrupting the
 //! primary evaluation flow.
 
@@ -14,26 +14,26 @@ use crate::SrcReferrer;
 
 /// A trait to define an issue.
 pub trait Issue:
-    From<Self::Err>
-    + From<Self::Warn>
-    + From<Self::Info>
+    From<Self::Error>
+    + From<Self::Warning>
+    + From<Self::Advice>
     + SrcReferrer
     + Diagnostic
     + Send
     + Sync
     + 'static
 {
-    type Err;
-    type Warn;
-    type Info;
+    type Error;
+    type Warning;
+    type Advice;
 
     fn severity(&self) -> Severity;
 
-    /// The diagnostic of the error, warning or info with its help and labels.
+    /// The diagnostic of the error, warning or advice with its help and labels.
     fn diagnostic(&self) -> &dyn Diagnostic;
 }
 
-/// An issue list contains issues (errors, warnings, infos) and tracks error and warning count.
+/// An issue list contains issues (errors, warnings, advices) and tracks error and warning count.
 #[derive(Debug)]
 pub struct IssueList<I: Issue> {
     issues: Vec<I>,
@@ -47,7 +47,7 @@ impl<I: Issue> IssueList<I> {
         Self::default()
     }
 
-    /// Returns the total number of issues (errors, warnings, and infos).
+    /// Returns the total number of issues (errors, warnings, and advices).
     #[inline]
     pub fn len(&self) -> usize {
         self.issues.len()
@@ -104,8 +104,8 @@ impl<I: Issue> IntoIterator for IssueList<I> {
     }
 }
 
-impl<I: Issue> From<Vec<I::Err>> for IssueList<I> {
-    fn from(errors: Vec<I::Err>) -> Self {
+impl<I: Issue> From<Vec<I::Error>> for IssueList<I> {
+    fn from(errors: Vec<I::Error>) -> Self {
         let mut issues = IssueList::new();
         errors.into_iter().for_each(|err| {
             issues.push_err(err);
@@ -116,12 +116,12 @@ impl<I: Issue> From<Vec<I::Err>> for IssueList<I> {
 
 pub trait PushIssue<I: Issue> {
     fn push_issue(&mut self, issue: impl Into<I>);
-    fn push_err(&mut self, err: impl Into<I::Err>);
-    fn push_warn(&mut self, warn: impl Into<I::Warn>);
-    fn push_info(&mut self, info: impl Into<I::Info>);
+    fn push_err(&mut self, err: impl Into<I::Error>);
+    fn push_warn(&mut self, warn: impl Into<I::Warning>);
+    fn push_advice(&mut self, advice: impl Into<I::Advice>);
 
     /// Pushes the error and returns a default value for `T`, so compilation can continue.
-    fn catch<T: Default>(&mut self, err: impl Into<I::Err>) -> Result<T, I::Err> {
+    fn catch<T: Default>(&mut self, err: impl Into<I::Error>) -> Result<T, I::Error> {
         self.push_err(err);
         Ok(T::default())
     }
@@ -149,19 +149,19 @@ impl<I: Issue> PushIssue<I> for IssueList<I> {
         self.issues.push(issue);
     }
 
-    fn push_err(&mut self, err: impl Into<I::Err>) {
-        // Convert input -> I::Err -> I
-        let err_type: I::Err = err.into();
+    fn push_err(&mut self, err: impl Into<I::Error>) {
+        // Convert input -> I::Error -> I
+        let err_type: I::Error = err.into();
         self.push_issue(err_type);
     }
 
-    fn push_warn(&mut self, warn: impl Into<I::Warn>) {
-        let warn_type: I::Warn = warn.into();
+    fn push_warn(&mut self, warn: impl Into<I::Warning>) {
+        let warn_type: I::Warning = warn.into();
         self.push_issue(warn_type);
     }
 
-    fn push_info(&mut self, info: impl Into<I::Info>) {
-        let info_type: I::Info = info.into();
-        self.push_issue(info_type);
+    fn push_advice(&mut self, advice: impl Into<I::Advice>) {
+        let advice_type: I::Advice = advice.into();
+        self.push_issue(advice_type);
     }
 }

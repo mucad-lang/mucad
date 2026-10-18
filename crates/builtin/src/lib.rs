@@ -50,16 +50,19 @@ impl<'a> PushIssue<BuiltinIssue> for BuiltinEvalContext<'a> {
         self.issues.push_issue(issue);
     }
 
-    fn push_err(&mut self, err: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Err>) {
+    fn push_err(&mut self, err: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Error>) {
         self.issues.push_err(err);
     }
 
-    fn push_warn(&mut self, warn: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Warn>) {
+    fn push_warn(&mut self, warn: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Warning>) {
         self.issues.push_warn(warn);
     }
 
-    fn push_info(&mut self, info: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Info>) {
-        self.issues.push_info(info);
+    fn push_advice(
+        &mut self,
+        advice: impl Into<<BuiltinIssue as microcad_lang_base::Issue>::Advice>,
+    ) {
+        self.issues.push_advice(advice);
     }
 }
 

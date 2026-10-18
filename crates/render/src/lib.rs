@@ -19,7 +19,7 @@ use cgmath::SquareMatrix;
 pub use attribute::*;
 pub use cache::*;
 pub use context::*;
-pub use diag::{RenderInfo, RenderIssue, RenderWarning};
+pub use diag::{RenderAdvice, RenderIssue, RenderWarning};
 pub use tree::*;
 
 use microcad_core::{self as core, traits::TransformAffine};

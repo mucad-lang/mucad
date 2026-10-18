@@ -17,7 +17,7 @@ pub mod token;
 #[cfg(feature = "parser")]
 use microcad_lang_base::{IssueList, ToHash};
 #[cfg(feature = "parser")]
-pub use parse::{ParseContext, ParseError, ParseInfo, ParseIssue, ParseWarning, parsers};
+pub use parse::{ParseAdvice, ParseContext, ParseError, ParseIssue, ParseWarning, parsers};
 
 /// Contains the parser.
 #[cfg(feature = "parser")]

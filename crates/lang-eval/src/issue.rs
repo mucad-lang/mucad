@@ -4,11 +4,9 @@
 //! Evaluation error
 
 use microcad_builtin::{BuiltinAdvice, BuiltinError, BuiltinIssue, BuiltinWarning};
-use microcad_lang_base::{
-    Identifier, Issue, LibraryId, Name, SrcRef, SrcReferrer, ToCompactString,
-};
+use microcad_lang_base::{Identifier, LibraryId, Name, SrcRef, SrcReferrer, ToCompactString};
 use microcad_lang_types::{Value, ValueError};
-use miette::{Diagnostic, Severity};
+use miette::Diagnostic;
 
 use thiserror::Error;
 
@@ -243,58 +241,35 @@ pub enum EvalWarning {
 
 #[derive(Debug, Error, Diagnostic)]
 #[non_exhaustive]
-pub enum EvalInfo {
-    /// An info of a built-in.
+pub enum EvalAdvice {
+    /// An advice of a built-in.
     #[error(transparent)]
     Builtin(#[from] BuiltinAdvice),
 }
 
-#[derive(Debug, Error, Diagnostic)]
+#[derive(Debug, Error, microcad_macros::Issue)]
+#[issue(code = "eval")]
 pub enum EvalIssue {
     /// A eval error.
     #[error(transparent)]
-    #[diagnostic(code(eval::error))]
-    Err(#[from] EvalError),
+    #[issue(diagnostic = kind)]
+    Error(#[from] EvalError),
 
     /// A warning from the eval.
     #[error(transparent)]
-    #[diagnostic(code(eval::warning))]
-    Warn(#[from] EvalWarning),
+    Warning(#[from] EvalWarning),
 
-    /// An info from the eval.
+    /// An advice from the eval.
     #[error(transparent)]
-    #[diagnostic(code(eval::info))]
-    Info(#[from] EvalInfo),
+    Advice(#[from] EvalAdvice),
 }
 
 impl From<BuiltinIssue> for EvalIssue {
     fn from(issue: BuiltinIssue) -> Self {
         match issue {
-            BuiltinIssue::Err(err) => EvalIssue::Err(err.into()),
-            BuiltinIssue::Warn(warn) => EvalIssue::Warn(warn.into()),
-            BuiltinIssue::Info(info) => EvalIssue::Info(info.into()),
-        }
-    }
-}
-
-impl Issue for EvalIssue {
-    type Err = EvalError;
-    type Warn = EvalWarning;
-    type Info = EvalInfo;
-
-    fn severity(&self) -> Severity {
-        match self {
-            EvalIssue::Err(_) => Severity::Error,
-            EvalIssue::Warn(_) => Severity::Warning,
-            EvalIssue::Info(_) => Severity::Advice,
-        }
-    }
-
-    fn diagnostic(&self) -> &dyn Diagnostic {
-        match self {
-            Self::Err(err) => err.kind(),
-            Self::Warn(warn) => warn,
-            Self::Info(info) => info,
+            BuiltinIssue::Error(err) => EvalIssue::Error(err.into()),
+            BuiltinIssue::Warning(warn) => EvalIssue::Warning(warn.into()),
+            BuiltinIssue::Advice(advice) => EvalIssue::Advice(advice.into()),
         }
     }
 }
@@ -302,7 +277,7 @@ impl Issue for EvalIssue {
 impl SrcReferrer for EvalIssue {
     fn src_ref(&self) -> SrcRef {
         match self {
-            Self::Err(err) => err.src_ref(),
+            Self::Error(err) => err.src_ref(),
             _ => SrcRef::none(),
         }
     }

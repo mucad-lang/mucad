@@ -13,6 +13,7 @@ mod builtin_primitive;
 mod builtin_transform;
 mod derive_artifact;
 mod derive_identifiable;
+mod derive_issue;
 mod derive_scaffold;
 mod derive_src_referrer;
 mod derive_visit;
@@ -149,6 +150,14 @@ pub fn derive_identifiable(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Scaffold)]
 pub fn derive_scaffold(input: TokenStream) -> TokenStream {
     derive_scaffold::derive_scaffold_impl(input)
+}
+
+/// Derives `Issue` and `miette::Diagnostic` for an enum with the variants `Error`, `Warning` and
+/// `Advice`,
+/// e.g. `#[derive(Issue)] #[issue(code = "render")] enum RenderIssue { ... }`.
+#[proc_macro_derive(Issue, attributes(issue))]
+pub fn derive_issue(input: TokenStream) -> TokenStream {
+    derive_issue::derive_issue_impl(input)
 }
 
 #[proc_macro_derive(SrcReferrer)]
