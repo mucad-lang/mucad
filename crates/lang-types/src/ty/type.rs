@@ -166,8 +166,8 @@ impl std::str::FromStr for Type {
             "Weight" => Type::Quantity(QuantityType::Weight),
             "Density" => Type::Quantity(QuantityType::Density),
             "Model" => Type::Model(ModelType::Any),
-            "Model2D" => Type::Model(ModelType::Geometry2D),
-            "Model3D" => Type::Model(ModelType::Geometry3D),
+            "Sketch" => Type::Model(ModelType::Geometry2D),
+            "Part" => Type::Model(ModelType::Geometry3D),
             _ => return Err(TypeError::UnknownType(ty.to_string())),
         })
     }
