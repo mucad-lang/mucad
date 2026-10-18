@@ -6,8 +6,10 @@
 use mucad_lang_types::{ModelTree, ModelType, Value};
 use mucad_render::Renderer;
 
+use std::io::Write;
+
 use crate::{
-    Export, ExportError, ExporterParameters, Writer,
+    Export, ExportError, Writer,
     stl::{
         BinaryStlWriter, WriteBinaryStl,
         ascii::{AsciiStlWriter, WriteAsciiStl},
@@ -24,27 +26,21 @@ pub struct StlExporter {
 }
 
 impl Export for StlExporter {
-    fn export(
-        &self,
-        model: &ModelTree,
-        parameters: &ExporterParameters,
-    ) -> Result<Value, ExportError> {
+    fn export(&self, model: &ModelTree, writer: &mut dyn Write) -> Result<Value, ExportError> {
         let geometry = crate::render(
             Renderer::new().with_resolution(self.resolution.clone()),
             model,
         )?;
-        let f = std::fs::File::create(&parameters.path)?;
 
         if self.binary {
-            let mut writer = BinaryStlWriter::new(f);
+            let mut writer = BinaryStlWriter::new(writer);
             geometry.write_binary_stl(&mut writer)?;
             writer.finalize()?;
         } else {
-            let mut writer = AsciiStlWriter::new(f);
+            let mut writer = AsciiStlWriter::new(writer);
             geometry.write_ascii_stl(&mut writer)?;
             writer.finalize()?;
         }
-
         Ok(Value::None)
     }
 

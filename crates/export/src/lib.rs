@@ -3,9 +3,9 @@
 
 //! Export models to files
 
+use miette::Diagnostic;
 use mucad_lang_types::{ModelTree, ModelType, Value};
 use mucad_render::{RenderError, RenderIssue, Renderer};
-use miette::Diagnostic;
 use thiserror::Error;
 
 pub mod stl;
@@ -81,42 +81,13 @@ fn render(
     }
 }
 
-/// Export parameters
-#[non_exhaustive]
-#[derive(Debug, Clone)]
-pub struct ExporterParameters {
-    /// Path into which the file is exported.
-    pub path: std::path::PathBuf,
-}
-
-impl ExporterParameters {
-    /// New exporter parameters.
-    pub fn new(path: impl Into<std::path::PathBuf>) -> Self {
-        Self { path: path.into() }
-    }
-}
-
-impl From<std::path::PathBuf> for ExporterParameters {
-    fn from(path: std::path::PathBuf) -> Self {
-        Self { path }
-    }
-}
-
-impl From<&std::path::Path> for ExporterParameters {
-    fn from(path: &std::path::Path) -> Self {
-        Self {
-            path: path.to_path_buf(),
-        }
-    }
-}
-
 /// An `Exporter` exports a `ModelTree`.
 pub trait Export {
     /// The export function.
     fn export(
         &self,
         model: &ModelTree,
-        parameters: &ExporterParameters,
+        writer: &mut dyn std::io::Write,
     ) -> Result<Value, ExportError>;
 
     /// Export the model tree to a path.
@@ -125,7 +96,10 @@ pub trait Export {
         model: &ModelTree,
         path: &std::path::Path,
     ) -> Result<Value, ExportError> {
-        self.export(model, &ExporterParameters::from(path))
+        let mut buffer = Vec::new();
+        let value = self.export(model, &mut buffer)?;
+        std::fs::write(path, buffer)?;
+        Ok(value)
     }
 
     /// The model type this export is supposed to use.

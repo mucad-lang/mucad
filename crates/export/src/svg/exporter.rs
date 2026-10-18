@@ -7,7 +7,7 @@ use mucad_core::{Bounds2D, Color, Scalar};
 use mucad_lang_types::{ModelTree, ModelType, Value};
 use mucad_render::Renderer;
 
-use crate::{Export, ExportError, ExporterParameters, Writer};
+use crate::{Export, ExportError, Writer};
 
 /// SVG Exporter.
 #[derive(Debug, Default)]
@@ -155,29 +155,25 @@ impl Export for SvgExporter {
     fn export(
         &self,
         model: &ModelTree,
-        parameters: &ExporterParameters,
+        writer: &mut dyn std::io::Write,
     ) -> Result<Value, ExportError> {
         use crate::svg::*;
         let settings = SvgExporterSettings::default();
-        let path = parameters.path.as_path();
         let mut geometry = crate::render(
             Renderer::new().with_resolution(self.resolution.clone()),
             model,
         )?;
         let bounds = Bounds2D::from(geometry.bounds());
 
-        if let Some(content_rect) = bounds.enlarge(2.0 * settings.padding_factor).rect() {
-            log::debug!("Exporting into SVG file {path:?}");
-            let f = std::fs::File::create(path)?;
-            let canvas = Canvas::new_centered(content_rect, bounds.size(), Some(1.0));
-            let mut writer = SvgWriter::new(f, canvas);
-            writer.style(&SvgExporter::theme_to_svg_style(&self.theme))?;
-            geometry.write_svg_mapped(&mut writer)?;
-            let _ = writer.finish()?;
-            Ok(Value::None)
-        } else {
-            Err(ExportError::Custom("Nothing to be exported".into()))
-        }
+        let Some(content_rect) = bounds.enlarge(2.0 * settings.padding_factor).rect() else {
+            return Err(ExportError::Custom("Nothing to be exported".into()));
+        };
+        let canvas = Canvas::new_centered(content_rect, bounds.size(), Some(1.0));
+        let mut writer = SvgWriter::new(writer, canvas);
+        writer.style(&SvgExporter::theme_to_svg_style(&self.theme))?;
+        geometry.write_svg_mapped(&mut writer)?;
+        let _ = writer.finish()?;
+        Ok(Value::None)
     }
 
     fn model_type(&self) -> ModelType {
