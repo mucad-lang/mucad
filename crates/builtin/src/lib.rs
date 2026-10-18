@@ -58,10 +58,7 @@ impl<'a> PushIssue<BuiltinIssue> for BuiltinEvalContext<'a> {
         self.issues.push_warn(warn);
     }
 
-    fn push_advice(
-        &mut self,
-        advice: impl Into<<BuiltinIssue as mucad_lang_base::Issue>::Advice>,
-    ) {
+    fn push_advice(&mut self, advice: impl Into<<BuiltinIssue as mucad_lang_base::Issue>::Advice>) {
         self.issues.push_advice(advice);
     }
 }
