@@ -136,6 +136,10 @@ impl Render for GeometryNodeData {
             if !self.local_matrix.is_identity() {
                 outputs.transform_affine(&self.local_matrix);
             }
+            if let Some(color) = model.attr.color() {
+                let [r, g, b, a] = [color.r, color.g, color.b, color.a].map(f32::from);
+                outputs = outputs.with_default_color(core::Color::rgba(r, g, b, a));
+            }
             Ok(outputs)
         })
     }

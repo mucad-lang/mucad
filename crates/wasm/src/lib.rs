@@ -8,9 +8,9 @@ use std::sync::Arc;
 
 use mu::{
     base::DiagRenderOptions,
-    core::{Geometry2D, MultiPolygon, TriangleMesh},
+    core::{Color, Geometry2D, MultiPolygon, TriangleMesh},
     export::{Export, stl::StlExporter, svg::SvgExporter},
-    render::{GeometryOutputs, RenderCache, Renderer},
+    render::{GeometryOutput, GeometryOutputs, RenderCache, Renderer},
     traits::RenderDiag,
     types::{ModelType, model::NodeExt},
 };
@@ -90,35 +90,25 @@ impl Mucad {
         }
     }
 
-    /// Render a 3D model into a triangle mesh.
-    #[wasm_bindgen(js_name = renderMesh)]
-    pub fn render_mesh(&mut self) -> Result<Mesh, String> {
-        Ok(TriangleMesh::from(&self.render()?.to_3d()).into())
+    /// Render a 3D model into triangle meshes, one for each color.
+    #[wasm_bindgen(js_name = renderMeshes)]
+    pub fn render_meshes(&mut self) -> Result<Vec<Mesh>, String> {
+        Ok(by_color(self.render()?)
+            .into_iter()
+            .map(|(color, outputs)| Mesh {
+                color: color.map(rgba),
+                ..TriangleMesh::from(&outputs.to_3d()).into()
+            })
+            .collect())
     }
 
-    /// Render a 2D model into polygons with holes.
-    #[wasm_bindgen(js_name = renderPolygons)]
-    pub fn render_polygons(&mut self) -> Result<Polygons, String> {
-        Ok(MultiPolygon::from(self.render()?.to_2d()).into())
-    }
-
-    /// Render a 2D model into line segments, e.g. the outlines of polygons.
-    #[wasm_bindgen(js_name = renderLines)]
-    pub fn render_lines(&mut self) -> Result<Lines, String> {
-        let mut lines = Lines::default();
-        self.render()?
-            .to_2d()
-            .iter()
-            .for_each(|geometry| lines.add(geometry));
-        Ok(lines)
-    }
-
-    /// Render a 2D model into a triangle mesh in the XY plane.
-    #[wasm_bindgen(js_name = renderTriangles)]
-    pub fn render_triangles(&mut self) -> Result<Mesh, String> {
-        Ok(Mesh::triangulate(&MultiPolygon::from(
-            self.render()?.to_2d(),
-        )))
+    /// Render a 2D model into sketches, one for each color.
+    #[wasm_bindgen(js_name = renderSketches)]
+    pub fn render_sketches(&mut self) -> Result<Vec<Sketch>, String> {
+        Ok(by_color(self.render()?)
+            .into_iter()
+            .map(|(color, outputs)| Sketch::new(color, &outputs))
+            .collect())
     }
 
     /// Export a 3D model as binary STL.
@@ -179,6 +169,30 @@ impl Mucad {
     }
 }
 
+/// The outputs grouped by their color, in the order of the first output of each color.
+fn by_color(outputs: GeometryOutputs) -> Vec<(Option<Color>, GeometryOutputs)> {
+    let mut groups: Vec<(Option<Color>, Vec<Arc<GeometryOutput>>)> = Vec::new();
+    for output in outputs {
+        let color = output.attr.fill_color;
+        match groups
+            .iter_mut()
+            .find(|(group_color, _)| *group_color == color)
+        {
+            Some((_, group)) => group.push(output),
+            None => groups.push((color, vec![output])),
+        }
+    }
+    groups
+        .into_iter()
+        .map(|(color, group)| (color, GeometryOutputs::from_iter(group)))
+        .collect()
+}
+
+/// A color as `r, g, b, a` from `0.0` to `1.0`.
+fn rgba(color: Color) -> [f32; 4] {
+    [color.r, color.g, color.b, color.a]
+}
+
 /// The result of a compilation.
 #[wasm_bindgen]
 pub struct CompileResult {
@@ -210,14 +224,22 @@ impl CompileResult {
 
 /// A triangle mesh, e.g. for a `THREE.BufferGeometry`.
 #[wasm_bindgen]
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Mesh {
     positions: Vec<f32>,
     indices: Vec<u32>,
+    color: Option<[f32; 4]>,
 }
 
 #[wasm_bindgen]
 impl Mesh {
+    /// The color as `r, g, b, a` from `0.0` to `1.0`, e.g. of `#[color = "red"]`,
+    /// or `undefined` for the default color.
+    #[wasm_bindgen(getter)]
+    pub fn color(&self) -> Option<Vec<f32>> {
+        self.color.map(Vec::from)
+    }
+
     /// The vertex positions as `x, y, z` triples.
     #[wasm_bindgen(getter)]
     pub fn positions(&self) -> Vec<f32> {
@@ -270,6 +292,59 @@ impl From<TriangleMesh> for Mesh {
                 .iter()
                 .flat_map(|triangle| [triangle.0, triangle.1, triangle.2])
                 .collect(),
+            color: None,
+        }
+    }
+}
+
+/// The 2D geometries of a model with one color, in several forms.
+#[wasm_bindgen]
+pub struct Sketch {
+    polygons: Polygons,
+    lines: Lines,
+    triangles: Mesh,
+    color: Option<[f32; 4]>,
+}
+
+#[wasm_bindgen]
+impl Sketch {
+    /// The polygons with holes, e.g. for a canvas or SVG.
+    #[wasm_bindgen(getter)]
+    pub fn polygons(&self) -> Polygons {
+        self.polygons.clone()
+    }
+
+    /// The outlines as line segments, e.g. for a `THREE.LineSegments`.
+    #[wasm_bindgen(getter)]
+    pub fn lines(&self) -> Lines {
+        self.lines.clone()
+    }
+
+    /// The filled areas as triangle mesh in the XY plane, e.g. for a `THREE.Mesh`.
+    #[wasm_bindgen(getter)]
+    pub fn triangles(&self) -> Mesh {
+        self.triangles.clone()
+    }
+
+    /// The color as `r, g, b, a` from `0.0` to `1.0`, e.g. of `#[color = "red"]`,
+    /// or `undefined` for the default color.
+    #[wasm_bindgen(getter)]
+    pub fn color(&self) -> Option<Vec<f32>> {
+        self.color.map(Vec::from)
+    }
+}
+
+impl Sketch {
+    fn new(color: Option<Color>, outputs: &GeometryOutputs) -> Self {
+        let geometries = outputs.to_2d();
+        let mut lines = Lines::default();
+        geometries.iter().for_each(|geometry| lines.add(geometry));
+        let multi_polygon = MultiPolygon::from(geometries);
+        Self {
+            triangles: Mesh::triangulate(&multi_polygon),
+            polygons: multi_polygon.into(),
+            lines,
+            color: color.map(rgba),
         }
     }
 }
@@ -282,7 +357,7 @@ impl From<TriangleMesh> for Mesh {
 /// polygon `j` of the rings `polygons[j]..polygons[j + 1]`, the first one is its outline,
 /// the others are its holes.
 #[wasm_bindgen]
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Polygons {
     coordinates: Vec<f32>,
     rings: Vec<u32>,
@@ -330,7 +405,7 @@ impl From<MultiPolygon> for Polygons {
 
 /// Line segments, e.g. for a `THREE.LineSegments`.
 #[wasm_bindgen]
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Lines {
     positions: Vec<f32>,
 }

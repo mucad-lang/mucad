@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import type { Lines, Mesh } from "mucad-wasm";
+import type { Mesh, Sketch } from "mucad-wasm";
 import { theme } from "./theme";
 
 /** The angle between faces, above which an edge is shown sharp instead of smooth. */
@@ -43,31 +43,48 @@ export class Viewer {
     });
   }
 
-  /** Show a 3D triangle mesh. */
-  show3d(mesh: Mesh) {
-    const material = new THREE.MeshStandardMaterial({
-      color: theme.brighter,
-      metalness: 0.1,
-      roughness: 0.6,
-    });
-    this.replace([new THREE.Mesh(toCreasedNormals(geometry(mesh), CREASE_ANGLE), material)]);
+  /** Show 3D triangle meshes in their colors. */
+  show3d(meshes: Mesh[]) {
+    this.replace(
+      meshes.map((mesh) => {
+        const material = new THREE.MeshStandardMaterial({
+          ...colorParameters(mesh.color, theme.brighter),
+          metalness: 0.1,
+          roughness: 0.6,
+        });
+        return new THREE.Mesh(toCreasedNormals(geometry(mesh), CREASE_ANGLE), material);
+      }),
+    );
     this.fit(new THREE.Vector3(1, -1.5, 1));
   }
 
-  /** Show a 2D model as filled triangles with outlines. */
-  show2d(triangles: Mesh, lines: Lines) {
-    const fill = new THREE.Mesh(
-      geometry(triangles),
-      new THREE.MeshBasicMaterial({ color: theme.darker, side: THREE.DoubleSide }),
+  /**
+   * Show 2D sketches as filled triangles with outlines.
+   *
+   * Sketches without a color are filled in the darker color with outlines in the signal color.
+   */
+  show2d(sketches: Sketch[]) {
+    this.replace(
+      sketches.flatMap((sketch) => {
+        const fill = new THREE.Mesh(
+          geometry(sketch.triangles),
+          new THREE.MeshBasicMaterial({
+            ...colorParameters(sketch.color, theme.darker),
+            side: THREE.DoubleSide,
+          }),
+        );
+        const positions = sketch.lines.positions;
+        const points = new Float32Array((positions.length / 2) * 3);
+        positions.forEach(
+          (value, index) => (points[Math.floor(index / 2) * 3 + (index % 2)] = value),
+        );
+        const outline = new THREE.LineSegments(
+          new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(points, 3)),
+          new THREE.LineBasicMaterial(colorParameters(sketch.color, theme.signal)),
+        );
+        return [fill, outline];
+      }),
     );
-    const positions = lines.positions;
-    const points = new Float32Array((positions.length / 2) * 3);
-    positions.forEach((value, index) => (points[Math.floor(index / 2) * 3 + (index % 2)] = value));
-    const outline = new THREE.LineSegments(
-      new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(points, 3)),
-      new THREE.LineBasicMaterial({ color: theme.signal }),
-    );
-    this.replace([fill, outline]);
     this.fit(new THREE.Vector3(0, 0, 1));
   }
 
@@ -117,6 +134,20 @@ export class Viewer {
     // Resizing clears the canvas, render at once to avoid flickering while a panel is resized.
     this.renderer.render(this.scene, this.camera);
   }
+}
+
+/**
+ * Material parameters of a µcad color (`r, g, b, a` from 0 to 1), e.g. of `#[color = "red"]`,
+ * or of the `fallback` color, if there is none.
+ */
+function colorParameters(color: Float32Array | undefined, fallback: string) {
+  if (!color) return { color: fallback };
+  const [r, g, b, a] = color;
+  return {
+    color: new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace),
+    transparent: a < 1,
+    opacity: a,
+  };
 }
 
 /** A three.js geometry of a µcad mesh. */

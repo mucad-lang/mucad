@@ -281,7 +281,11 @@ impl MapToCanvas for GeometryOutputs {
         *self = Self::from_iter(self.iter().map(|output| {
             let mut geo = output.geometry.clone();
             geo.map_to_canvas(canvas);
-            std::sync::Arc::new(geo.into())
+            // A new output with the bounds of the mapped geometry and the same attributes.
+            let mut mapped = mucad_render::GeometryOutput::from(geo);
+            mapped.id = output.id.clone();
+            mapped.attr = output.attr.clone();
+            std::sync::Arc::new(mapped)
         }));
     }
 }

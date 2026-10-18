@@ -6,6 +6,7 @@ WebAssembly (`crates/wasm`).
 - [Monaco](https://microsoft.github.io/monaco-editor/) editor with µcad syntax highlighting
 - [three.js](https://threejs.org/) view of 3D models and 2D sketches
 - Examples from the repository's `examples` folder
+- Models in their colors, e.g. of `#[color = "red"]`
 - Export of 3D models as STL and of 2D sketches as SVG
 - Dockable panels with [Dockview](https://dockview.dev/)
 

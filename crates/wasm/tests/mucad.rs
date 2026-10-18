@@ -22,7 +22,11 @@ fn compiled(code: &str, model_type: &str) -> Mucad {
 fn render_3d() {
     let mut mucad = compiled(CSG_CUBE, "3d");
 
-    let mesh = mucad.render_mesh().expect("A mesh");
+    let meshes = mucad.render_meshes().expect("Meshes");
+    let [mesh] = &meshes[..] else {
+        panic!("A mesh with the default color");
+    };
+    assert_eq!(mesh.color(), None);
     assert!(!mesh.indices().is_empty());
     assert_eq!(mesh.indices().len() % 3, 0);
     assert_eq!(mesh.positions().len() % 3, 0);
@@ -40,8 +44,13 @@ fn render_3d() {
 fn render_2d() {
     let mut mucad = compiled(DRILL_PLATE, "2d");
 
+    let sketches = mucad.render_sketches().expect("Sketches");
+    let [sketch] = &sketches[..] else {
+        panic!("A sketch with the default color");
+    };
+
     // One plate with four holes.
-    let polygons = mucad.render_polygons().expect("Polygons");
+    let polygons = sketch.polygons();
     assert_eq!(polygons.polygons(), [0, 5]);
     assert_eq!(polygons.rings().len(), 6);
     assert_eq!(
@@ -49,11 +58,11 @@ fn render_2d() {
         polygons.coordinates().len() / 2
     );
 
-    let lines = mucad.render_lines().expect("Lines");
+    let lines = sketch.lines();
     assert!(!lines.positions().is_empty());
     assert_eq!(lines.positions().len() % 4, 0);
 
-    let triangles = mucad.render_triangles().expect("Triangles");
+    let triangles = sketch.triangles();
     assert!(!triangles.indices().is_empty());
     assert!(
         triangles
@@ -64,6 +73,36 @@ fn render_2d() {
 
     let svg = mucad.export_svg().expect("An SVG");
     assert!(svg.contains("<svg"), "{svg}");
+}
+
+/// Models with a color attribute are rendered into one mesh or sketch for each color.
+#[test]
+fn render_colors() {
+    let mut mucad = compiled(
+        r#"
+        use std::geo3d::*;
+        #[color = "red"]
+        Cube(1mm);
+        Sphere(r = 1mm).translate(x = 5mm);
+        #[color = "red"]
+        Cube(1mm).translate(x = 10mm);
+        "#,
+        "3d",
+    );
+    let colors: Vec<_> = mucad
+        .render_meshes()
+        .expect("Meshes")
+        .iter()
+        .map(|mesh| mesh.color())
+        .collect();
+    assert_eq!(colors, [Some(vec![1.0, 0.0, 0.0, 1.0]), None]);
+
+    let mut mucad = compiled("#[color = \"#0000FF\"]\nstd::geo2d::Circle(r = 1mm);", "2d");
+    let sketches = mucad.render_sketches().expect("Sketches");
+    assert_eq!(sketches[0].color(), Some(vec![0.0, 0.0, 1.0, 1.0]));
+
+    let svg = mucad.export_svg().expect("An SVG");
+    assert!(svg.contains("#0000FF"), "{svg}");
 }
 
 /// Errors are reported as diagnostics, a model is only kept without errors.
@@ -78,6 +117,6 @@ fn compile_errors() {
         result.diagnostics()
     );
     assert_eq!(result.model_type(), "none");
-    assert!(mucad.render_mesh().is_err());
+    assert!(mucad.render_meshes().is_err());
     assert!(mucad.export_svg().is_err());
 }

@@ -129,6 +129,19 @@ impl GeometryOutputs {
         self.outputs.is_empty()
     }
 
+    /// Set the color of the outputs without a color, e.g. of a model with `#[color = "red"]`.
+    ///
+    /// Outputs of children with their own color keep it.
+    pub fn with_default_color(mut self, color: core::Color) -> Self {
+        for output in &mut self.outputs {
+            if output.attr.fill_color.is_none() {
+                let output = Arc::make_mut(output);
+                output.attr = output.attr.clone().with_color(color);
+            }
+        }
+        self
+    }
+
     /// Return all outputs with no name.
     pub fn primary(self) -> Self {
         Self::from_iter(self.into_iter().filter(|geo| geo.id.is_none()))

@@ -69,6 +69,14 @@ impl Attributes {
         })
     }
 
+    /// Returns the `Color` if present.
+    pub fn color(&self) -> Option<&Color> {
+        self.0.iter().find_map(|attr| match attr {
+            Attribute::Color(color) => Some(color),
+            _ => None,
+        })
+    }
+
     /// Add an attribute, which replaces a unique attribute of the same kind, e.g. a color.
     pub fn set(&mut self, attribute: Attribute) {
         if attribute.is_unique() {

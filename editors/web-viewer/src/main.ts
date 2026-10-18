@@ -41,10 +41,10 @@ function compile(code: string) {
   try {
     switch (modelType) {
       case "3d":
-        viewer.show3d(mucad.renderMesh());
+        viewer.show3d(mucad.renderMeshes());
         break;
       case "2d":
-        viewer.show2d(mucad.renderTriangles(), mucad.renderLines());
+        viewer.show2d(mucad.renderSketches());
         break;
       default:
         viewer.clear();

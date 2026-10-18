@@ -24,9 +24,10 @@ impl From<f32> for ColorChannel {
     }
 }
 
+/// The channel value from `0.0` to `1.0`.
 impl From<ColorChannel> for f32 {
     fn from(color_channel: ColorChannel) -> Self {
-        color_channel.0 as f32
+        color_channel.0 as f32 / u16::MAX as f32
     }
 }
 

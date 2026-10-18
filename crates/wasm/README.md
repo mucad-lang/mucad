@@ -28,11 +28,13 @@ const result = mucad.compile(`Circle(radius = 10mm).extrude(5mm);`);
 if (!result.success) {
   console.error(result.diagnostics);
 } else if (result.modelType === "3d") {
-  const mesh = mucad.renderMesh();
-  // mesh.positions: Float32Array, mesh.indices: Uint32Array
+  for (const mesh of mucad.renderMeshes()) {
+    // mesh.positions: Float32Array, mesh.indices: Uint32Array, mesh.color: Float32Array | undefined
+  }
 } else if (result.modelType === "2d") {
-  const lines = mucad.renderLines();
-  // lines.positions: Float32Array
+  for (const sketch of mucad.renderSketches()) {
+    // sketch.lines.positions: Float32Array, sketch.color: Float32Array | undefined
+  }
 }
 ```
 
@@ -47,11 +49,17 @@ rendered.
 | `compile(code)` | `CompileResult` with `success`, `diagnostics` (errors and warnings as text) and `modelType` (`"2d"`, `"3d"`, `"mixed"` or `"none"`) |
 | `setResolution(mm)` | Sets the linear render resolution, e.g. `0.1` for smoother circles (default `0.25`) |
 
+### Colors
+
+A model is rendered into one mesh or sketch for each color, e.g. of `#[color = "red"]`.
+`color` is `r, g, b, a` from `0.0` to `1.0` (sRGB), or `undefined` for the default color,
+which is up to the viewer.
+
 ### 3D models
 
 | Method | Returns |
 |---|---|
-| `renderMesh()` | `Mesh` with `positions` (`x, y, z` triples) and `indices` (triangles as index triples) |
+| `renderMeshes()` | `Mesh[]`, each with `positions` (`x, y, z` triples), `indices` (triangles as index triples) and `color` |
 | `exportStl()` | Binary STL as `Uint8Array` |
 
 A mesh can be displayed with three.js:
@@ -61,19 +69,29 @@ const geometry = new THREE.BufferGeometry();
 geometry.setAttribute("position", new THREE.BufferAttribute(mesh.positions, 3));
 geometry.setIndex(new THREE.BufferAttribute(mesh.indices, 1));
 geometry.computeVertexNormals();
-scene.add(new THREE.Mesh(geometry, new THREE.MeshStandardMaterial()));
+
+const material = new THREE.MeshStandardMaterial();
+if (mesh.color) {
+  const [r, g, b, a] = mesh.color;
+  material.color.setRGB(r, g, b, THREE.SRGBColorSpace);
+  material.transparent = a < 1;
+  material.opacity = a;
+}
+scene.add(new THREE.Mesh(geometry, material));
 ```
 
 ### 2D models
 
-A 2D model can be rendered in three forms:
-
 | Method | Returns |
 |---|---|
-| `renderPolygons()` | `Polygons`: the polygons with holes, e.g. for a canvas or SVG |
-| `renderLines()` | `Lines` with `positions`: line segments as `x0, y0, x1, y1`, e.g. for a `THREE.LineSegments` |
-| `renderTriangles()` | `Mesh` in the XY plane (`z = 0`), e.g. for a filled `THREE.Mesh` |
-| `exportSvg()` | SVG as string |
+| `renderSketches()` | `Sketch[]`, each with `color` and its geometries in three forms, see below |
+| `exportSvg()` | SVG as string, with the colors of the models |
+
+| `Sketch` property | Content |
+|---|---|
+| `polygons` | `Polygons`: the polygons with holes, e.g. for a canvas or SVG |
+| `lines` | `Lines` with `positions`: line segments as `x0, y0, x1, y1`, e.g. for a `THREE.LineSegments` |
+| `triangles` | `Mesh` in the XY plane (`z = 0`), e.g. for a filled `THREE.Mesh` |
 
 `Polygons` stores the points of all rings one after another in `coordinates` (`x, y` pairs).
 `rings` and `polygons` contain start indices with an additional end index:
@@ -82,7 +100,7 @@ polygon `j` of the rings `polygons[j]` to `polygons[j + 1]`.
 The first ring of a polygon is its outline, the others are its holes.
 
 ```js
-const { coordinates, rings, polygons } = mucad.renderPolygons();
+const { coordinates, rings, polygons } = sketch.polygons;
 for (let p = 0; p + 1 < polygons.length; p++) {
   for (let r = polygons[p]; r < polygons[p + 1]; r++) {
     const ring = coordinates.subarray(2 * rings[r], 2 * rings[r + 1]);
