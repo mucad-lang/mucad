@@ -114,3 +114,31 @@ impl RenderPolygon for __mu::geo2d::Sector {
         mucad_core::Polygon::new(mucad_core::LineString::from(points), vec![])
     }
 }
+
+impl RenderPolygon for __mu::geo2d::SinusoidalGearProfile {
+    fn render_polygon(&self, resolution: &RenderResolution) -> mucad_core::Polygon {
+        use mucad_core::Scalar;
+        let a = self.module.as_mm() * 2.0;
+        let b = self.roundness.into_float();
+        let teeth: i64 = self.teeth.to_num();
+        let radius = a * teeth as Scalar * 0.5;
+        let n = resolution.circular_segments(radius) * 2;
+        let stretch: Scalar = self.stretch.into_float();
+
+        mucad_core::Polygon::new(
+            mucad_core::LineString::new(
+                (0..n)
+                    .map(|i| {
+                        let theta = (i as Scalar) / (n as Scalar) * mucad_core::consts::PI * 2.0;
+                        let phi_sin = (theta * (teeth as Scalar)).sin();
+                        let l = a * (phi_sin.abs().powf(b) * phi_sin.signum()) * stretch + radius;
+
+                        mucad_core::geo2d::Coord::from((l * theta.cos(), l * theta.sin()))
+                    })
+                    .collect(),
+            ),
+            vec![],
+        )
+        .into()
+    }
+}

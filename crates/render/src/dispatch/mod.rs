@@ -21,9 +21,13 @@ pub struct RenderHooks {
 impl RenderHooks {
     pub fn new() -> Self {
         let mut hooks = RenderHooks::default();
+        // 2D Primitives
         hooks.insert::<mu::geo2d::Circle>();
         hooks.insert::<mu::geo2d::Rect>();
+        hooks.insert::<mu::geo2d::SinusoidalGearProfile>();
         hooks.insert::<mu::geo2d::Sector>();
+
+        // 3D Primitives
         hooks.insert::<mu::geo3d::Sphere>();
         hooks.insert::<mu::ops::Extrude>();
         hooks.insert::<mu::ops::Buffer>();
