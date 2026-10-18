@@ -27,8 +27,29 @@ impl Session {
     fn render(&mut self, code: &str) -> mu::render::GeometryTree {
         let (model, diags) = self.compiler.compile(code).expect("A model");
         assert!(!diags.has_errors(), "{diags:?}");
-        self.renderer.render(&model).expect("A geometry tree")
+        let (tree, issues) = self.renderer.render(&model).expect("A geometry tree");
+        assert!(!issues.has_errors(), "{issues:?}");
+        tree
     }
+}
+
+/// A built-in without render hook is an error, but rendering continues with the other models.
+#[test]
+fn render_missing_hook() {
+    let mut session = Session::new();
+    let (model, _) = session
+        .compiler
+        .compile("__mu::geo2d::Ngon(n = 6, radius = 1mm);\nCircle(radius = 2mm);")
+        .expect("A model");
+    let (tree, issues) = session.renderer.render(&model).expect("A geometry tree");
+
+    let errors: Vec<_> = issues.iter().map(|issue| issue.to_string()).collect();
+    assert_eq!(errors, ["Built-in `__mu::geo2d::Ngon` cannot be rendered"]);
+    assert!(
+        (tree.bounds().max.x - 2.0).abs() < 1e-6,
+        "{:?}",
+        tree.bounds()
+    );
 }
 
 /// A changed source is rendered again, although its model tree has the same structure.

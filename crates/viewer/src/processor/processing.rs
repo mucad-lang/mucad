@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crossbeam::channel::{Receiver, Sender};
-use microcad_driver::prelude as mu;
+use microcad_driver::prelude::{self as mu, traits::RenderDiag};
 use miette::IntoDiagnostic;
 
 use crate::{
@@ -119,7 +119,22 @@ impl Processor {
     /// Render the model tree, update the model instances and generate processor responses.
     fn respond(&mut self, model_tree: &mu::ModelTree) -> miette::Result<Vec<ProcessorResponse>> {
         // The geometry tree is temporary, its geometry is kept in the render cache.
-        let geometry_tree = self.context.renderer.render(model_tree)?;
+        // Render errors are shown, the geometry rendered despite them is shown too.
+        let geometry_tree = match self.context.renderer.render(model_tree) {
+            Ok((geometry_tree, issues)) => {
+                if !issues.is_empty() {
+                    let diags = issues.into_diagnostics();
+                    eprintln!("{}", self.context.renderer.render_diag_to_string(&diags));
+                }
+                geometry_tree
+            }
+            Err(issues) => {
+                let diags = issues.into_diagnostics();
+                eprintln!("{}", self.context.renderer.render_diag_to_string(&diags));
+                self.state_change(ProcessingState::Error);
+                return Ok(vec![]);
+            }
+        };
 
         let mut responses = Vec::new();
         responses.push(ProcessorResponse::RemoveModelInstances(

@@ -12,6 +12,34 @@ pub use diagnostic::Diagnostic;
 pub use diagnostics::{DiagRenderOptions, Diagnostics};
 pub use issue::{Issue, IssueList, PushIssue};
 
+/// Render diagnostics as text, e.g. with the source code they refer to.
+pub trait RenderDiag {
+    /// Render `diagnostics` with `options` into `f`.
+    fn render_diag_with(
+        &self,
+        f: &mut dyn std::fmt::Write,
+        diagnostics: &Diagnostics,
+        options: &DiagRenderOptions,
+    ) -> std::fmt::Result;
+
+    /// Render diagnostics into a string.
+    fn render_diag_to_string(&self, diagnostics: &Diagnostics) -> String {
+        self.render_diag_to_string_with(diagnostics, &DiagRenderOptions::default())
+    }
+
+    /// Render diagnostics with `options` into a string, e.g. without colors for a log file.
+    fn render_diag_to_string_with(
+        &self,
+        diagnostics: &Diagnostics,
+        options: &DiagRenderOptions,
+    ) -> String {
+        let mut buff = String::new();
+        self.render_diag_with(&mut buff, diagnostics, options)
+            .expect("format to string can't fail");
+        buff
+    }
+}
+
 /// Trait to implement `.to_diagnostics()`.
 pub trait ToDiagnostics {
     fn to_diagnostics(&self) -> Diagnostics;

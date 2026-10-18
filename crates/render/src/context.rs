@@ -4,11 +4,12 @@
 //! Render context
 
 use microcad_hash::HashId;
+use microcad_lang_base::{IssueList, PushIssue};
 use microcad_lang_types::{ModelNodeRef, ModelTree};
 
 use crate::{
-    GeometryNodeId, GeometryNodeRef, GeometryOutputs, GeometryTree, Render, RenderResolution,
-    RenderResult, Renderer,
+    GeometryNodeId, GeometryNodeRef, GeometryOutputs, GeometryTree, Render, RenderError,
+    RenderIssue, RenderResolution, RenderResult, Renderer,
 };
 
 /// The render context.
@@ -27,6 +28,9 @@ pub struct RenderContext<'a, 'tree> {
 
     /// The number of model that been been rendered.
     models_rendered: usize,
+
+    /// Issues, which do not stop rendering, e.g. a missing render hook.
+    pub(crate) issues: IssueList<RenderIssue>,
 }
 
 /// Builder methods
@@ -39,6 +43,7 @@ impl<'a, 'tree> RenderContext<'a, 'tree> {
             stack: vec![],
             models_rendered: 0,
             models_to_render: model_tree.root().descendants().count(),
+            issues: IssueList::default(),
         }
     }
 
@@ -88,6 +93,11 @@ impl<'a, 'tree> RenderContext<'a, 'tree> {
         {
             progress_tx.send(new_percent).expect("No error");
         }
+    }
+
+    /// Record an error, rendering continues.
+    pub(crate) fn push_error(&mut self, err: RenderError) {
+        self.issues.push_err(err);
     }
 
     /// Return render progress in percent.

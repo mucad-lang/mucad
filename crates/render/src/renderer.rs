@@ -1,11 +1,13 @@
 // Copyright © 2026 The µcad authors <info@microcad.xyz>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use microcad_lang_base::SharedMut;
+use microcad_lang_base::{
+    DiagRenderOptions, Diagnostics, IssueResult, PushIssue, RenderDiag, SharedMut,
+};
 use microcad_lang_types::ModelTree;
 
 use crate::{
-    GeometryTree, RenderCache, RenderContext, RenderResolution, RenderResult, dispatch::RenderHooks,
+    GeometryTree, RenderCache, RenderContext, RenderIssue, RenderResolution, dispatch::RenderHooks,
 };
 
 /// Our progress sender.
@@ -50,9 +52,34 @@ impl Renderer {
 
 impl Renderer {
     /// Execute rendering for a given model tree.
-    pub fn render(&mut self, model_tree: &ModelTree) -> RenderResult<GeometryTree> {
+    ///
+    /// Errors which do not stop rendering (e.g. a missing render hook) are returned with the
+    /// geometry tree.
+    pub fn render(&mut self, model_tree: &ModelTree) -> IssueResult<GeometryTree, RenderIssue> {
         let mut ctx = RenderContext::new(self, model_tree);
-        ctx.execute()
+        match ctx.execute() {
+            Ok(tree) => Ok((tree, ctx.issues)),
+            Err(err) => {
+                let mut issues = ctx.issues;
+                issues.push_err(err);
+                Err(issues)
+            }
+        }
+    }
+}
+
+/// The renderer has no sources, so diagnostics are rendered without source code,
+/// e.g. render errors refer to the source code of the compiled models.
+impl RenderDiag for Renderer {
+    fn render_diag_with(
+        &self,
+        f: &mut dyn std::fmt::Write,
+        diagnostics: &Diagnostics,
+        options: &DiagRenderOptions,
+    ) -> std::fmt::Result {
+        diagnostics
+            .iter()
+            .try_for_each(|diag| diag.render_report(f, options))
     }
 }
 

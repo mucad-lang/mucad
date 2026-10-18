@@ -105,7 +105,7 @@ impl Export for WktExporter {
         model: &ModelTree,
         parameters: &ExporterParameters,
     ) -> Result<Value, ExportError> {
-        let geometry = Renderer::new().render(model)?;
+        let geometry = crate::render(Renderer::new(), model)?;
         let mut f = std::fs::File::create(&parameters.path)?;
         geometry.write_wkt(&mut f)?;
 

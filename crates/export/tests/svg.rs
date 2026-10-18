@@ -281,7 +281,8 @@ fn difference() -> std::io::Result<()> {
 
             let mut geometry = Renderer::new()
                 .render(&translate)
-                .expect("No render errors");
+                .expect("No render errors")
+                .0;
 
             geometry.write_svg_mapped(writer)
         },

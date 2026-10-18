@@ -146,7 +146,7 @@ pub use crate::{Exporter, config::ExportConfig};
 /// Import with: `use microcad_driver::prelude::traits::*;`
 pub mod traits {
     pub use super::{
-        base::{Identifiable, SrcReferrer, ToHash},
+        base::{Identifiable, RenderDiag, SrcReferrer, ToHash},
         core::{CalcBounds2D, CalcBounds3D},
         docgen::GenerateDoc,
     };

@@ -3,8 +3,6 @@
 
 //! µcad model exporter
 
-use miette::IntoDiagnostic;
-
 use crate::prelude as mu;
 use mu::export::{Export, stl::StlExporter, svg::SvgExporter};
 use mu::types::{ModelType, model::NodeExt};
@@ -54,7 +52,10 @@ impl Exporter {
             ));
         }
 
-        exporter.export_to_path(model, &path).into_diagnostic()?;
+        // A report, which keeps related diagnostics, e.g. render errors.
+        exporter
+            .export_to_path(model, &path)
+            .map_err(miette::Report::new)?;
         Ok(path)
     }
 

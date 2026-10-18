@@ -29,9 +29,10 @@ impl Export for StlExporter {
         model: &ModelTree,
         parameters: &ExporterParameters,
     ) -> Result<Value, ExportError> {
-        let geometry = Renderer::new()
-            .with_resolution(self.resolution.clone())
-            .render(model)?;
+        let geometry = crate::render(
+            Renderer::new().with_resolution(self.resolution.clone()),
+            model,
+        )?;
         let f = std::fs::File::create(&parameters.path)?;
 
         if self.binary {

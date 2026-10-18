@@ -21,7 +21,8 @@ fn render_circle() {
 
     let geometry = Renderer::new()
         .render(&model_tree)
-        .expect("No render errors");
+        .expect("No render errors")
+        .0;
 
     insta::assert_snapshot!("render_circle", geometry);
 }
@@ -41,7 +42,7 @@ fn render_subtract() {
     let mut diff = mu::ops::subtract(arguments!(self = group), &mut ctx).expect("No error");
     diff.compute_hashes();
 
-    let geometry = Renderer::new().render(&diff).expect("No render errors");
+    let geometry = Renderer::new().render(&diff).expect("No render errors").0;
 
     insta::assert_snapshot!("render_difference", geometry);
 }
@@ -64,7 +65,10 @@ fn render_extrude() {
     .expect("No error");
     extrude.compute_hashes();
 
-    let geometry = Renderer::new().render(&extrude).expect("No render errors");
+    let geometry = Renderer::new()
+        .render(&extrude)
+        .expect("No render errors")
+        .0;
 
     insta::assert_snapshot!("render_extrude", geometry);
 }

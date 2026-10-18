@@ -35,7 +35,8 @@ pub const MUCAD_EXTENSION: &str = "mu";
 
 pub use artifact::{Artifact, ArtifactError, ArtifactHeader, ArtifactKind, StageResult};
 pub use diag::{
-    DiagRenderOptions, Diagnostic, Diagnostics, Issue, IssueList, PushIssue, ToDiagnostics,
+    DiagRenderOptions, Diagnostic, Diagnostics, Issue, IssueList, PushIssue, RenderDiag,
+    ToDiagnostics,
 };
 pub use display::DisplayOneLine;
 pub use element::{Identifier, IdentifierList};

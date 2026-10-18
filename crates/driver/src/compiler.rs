@@ -5,7 +5,7 @@
 
 pub use crate::prelude as mu;
 
-use microcad_lang_base::{DiagRenderOptions, Diagnostics, Issue, PushIssue};
+use microcad_lang_base::{DiagRenderOptions, Diagnostics, Issue, PushIssue, RenderDiag};
 use microcad_std::{StdLib, StdLibError};
 
 /// Result of the compiler: the output bundled with the diagnostics of all stages run so far.
@@ -247,17 +247,11 @@ impl Compiler {
         StdLib::install(&path).map_err(|StdLibError::InstallError(err)| err)?;
         Ok(path)
     }
+}
 
-    pub fn render_diag(
-        &self,
-        f: &mut dyn std::fmt::Write,
-        diagnostics: &Diagnostics,
-    ) -> std::fmt::Result {
-        self.render_diag_with(f, diagnostics, &DiagRenderOptions::default())
-    }
-
-    /// Render diagnostics with `options`, e.g. without colors for a log file.
-    pub fn render_diag_with(
+/// Diagnostics are rendered with the source code from the compiler's source cache.
+impl RenderDiag for Compiler {
+    fn render_diag_with(
         &self,
         f: &mut dyn std::fmt::Write,
         diagnostics: &Diagnostics,
@@ -270,21 +264,5 @@ impl Compiler {
                     .iter()
                     .try_for_each(|diag| diag.render(f, source_cache, options))
             })
-    }
-
-    pub fn render_diag_to_string(&self, diagnostics: &Diagnostics) -> String {
-        self.render_diag_to_string_with(diagnostics, &DiagRenderOptions::default())
-    }
-
-    /// Render diagnostics with `options` into a string, e.g. without colors for a log file.
-    pub fn render_diag_to_string_with(
-        &self,
-        diagnostics: &Diagnostics,
-        options: &DiagRenderOptions,
-    ) -> String {
-        let mut buff = String::new();
-        self.render_diag_with(&mut buff, diagnostics, options)
-            .expect("format to string can't fail");
-        buff
     }
 }

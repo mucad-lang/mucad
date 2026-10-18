@@ -6,7 +6,7 @@
 use clap::Parser;
 
 use crate::commands::*;
-use microcad_driver::prelude as mu;
+use microcad_driver::prelude::{self as mu, traits::RenderDiag};
 
 /// µcad cli
 #[derive(Parser)]

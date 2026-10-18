@@ -6,6 +6,7 @@
 mod attribute;
 mod cache;
 mod context;
+mod diag;
 mod dispatch;
 mod display;
 mod output;
@@ -18,6 +19,7 @@ use cgmath::SquareMatrix;
 pub use attribute::*;
 pub use cache::*;
 pub use context::*;
+pub use diag::{RenderInfo, RenderIssue, RenderWarning};
 pub use tree::*;
 
 use microcad_core::{self as core, traits::TransformAffine};
@@ -42,9 +44,29 @@ pub enum RenderError {
     /// Nothing to render.
     #[error("Nothing to render")]
     NothingToRender,
+
+    /// A built-in has no render hook, its children are rendered instead.
+    #[error("Built-in `{builtin}` cannot be rendered")]
+    #[diagnostic(help("Its children are rendered instead."))]
+    MissingRenderHook {
+        builtin: String,
+        #[label("No render hook")]
+        src_ref: SrcRef,
+    },
+}
+
+impl SrcReferrer for RenderError {
+    fn src_ref(&self) -> SrcRef {
+        match self {
+            Self::MissingRenderHook { src_ref, .. } => *src_ref,
+            Self::BuiltinError(err) => err.src_ref(),
+            Self::InvalidOutputType(_) | Self::NothingToRender => SrcRef::none(),
+        }
+    }
 }
 
 use microcad_builtin::BuiltinError;
+use microcad_lang_base::{LookUpName, SrcRef, SrcReferrer};
 
 /// A trait that renders something with a reslution
 pub trait RenderPrimitive<T = core::Geometry> {
@@ -86,15 +108,29 @@ impl Render for GeometryNodeData {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
-        context.update(self.cache_key(), |_node, context| {
-            let model = context.model(tree);
+        // Reported before the cache look up, to report it on each render.
+        let model = context.model(tree);
+        let hook = model
+            .builtin_id()
+            .map(|builtin_id| (builtin_id, context.renderer.hooks.get(builtin_id)));
+        if let Some((builtin_id, None)) = hook {
+            context.push_error(RenderError::MissingRenderHook {
+                builtin: microcad_builtin::BuiltinLibrary::new()
+                    .look_up_built_in_name(&builtin_id)
+                    .map(|name| name.to_string())
+                    .unwrap_or_else(|| builtin_id.to_string()),
+                src_ref: model
+                    .creator
+                    .as_ref()
+                    .map(|creator| creator.src_ref)
+                    .unwrap_or_else(SrcRef::none),
+            });
+        }
 
-            let mut outputs = match model
-                .builtin_id()
-                .and_then(|builtin_id| context.renderer.hooks.get(builtin_id))
-            {
-                Some(hook) => hook(tree, context)?,
-                None => context.collect_outputs(tree).primary(),
+        context.update(self.cache_key(), |_node, context| {
+            let mut outputs = match hook {
+                Some((_, Some(hook))) => hook(tree, context)?,
+                Some((_, None)) | None => context.collect_outputs(tree).primary(),
             };
 
             if !self.local_matrix.is_identity() {

@@ -55,7 +55,10 @@ fn test_cube() -> std::io::Result<()> {
             &mut ctx,
         )
         .expect("No error");
-        let geometry = Renderer::new().render(&extrude).expect("No render errors");
+        let geometry = Renderer::new()
+            .render(&extrude)
+            .expect("No render errors")
+            .0;
 
         geometry.write_ascii_stl(writer)?;
         Ok(())

@@ -27,6 +27,7 @@ wkt = "0.14"
 cgmath = "0.18"
 derive_more = { version = "2", features = ["deref", "deref_mut"] }
 geo = "0.33"
+miette = { version = "7.6.0", features = ["derive"] }
 thiserror = "2.0"
 
 [dev-dependencies]

@@ -4,6 +4,8 @@
 //! Export models to files
 
 use microcad_lang_types::{ModelTree, ModelType, Value};
+use microcad_render::{RenderError, RenderIssue, Renderer};
+use miette::Diagnostic;
 use thiserror::Error;
 
 pub mod stl;
@@ -37,7 +39,7 @@ pub trait Writer {
 }
 
 /// An export error
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Diagnostic)]
 pub enum ExportError {
     /// Custom error.
     #[error("{0}")]
@@ -51,9 +53,32 @@ pub enum ExportError {
     #[error("Format error: {0}")]
     FmtError(#[from] std::fmt::Error),
 
-    /// Error when rendering the model.
-    #[error("Render error: {0}")]
-    RenderError(#[from] microcad_render::RenderError),
+    /// Errors when rendering the model, e.g. a built-in without render hook.
+    ///
+    /// The render errors are shown as related diagnostics.
+    #[error("The model cannot be rendered without errors")]
+    RenderErrors(#[related] Vec<RenderError>),
+}
+
+/// Render the model for an export.
+///
+/// Render errors make the export fail, even if rendering continued.
+fn render(
+    mut renderer: Renderer,
+    model: &ModelTree,
+) -> Result<microcad_render::GeometryTree, ExportError> {
+    match renderer.render(model) {
+        Ok((geometry, issues)) if !issues.has_errors() => Ok(geometry),
+        Ok((_, issues)) | Err(issues) => Err(ExportError::RenderErrors(
+            issues
+                .into_iter()
+                .filter_map(|issue| match issue {
+                    RenderIssue::Err(err) => Some(err),
+                    RenderIssue::Warn(_) | RenderIssue::Info(_) => None,
+                })
+                .collect(),
+        )),
+    }
 }
 
 /// Export parameters
