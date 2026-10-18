@@ -20,7 +20,7 @@ pub mod mucad {
             x = radius - thickness,
             y = -radius,
         );
-        u | r_l | r_r
+        (u | r_l | r_r).buffer(3.0mm)
     }
 
     pub sketch Logo(radius: Length, thickness: Length) {
@@ -30,12 +30,12 @@ pub mod mucad {
             thickness = size * 20%;
         }
 
-        {
-            Mu(radius, thickness);
-        }.align(X, 4mm).center()
+        SinusoidalGearProfile(10mm, 13) - Circle(radius * 200.0%);
+        Mu(radius, thickness);
     }
 }
 
-pub const SIZE = 1cm;
+pub const SIZE = 10cm;
 
-mucad::Logo(size = SIZE);
+mucad::Logo(size = SIZE).extrude(4mm);
+(Circle(r = SIZE) - Circle(r = SIZE * 80%)).extrude(2mm);
