@@ -3,12 +3,11 @@
 
 //! Data structure for the package manifest, saved as `mu.toml`.
 
-use mucad_lang_base::{Name, Url};
+use mucad_lang_base::{FileSystem, Name, Url};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// Manifest error.
-#[cfg(feature = "io")]
 #[derive(Debug, Error)]
 pub enum ManifestError {
     /// An IO error while processing the `manifest.toml` file.
@@ -58,20 +57,22 @@ pub struct Dependency {
     pub path: Option<std::path::PathBuf>,
 }
 
-#[cfg(feature = "io")]
 impl Manifest {
     pub const MU_TOML: &str = "mu.toml";
 
-    // Load a `mu.toml` inside a path.
-    pub fn load(path: impl AsRef<std::path::Path>) -> Result<Self, ManifestError> {
+    /// Load the `mu.toml` at `path` from the file system `fs`.
+    pub fn load(
+        fs: &dyn FileSystem,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<Self, ManifestError> {
         let manifest_path = path.as_ref();
-        if !manifest_path.exists() || !manifest_path.is_file() {
+        if !fs.is_file(manifest_path) {
             return Err(ManifestError::NotFound {
-                path: std::path::PathBuf::from(path.as_ref()),
+                path: manifest_path.to_path_buf(),
             });
         }
 
-        let buf = std::fs::read_to_string(manifest_path)?;
+        let buf = fs.read_to_string(manifest_path)?;
         Ok(toml::from_str(&buf)?)
     }
 

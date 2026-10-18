@@ -4,11 +4,11 @@
 mod error;
 
 pub use error::{ResolveError, ResolveErrorKind};
+use miette::Diagnostic;
 use mucad_lang_base::{Identifier, SrcRef, SrcReferrer, element::Case};
 use mucad_lang_lower::{LowerAdvice, LowerIssue, LowerWarning};
 use mucad_lang_parse::{ParseAdvice, ParseIssue, ParseWarning};
 use mucad_macros::Issue;
-use miette::Diagnostic;
 use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]

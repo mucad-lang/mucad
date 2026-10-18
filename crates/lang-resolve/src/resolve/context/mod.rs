@@ -10,18 +10,20 @@ pub use cache::{LibraryCache, SourceCache};
 pub use lib_ctx::ResolveLibraryContext;
 use mucad_lang_parse::Ast;
 pub use prelude::Prelude;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::Arc};
 
 use mucad_lang_base::{
-    Artifact, HashId, IssueList, IssueResult, LibraryId, Name, PushIssue, SharedMut,
+    Artifact, FileSystem, HashId, IssueList, IssueResult, LibraryId, Name, PushIssue, SharedMut,
 };
 use mucad_lang_lower::Ir;
 
-use crate::{Library, ResolveErrorKind, ResolveIssue};
+use crate::{Library, LocalFileSystem, ResolveErrorKind, ResolveIssue};
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct ResolveContext {
     _lib_search_paths: Vec<std::path::PathBuf>,
+    /// The file system, from which sources and libraries are loaded.
+    file_system: Arc<dyn FileSystem>,
     lib_cache: SharedMut<LibraryCache>,
     src_cache: SharedMut<SourceCache>,
     /// Libraries in the cache that every resolved library depends on, e.g. `std`.
@@ -45,8 +47,19 @@ impl ResolveContext {
     }
 }
 
+impl Default for ResolveContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Accessors
 impl ResolveContext {
+    /// The file system, from which sources and libraries are loaded.
+    pub fn file_system(&self) -> Arc<dyn FileSystem> {
+        self.file_system.clone()
+    }
+
     /// Execute a closure with a reference to the AST, if present.
     pub fn with_ast<F, R>(&self, id: HashId, f: F) -> Option<R>
     where
@@ -127,7 +140,10 @@ impl ResolveContext {
         lib_path: impl AsRef<std::path::Path>,
     ) -> IssueResult<LibraryId, ResolveIssue> {
         let lib_path = lib_path.as_ref();
-        let path = std::fs::canonicalize(lib_path).unwrap_or_else(|_| lib_path.to_path_buf());
+        let path = self
+            .file_system
+            .canonicalize(lib_path)
+            .unwrap_or_else(|_| lib_path.to_path_buf());
 
         if let Some(start) = self.loading.iter().position(|loading| *loading == path) {
             let chain = self.loading[start..]
@@ -191,6 +207,7 @@ impl ResolveContext {
 #[derive(Debug, Default)]
 pub struct ResolveContextBuilder {
     lib_search_paths: Vec<std::path::PathBuf>,
+    file_system: Option<Arc<dyn FileSystem>>,
     lib_cache: Option<SharedMut<LibraryCache>>,
     src_cache: Option<SharedMut<SourceCache>>,
 }
@@ -218,6 +235,12 @@ impl ResolveContextBuilder {
         self
     }
 
+    /// Load sources and libraries from `file_system` instead of the local file system.
+    pub fn with_file_system(mut self, file_system: Arc<dyn FileSystem>) -> Self {
+        self.file_system = Some(file_system);
+        self
+    }
+
     /// Attach a shared library cache.
     pub fn with_lib_cache(mut self, lib_cache: SharedMut<LibraryCache>) -> Self {
         self.lib_cache = Some(lib_cache);
@@ -234,6 +257,9 @@ impl ResolveContextBuilder {
     pub fn build(self) -> ResolveContext {
         ResolveContext {
             _lib_search_paths: self.lib_search_paths,
+            file_system: self
+                .file_system
+                .unwrap_or_else(|| Arc::new(LocalFileSystem)),
             implicit_dependencies: BTreeMap::new(),
             lib_cache: self.lib_cache.unwrap_or_default(),
             src_cache: self.src_cache.unwrap_or_default(),

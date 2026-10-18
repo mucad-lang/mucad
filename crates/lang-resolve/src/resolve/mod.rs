@@ -37,7 +37,7 @@ pub fn library_source_files(
     path: impl AsRef<std::path::Path>,
     ctx: &mut ResolveContext,
 ) -> IssueResult<Vec<std::path::PathBuf>, ResolveIssue> {
-    let (lib, issues) = resolve(locate::library_root(path), ctx)?;
+    let (lib, issues) = resolve(locate::library_root(ctx.file_system().as_ref(), path), ctx)?;
 
     let lib_cache = ctx.lib_cache();
     let lib_cache = lib_cache.read_unwrap();

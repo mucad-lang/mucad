@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use mucad_lang_base::Url;
-use mucad_lang_resolve::locate;
+use mucad_lang_resolve::{LocalFileSystem, locate};
 
 #[test]
 fn test_external_url_pass_through() {
     let https_url = "https://example.com/design.mcad";
-    let result = locate::to_url(https_url).unwrap();
+    let result = locate::to_url(&LocalFileSystem, https_url).unwrap();
     assert_eq!(result.as_str(), https_url);
 }
 
@@ -19,7 +19,7 @@ fn test_filesystem_resolution_with_extension() {
 
     // Test raw string path
     let input = file_path.to_str().unwrap();
-    let result = locate::to_url(input).unwrap();
+    let result = locate::to_url(&LocalFileSystem, input).unwrap();
 
     assert_eq!(result.scheme(), "file");
     // Canonicalize returns the absolute path, so we compare URLs
@@ -37,7 +37,7 @@ fn test_filesystem_resolution_missing_extension() {
 
     // Input WITHOUT extension
     let input = dir.path().join("logic").to_str().unwrap().to_string();
-    let result = locate::to_url(&input).unwrap();
+    let result = locate::to_url(&LocalFileSystem, &input).unwrap();
 
     assert!(result.as_str().ends_with("logic.mcad"));
 }
@@ -53,7 +53,7 @@ fn test_directory_mod_resolution() {
 
     // Input is the directory path
     let input = sub_dir.to_str().unwrap();
-    let result = locate::to_url(input).unwrap();
+    let result = locate::to_url(&LocalFileSystem, input).unwrap();
 
     assert!(
         result.to_file_path().unwrap().ends_with("my_module/mod.mu"),
@@ -63,7 +63,7 @@ fn test_directory_mod_resolution() {
 
 #[test]
 fn test_invalid_path_fails() {
-    let result = locate::to_url("/non/existent/path/at/all/ever");
+    let result = locate::to_url(&LocalFileSystem, "/non/existent/path/at/all/ever");
     assert!(result.is_err());
 }
 
@@ -74,7 +74,7 @@ fn test_file_scheme_input() {
     std::fs::write(&file_path, "content").unwrap();
 
     let file_url = Url::from_file_path(&file_path).unwrap();
-    let result = locate::to_url(file_url.as_str()).unwrap();
+    let result = locate::to_url(&LocalFileSystem, file_url.as_str()).unwrap();
 
     assert_eq!(result, file_url);
 }
@@ -82,7 +82,8 @@ fn test_file_scheme_input() {
 /// The root of a library is the directory with a `mu.toml` or the topmost source file.
 #[test]
 fn library_root() {
-    let root = |path: &str| locate::library_root(format!("tests/test_cases/{path}"));
+    let root =
+        |path: &str| locate::library_root(&LocalFileSystem, format!("tests/test_cases/{path}"));
     let path = |path: &str| std::path::PathBuf::from(format!("tests/test_cases/{path}"));
 
     // File modules of a single file.

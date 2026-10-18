@@ -27,7 +27,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         path: impl AsRef<std::path::Path>,
     ) -> ResolveResult<Option<SymbolNodeId>> {
         let path = path.as_ref();
-        let id = if path.is_file() {
+        let id = if self.ctx().file_system().is_file(path) {
             self.load_file(path)?
         } else {
             self.load_library(path)?
@@ -90,11 +90,12 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         lib_path: impl AsRef<std::path::Path>,
     ) -> ResolveResult<Option<SymbolNodeId>> {
         // Locate `lib.mu` in directory
-        let lib_mu = locate::lib_mu_path(&lib_path)?;
+        let fs = self.ctx().file_system();
+        let lib_mu = locate::lib_mu_path(fs.as_ref(), &lib_path)?;
         log::debug!("Loading library from {lib_mu:?}");
 
         // Load manifest and load library
-        match Manifest::load(locate::mu_toml_path(&lib_path)) {
+        match Manifest::load(fs.as_ref(), locate::mu_toml_path(&lib_path)) {
             Ok(manifest) => {
                 log::debug!("Loaded manifest:\n{manifest}");
 
@@ -167,8 +168,8 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         path: impl AsRef<std::path::Path>,
         parent_id: Option<SymbolNodeId>,
     ) -> ResolveResult<Option<SymbolNodeId>> {
-        let path = path.as_ref().to_path_buf();
-        self.load_source_symbol(Source::load(&path)?, parent_id)
+        let source = self.ctx().file_system().load_source(path.as_ref())?;
+        self.load_source_symbol(source, parent_id)
     }
 
     /// Load a source and its file modules into the symbol tree.
@@ -215,11 +216,13 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                         ir::Def::FileModule(_) => {
                             // File modules are located relative to the source file.
                             let loaded = match &path {
-                                Some(path) => locate::file_module_path(path, item.name())
-                                    .map_err(ResolveError::from)
-                                    .and_then(|path| {
-                                        Ok((self._load_source(&path, Some(id))?, path))
-                                    }),
+                                Some(path) => locate::file_module_path(
+                                    self.ctx().file_system().as_ref(),
+                                    path,
+                                    item.name(),
+                                )
+                                .map_err(ResolveError::from)
+                                .and_then(|path| Ok((self._load_source(&path, Some(id))?, path))),
                                 None => {
                                     Err(ResolveErrorKind::SourceHasNoPath(source_name.clone())
                                         .into())

@@ -5,10 +5,10 @@
 
 use mucad_lang_base::{HashId, SrcRef, SrcReferrer};
 
+use miette::Diagnostic;
 use mucad_lang_lower::LowerError;
 use mucad_lang_parse::ParseError;
 use mucad_lang_types::Type;
-use miette::Diagnostic;
 use thiserror::Error;
 
 use crate::{ManifestError, locate::LocateError};

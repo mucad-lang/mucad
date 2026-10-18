@@ -7,10 +7,12 @@ mod resolve;
 
 mod diag;
 
+mod local_file_system;
 mod source_unit;
 
 pub mod locate;
 
+pub use local_file_system::LocalFileSystem;
 pub use source_unit::SourceUnit;
 
 pub use diag::{

@@ -22,7 +22,7 @@ semver = { version = "1.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 strum = { version = "0.28", features = ["derive"] }
 thiserror = "2.0"
-toml = { version = "1.1.4", optional = true }
+toml = "1.1.4"
 
 mucad-lang-base = { workspace = true }
 mucad-macros = { workspace = true }
@@ -41,8 +41,6 @@ test-that = "0.6"
 
 [features]
 default = [
-    "io",    # This feature is supposed to be removed once we have a file handling abstraction.
     "parse", # This feature is supposed to removed once we have an abstraction in `mucad-driver`
 ]
 parse = ["dep:mucad-lang-parse"]
-io = ["dep:toml"]

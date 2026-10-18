@@ -3,10 +3,10 @@
 
 //! A source unit that can be compiled into an IR.
 
-use mucad_lang_base::{HashId, IssueList, Source, StageResult};
+use miette::Diagnostic;
+use mucad_lang_base::{FileSystem, HashId, IssueList, Source, StageResult};
 use mucad_lang_lower::{Ir, LowerContext, LowerIssue};
 use mucad_lang_parse::{Ast, ParseIssue};
-use miette::Diagnostic;
 use thiserror::Error;
 
 use crate::{ResolveIssue, ResolveResult, locate};
@@ -49,9 +49,10 @@ impl SourceUnit {
         Self::Loaded(source)
     }
 
-    /// Load a source unit from disk and immediately run full compilation through lowering.
-    pub fn load(path: impl AsRef<std::path::Path>) -> ResolveResult<Self> {
-        let source = Source::load(locate::resolved_path(path)?)?;
+    /// Load a source unit from the file system `fs` and immediately run full compilation through
+    /// lowering.
+    pub fn load(fs: &dyn FileSystem, path: impl AsRef<std::path::Path>) -> ResolveResult<Self> {
+        let source = fs.load_source(&locate::resolved_path(fs, path)?)?;
         Ok(Self::new(source).parse().lower())
     }
 
@@ -73,10 +74,7 @@ impl SourceUnit {
                 let ir = match ast.artifact() {
                     Some(ast_artifact) => {
                         let mut lower_context = LowerContext::new(&source);
-                        StageResult::from(mucad_lang_lower::lower(
-                            &mut lower_context,
-                            ast_artifact,
-                        ))
+                        StageResult::from(mucad_lang_lower::lower(&mut lower_context, ast_artifact))
                     }
                     None => StageResult::default(),
                 };

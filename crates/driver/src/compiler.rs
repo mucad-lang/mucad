@@ -5,6 +5,8 @@
 
 pub use crate::prelude as mu;
 
+use std::sync::Arc;
+
 use mucad_lang_base::{DiagRenderOptions, Diagnostics, Issue, PushIssue, RenderDiag};
 use mucad_std::{StdLib, StdLibError};
 
@@ -93,6 +95,14 @@ impl Compiler {
             search_paths: config.search_paths.clone(),
             std: None,
         }
+    }
+
+    /// Load sources and libraries from `file_system`, e.g. a virtual one in a browser.
+    pub fn with_file_system(mut self, file_system: Arc<dyn mu::base::FileSystem>) -> Self {
+        self.resolve_context = mu::ResolveContext::builder()
+            .with_file_system(file_system)
+            .build();
+        self
     }
 }
 
@@ -237,7 +247,10 @@ impl Compiler {
             .cloned()
             .chain(std::iter::once(mucad_std::global_library_search_path()))
             .flat_map(|path| [path.join(info.path()), path.join(info.name.as_str())])
-            .find(|path| path.join(mu::resolve::Manifest::MU_TOML).is_file());
+            .find(|path| {
+                let file_system = self.resolve_context.file_system();
+                file_system.is_file(&path.join(mu::resolve::Manifest::MU_TOML))
+            });
 
         if let Some(path) = found {
             return Ok(path);

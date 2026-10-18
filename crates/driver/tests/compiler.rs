@@ -3,8 +3,8 @@
 
 //! Tests for the high-level compiler API.
 
-use mucad_driver::{Compiler, prelude as mu};
 use mu::base::DisplayWithCtx;
+use mucad_driver::{Compiler, prelude as mu};
 
 /// A sketch and an operation, called as method on the sketch.
 const DISC: &str = r#"
@@ -583,5 +583,44 @@ fn compile_local_does_not_shadow_function() {
     let (_, diags) = compiler
         .compile("fn double(x: Integer) -> Integer { x * 2 }\ndouble = 3;\nassert_eq(double(double), 6);")
         .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}
+
+/// A compiler with a virtual file system containing the standard library, e.g. in a browser.
+fn virtual_compiler(file_system: mu::base::VirtualFileSystem) -> Compiler {
+    Compiler::from_config(&mu::DriverConfig {
+        search_paths: vec!["/lib".into()],
+        ..Default::default()
+    })
+    .with_file_system(std::sync::Arc::new(file_system))
+}
+
+/// The standard library is loaded from a virtual file system.
+#[test]
+fn compile_virtual_std() {
+    let file_system = mu::stdlib::StdLib::virtual_file_system("/lib");
+    let mut compiler = virtual_compiler(file_system);
+    let (_, diags) = compiler
+        .compile("Circle(radius = 1mm).translate(x = 1mm);")
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+}
+
+/// File modules are loaded from a virtual file system.
+#[test]
+fn compile_virtual_file_module() {
+    use mu::base::FileSystem;
+
+    let file_system = mu::stdlib::StdLib::virtual_file_system("/lib")
+        .with_file("/project/main.mu", "mod geo;\ngeo::Shape();")
+        .with_file(
+            "/project/main/geo.mu",
+            "pub sketch Shape() {\n    Circle(radius = 1mm);\n}",
+        );
+    let source = file_system
+        .load_source(std::path::Path::new("/project/main.mu"))
+        .expect("A source");
+    let mut compiler = virtual_compiler(file_system);
+    let (_, diags) = compiler.compile(source).expect("A model");
     assert!(!diags.has_errors(), "{diags:?}");
 }

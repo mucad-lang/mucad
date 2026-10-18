@@ -19,6 +19,30 @@ pub enum SourceKind {
     Str,
 }
 
+/// The `file://` URL of a path.
+#[cfg(any(unix, windows, target_os = "wasi"))]
+fn url_from_file_path(path: &std::path::Path) -> Option<Url> {
+    Url::from_file_path(path).ok()
+}
+
+/// The `file://` URL of a path, without a file system, e.g. in a browser.
+#[cfg(not(any(unix, windows, target_os = "wasi")))]
+fn url_from_file_path(path: &std::path::Path) -> Option<Url> {
+    Url::parse(&format!("file://{}", path.display())).ok()
+}
+
+/// The path of a `file://` URL.
+#[cfg(any(unix, windows, target_os = "wasi"))]
+fn url_to_file_path(url: &Url) -> Option<std::path::PathBuf> {
+    url.to_file_path().ok()
+}
+
+/// The path of a `file://` URL, without a file system, e.g. in a browser.
+#[cfg(not(any(unix, windows, target_os = "wasi")))]
+fn url_to_file_path(url: &Url) -> Option<std::path::PathBuf> {
+    Some(std::path::PathBuf::from(url.path()))
+}
+
 impl SourceKind {
     /// Returns a fallback or explicit URL representation of the source.
     pub fn url(&self) -> Url {
@@ -26,8 +50,8 @@ impl SourceKind {
             SourceKind::Url(url) => url.clone(),
             SourceKind::Path(path) => {
                 // Safely convert a local path to a file:// URL
-                Url::from_file_path(path)
-                    .unwrap_or_else(|_| Url::parse("file:///invalid-path").unwrap())
+                url_from_file_path(path)
+                    .unwrap_or_else(|| Url::parse("file:///invalid-path").unwrap())
             }
             SourceKind::Stdin => Url::parse("stdin://-").unwrap(),
             SourceKind::Virtual(name) => {
@@ -46,7 +70,7 @@ impl SourceKind {
             SourceKind::Url(url) => {
                 // If it's a file:// URL, we can extract the path dynamically
                 if url.scheme() == "file" {
-                    url.to_file_path().ok()
+                    url_to_file_path(url)
                 } else {
                     None
                 }

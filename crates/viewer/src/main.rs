@@ -61,7 +61,10 @@ impl Args {
                         let url = Url::parse("stdin://").into_diagnostic()?;
                         Ok(Some(url))
                     }
-                    "file" => Ok(Some(mu::locate::to_url(input)?)),
+                    "file" => Ok(Some(mu::locate::to_url(
+                        &mu::resolve::LocalFileSystem,
+                        input,
+                    )?)),
                     scheme => Err(miette::miette!("Unknown scheme: {scheme}")),
                 }
             }

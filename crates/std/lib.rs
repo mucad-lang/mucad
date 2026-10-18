@@ -6,7 +6,7 @@
 use rust_embed::RustEmbed;
 use thiserror::Error;
 
-use mucad_lang_base::{LibraryId, LibraryInfo};
+use mucad_lang_base::{LibraryId, LibraryInfo, VirtualFileSystem};
 
 /// Standard library error.
 #[derive(Debug, Error)]
@@ -75,6 +75,19 @@ impl StdLib {
 
         eprintln!("Successfully installed µcad standard library.");
         Ok(())
+    }
+
+    /// A virtual file system with the standard library in the library search path `search_path`,
+    /// e.g. in a browser without a local file system.
+    pub fn virtual_file_system(search_path: impl AsRef<std::path::Path>) -> VirtualFileSystem {
+        let path = search_path.as_ref().join(Self::info().path());
+        StdLibEmbedded::iter().fold(VirtualFileSystem::new(), |file_system, file| {
+            let content = StdLibEmbedded::get(file.as_ref()).expect("embedded folder 'lib/std'");
+            file_system.with_file(
+                path.join(file.as_ref()),
+                String::from_utf8_lossy(&content.data),
+            )
+        })
     }
 
     /// Uninstall the standard library from the standard library path.
