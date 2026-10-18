@@ -29,6 +29,9 @@ pub use size::*;
 
 pub use geo::{Buffer, ConvexHull};
 
+/// Forward type from `geo::Coord`;
+pub type Coord = geo::Coord<Scalar>;
+
 /// Trait to return all points of 2D geometry.
 pub trait FetchPoints2D {
     /// Returns all points.

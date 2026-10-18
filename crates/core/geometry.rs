@@ -1,6 +1,8 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+//! µcad core 2D and 3D Geometry integration.
+
 use derive_more::From;
 use strum::IntoStaticStr;
 
