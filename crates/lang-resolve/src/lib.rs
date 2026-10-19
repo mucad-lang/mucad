@@ -20,14 +20,14 @@ pub use diag::{
 };
 
 pub use resolve::{
-    LibraryCache, Prelude, ResolveContext, ResolveLibraryContext, SourceCache,
-    library_source_files, resolve, resolve_source,
+    Completion, CompletionKind, LibraryCache, Prelude, ResolveContext, ResolveLibraryContext,
+    SourceCache, library_source_files, resolve, resolve_source,
 };
 
 pub mod library;
 
 pub use library::{
-    ExternalLookUp, Library, LookUp, Manifest, ManifestError,
+    External, Library, LookUp, Manifest, ManifestError, NoExternals,
     symbol::{SymbolDef, SymbolId, SymbolNode, SymbolNodeExt, SymbolNodeMut, SymbolNodeRef},
 };
 

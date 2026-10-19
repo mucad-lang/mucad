@@ -18,7 +18,10 @@ use mucad_lang_base::{HashSet, IssueResult, PushIssue, Source};
 
 use crate::{Library, ResolveIssue, ResolveResult, library::SymbolNodeId, locate};
 
-pub use context::{LibraryCache, Prelude, ResolveContext, ResolveLibraryContext, SourceCache};
+pub use context::{
+    Completion, CompletionKind, LibraryCache, Prelude, ResolveContext, ResolveLibraryContext,
+    SourceCache,
+};
 
 /// Resolve a single source file or a library directory.
 pub fn resolve(

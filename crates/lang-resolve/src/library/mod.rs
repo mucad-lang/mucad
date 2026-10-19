@@ -13,7 +13,7 @@ pub mod visitor;
 use std::collections::BTreeMap;
 
 pub use manifest::{Dependency, LibrarySection, Manifest, ManifestError};
-use mucad_lang_base::{ExternalId, LibraryId, LibraryInfo, Name, Version};
+use mucad_lang_base::{ExternalId, LibraryId, LibraryInfo, Name, SrcRef, Version};
 use mucad_lang_lower::ir::UnresolvedPath;
 use mucad_macros::Artifact;
 pub use search::Search;
@@ -22,8 +22,27 @@ use serde::{Deserialize, Serialize};
 pub use symbol::*;
 use visitor::Visitor;
 
-/// Looks up path parts inside a module of another library.
-pub type ExternalLookUp<'a> = dyn Fn(&ExternalId, &[Identifier]) -> Option<SymbolId> + 'a;
+/// Access to the modules of other libraries, e.g. imported by `use std::geo2d::*;`.
+pub trait External {
+    /// Look up path parts inside a module of another library.
+    fn look_up(&self, module: &ExternalId, parts: &[Identifier]) -> Option<SymbolId>;
+
+    /// The public symbols inside a module of another library, e.g. to complete a path.
+    fn symbols(&self, module: &ExternalId) -> Vec<(Identifier, SymbolId)>;
+}
+
+/// No access to other libraries, their symbols are not found.
+pub struct NoExternals;
+
+impl External for NoExternals {
+    fn look_up(&self, _: &ExternalId, _: &[Identifier]) -> Option<SymbolId> {
+        None
+    }
+
+    fn symbols(&self, _: &ExternalId) -> Vec<(Identifier, SymbolId)> {
+        Vec::new()
+    }
+}
 
 /// A symbol found by a look up.
 #[derive(Debug, Clone, PartialEq)]
@@ -32,6 +51,18 @@ pub enum LookUp {
     Local(SymbolNodeId),
     /// A symbol of another library, imported e.g. by `use std::geo2d::*;`.
     External(SymbolId),
+}
+
+impl LookUp {
+    /// The symbol found in `lib`, see [`Library::symbol_id`].
+    ///
+    /// `lib_id` is the ID of `lib`, if it is another library than the one being resolved.
+    pub fn symbol_id(self, lib: &Library, lib_id: Option<LibraryId>) -> SymbolId {
+        match self {
+            LookUp::Local(node_id) => lib.symbol_id(node_id, lib_id),
+            LookUp::External(symbol_id) => symbol_id,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Artifact)]
@@ -190,7 +221,7 @@ impl Library {
         starting_node: SymbolNodeId,
         path: &UnresolvedPath,
     ) -> Option<SymbolNodeId> {
-        match self.look_up_symbol(starting_node, path, &|_, _| None)? {
+        match self.look_up_symbol(starting_node, path, &NoExternals)? {
             LookUp::Local(id) => Some(id),
             LookUp::External(_) => None,
         }
@@ -203,7 +234,7 @@ impl Library {
         &self,
         starting_node: SymbolNodeId,
         path: &UnresolvedPath,
-        external: &ExternalLookUp,
+        external: &dyn External,
     ) -> Option<LookUp> {
         Search::new(self, starting_node, external).path(path)
     }
@@ -215,10 +246,55 @@ impl Library {
         &self,
         module: SymbolNodeId,
         parts: &[Identifier],
-        external: &ExternalLookUp,
+        external: &dyn External,
     ) -> Option<LookUp> {
         // From the root, only public symbols inside the module are visible.
         Search::new(self, self.root, external).downwards(module, parts)
+    }
+
+    /// The innermost symbol whose definition in `source` contains the byte `offset`,
+    /// e.g. the module or workbench to complete a name in.
+    ///
+    /// A definition contains the offsets after its first and before its last character,
+    /// whitespace after the definition is not part of it. A source file contains all offsets.
+    pub fn scope_at(&self, source: &mucad_lang_base::Source, offset: usize) -> SymbolNodeId {
+        let code = source.code();
+        let contains = |src_ref: &SrcRef| {
+            let text = code.get(src_ref.start..src_ref.end).unwrap_or_default();
+            src_ref.start < offset && offset < src_ref.start + text.trim_end().len()
+        };
+        let symbol = |id: &SymbolNodeId| SymbolNodeRef::new(*id, &self.arena).get();
+
+        let in_source: Vec<_> = self
+            .root
+            .descendants(&self.arena)
+            .filter(|id| symbol(id).meta.src_ref.source_hash() == source.hash_id())
+            .collect();
+        if !in_source.is_empty() {
+            // The source file contains all offsets, also in front of or after all definitions.
+            return in_source
+                .into_iter()
+                .filter(|id| {
+                    matches!(symbol(id).def, SymbolDef::SourceFile(_))
+                        || contains(&symbol(id).meta.src_ref)
+                })
+                .min_by_key(|id| symbol(id).meta.src_ref.len())
+                .unwrap_or(self.root);
+        }
+
+        let source_files: Vec<_> = self
+            .root
+            .descendants(&self.arena)
+            .filter_map(|id| match &symbol(&id).def {
+                SymbolDef::SourceFile(SourceFile::Loaded { path, .. }) => Some((id, path)),
+                _ => None,
+            })
+            .collect();
+        source_files
+            .iter()
+            .find(|(_, path)| source.path().as_ref() == Some(*path))
+            .or(source_files.first())
+            .map_or(self.root, |(id, _)| *id)
     }
 
     /// The module (root, inline module or source file) which contains `node` or is `node`.

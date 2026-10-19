@@ -3,11 +3,12 @@
 
 //! Search for library symbols.
 
-use mucad_lang_base::{HashSet, Identifier, SymbolId};
+use mucad_lang_base::{ExternalId, HashSet, Identifier, SymbolId};
 use mucad_lang_lower::ir::{Path, UnresolvedPath};
 
 use crate::{
-    ExternalLookUp, Library, LookUp, SymbolDef, SymbolNodeExt, SymbolNodeRef, library::SymbolNodeId,
+    Library, LookUp, SymbolDef, SymbolNodeExt, SymbolNodeRef,
+    library::{External, SymbolNodeId},
 };
 
 /// The leading path part, which refers to the parent module, e.g. `super::geo::Circle`.
@@ -18,18 +19,14 @@ pub struct Search<'a> {
     lib: &'a Library,
     /// The scope the look up starts from, which determines the visible symbols.
     from_scope: SymbolNodeId,
-    /// Looks up path parts inside a module of another library.
-    external: &'a ExternalLookUp<'a>,
+    /// Looks up and lists symbols inside modules of other libraries.
+    external: &'a dyn External,
     /// Wildcards and aliases searched already, to stop at cyclic imports.
     visited: HashSet<SymbolNodeId>,
 }
 
 impl<'a> Search<'a> {
-    pub fn new(
-        lib: &'a Library,
-        from_scope: SymbolNodeId,
-        external: &'a ExternalLookUp<'a>,
-    ) -> Self {
+    pub fn new(lib: &'a Library, from_scope: SymbolNodeId, external: &'a dyn External) -> Self {
         Self {
             lib,
             from_scope,
@@ -98,20 +95,10 @@ impl<'a> Search<'a> {
             return None;
         }
 
-        let target = match path {
-            Path::Resolved(SymbolId::Item(module)) => LookUp::Local(*module),
-            Path::Resolved(module @ SymbolId::External(_)) => LookUp::External(module.clone()),
-            // Not resolved yet, e.g. while resolving other imports.
-            Path::Unresolved(path) => {
-                let scope = node.parent(&self.lib.arena)?;
-                self.with_scope(scope, |search| search.path(path))?
-            }
-            _ => return None,
-        };
-        match target {
+        match self.alias_target(node, path)? {
             LookUp::Local(module) => self.descend(LookUp::Local(module), rest),
             LookUp::External(SymbolId::External(module)) => {
-                (self.external)(&module, rest).map(LookUp::External)
+                self.external.look_up(&module, rest).map(LookUp::External)
             }
             LookUp::External(_) => None,
         }
@@ -156,7 +143,7 @@ impl<'a> Search<'a> {
         match &wildcard.path {
             Path::Resolved(SymbolId::Item(module)) => self.in_scope(*module, parts),
             Path::Resolved(SymbolId::External(module)) => {
-                (self.external)(module, parts).map(LookUp::External)
+                self.external.look_up(module, parts).map(LookUp::External)
             }
             // Not resolved yet, e.g. while resolving the wildcard itself.
             Path::Unresolved(path) => match self.with_scope(scope, |search| search.path(path))? {
@@ -165,6 +152,116 @@ impl<'a> Search<'a> {
             },
             _ => None,
         }
+    }
+
+    /// The symbols visible from `from_scope` by their name: in it and its parent scopes,
+    /// e.g. to complete a name.
+    ///
+    /// Symbols of inner scopes shadow those of outer scopes with the same name.
+    pub fn visible_symbols(&mut self) -> Vec<(Identifier, LookUp)> {
+        let lib = self.lib;
+        let mut symbols: Vec<(Identifier, LookUp)> = Vec::new();
+        for scope in std::iter::successors(Some(self.from_scope), |scope| scope.parent(&lib.arena))
+        {
+            for (name, found) in self.symbols_in(scope) {
+                if !symbols.iter().any(|(known, _)| *known == name) {
+                    symbols.push((name, found));
+                }
+            }
+        }
+        symbols
+    }
+
+    /// The symbols inside the module `path` refers to, e.g. to complete `geo::`.
+    ///
+    /// An alias of a module (`use std::geo3d as space;`) stands for the module.
+    pub fn symbols_in_path(&mut self, path: &UnresolvedPath) -> Vec<(Identifier, LookUp)> {
+        let found = match self.path(path) {
+            Some(LookUp::Local(id)) => match &SymbolNodeRef::new(id, &self.lib.arena).get().def {
+                SymbolDef::Alias(alias) => self.alias_target(id, &alias.path),
+                _ => Some(LookUp::Local(id)),
+            },
+            found => found,
+        };
+        match found {
+            Some(LookUp::Local(module)) => self.symbols_in(module),
+            Some(LookUp::External(SymbolId::External(module))) => self.external_symbols(&module),
+            _ => Vec::new(),
+        }
+    }
+
+    /// The symbols in `scope` visible from `from_scope` by their name: its children and the
+    /// symbols imported by its wildcards.
+    ///
+    /// Children shadow imported symbols with the same name.
+    pub fn symbols_in(&mut self, scope: SymbolNodeId) -> Vec<(Identifier, LookUp)> {
+        let lib = self.lib;
+        let mut children = Vec::new();
+        let mut imported = Vec::new();
+        for child in SymbolNodeRef::new(scope, &lib.arena).children() {
+            if !lib.is_visible(child.id, self.from_scope) {
+                continue;
+            }
+            match (&child.get().def, child.name()) {
+                (SymbolDef::Wildcard(_), _) => imported.extend(self.wildcard_symbols(scope, child)),
+                (_, Some(name)) => children.push((name.clone(), LookUp::Local(child.id))),
+                (_, None) => {}
+            }
+        }
+        imported.retain(|(name, _)| !children.iter().any(|(child, _)| child == name));
+        children.extend(imported);
+        children
+    }
+
+    /// The symbols imported by the wildcard `node` in `scope`, see [`Search::in_wildcard`].
+    fn wildcard_symbols(
+        &mut self,
+        scope: SymbolNodeId,
+        node: SymbolNodeRef<'a>,
+    ) -> Vec<(Identifier, LookUp)> {
+        let SymbolDef::Wildcard(wildcard) = &node.get().def else {
+            return Vec::new();
+        };
+        // Each wildcard is searched once, to stop at cyclic imports.
+        if !self.visited.insert(node.id) {
+            return Vec::new();
+        }
+
+        match &wildcard.path {
+            Path::Resolved(SymbolId::Item(module)) => self.symbols_in(*module),
+            Path::Resolved(SymbolId::External(module)) => self.external_symbols(module),
+            // Not resolved, e.g. while resolving the wildcard itself.
+            Path::Unresolved(path) => match self.with_scope(scope, |search| search.path(path)) {
+                Some(LookUp::Local(module)) => self.symbols_in(module),
+                _ => Vec::new(),
+            },
+            _ => Vec::new(),
+        }
+    }
+
+    /// The symbol the alias `node` with `path` stands for, e.g. a module.
+    fn alias_target(&mut self, node: SymbolNodeId, path: &Path) -> Option<LookUp> {
+        match path {
+            Path::Resolved(SymbolId::Item(module)) => Some(LookUp::Local(*module)),
+            Path::Resolved(module @ SymbolId::External(_)) => {
+                Some(LookUp::External(module.clone()))
+            }
+            // Not resolved yet, e.g. while resolving other imports.
+            Path::Unresolved(path) => {
+                let scope = node.parent(&self.lib.arena)?;
+                self.with_scope(scope, |search| search.path(path))
+            }
+            _ => None,
+        }
+    }
+
+    /// The public symbols inside a module of another library.
+    fn external_symbols(&self, module: &ExternalId) -> Vec<(Identifier, LookUp)> {
+        self.external
+            .symbols(module)
+            .into_iter()
+            .map(|(name, symbol_id)| (name, LookUp::External(symbol_id)))
+            .collect()
     }
 
     /// Run `f` with a look up from `scope` instead of `from_scope`.

@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 mod cache;
+mod completion;
+mod external;
 mod lib_ctx;
 mod loader;
 mod prelude;
 
 pub use cache::{LibraryCache, SourceCache};
+pub use completion::{Completion, CompletionKind};
+pub(crate) use external::ExternalResolver;
 pub use lib_ctx::ResolveLibraryContext;
 use mucad_lang_parse::Ast;
 pub use prelude::Prelude;
