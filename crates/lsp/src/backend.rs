@@ -16,9 +16,10 @@ use tower_lsp::{
     Client, LanguageServer, async_trait,
     jsonrpc::Result,
     lsp_types::{
-        DiagnosticOptions, DiagnosticServerCapabilities, DidChangeTextDocumentParams,
-        DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
-        DocumentDiagnosticParams, DocumentDiagnosticReport, DocumentDiagnosticReportPartialResult,
+        CompletionOptions, CompletionParams, CompletionResponse, DiagnosticOptions,
+        DiagnosticServerCapabilities, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
+        DidOpenTextDocumentParams, DidSaveTextDocumentParams, DocumentDiagnosticParams,
+        DocumentDiagnosticReport, DocumentDiagnosticReportPartialResult,
         DocumentDiagnosticReportResult, DocumentFormattingParams, ExecuteCommandParams,
         InitializeParams, InitializeResult, InitializedParams, MessageType, OneOf,
         RelatedFullDocumentDiagnosticReport, SemanticTokensFullOptions, SemanticTokensLegend,
@@ -136,6 +137,11 @@ impl LanguageServer for Service {
                     ),
                 ),
                 document_formatting_provider: Some(OneOf::Left(true)),
+                completion_provider: Some(CompletionOptions {
+                    // Paths are completed after `::`.
+                    trigger_characters: Some(vec![":".into()]),
+                    ..Default::default()
+                }),
                 ..Default::default()
             },
         })
@@ -288,6 +294,19 @@ impl LanguageServer for Service {
         }
 
         Ok(None)
+    }
+
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        let position = params.text_document_position;
+        let url = position.text_document.uri;
+        Ok(self
+            .processor
+            .request(|reply| {
+                mu_processor::ProcessorRequest::CompleteDocument(url, position.position, reply)
+            })
+            .await
+            .ok()
+            .map(CompletionResponse::Array))
     }
 
     async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {

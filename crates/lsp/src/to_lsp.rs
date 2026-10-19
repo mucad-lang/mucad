@@ -19,6 +19,25 @@ pub fn position(code: &str, offset: usize) -> lsp::Position {
     )
 }
 
+/// The byte offset of an LSP position in `code`, see [`position`].
+///
+/// A position after the end of its line is at the end of the line.
+pub fn offset(code: &str, position: lsp::Position) -> usize {
+    let line_start: usize = code
+        .split_inclusive('\n')
+        .take(position.line as usize)
+        .map(str::len)
+        .sum();
+    let mut units = 0;
+    for (index, ch) in code[line_start..].char_indices() {
+        if units >= position.character || ch == '\n' {
+            return line_start + index;
+        }
+        units += ch.len_utf16() as u32;
+    }
+    code.len()
+}
+
 /// The LSP range of a source reference into `code`.
 pub fn range(code: &str, src_ref: &mu::SrcRef) -> lsp::Range {
     lsp::Range::new(position(code, src_ref.start), position(code, src_ref.end))
@@ -86,5 +105,34 @@ impl ToLsp for mu::TextEdit {
             range: range(source.code(), &self.src_ref),
             new_text: self.new_text.clone(),
         }
+    }
+}
+
+/// The LSP completion item of a symbol.
+pub fn completion_item(completion: &mu::resolve::Completion) -> lsp::CompletionItem {
+    use mu::{base::element::WorkbenchKind, resolve::CompletionKind};
+
+    let (kind, detail) = match completion.kind {
+        CompletionKind::Library => (lsp::CompletionItemKind::MODULE, "library".into()),
+        CompletionKind::Module => (lsp::CompletionItemKind::MODULE, "mod".into()),
+        CompletionKind::Workbench(kind @ WorkbenchKind::Op) => {
+            (lsp::CompletionItemKind::METHOD, kind.to_string())
+        }
+        CompletionKind::Workbench(kind) => (lsp::CompletionItemKind::CLASS, kind.to_string()),
+        CompletionKind::Function => (lsp::CompletionItemKind::FUNCTION, "fn".into()),
+        CompletionKind::Constant => (lsp::CompletionItemKind::CONSTANT, "const".into()),
+        CompletionKind::Builtin => (lsp::CompletionItemKind::FUNCTION, "built-in".into()),
+    };
+    lsp::CompletionItem {
+        label: completion.name.to_string(),
+        kind: Some(kind),
+        detail: Some(detail),
+        documentation: completion.doc.clone().map(|doc| {
+            lsp::Documentation::MarkupContent(lsp::MarkupContent {
+                kind: lsp::MarkupKind::Markdown,
+                value: doc,
+            })
+        }),
+        ..Default::default()
     }
 }

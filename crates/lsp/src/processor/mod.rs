@@ -38,6 +38,8 @@ pub enum ProcessorRequest {
     GetFullSemanticTokens(Url, Reply<Option<lsp::SemanticTokensResult>>),
     /// Format a document into text edits.
     FormatDocument(Url, Reply<miette::Result<Vec<lsp::TextEdit>>>),
+    /// Get the symbols to complete the path in front of a position in a document.
+    CompleteDocument(Url, lsp::Position, Reply<Vec<lsp::CompletionItem>>),
 }
 
 /// An open document.
@@ -51,6 +53,8 @@ struct Document {
 struct Processor {
     compiler: mu::Compiler,
     documents: mu::HashMap<Url, Document>,
+    /// The document of the most recent compilation, whose symbols the compiler completes.
+    compiled: Option<Url>,
 }
 
 impl Processor {
@@ -82,6 +86,9 @@ impl Processor {
             ProcessorRequest::FormatDocument(url, reply) => {
                 reply.send(self.format_document(&url)).ok();
             }
+            ProcessorRequest::CompleteDocument(url, position, reply) => {
+                reply.send(self.complete_document(&url, position)).ok();
+            }
         }
     }
 
@@ -90,7 +97,28 @@ impl Processor {
             document.diagnostics = match self.compiler.compile(document.source.clone()) {
                 Ok((_, diagnostics)) | Err(diagnostics) => diagnostics,
             };
+            self.compiled = Some(url.clone());
         }
+    }
+
+    fn complete_document(
+        &mut self,
+        url: &Url,
+        position: lsp::Position,
+    ) -> Vec<lsp::CompletionItem> {
+        // The symbols of another document have been compiled since.
+        if self.compiled.as_ref() != Some(url) {
+            self.compile_document(url);
+        }
+        let Some(document) = self.documents.get(url) else {
+            return Vec::new();
+        };
+        let offset = crate::to_lsp::offset(document.source.code(), position);
+        self.compiler
+            .completions(&document.source, offset)
+            .iter()
+            .map(crate::to_lsp::completion_item)
+            .collect()
     }
 
     fn document_diagnostics(&self, url: &Url) -> lsp::FullDocumentDiagnosticReport {
@@ -159,6 +187,7 @@ impl ProcessorController {
             let mut processor = Processor {
                 compiler: mu::Compiler::from_config(&config),
                 documents: Default::default(),
+                compiled: None,
             };
             // Ends when the controller has been dropped.
             for request in request_receiver {
