@@ -3,30 +3,52 @@
 
 use zed_extension_api::{self as zed, LanguageServerId, Result, settings::LspSettings};
 
-const UCAD_BINARY_NAME: &str = "mucad-lsp";
+/// The name of the µcad language server binary, e.g. installed with `cargo install`.
+const LSP_BINARY_NAME: &str = "mucad-lsp";
 
-struct MicrocadExtension;
+struct MucadExtension;
 
-impl zed::Extension for MicrocadExtension {
+impl zed::Extension for MucadExtension {
     fn new() -> Self {
         Self
     }
 
+    /// The language server command: the binary from the settings
+    /// (`lsp.mucad-lsp.binary.path`) or from the `PATH`, which is started with `--stdio`.
     fn language_server_command(
         &mut self,
-        _language_server_id: &LanguageServerId,
+        language_server_id: &LanguageServerId,
         worktree: &zed::Worktree,
     ) -> Result<zed::Command> {
-        let shell_env = worktree.shell_env();
+        let binary = LspSettings::for_worktree(language_server_id.as_ref(), worktree)
+            .ok()
+            .and_then(|settings| settings.binary);
 
-        let command = worktree
-            .which(UCAD_BINARY_NAME)
-            .ok_or_else(|| format!("Could not find {} binary", UCAD_BINARY_NAME))?;
+        let command = binary
+            .as_ref()
+            .and_then(|binary| binary.path.clone())
+            .or_else(|| worktree.which(LSP_BINARY_NAME))
+            .ok_or_else(|| {
+                format!(
+                    "Cannot find `{LSP_BINARY_NAME}`: install it with \
+                     `cargo install --path crates/lsp` or set `lsp.{LSP_BINARY_NAME}.binary.path`"
+                )
+            })?;
+
+        let mut env = worktree.shell_env();
+        env.extend(
+            binary
+                .as_ref()
+                .and_then(|binary| binary.env.clone())
+                .unwrap_or_default(),
+        );
 
         Ok(zed::Command {
             command,
-            args: vec!["--stdio".into()],
-            env: shell_env,
+            args: binary
+                .and_then(|binary| binary.arguments)
+                .unwrap_or_else(|| vec!["--stdio".into()]),
+            env,
         })
     }
 
@@ -55,4 +77,4 @@ impl zed::Extension for MicrocadExtension {
     }
 }
 
-zed::register_extension!(MicrocadExtension);
+zed::register_extension!(MucadExtension);

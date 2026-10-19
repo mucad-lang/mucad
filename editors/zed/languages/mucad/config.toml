@@ -1,15 +1,17 @@
 # Copyright © 2026 The µcad authors <info@mucad.org>
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-name = "Microcad"
+name = "µcad"
 grammar = "mucad"
-path_suffixes = ["µcad", "ucad", "mcad"]
-line_comments = ["// ", "/// "]
+path_suffixes = ["mu", "µcad", "mcad", "ucad"]
+line_comments = ["// ", "/// ", "//! "]
 block_comment = ["/*", "*/"]
-autoclose_before = ";:.,=}])>"
+tab_size = 4
+autoclose_before = ";:.,=}])"
 brackets = [
     { start = "{", end = "}", close = true, newline = true },
     { start = "[", end = "]", close = true, newline = true },
     { start = "(", end = ")", close = true, newline = true },
-    { start = "<", end = ">", close = true, newline = true },
+    { start = "\"", end = "\"", close = true, newline = false, not_in = ["string", "comment"] },
 ]
+word_characters = ["'"]

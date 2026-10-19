@@ -1,0 +1,1 @@
+../../../tree-sitter-mucad/queries/highlights.scm

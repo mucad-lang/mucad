@@ -2,16 +2,20 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 id = "mucad"
-name = "Microcad"
-version = "0.0.1"
+name = "µcad"
+version = "0.1.0"
 schema_version = 1
 authors = ["Michael Winkelmann"]
-description = "Microcad Plugin for Zed"
+description = "µcad language support: syntax highlighting, diagnostics, completion and formatting"
 repository = "https://codeberg.org/mucad/mucad"
 
+# The grammar in `editors/tree-sitter-mucad` of the µcad repository.
+# Update `rev` to a pushed commit after changing the grammar.
 [grammars.mucad]
-repository = "https://codeberg.org/mucad/tree-sitter-mucad"
-commit = "339420b9cfbb9d6e96ed1f881c1632af4c3fcd22"
+repository = "https://codeberg.org/mucad/mucad"
+rev = "ec08c2625ec0e7c5425a5bce087b6b170f7eb395"
+path = "editors/tree-sitter-mucad"
 
 [language_servers.mucad-lsp]
-language = "Microcad"
+name = "µcad LSP"
+languages = ["µcad"]
