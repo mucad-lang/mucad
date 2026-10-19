@@ -1,8 +1,9 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// file: logo.mu
 
-/// Some module with shapes.
+//! A µcad gear logo with a little shape module. The interesting stuff happens at the bottom.
+
+/// Some public module with shapes.
 pub mod shapes {
     use std::geo2d::*;
     use std::ops::*;
@@ -32,24 +33,24 @@ pub mod shapes {
 
     /// "A" shape.
     pub sketch A(radius: Length, thickness: Length) {
-        Arc(radius, thickness)
+        (Arc(radius, thickness)
         | Rect(
             width = thickness,
             height = radius * 2,
             x = radius * 0.75,
             y = -radius,
-        );
+        )).buffer(6.0mm);
     }
 
     /// "D" shape.
     pub sketch D(radius: Length, thickness: Length) {
-        Arc(radius, thickness)
+        (Arc(radius, thickness)
         | Rect(
             width = thickness,
             height = radius * 3,
             x = radius * 0.75,
             y = -radius,
-        );
+        )).buffer(6.0mm);
     }
 
     /// Private helper: An Arc struct.
@@ -59,19 +60,27 @@ pub mod shapes {
     }
 }
 
-sketch WithMuGear(radius: Length, model: Model2D) {
-    (std::geo2d::SinusoidalGearProfile(10mm, 13) - Circle(radius)) | model;
+// The official µcad gear (private sketch)
+sketch MuGear(radius: Length, shape: Sketch) {
+    (std::geo2d::SinusoidalGearProfile(10mm, 13) - Circle(radius)) | shape;
 }
 
 // A constant symbol for the overall size.
 const SIZE = 10cm;
 
 // Pick any shape you like.
+#[export] // Export to `logo__shape.svg`
 shape = shapes::Mu(SIZE * 50%, SIZE * 10%);
 // shape = shapes::C(SIZE * 50%, SIZE * 10%);
 // shape = shapes::A(SIZE * 50%, SIZE * 10%);
 // shape = shapes::D(SIZE * 50%, SIZE * 10%);
 // shape = Rect(SIZE);
 
-// Let's turn it 3D.
-WithMuGear(SIZE, shape).extrude(10mm);
+// Let's construct a µ-gear with custom shape and ...
+#[export = "mylogo.svg"] // Export under custom name `mylogo.svg` by default.
+#[color = (fill = "#100000", stroke = "#100000")]
+logo = MuGear(SIZE, shape);
+
+// ... turn it into 3D.
+#[export = "logo.stl"] // Export as `logo.stl`. File name is required.
+logo.extrude(20mm);
