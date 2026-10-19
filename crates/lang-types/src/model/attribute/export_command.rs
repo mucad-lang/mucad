@@ -3,27 +3,29 @@
 
 //! Export attribute.
 
-use derive_more::Display;
-use mucad_lang_base::Name;
 use serde::{Deserialize, Serialize};
 
-use crate::{Value, tuple};
+use crate::Value;
 
-/// Export attribute, e.g. `#[export: "output.svg"]`.
-#[derive(Clone, Debug, Display, PartialEq, Hash, Serialize, Deserialize)]
-#[display("path = {}, id = {}", path.display(), id)]
+/// Export attribute, e.g. `#[export = "output.svg"]`.
+#[derive(Clone, Debug, PartialEq, Hash, Serialize, Deserialize)]
 pub struct ExportCommand {
-    /// Filename.
-    pub path: std::path::PathBuf,
-    /// Exporter id
-    pub id: Name,
+    /// Optional filename.
+    pub path: Option<String>,
 }
 
+// Used mainly for attribute access.
 impl From<ExportCommand> for Value {
     fn from(export: ExportCommand) -> Self {
-        Value::from(tuple!(
-            path = export.path.display().to_string(),
-            id = export.id
-        ))
+        export.path.map(Value::from).unwrap_or_default()
+    }
+}
+
+impl std::fmt::Display for ExportCommand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.path {
+            Some(path) => write!(f, "#[export = {path}]"),
+            None => write!(f, "#[export]"),
+        }
     }
 }
