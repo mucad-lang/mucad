@@ -5,25 +5,27 @@ mod expression;
 mod statement;
 
 use mucad_driver::prelude as mu;
-use mucad_driver::prelude::Diagnostics;
-use mucad_driver::prelude::base::LineCol;
 
 use mu::ast;
-use mu::traits::*;
 
 use lsp::SemanticTokenModifier as TokenModifier;
 use lsp::SemanticTokenType as TokenType;
 use tower_lsp::lsp_types as lsp;
 use tower_lsp::lsp_types::SemanticToken;
 
-use crate::to_lsp::ToLsp;
+use crate::to_lsp::position;
 
-pub(crate) struct TokenContext<'ast> {
-    source: &'ast ast::Source,
-    line_index: mu::base::LineIndex,
-    last: mu::base::LineCol,
-    tokens: Vec<SemanticToken>,
-    diag: mu::Diagnostics,
+/// The semantic tokens of a parsed `source`, encoded relative to each other as LSP expects.
+pub(crate) fn semantic_tokens(source: &mu::Source, tree: &ast::Source) -> Vec<SemanticToken> {
+    let mut ctx = TokenContext::default();
+    tree.semantic_tokens(&mut ctx);
+    ctx.encode(source.code())
+}
+
+/// Collects the tokens of an AST in any order.
+#[derive(Default)]
+pub(crate) struct TokenContext {
+    tokens: Vec<(mu::base::Span, TokenType, u32)>,
 }
 
 /// Macro for token implementation
@@ -31,8 +33,8 @@ pub(crate) struct TokenContext<'ast> {
 macro_rules! impl_tokens {
     // 3. Field List Arm: Triggers for a list of comma-separated structural fields
     ($t:ty => $($field:ident),+ $(,)?) => {
-        impl<'ast> SemanticTokens<'ast> for $t {
-            fn semantic_tokens(&self, ctx: &'ast mut TokenContext) {
+        impl SemanticTokens for $t {
+            fn semantic_tokens(&self, ctx: &mut TokenContext) {
                 $(
                     self.$field.semantic_tokens(ctx);
                 )+
@@ -42,8 +44,8 @@ macro_rules! impl_tokens {
 
     // 1. Single Token Arm: Triggers when the right side is a type path (e.g., TokenType::COMMENT)
     ($t:ty => $token_type:path) => {
-        impl<'ast> SemanticTokens<'ast> for $t {
-            fn semantic_tokens(&self, ctx: &'ast mut TokenContext) {
+        impl SemanticTokens for $t {
+            fn semantic_tokens(&self, ctx: &mut TokenContext) {
                 ctx.push_token(&self.span, $token_type, &[]);
             }
         }
@@ -51,8 +53,8 @@ macro_rules! impl_tokens {
 
     // 4. Custom Block Arm: Fallback for matches or custom logic
     ($t:ty => |$self:ident, $ctx:ident| $body:block) => {
-        impl<'ast> SemanticTokens<'ast> for $t {
-            fn semantic_tokens(&self, $ctx: &'ast mut TokenContext) {
+        impl SemanticTokens for $t {
+            fn semantic_tokens(&self, $ctx: &mut TokenContext) {
                 let $self = self;
                 $body
             }
@@ -60,72 +62,58 @@ macro_rules! impl_tokens {
     };
 }
 
-impl<'ast> TokenContext<'ast> {
-    pub fn new(source: &'ast ast::Source) -> Self {
-        Self {
-            source,
-            line_index: mu::base::LineIndex::new(&source.code),
-            last: LineCol::default(),
-            tokens: Vec::default(),
-            diag: Diagnostics::default(),
-        }
-    }
-
-    pub fn tokens(&self) -> &Vec<SemanticToken> {
-        &self.tokens
-    }
-
-    fn span_to_src_ref(&self, span: &mu::base::Span) -> mu::base::SrcRef {
-        self.line_index
-            .src_ref(&self.source.code, span, self.source.code.computed_hash())
-    }
-
-    fn error(&mut self, span: &mu::base::Span, err: miette::ErrReport) {
-        self.diag
-            .error(&self.span_to_src_ref(span), err)
-            .expect("No error");
-    }
-
+impl TokenContext {
     fn push_token(
         &mut self,
         span: &mu::base::Span,
         token_type: TokenType,
         modifiers: &[lsp::SemanticTokenModifier],
     ) {
-        let src_ref = self.span_to_src_ref(span);
-        assert!(src_ref.is_some());
+        if !span.is_empty() {
+            self.tokens.push((
+                span.clone(),
+                token_type,
+                semantic_token_modifier_bitset(modifiers),
+            ));
+        }
+    }
 
-        let length = src_ref.len() as u32;
-        let pos = src_ref.to_lsp().expect("A src_ref with a hash");
-        let line = pos.start.line;
-        let char = pos.start.character;
-        let delta_start = if line == self.last.line {
-            char - self.last.col
-        } else {
-            char
-        };
+    /// Encode the tokens sorted by position, a token over several lines is split into lines.
+    fn encode(mut self, code: &str) -> Vec<SemanticToken> {
+        self.tokens.sort_by_key(|(span, ..)| span.start);
 
-        match line.checked_sub(self.last.line) {
-            Some(delta_line) => {
-                self.last = mu::base::LineCol { line, col: char };
+        let mut last = lsp::Position::default();
+        let mut encoded = Vec::new();
+        for (span, token_type, modifiers) in self.tokens {
+            let mut line_start = span.start;
+            for line in code[span.clone()].split_inclusive('\n') {
+                let text = line.trim_end_matches(['\n', '\r']);
+                let start = position(code, line_start);
+                line_start += line.len();
+                if text.is_empty() {
+                    continue;
+                }
 
-                self.tokens.push(lsp::SemanticToken {
+                let delta_line = start.line - last.line;
+                encoded.push(SemanticToken {
                     delta_line,
-                    delta_start,
-                    length,
+                    delta_start: match delta_line {
+                        0 => start.character - last.character,
+                        _ => start.character,
+                    },
+                    length: text.encode_utf16().count() as u32,
                     token_type: semantic_token_type_index(&token_type),
-                    token_modifiers_bitset: semantic_token_modifier_bitset(modifiers),
+                    token_modifiers_bitset: modifiers,
                 });
-            }
-            None => {
-                self.error(span, miette::miette!("Line overflow"));
+                last = start;
             }
         }
+        encoded
     }
 }
 
-pub trait SemanticTokens<'ast> {
-    fn semantic_tokens(&'ast self, ctx: &'ast mut TokenContext);
+pub trait SemanticTokens {
+    fn semantic_tokens(&self, ctx: &mut TokenContext);
 }
 
 impl_tokens!(ast::Comment => TokenType::COMMENT);
@@ -164,7 +152,7 @@ impl_tokens!(ast::LeadingExtras => |self_, ctx| {
 
 impl_tokens!(ast::ItemExtras => leading, trailing);
 
-impl_tokens!(ast::Program => statements);
+impl_tokens!(ast::Source => statements);
 
 const SEMANTIC_LENGTH: TokenType = TokenType::new("length");
 

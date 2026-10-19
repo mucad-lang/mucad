@@ -1,8 +1,8 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use mucad_driver::prelude as mu;
 use mu::ast;
+use mucad_driver::prelude as mu;
 
 use super::{SemanticTokens, TokenContext, TokenType};
 

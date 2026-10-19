@@ -3,7 +3,6 @@
 
 //! µcad language server.
 
-use mucad_driver::prelude as mu;
 use mucad_lsp as mu_lsp;
 
 use clap::Parser;
@@ -29,7 +28,7 @@ async fn main() {
             .filter(None, log::LevelFilter::Info)
             .init();
     } else {
-        env_logger::try_init_from_env("MICROCAD_LSP_LOG").ok();
+        env_logger::try_init_from_env("MUCAD_LSP_LOG").ok();
     }
 
     let config = mu_lsp::Config::default();

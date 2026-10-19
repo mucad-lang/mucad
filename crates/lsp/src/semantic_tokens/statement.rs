@@ -8,14 +8,12 @@ use crate::{
 
 use super::{TokenModifier, TokenType};
 
-use mucad_driver::prelude as mu;
 use mu::ast;
+use mucad_driver::prelude as mu;
 
 impl_tokens!(ast::LocalAssignment => |self_, ctx| {
     self_.extras.semantic_tokens(ctx);
-    self_.attr
-            .iter()
-            .for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     ctx.push_token(&self_.id.span, TokenType::VARIABLE, &[]);
     if let Some(ty) = self_.ty.as_ref() { ty.semantic_tokens(ctx) }
 });
@@ -26,6 +24,10 @@ impl_tokens!(ast::AttributeCommand => |self_, ctx| {
         ast::AttributeCommand::Assignment(local_assignment) => local_assignment.semantic_tokens(ctx),
         ast::AttributeCommand::Call(call) => call.semantic_tokens(ctx),
     }
+});
+
+impl_tokens!(ast::Attributes => |self_, ctx| {
+    self_.0.iter().for_each(|attr| attr.semantic_tokens(ctx));
 });
 
 impl_tokens!(ast::Attribute => |self_, ctx| {
@@ -52,9 +54,7 @@ impl_tokens!(ast::ParameterList => |self_, ctx| {
 impl_tokens!(ast::Init => |self_, ctx| {
         self_.extras.semantic_tokens(ctx);
         self_.doc.semantic_tokens(ctx);
-        self_.attr
-            .iter()
-            .for_each(|attr| attr.semantic_tokens(ctx));
+        self_.attr.semantic_tokens(ctx);
         ctx.push_token(&self_.keyword_span, TokenType::KEYWORD, &[]);
         self_.parameters.semantic_tokens(ctx);
         self_.body.semantic_tokens(ctx);
@@ -66,7 +66,7 @@ impl_tokens!(ast::Body => statements);
 impl_tokens!(ast::def::Workbench => |self_, ctx| {
     self_.extras.semantic_tokens(ctx);
     self_.doc.semantic_tokens(ctx);
-    self_.attr.iter().for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     // TODO: self_.visibility.as_ref().map(|vis| vis.semantic_tokens(ctx));
     ctx.push_token(&self_.keyword_span, TokenType::KEYWORD, &[]);
     ctx.push_token(&self_.id.span, TokenType::FUNCTION, &[]);
@@ -82,7 +82,7 @@ impl_tokens!(ast::Return => |self_, ctx| {
 impl_tokens!(ast::def::InlineModule => |self_, ctx| {
     self_.extras.semantic_tokens(ctx);
     self_.doc.semantic_tokens(ctx);
-    self_.attr.iter().for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     // TODO: self_.visibility.as_ref().map(|vis| vis.semantic_tokens(ctx));
     ctx.push_token(&self_.keyword_span, TokenType::KEYWORD, &[]);
     ctx.push_token(&self_.id.span, TokenType::NAMESPACE, &[]);
@@ -92,7 +92,7 @@ impl_tokens!(ast::def::InlineModule => |self_, ctx| {
 impl_tokens!(ast::def::FileModule => |self_, ctx| {
     self_.extras.semantic_tokens(ctx);
     self_.doc.semantic_tokens(ctx);
-    self_.attr.iter().for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     // TODO: self_.visibility.as_ref().map(|vis| vis.semantic_tokens(ctx));
     ctx.push_token(&self_.keyword_span, TokenType::KEYWORD, &[]);
     ctx.push_token(&self_.id.span, TokenType::NAMESPACE, &[]);
@@ -101,7 +101,7 @@ impl_tokens!(ast::def::FileModule => |self_, ctx| {
 impl_tokens!(ast::def::Function => |self_, ctx| {
     self_.extras.semantic_tokens(ctx);
     self_.doc.semantic_tokens(ctx);
-    self_.attr.iter().for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     // TODO: self_.visibility.as_ref().map(|vis| vis.semantic_tokens(ctx));
     ctx.push_token(&self_.keyword_span, TokenType::KEYWORD, &[]);
     ctx.push_token(&self_.id.span, TokenType::FUNCTION, &[]);
@@ -124,7 +124,7 @@ impl_tokens!(ast::def::UseName => |self_, ctx| {
 
 impl_tokens!(ast::def::Use => |self_, ctx| {
     self_.extras.semantic_tokens(ctx);
-    self_.attr.iter().for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     // TODO: self_.visibility.as_ref().map(|vis| vis.semantic_tokens(ctx));
     ctx.push_token(&self_.keyword_span, TokenType::KEYWORD, &[]);
     self_.name.semantic_tokens(ctx);
@@ -134,7 +134,7 @@ impl_tokens!(ast::def::Use => |self_, ctx| {
 impl_tokens!(ast::def::Constant => |self_, ctx| {
     self_.extras.semantic_tokens(ctx);
     self_.doc.semantic_tokens(ctx);
-    self_.attr.iter().for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     // TODO: self_.visibility.as_ref().map(|vis| vis.semantic_tokens(ctx));
     ctx.push_token(&self_.keyword_span, TokenType::KEYWORD, &[]);
     ctx.push_token(&self_.id.span, TokenType::PROPERTY, &[]);
@@ -144,7 +144,7 @@ impl_tokens!(ast::def::Constant => |self_, ctx| {
 
 impl_tokens!(ast::PropertyAssignment => |self_, ctx| {
     self_.extras.semantic_tokens(ctx);
-    self_.attr.iter().for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     ctx.push_token(&self_.keyword_span, TokenType::KEYWORD, &[]);
     ctx.push_token(&self_.id.span, TokenType::PROPERTY, &[]);
     if let Some(ty) = self_.ty.as_ref() { ty.semantic_tokens(ctx) }
@@ -157,7 +157,7 @@ impl_tokens!(ast::InnerDocComment => |self_, ctx| {
 
 impl_tokens!(ast::ExpressionStatement => |self_, ctx | {
     self_.extras.semantic_tokens(ctx);
-    self_.attr.iter().for_each(|attr| attr.semantic_tokens(ctx));
+    self_.attr.semantic_tokens(ctx);
     self_.expr.semantic_tokens(ctx);
 });
 

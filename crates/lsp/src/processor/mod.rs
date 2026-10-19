@@ -3,221 +3,169 @@
 
 //! µcad language server processor.
 //!
-//! The processor sets up the µcad language toolchain (parse, resolve, eval).
-//! It runs in a separate thread and communication is handled via
-//! crossbeam channels with requests and responses.
+//! The processor compiles the open documents with the µcad toolchain.
+//! It runs in a separate thread and is controlled with requests over a channel,
+//! requests with a result send it over their own reply channel.
 
 use mucad_driver::prelude as mu;
-use mu::traits::*;
 
 use crossbeam::channel::{Receiver, Sender};
-
 use miette::IntoDiagnostic;
+use tokio::sync::oneshot;
 
 use mu::Url;
 use tower_lsp::lsp_types as lsp;
 
 use crate::to_lsp::ToLsp;
 
+/// The channel to send the result of a request.
+pub type Reply<T> = oneshot::Sender<T>;
+
 /// A processor request.
-///
-/// Commands that can be passed to the [`Processor`].
-#[derive(Clone)]
-#[allow(unused, missing_docs)]
 pub enum ProcessorRequest {
-    AddDocument(Url),
-    ChangeDocument {
-        url: Url,
-        new_code: String,
-    },
-    RemoveDocument(Url),
+    /// Open a document with its code and compile it.
+    OpenDocument { url: Url, code: String },
+    /// Change the code of a document and compile it.
+    ChangeDocument { url: Url, code: String },
+    /// Close a document.
+    CloseDocument(Url),
+    /// Compile a document again, e.g. after its file modules have been saved.
     CompileDocument(Url),
 
-    /// Get diagnostics from a document and converts it to LSP diagnostics
-    GetDocumentDiagnostics(Url),
-
-    GetFullSemanticTokens(Url),
-    FormatDocument(Url),
+    /// Get the diagnostics of the last compilation of a document.
+    GetDocumentDiagnostics(Url, Reply<lsp::FullDocumentDiagnosticReport>),
+    /// Get the semantic tokens of a document, `None` if it has syntax errors.
+    GetFullSemanticTokens(Url, Reply<Option<lsp::SemanticTokensResult>>),
+    /// Format a document into text edits.
+    FormatDocument(Url, Reply<miette::Result<Vec<lsp::TextEdit>>>),
 }
 
-/// A processor response.
-pub enum ProcessorResponse {
-    /// Error messages and warnings for a specific document received.
-    DocumentDiagnostics(Url, lsp::FullDocumentDiagnosticReport),
-    /// Output semantic tokens.
-    SemanticTokens(Url, lsp::SemanticTokensResult),
-
-    /// A list of edited text snippets, e.g. after a format request.
-    TextEdits(Url, Vec<lsp::TextEdit>),
-
-    /// Update the code of the document (e.g. after linting or formatting)
-    UpdatedDocumentCode {
-        /// Document URL
-        url: Url,
-        /// The old code of the document
-        old: String,
-        /// The new code of the document
-        new: String,
-    },
+/// An open document.
+struct Document {
+    source: mu::Source,
+    /// The diagnostics of the last compilation.
+    diagnostics: mu::Diagnostics,
 }
 
-/// The processor  responsible for generating view commands.
-///
-/// The processor itself runs in a separate thread and can be controlled
-/// via [`ProcessorInterface`] by sending requests and handling the corresponding responses.
-pub struct Processor {
-    /// Request handler.
-    pub request_handler: Receiver<ProcessorRequest>,
-
-    /// Response handler.
-    pub response_sender: Sender<ProcessorResponse>,
-
-    /// Driver session
-    pub session: mu::Session,
+/// The processor, which compiles the open documents.
+struct Processor {
+    compiler: mu::Compiler,
+    documents: mu::HashMap<Url, Document>,
 }
-
-/// Type alias for a Result from a processor command.
-pub type ProcessorResult = miette::Result<Vec<ProcessorResponse>>;
 
 impl Processor {
-    /// Handle processor request.
-    pub fn handle_request(&mut self, request: ProcessorRequest) -> ProcessorResult {
+    fn handle_request(&mut self, request: ProcessorRequest) {
+        // A reply fails if the receiver has gone, e.g. a cancelled request.
         match request {
-            ProcessorRequest::AddDocument(url) => self.add_document(&url),
-            ProcessorRequest::RemoveDocument(url) => self.remove_document(&url),
-            ProcessorRequest::CompileDocument(url) => self.compile_document(&url),
-            ProcessorRequest::ChangeDocument { url, new_code } => {
-                self.change_document(&url, new_code)
+            ProcessorRequest::OpenDocument { url, code }
+            | ProcessorRequest::ChangeDocument { url, code } => {
+                let source = mu::Source::new(mu::SourceKind::Url(url.clone()), code);
+                self.documents.insert(
+                    url.clone(),
+                    Document {
+                        source,
+                        diagnostics: Default::default(),
+                    },
+                );
+                self.compile_document(&url);
             }
-            ProcessorRequest::GetDocumentDiagnostics(url) => self.get_document_diagnostics(&url),
-            ProcessorRequest::GetFullSemanticTokens(url) => self.get_full_semantic_tokens(&url),
-            ProcessorRequest::FormatDocument(url) => self.format_document(&url),
+            ProcessorRequest::CloseDocument(url) => {
+                self.documents.remove(&url);
+            }
+            ProcessorRequest::CompileDocument(url) => self.compile_document(&url),
+            ProcessorRequest::GetDocumentDiagnostics(url, reply) => {
+                reply.send(self.document_diagnostics(&url)).ok();
+            }
+            ProcessorRequest::GetFullSemanticTokens(url, reply) => {
+                reply.send(self.full_semantic_tokens(&url)).ok();
+            }
+            ProcessorRequest::FormatDocument(url, reply) => {
+                reply.send(self.format_document(&url)).ok();
+            }
         }
     }
-}
 
-/// Request handler implementation (must be private)
-impl Processor {
-    fn add_document(&mut self, url: &Url) -> ProcessorResult {
-        match self.session.load_document(url.clone()) {
-            Ok(_) => self.get_document_diagnostics(&url),
-            Err(err) => Err(err),
+    fn compile_document(&mut self, url: &Url) {
+        if let Some(document) = self.documents.get_mut(url) {
+            document.diagnostics = match self.compiler.compile(document.source.clone()) {
+                Ok((_, diagnostics)) | Err(diagnostics) => diagnostics,
+            };
         }
     }
 
-    fn remove_document(&mut self, url: &Url) -> ProcessorResult {
-        self.session.remove_document(url);
-        Ok(vec![]) // Maybe: Return `ProcessorResponse::RemovedDocument` here?
+    fn document_diagnostics(&self, url: &Url) -> lsp::FullDocumentDiagnosticReport {
+        self.documents
+            .get(url)
+            .map(|document| document.diagnostics.to_lsp(&document.source))
+            .unwrap_or_default()
     }
 
-    fn compile_document(&mut self, url: &Url) -> ProcessorResult {
-        self.session.compile_document(url)?;
-        self.get_document_diagnostics(url)
+    fn full_semantic_tokens(&self, url: &Url) -> Option<lsp::SemanticTokensResult> {
+        let document = self.documents.get(url)?;
+        let (ast, _) = mu::parse(&document.source).ok()?;
+        Some(lsp::SemanticTokensResult::Tokens(lsp::SemanticTokens {
+            result_id: None, // TODO: support delta updates
+            data: crate::semantic_tokens::semantic_tokens(&document.source, ast.tree()),
+        }))
     }
 
-    fn change_document(&mut self, url: &Url, new_code: String) -> ProcessorResult {
-        self.session.change_document(url, new_code)?;
-        self.get_document_diagnostics(url)
-    }
-
-    fn get_document_diagnostics(&self, url: &Url) -> ProcessorResult {
-        Ok(self
-            .session
-            .get_document(&url)
-            .map(|doc| doc.diags().to_lsp())
-            .into_iter()
-            .map(|report| ProcessorResponse::DocumentDiagnostics(url.clone(), report))
+    fn format_document(&self, url: &Url) -> miette::Result<Vec<lsp::TextEdit>> {
+        let document = self
+            .documents
+            .get(url)
+            .ok_or_else(|| miette::miette!("Document `{url}` is not open"))?;
+        let formatted = mu::Formatter::new()
+            .format(document.source.clone())
+            .map_err(|_| miette::miette!("Document `{url}` has syntax errors"))?;
+        Ok(document
+            .source
+            .compare(&formatted.source)
+            .iter()
+            .map(|edit| edit.to_lsp(&document.source))
             .collect())
     }
-
-    fn get_full_semantic_tokens(&self, url: &Url) -> ProcessorResult {
-        match self
-            .session
-            .get_source_file(url)
-            .and_then(|doc| doc.ast.as_ref())
-        {
-            Some(ast) => {
-                use crate::semantic_tokens::SemanticTokens;
-                let mut ctx = crate::semantic_tokens::TokenContext::new(ast);
-                ast.ast.semantic_tokens(&mut ctx);
-
-                Ok(vec![ProcessorResponse::SemanticTokens(
-                    url.clone(),
-                    lsp::SemanticTokensResult::Tokens(lsp::SemanticTokens {
-                        result_id: None, // TODO: support delta updates
-                        data: ctx.tokens().clone(),
-                    }),
-                )])
-            }
-            None => Ok(vec![]),
-        }
-    }
-
-    fn format_document(&mut self, url: &Url) -> ProcessorResult {
-        match self.session.get_source_file_mut(url) {
-            Some(source_file) => {
-                let old_source = source_file.source.0.clone();
-                source_file.format(&mu::FormatParameters::default())?;
-
-                let text_edits = old_source
-                    .compare(&source_file.source)
-                    .into_iter()
-                    .map(|text_edit| text_edit.to_lsp())
-                    .collect();
-
-                Ok(vec![ProcessorResponse::TextEdits(url.clone(), text_edits)])
-            }
-            None => Err(miette::miette!("No source file at {url}")),
-        }
-    }
 }
 
-/// Send request to the µcad processor and recv requests.
+/// Sends requests to the µcad processor thread.
 #[derive(Debug)]
 pub struct ProcessorController {
-    /// Send req interface.
-    pub request_sender: Sender<ProcessorRequest>,
-    /// Response recv interface.
-    pub response_receiver: Receiver<ProcessorResponse>,
+    request_sender: Sender<ProcessorRequest>,
 }
 
 impl ProcessorController {
-    /// Send request.
+    /// Send a request without result.
     pub fn send_request(&self, request: ProcessorRequest) -> miette::Result<()> {
         self.request_sender.send(request).into_diagnostic()
     }
 
-    /// Recv response.
-    pub fn recv_response(&self) -> miette::Result<ProcessorResponse> {
-        self.response_receiver.recv().into_diagnostic()
+    /// Send a request and wait for its result.
+    ///
+    /// `request` creates the request with the channel for the result.
+    pub async fn request<T>(
+        &self,
+        request: impl FnOnce(Reply<T>) -> ProcessorRequest,
+    ) -> miette::Result<T> {
+        let (reply, result) = oneshot::channel();
+        self.send_request(request(reply))?;
+        result.await.into_diagnostic()
     }
 
-    /// Run the processing thread and create interface.
+    /// Run the processor thread, which compiles with the settings of `config`.
     pub fn run(config: mu::DriverConfig) -> mu::Result<Self> {
-        let (request_sender, request_receiver) = crossbeam::channel::unbounded();
-        let (response_sender, response_receiver) = crossbeam::channel::unbounded();
+        let (request_sender, request_receiver): (_, Receiver<ProcessorRequest>) =
+            crossbeam::channel::unbounded();
 
         std::thread::spawn(move || {
             let mut processor = Processor {
-                request_handler: request_receiver,
-                response_sender,
-                session: mu::Session::new(config),
+                compiler: mu::Compiler::from_config(&config),
+                documents: Default::default(),
             };
-
-            loop {
-                if let Ok(request) = processor.request_handler.recv()
-                    && let Ok(responses) = processor.handle_request(request)
-                {
-                    for response in responses {
-                        processor.response_sender.send(response).ok();
-                    }
-                }
+            // Ends when the controller has been dropped.
+            for request in request_receiver {
+                processor.handle_request(request);
             }
         });
 
-        Ok(Self {
-            request_sender,
-            response_receiver,
-        })
+        Ok(Self { request_sender })
     }
 }

@@ -6,67 +6,74 @@
 use tower_lsp::lsp_types as lsp;
 
 use mucad_driver::prelude as mu;
-use mu::traits::*;
 
+/// The LSP position of the byte `offset` in `code`.
+///
+/// Lines start at zero, columns are counted in UTF-16 code units, as LSP clients expect by default.
+pub fn position(code: &str, offset: usize) -> lsp::Position {
+    let before = &code[..offset.min(code.len())];
+    let line_start = before.rfind('\n').map_or(0, |index| index + 1);
+    lsp::Position::new(
+        before.matches('\n').count() as u32,
+        before[line_start..].encode_utf16().count() as u32,
+    )
+}
+
+/// The LSP range of a source reference into `code`.
+pub fn range(code: &str, src_ref: &mu::SrcRef) -> lsp::Range {
+    lsp::Range::new(position(code, src_ref.start), position(code, src_ref.end))
+}
+
+/// Conversion of µcad types, which refer to a source, into LSP types.
 pub trait ToLsp {
     type Output;
 
-    fn to_lsp(&self) -> Self::Output;
+    /// Convert into an LSP type, source references refer to `source`.
+    fn to_lsp(&self, source: &mu::Source) -> Self::Output;
 }
 
-impl ToLsp for mu::SrcRef {
-    type Output = Option<lsp::Range>;
+impl ToLsp for mu::Diagnostic {
+    type Output = Option<lsp::Diagnostic>;
 
-    fn to_lsp(&self) -> Self::Output {
-        match self.is_some() {
-            true => {
-                let start = lsp::Position::new(self.at.line, self.at.col - 1);
-                let end = lsp::Position::new(self.at.line, (self.at.col + self.len() as u32) - 1);
+    /// A diagnostic in `source` or without a source reference, e.g. a missing standard library.
+    ///
+    /// Diagnostics in other sources, e.g. file modules, are skipped.
+    fn to_lsp(&self, source: &mu::Source) -> Self::Output {
+        let range = if self.src_ref.is_none() {
+            lsp::Range::default()
+        } else if self.src_ref.source_hash() == source.hash_id() {
+            range(source.code(), &self.src_ref)
+        } else {
+            return None;
+        };
 
-                Some(lsp::Range::new(start, end))
-            }
-            false => None,
-        }
-    }
-}
-
-impl ToLsp for mu::base::DiagLevel {
-    type Output = lsp::DiagnosticSeverity;
-
-    fn to_lsp(&self) -> Self::Output {
-        use mu::base::DiagLevel::*;
-        match &self {
-            Trace => lsp::DiagnosticSeverity::HINT,
-            Info => lsp::DiagnosticSeverity::INFORMATION,
-            Warning => lsp::DiagnosticSeverity::WARNING,
-            Error => lsp::DiagnosticSeverity::ERROR,
-        }
+        Some(lsp::Diagnostic {
+            range,
+            severity: Some(match self.severity() {
+                Some(miette::Severity::Advice) => lsp::DiagnosticSeverity::HINT,
+                Some(miette::Severity::Warning) => lsp::DiagnosticSeverity::WARNING,
+                Some(miette::Severity::Error) | None => lsp::DiagnosticSeverity::ERROR,
+            }),
+            code: self
+                .code()
+                .map(|code| lsp::NumberOrString::String(code.to_string())),
+            source: Some("µcad".into()),
+            message: match self.help() {
+                Some(help) => format!("{}\n{help}", self.report),
+                None => self.report.to_string(),
+            },
+            ..Default::default()
+        })
     }
 }
 
 impl ToLsp for mu::Diagnostics {
     type Output = lsp::FullDocumentDiagnosticReport;
 
-    fn to_lsp(&self) -> Self::Output {
+    fn to_lsp(&self, source: &mu::Source) -> Self::Output {
         Self::Output {
             result_id: None,
-            items: self
-                .iter()
-                .filter_map(|diag| {
-                    let message = diag.message();
-                    diag.src_ref().to_lsp().map(|range| {
-                        lsp::Diagnostic::new(
-                            range,
-                            Some(diag.level().to_lsp()),
-                            None,
-                            None,
-                            message,
-                            None,
-                            None,
-                        )
-                    })
-                })
-                .collect(),
+            items: self.iter().filter_map(|diag| diag.to_lsp(source)).collect(),
         }
     }
 }
@@ -74,9 +81,9 @@ impl ToLsp for mu::Diagnostics {
 impl ToLsp for mu::TextEdit {
     type Output = lsp::TextEdit;
 
-    fn to_lsp(&self) -> Self::Output {
+    fn to_lsp(&self, source: &mu::Source) -> Self::Output {
         Self::Output {
-            range: self.src_ref.to_lsp().unwrap_or_default(),
+            range: range(source.code(), &self.src_ref),
             new_text: self.new_text.clone(),
         }
     }

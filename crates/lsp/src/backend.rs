@@ -22,9 +22,9 @@ use tower_lsp::{
         DocumentDiagnosticReportResult, DocumentFormattingParams, ExecuteCommandParams,
         InitializeParams, InitializeResult, InitializedParams, MessageType, OneOf,
         RelatedFullDocumentDiagnosticReport, SemanticTokensFullOptions, SemanticTokensLegend,
-        SemanticTokensOptions, SemanticTokensParams, SemanticTokensPartialResult,
-        SemanticTokensResult, SemanticTokensServerCapabilities, ServerCapabilities,
-        TextDocumentSyncCapability, TextDocumentSyncKind, TextEdit, Url,
+        SemanticTokensOptions, SemanticTokensParams, SemanticTokensResult,
+        SemanticTokensServerCapabilities, ServerCapabilities, TextDocumentSyncCapability,
+        TextDocumentSyncKind, TextEdit, Url,
     },
 };
 
@@ -159,15 +159,16 @@ impl LanguageServer for Service {
         if let Some(last) = params.content_changes.pop() {
             self.send_lsp(mu_processor::ProcessorRequest::ChangeDocument {
                 url,
-                new_code: last.text,
+                code: last.text,
             });
         }
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        let uri = params.text_document.uri;
-
-        self.send_lsp(mu_processor::ProcessorRequest::AddDocument(uri.clone()));
+        self.send_lsp(mu_processor::ProcessorRequest::OpenDocument {
+            url: params.text_document.uri,
+            code: params.text_document.text,
+        });
     }
 
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
@@ -183,22 +184,19 @@ impl LanguageServer for Service {
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         let uri = params.text_document.uri;
-        self.send_lsp(mu_processor::ProcessorRequest::RemoveDocument(uri))
+        self.send_lsp(mu_processor::ProcessorRequest::CloseDocument(uri))
     }
 
     async fn diagnostic(
         &self,
         params: DocumentDiagnosticParams,
     ) -> Result<DocumentDiagnosticReportResult> {
-        self.send_lsp(mu_processor::ProcessorRequest::GetDocumentDiagnostics(
-            params.text_document.uri,
-        ));
-
-        // Wait for response
-        if let Ok(mu_processor::ProcessorResponse::DocumentDiagnostics(_url, diag)) =
-            self.processor.recv_response()
+        let url = params.text_document.uri;
+        if let Ok(diag) = self
+            .processor
+            .request(|reply| mu_processor::ProcessorRequest::GetDocumentDiagnostics(url, reply))
+            .await
         {
-            log::info!("Diagnostics received!");
             Ok(DocumentDiagnosticReportResult::Report(
                 DocumentDiagnosticReport::Full(RelatedFullDocumentDiagnosticReport {
                     related_documents: None, // TODO: Get related documents.
@@ -218,21 +216,13 @@ impl LanguageServer for Service {
         &self,
         params: SemanticTokensParams,
     ) -> Result<Option<SemanticTokensResult>> {
-        self.send_lsp(mu_processor::ProcessorRequest::GetFullSemanticTokens(
-            params.text_document.uri,
-        ));
-
-        // Wait for response
-        if let Ok(mu_processor::ProcessorResponse::SemanticTokens(url, result)) =
-            self.processor.recv_response()
-        {
-            log::info!("Semantic tokens received! for {url}");
-            Ok(Some(result))
-        } else {
-            Ok(Some(SemanticTokensResult::Partial(
-                SemanticTokensPartialResult::default(),
-            )))
-        }
+        let url = params.text_document.uri;
+        Ok(self
+            .processor
+            .request(|reply| mu_processor::ProcessorRequest::GetFullSemanticTokens(url, reply))
+            .await
+            .ok()
+            .flatten())
     }
 
     async fn execute_command(
@@ -254,7 +244,7 @@ impl LanguageServer for Service {
                     }) {
                         Ok(uri) => uri,
                         Err(err) => {
-                            return Ok(Some(serde_json::json! ({"error": format!("{err}")})));
+                            return Ok(Some(serde_json::json!({"error": err.to_string()})));
                         }
                     };
 
@@ -271,7 +261,7 @@ impl LanguageServer for Service {
                             .expect("A valid URI containing a file path"),
                     }) {
                         log::error!("{err}");
-                        return Ok(Some(serde_json::json! ({"error": format!("{err}")})));
+                        return Ok(Some(serde_json::json!({"error": err.to_string()})));
                     }
 
                     self.client
@@ -301,9 +291,18 @@ impl LanguageServer for Service {
     }
 
     async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
-        let url = &params.text_document.uri;
-        self.send_lsp(mu_processor::ProcessorRequest::FormatDocument(url.clone()));
-
-        todo!("Send text editr")
+        let url = params.text_document.uri;
+        match self
+            .processor
+            .request(|reply| mu_processor::ProcessorRequest::FormatDocument(url, reply))
+            .await
+        {
+            Ok(Ok(edits)) => Ok(Some(edits)),
+            // E.g. syntax errors, which are reported as diagnostics.
+            Ok(Err(err)) | Err(err) => {
+                log::warn!("Cannot format: {err}");
+                Ok(None)
+            }
+        }
     }
 }
