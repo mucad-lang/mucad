@@ -1,17 +1,25 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import csgCube from "../../../examples/csg_cube.mu?raw";
-import drillPlate from "../../../examples/drill_plate.mu?raw";
-
 /** An example from the repository's `examples` folder. */
 export interface Example {
   name: string;
   code: string;
 }
 
-/** The examples, which can be selected. Extend this list for more examples. */
-export const examples: Example[] = [
-  { name: "CsgCube (3D)", code: csgCube },
-  { name: "DrillPlate (2D)", code: drillPlate },
-];
+// Fetch all .mu files as raw strings eagerly
+const modules = import.meta.glob<{ [key: string]: string } | string>(
+  '../../../examples/*.mu',
+  { eager: true, query: '?raw', import: 'default' }
+);
+
+// Transform the module dictionary into an Example array dynamically
+export const examples: Example[] = Object.entries(modules).map(([path, code]) => {
+  // Extract file name from path (e.g., "../../examples/csg_cube.mu" -> "csg_cube")
+  const name = path.split('/').pop()?.replace('.mu', '') || '';
+
+  return {
+    name,
+    code: code as string,
+  };
+});
