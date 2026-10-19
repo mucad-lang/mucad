@@ -137,6 +137,19 @@ impl Compiler {
             .with_read(|lib_cache| lib_cache.source_files(&mu::base::LibraryId::ROOT))
     }
 
+    /// The symbols to complete the path in front of the byte `offset` in `source`, e.g. the
+    /// symbols of `std::geo2d` for `std::geo2d::Ci`, or the visible names for `Ci`.
+    ///
+    /// The symbols are those of the most recent compilation, which may have been of another
+    /// version of `source`, see [`mu::ResolveContext::completions`].
+    /// Numbers (e.g. `12`) are not completed.
+    pub fn completions(&self, source: &mu::Source, offset: usize) -> Vec<mu::resolve::Completion> {
+        match qualifier_in_front_of(source.code(), offset) {
+            Some(qualifier) => self.resolve_context.completions(source, offset, &qualifier),
+            None => Vec::new(),
+        }
+    }
+
     /// Execute a closure with a reference to the AST, if present.
     pub fn with_ast<F, R>(&self, id: mu::HashId, f: F) -> Option<R>
     where
@@ -280,4 +293,35 @@ impl RenderDiag for Compiler {
                     .try_for_each(|diag| diag.render(f, source_cache, options))
             })
     }
+}
+
+/// The qualifier of the path in front of the byte `offset` in `code`, e.g. `std::geo2d` for
+/// `std::geo2d::Ci`, `::` for `::Ci` or no parts for `Ci`.
+///
+/// Returns `None` in front of a number or inside of a character.
+fn qualifier_in_front_of(code: &str, offset: usize) -> Option<mu::lower::ir::UnresolvedPath> {
+    let before = code.get(..offset)?;
+    let is_identifier_char = |ch: char| ch.is_ascii_alphanumeric() || ch == '_' || ch == '\'';
+
+    // Identifiers separated by `::`, e.g. `std::geo2d::Ci`.
+    let mut start = offset;
+    loop {
+        start = before[..start].trim_end_matches(is_identifier_char).len();
+        match before[..start].strip_suffix("::") {
+            Some(rest) => start = rest.len(),
+            None => break,
+        }
+    }
+
+    let path = &before[start..];
+    let (qualifier, name) = match path.rsplit_once("::") {
+        // `::Ci` is an absolute path in the library root.
+        Some(("", name)) => ("::", name),
+        Some(split) => split,
+        None => ("", path),
+    };
+    if name.starts_with(|ch: char| ch.is_ascii_digit()) {
+        return None;
+    }
+    qualifier.parse().ok()
 }

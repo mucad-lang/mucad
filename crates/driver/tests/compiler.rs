@@ -690,3 +690,60 @@ fn compile_virtual_file_module() {
     let (_, diags) = compiler.compile(source).expect("A model");
     assert!(!diags.has_errors(), "{diags:?}");
 }
+
+/// The names to complete at `|` in `code`, with the symbols of the most recent compilation.
+fn completion_names(compiler: &Compiler, code: &str) -> Vec<String> {
+    let offset = code.find('|').expect("A position");
+    let source = mu::Source::from(code.replacen('|', "", 1).as_str());
+    compiler
+        .completions(&source, offset)
+        .into_iter()
+        .map(|completion| completion.name.to_string())
+        .collect()
+}
+
+/// Names of the source, of libraries and of the prelude are completed, but no built-ins.
+#[test]
+fn complete_names() {
+    let mut compiler = std_compiler();
+    let code = "sketch Disc() {}\nDi|";
+    let _ = compiler.compile(code.replace('|', "").as_str());
+
+    let names = completion_names(&compiler, code);
+    for name in ["Disc", "Circle", "std"] {
+        assert!(names.iter().any(|n| n == name), "{name} in {names:?}");
+    }
+    assert!(!names.iter().any(|n| n.starts_with("__")), "{names:?}");
+}
+
+/// The symbols in a module of a library are completed, also while the code has syntax errors.
+#[test]
+fn complete_library_module() {
+    let mut compiler = std_compiler();
+    let code = "std::geo2d::Ci|";
+    let _ = compiler.compile(code.replace('|', "").as_str());
+
+    let names = completion_names(&compiler, code);
+    for name in ["Circle", "Rect"] {
+        assert!(names.iter().any(|n| n == name), "{name} in {names:?}");
+    }
+    assert!(completion_names(&compiler, "__mu::geo2d::|").is_empty());
+}
+
+/// Names are completed with the symbols of a previous version of the source.
+#[test]
+fn complete_names_of_previous_compilation() {
+    let mut compiler = std_compiler();
+    let (_, diags) = compiler.compile("sketch Disc() {}").expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+
+    let names = completion_names(&compiler, "sketch Disc() {}\nDisc(); Di|");
+    assert!(names.iter().any(|n| n == "Disc"), "{names:?}");
+}
+
+/// Numbers are not completed.
+#[test]
+fn complete_no_number() {
+    let compiler = std_compiler();
+    assert!(completion_names(&compiler, "x = 12|").is_empty());
+}
