@@ -1,0 +1,57 @@
+==================
+Return type
+==================
+
+fn x() -> Scalar {
+  return 1;
+}
+
+---
+
+(source_file
+  (statement_list
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list)
+      return: (type
+        (type_name
+          (identifier)))
+      body: (block
+        (statement_list
+          (return_statement
+            (expression
+              (number_literal))))))))
+
+==================
+Params
+==================
+
+fn x(val: Length, width: Volume = 4mm³) {
+  return;
+}
+
+---
+
+(source_file
+  (statement_list
+    (function_definition
+      name: (identifier)
+      parameters: (parameter_list
+        (parameter
+          name: (identifier)
+          type: (type_annotation
+            (type
+              (type_name
+                (identifier)))))
+        (parameter
+          name: (identifier)
+          type: (type_annotation
+            (type
+              (type_name
+                (identifier))))
+          default: (expression
+            (number_literal
+              (unit)))))
+      body: (block
+        (statement_list
+          (return_statement))))))

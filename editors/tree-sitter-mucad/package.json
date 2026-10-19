@@ -1,0 +1,15 @@
+{
+  "name": "tree-sitter-mucad",
+  "version": "0.2.0",
+  "description": "µcad grammar for tree-sitter",
+  "license": "AGPL-3.0-or-later",
+  "private": true,
+  "scripts": {
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "check": "./check.sh"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.25.10"
+  }
+}

@@ -4,6 +4,7 @@ This folder contains integrations and plugins for various editors and IDEs.
 
 - [`vscode`](vscode): Visual Studio Code extension
 - [`zed`](zed): Zed extension
+- [`tree-sitter-mucad`](tree-sitter-mucad): tree-sitter grammar with highlight queries, e.g. for Zed
 - [`web-viewer`](web-viewer): web app to edit, display and export µcad models in a browser
 
 ## ❤️ Support the project

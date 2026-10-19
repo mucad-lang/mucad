@@ -1,0 +1,47 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "mucad",
+      "camelcase": "Mucad",
+      "title": "µcad",
+      "scope": "source.mucad",
+      "file-types": [
+        "mu",
+        "µcad",
+        "mcad",
+        "ucad"
+      ],
+      "highlights": [
+        "queries/highlights.scm"
+      ],
+      "tags": [
+        "queries/tags.scm"
+      ],
+      "injection-regex": "^mucad$",
+      "class-name": "TreeSitterMucad"
+    }
+  ],
+  "metadata": {
+    "version": "0.2.0",
+    "license": "AGPL-3.0-or-later",
+    "description": "µcad grammar for tree-sitter",
+    "authors": [
+      {
+        "name": "Robin Appelman"
+      }
+    ],
+    "links": {
+      "repository": "https://codeberg.org/mucad/mucad"
+    }
+  },
+  "bindings": {
+    "c": false,
+    "go": false,
+    "node": false,
+    "python": false,
+    "rust": false,
+    "swift": false,
+    "zig": false
+  }
+}

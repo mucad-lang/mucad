@@ -1,0 +1,275 @@
+==================
+Empty file
+==================
+
+// Only a comment
+
+---
+
+(source_file
+  (comment
+    (single_line_comment)))
+
+==================
+Doc comments over several lines
+==================
+
+/// A disc.
+///
+/// With a radius.
+#[color = "red"]
+pub sketch Disc(radius: Length) {}
+
+---
+
+(source_file
+  (statement_list
+    (workbench_definition
+      (doc_comment)
+      (doc_comment)
+      (doc_comment)
+      (attribute_list
+        (attribute
+          (attribute_item
+            (assignment
+              (identifier)
+              (expression
+                (string
+                  (string_literal_inner)))))))
+      (visibility)
+      (workbench_kind)
+      (identifier)
+      (parameter_list
+        (parameter
+          (identifier)
+          (type_annotation
+            (type
+              (type_name
+                (identifier))))))
+      (block))))
+
+==================
+Ranges, units and exponents
+==================
+
+x = [1..4] * 2.5µm + 1e3mm²;
+
+---
+
+(source_file
+  (statement_list
+    (assignment_statement
+      (assignment
+        (identifier)
+        (expression
+          (array_expression
+            (range_expression
+              (expression
+                (number_literal))
+              (expression
+                (number_literal))))
+          (bin_op)
+          (number_literal
+            (float)
+            (unit))
+          (bin_op)
+          (number_literal
+            (float)
+            (unit)))))))
+
+==================
+Paths with super and absolute paths
+==================
+
+use super::geo::*;
+::geo::Circle(r = 1mm);
+
+---
+
+(source_file
+  (statement_list
+    (use_statement
+      (use_declaration
+        (identifier)))
+    (expression_statement
+      (expression
+        (call
+          (qualified_name
+            (identifier)
+            (identifier))
+          (argument_list
+            (argument
+              (identifier)
+              (expression
+                (number_literal
+                  (unit))))))))))
+
+==================
+Attributes of assignments
+==================
+
+#[color = "#FFFFFF"]
+c = Circle(r = 42mm);
+
+---
+
+(source_file
+  (statement_list
+    (assignment_statement
+      (attribute_list
+        (attribute
+          (attribute_item
+            (assignment
+              (identifier)
+              (expression
+                (string
+                  (string_literal_inner)))))))
+      (assignment
+        (identifier)
+        (expression
+          (call
+            (qualified_name
+              (identifier))
+            (argument_list
+              (argument
+                (identifier)
+                (expression
+                  (number_literal
+                    (unit)))))))))))
+
+==================
+Blocks without semicolon
+==================
+
+{ a }
+{ b }.translate(x = 1mm);
+
+---
+
+(source_file
+  (statement_list
+    (block_statement
+      (block
+        (statement_list
+          (final_expression_statement
+            (expression
+              (qualified_name
+                (identifier)))))))
+    (expression_statement
+      (expression
+        (block
+          (statement_list
+            (final_expression_statement
+              (expression
+                (qualified_name
+                  (identifier))))))
+        (element_access
+          (method_call
+            (qualified_name
+              (identifier))
+            (argument_list
+              (argument
+                (identifier)
+                (expression
+                  (number_literal
+                    (unit)))))))))))
+
+==================
+Workbench without parameters
+==================
+
+sketch B {
+    init(r: Length) {}
+}
+
+---
+
+(source_file
+  (statement_list
+    (workbench_definition
+      (workbench_kind)
+      (identifier)
+      (block
+        (statement_list
+          (init_definition
+            (parameter_list
+              (parameter
+                (identifier)
+                (type_annotation
+                  (type
+                    (type_name
+                      (identifier))))))
+            (block)))))))
+
+==================
+Trailing comma in lists
+==================
+
+l = [1, 2,];
+
+---
+
+(source_file
+  (statement_list
+    (assignment_statement
+      (assignment
+        (identifier)
+        (expression
+          (array_expression
+            (list_expression
+              (expression
+                (number_literal))
+              (expression
+                (number_literal)))))))))
+
+==================
+Types
+==================
+
+fn f(c: Color, s: Sketch, l: [Length], t: (x: Scalar, Bool)) -> Integer {}
+
+---
+
+(source_file
+  (statement_list
+    (function_definition
+      (identifier)
+      (parameter_list
+        (parameter
+          (identifier)
+          (type_annotation
+            (type
+              (type_name
+                (identifier)))))
+        (parameter
+          (identifier)
+          (type_annotation
+            (type
+              (type_name
+                (identifier)))))
+        (parameter
+          (identifier)
+          (type_annotation
+            (type
+              (array_type
+                (type
+                  (type_name
+                    (identifier)))))))
+        (parameter
+          (identifier)
+          (type_annotation
+            (type
+              (tuple_type
+                (tuple_type_element
+                  (identifier)
+                  (type
+                    (type_name
+                      (identifier))))
+                (tuple_type_element
+                  (type
+                    (type_name
+                      (identifier)))))))))
+      (type
+        (type_name
+          (identifier)))
+      (block))))
