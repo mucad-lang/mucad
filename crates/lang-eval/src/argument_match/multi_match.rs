@@ -36,9 +36,7 @@ pub(super) fn argument_multi_match(
                 .find(|(p_id, _)| p_id == &id)
                 .map(|(_, ty)| ty);
             match (expected_ty, &val) {
-                (Some(expected), Value::List(elements))
-                    if val.ty().matches_multiplicity(expected) =>
-                {
+                (Some(expected), Value::List(elements)) if val.ty().matches_list_type(expected) => {
                     let elements = elements.to_vec();
                     (id, elements)
                 }

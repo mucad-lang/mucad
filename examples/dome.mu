@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! A none-geodesic dome constructed via list combinations.
+//! A none-geodesic dome constructed via list expansions.
 
 pub part Dome(size: Length, strut_width = 1mm) {
     Rect(strut_width)

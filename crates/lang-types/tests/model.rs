@@ -229,11 +229,11 @@ fn test_subtree_adoption_preserves_hierarchy() {
 }
 
 #[test]
-fn test_replace_input_placeholders_multiplicity() {
+fn test_replace_input_placeholders_list_expansion() {
     use mucad_lang_types::model::GetProperty;
 
-    // 1. Build Multiplicity template tree:
-    // Multiplicity
+    // 1. Build Replication template tree:
+    // Replication
     //   ├── translate(0, 0, 0)
     //   │     └── InputPlaceholder
     //   ├── translate(0, 10, 0)
@@ -243,7 +243,7 @@ fn test_replace_input_placeholders_multiplicity() {
     //   └── translate(10, 10, 0)
     //         └── InputPlaceholder
     let mut template_tree =
-        ModelTree::new(Model::new(Element::Multiplicity).with_name("Multiplicity"));
+        ModelTree::new(Model::new(Element::Replication).with_name("Replication"));
 
     let translations = [
         (0.0, 0.0, 0.0),
@@ -259,7 +259,7 @@ fn test_replace_input_placeholders_multiplicity() {
         let placeholder_model = Model::new(Element::InputPlaceholder);
         let placeholder_id = template_tree.arena.new_node(placeholder_model);
 
-        // Attach InputPlaceholder under translation, and translation under Multiplicity
+        // Attach InputPlaceholder under translation, and translation under Replication
         trans_id.append(placeholder_id, &mut template_tree.arena);
         template_tree
             .root
@@ -273,7 +273,7 @@ fn test_replace_input_placeholders_multiplicity() {
 
     // 4. Assertions
     let root = result_tree.root();
-    assert_eq!(root.element, Element::Multiplicity);
+    assert_eq!(root.element, Element::Replication);
 
     let branches: Vec<_> = root.children().collect();
     assert_eq!(branches.len(), 4, "Should have 4 translation branches");

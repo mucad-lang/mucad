@@ -352,7 +352,7 @@ fn op_rotate() {
 /// ```
 ///
 /// The evaluator cannot expand a computed list inside a workbench yet, so this test takes the
-/// angles as parameter and lets the parameter multiplicity create the copies:
+/// angles as parameter and list expansions creates the replications:
 ///
 /// ```mu
 /// op polar_array(angle: Angle, r: Length) {

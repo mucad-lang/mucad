@@ -143,7 +143,7 @@ impl Matcher {
     /// Required parameters are filled before parameters with default values, e.g. in
     /// `assert_eq(a: Any, b: Any, message: String = "")` two strings are `a` and `b`.
     /// Within these, a parameter of exactly the argument type is preferred, e.g. to `Any`,
-    /// and a list matches a parameter of its element type last (parameter multiplicity).
+    /// and a list matches a parameter of its element type last (list expansion).
     /// Positional arguments, which match no parameter, are an error.
     fn positional(&mut self, arguments: &ArgumentValueList) -> Result<(), ArgumentMatchError> {
         use mucad_lang_types::Ty;
@@ -166,7 +166,7 @@ impl Matcher {
         for value in by_type {
             let ty = value.ty();
             // Required parameters come first, then those with default values.
-            // Within these, the exact type is preferred, e.g. to `Any`, multiplicity comes last.
+            // Within these, the exact type is preferred, e.g. to `Any`, list expansion comes last.
             let open = |param: &MatchedParameter, required: bool| {
                 !param.given && param.value.is_none() == required
             };
@@ -181,7 +181,7 @@ impl Matcher {
                     })
                     .or_else(|| {
                         self.params.iter().position(|param| {
-                            open(param, required) && ty.matches_multiplicity(&param.ty)
+                            open(param, required) && ty.matches_list_type(&param.ty)
                         })
                     })
             });

@@ -596,7 +596,7 @@ fn compile_prelude_no_std() {
 
 /// A list argument for a parameter of its element type calls the workbench once per element.
 #[test]
-fn compile_positional_multiplicity() {
+fn compile_positional_list_expansion() {
     let mut compiler = std_compiler();
     let (model, diags) = compiler
         .compile(
@@ -607,7 +607,7 @@ fn compile_positional_multiplicity() {
         )
         .expect("A model");
     assert!(!diags.has_errors(), "{diags:?}");
-    insta::assert_snapshot!("compile_positional_multiplicity", display(&model));
+    insta::assert_snapshot!("compile_positional_list_expansion", display(&model));
 }
 
 /// An initialization error is reported at the call with the possible initializations.

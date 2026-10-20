@@ -6,20 +6,20 @@
 mod matcher;
 mod multi_match;
 
+use miette::Diagnostic;
 use mucad_lang_base::{Identifier, IdentifierList};
 use mucad_lang_resolve::library::symbol::{
     Function, ParameterList, function::FunctionSignature, workbench::Init,
 };
 use mucad_lang_types::{ArgumentValueList, Arguments, CallSignature, Tuple};
-use miette::Diagnostic;
 use thiserror::Error;
 
 use matcher::Matcher;
 
 #[derive(Error, Debug, Diagnostic)]
 pub enum ArgumentMatchError {
-    /// Multiplicity (variadic expansion) is not supported for variadic call signatures.
-    #[error("Multiplicity `({arguments})` is not allowed for variadic call signatures")]
+    /// Variadic list expansion is not supported for variadic call signatures.
+    #[error("List expansion `({arguments})` is not allowed for variadic call signatures")]
     #[diagnostic(help(
         "Pass arguments explicitly instead of using variadic expansion on multi-matches."
     ))]

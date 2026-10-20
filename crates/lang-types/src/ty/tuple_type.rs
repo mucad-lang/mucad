@@ -57,7 +57,7 @@ impl TupleType {
     }
 
     /// Match tuples by id.
-    pub fn matches_multiplicity(&self, params: &TupleType) -> bool {
+    pub fn matches_replication(&self, params: &TupleType) -> bool {
         if self == params {
             true
         } else if self.positional.is_empty()
@@ -219,7 +219,7 @@ impl std::ops::Add for TupleType {
 
     fn add(self, rhs: Self) -> Self::Output {
         let lhs = self;
-        if lhs.matches_multiplicity(&rhs) {
+        if lhs.matches_replication(&rhs) {
             Ok(Type::from(Box::new(lhs)))
         } else {
             Err(TypeError::binary_op(lhs, rhs, BinaryOperator::Add))
@@ -232,7 +232,7 @@ impl std::ops::Sub for TupleType {
 
     fn sub(self, rhs: Self) -> Self::Output {
         let lhs = self;
-        if lhs.matches_multiplicity(&rhs) {
+        if lhs.matches_replication(&rhs) {
             Ok(Type::from(Box::new(lhs)))
         } else {
             Err(TypeError::binary_op(lhs, rhs, BinaryOperator::Subtract))

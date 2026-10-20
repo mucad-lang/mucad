@@ -2,7 +2,7 @@
 source: crates/lang-eval/tests/workbench.rs
 expression: model.to_string_with_ctx(&context)
 ---
-Multiplicity
+Replication
 ├── Workpiece(op)
 │   │   - angle [in]: Angle = 120deg
 │   │   - r [in]: Length = 10mm

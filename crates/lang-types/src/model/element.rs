@@ -128,8 +128,8 @@ pub enum Element {
     /// A built-in workpiece which created by built-in workbenches.
     BuiltinWorkpiece(BuiltinWorkpiece),
 
-    /// Multiplicity.
-    Multiplicity,
+    /// A result from a list expansion.
+    Replication,
 
     /// Created from `@input` marker. Will never be part of the final model.
     InputPlaceholder,
@@ -141,7 +141,7 @@ impl Element {
         match &self {
             Workpiece(workpiece) => workpiece.kind.into(),
             BuiltinWorkpiece(builtin_workpiece) => builtin_workpiece.output_type(),
-            Group | Multiplicity | InputPlaceholder | Value(_) => ModelType::NotDetermined,
+            Group | Replication | InputPlaceholder | Value(_) => ModelType::NotDetermined,
         }
     }
 }
@@ -155,7 +155,7 @@ impl<Ctx: LookUpName> DisplayWithCtx<Ctx> for Element {
             Element::BuiltinWorkpiece(builtin_workpiece) => {
                 write!(f, "Builtin({})", builtin_workpiece.to_string_with_ctx(ctx))
             }
-            Element::Multiplicity => write!(f, "Multiplicity"),
+            Element::Replication => write!(f, "Replication"),
             Element::InputPlaceholder => write!(f, "InputPlaceholder"),
         }
     }

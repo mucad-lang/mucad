@@ -29,7 +29,7 @@ fn test_tuple_type_match() {
         .collect(),
         positional: Default::default(),
     };
-    assert!(args.matches_multiplicity(&params));
+    assert!(args.matches_replication(&params));
 }
 
 #[test]

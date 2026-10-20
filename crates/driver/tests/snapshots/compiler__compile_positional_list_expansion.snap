@@ -3,7 +3,7 @@ source: crates/driver/tests/compiler.rs
 expression: display(&model)
 ---
 Group
-└── Multiplicity
+└── Replication
     ├── Workpiece(sketch)
     │   │   - x [in]: Integer = -1
     │   └── Group

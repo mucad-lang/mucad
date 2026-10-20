@@ -54,12 +54,12 @@ impl ModelTree {
         compute(self.root, &mut self.arena);
     }
 
-    /// Create a multiplicity node if there is more than one child in the list
-    pub fn to_multiplicity(mut children: Vec<ModelTree>) -> Self {
+    /// Create a replication node if there is more than one child in the list
+    pub fn to_replication(mut children: Vec<ModelTree>) -> Self {
         match children.len() {
             1 => children.remove(0), // Return this tree if we have only one element.
             _ => {
-                let mut tree = ModelTree::new(Element::Multiplicity);
+                let mut tree = ModelTree::new(Element::Replication);
                 tree.extend(children);
                 tree
             }

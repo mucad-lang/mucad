@@ -324,6 +324,6 @@ impl Callable for symbol::Workbench {
             )?;
             models.push(eval_to_model(self, properties, input.clone(), context)?);
         }
-        Ok(ModelTree::to_multiplicity(models).into())
+        Ok(ModelTree::to_replication(models).into())
     }
 }

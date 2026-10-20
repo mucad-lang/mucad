@@ -284,7 +284,7 @@ fn multi_match_positional() {
     );
 }
 
-/// A list argument for a list parameter is no multiplicity.
+/// A list argument for a list parameter is no replication.
 #[test]
 fn multi_match_list_parameter() {
     let signature = Signature {

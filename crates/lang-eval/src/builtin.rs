@@ -24,7 +24,7 @@ impl Callable for BuiltinPrimitive {
             models.push(ModelTree::from(model));
         }
 
-        Ok(ModelTree::to_multiplicity(models).into())
+        Ok(ModelTree::to_replication(models).into())
     }
 }
 
@@ -52,7 +52,7 @@ impl Callable for BuiltinOperation {
             models.push(context.with_builtin_context(src_ref, |ctx| (self.f)(args, ctx))?);
         }
 
-        Ok(ModelTree::to_multiplicity(models).into())
+        Ok(ModelTree::to_replication(models).into())
     }
 }
 

@@ -115,7 +115,7 @@ impl Type {
                 self == &Type::scalar() || self == &Type::Integer
             }
             // Invalid types never match
-            (Type::Tuple(ty_s), Type::Tuple(ty_p)) => ty_s.matches_multiplicity(ty_p),
+            (Type::Tuple(ty_s), Type::Tuple(ty_p)) => ty_s.matches_replication(ty_p),
             // Lists match by their element types, e.g. `[Integer]` matches `[Any]`.
             (Type::List(ty_s), Type::List(ty_p)) => ty_s.matches(ty_p),
             (Type::Invalid, _) | (_, Type::Invalid) => false,
@@ -124,9 +124,9 @@ impl Type {
         }
     }
 
-    /// Returns if a list matches the parameter type `param` by its elements (parameter multiplicity),
+    /// Returns if a list matches the parameter type `param` by its elements (list expansion),
     /// e.g. `[Integer]` matches `Integer`, but `[Integer]` doesn't match `[Integer]` or `Any` this way.
-    pub fn matches_multiplicity(&self, param: &Type) -> bool {
+    pub fn matches_list_type(&self, param: &Type) -> bool {
         match self {
             Self::List(ty) => !self.matches(param) && ty.matches(param),
             _ => false,

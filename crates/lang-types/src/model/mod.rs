@@ -6,7 +6,6 @@
 pub mod attribute;
 pub mod creator;
 pub mod element;
-pub mod iter;
 pub mod output_type;
 
 mod prop;

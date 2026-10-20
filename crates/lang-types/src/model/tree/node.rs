@@ -20,8 +20,6 @@ pub trait NodeExt<'a> {
 
     fn into_group_child(self) -> Option<NodeRef<'a>>;
 
-    fn multiplicity_descendants(&self) -> model::iter::MultiplicityDescendants<'a>;
-
     fn builtin_id(&self) -> Option<BuiltinId>;
 }
 
@@ -60,11 +58,6 @@ impl<'a> NodeExt<'a> for NodeRef<'a> {
         } else {
             None
         }
-    }
-
-    /// An iterator that descends to multiplicity nodes.
-    fn multiplicity_descendants(&self) -> model::iter::MultiplicityDescendants<'a> {
-        model::iter::MultiplicityDescendants::new(*self)
     }
 
     fn builtin_id(&self) -> Option<BuiltinId> {

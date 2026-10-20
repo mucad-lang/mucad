@@ -49,7 +49,7 @@ impl CallParameters {
                 })
     }
 
-    pub fn matches_multiplicity(&self, other: &CallParameters) -> bool {
+    pub fn matches_replication(&self, other: &CallParameters) -> bool {
         let lhs_sorted = self.sorted();
         let rhs_sorted = other.sorted();
 
@@ -107,13 +107,13 @@ impl CallSignature {
         }
     }
 
-    pub fn matches_multiplicity(&self, other: &CallSignature) -> bool {
+    pub fn matches_replication(&self, other: &CallSignature) -> bool {
         match (&self.parameters, &other.parameters) {
             // A variadic signature cannot metch a signature with specified signature parameters.
             (None, Some(_)) => false,
             // A variadic can accept any function
-            (Some(lhs), Some(rhs)) if lhs.matches_multiplicity(rhs) => true,
-            (Some(lhs), Some(rhs)) if !lhs.matches_multiplicity(rhs) => false,
+            (Some(lhs), Some(rhs)) if lhs.matches_replication(rhs) => true,
+            (Some(lhs), Some(rhs)) if !lhs.matches_replication(rhs) => false,
             _ => true,
         }
     }
@@ -194,8 +194,8 @@ impl FunctionType {
         self.call_ty.matches(&other.call_ty) && self.match_return_type(other)
     }
 
-    pub fn matches_multiplicity(&self, other: &FunctionType) -> bool {
-        self.call_ty.matches_multiplicity(&other.call_ty) && self.match_return_type(other)
+    pub fn matches_replication(&self, other: &FunctionType) -> bool {
+        self.call_ty.matches_replication(&other.call_ty) && self.match_return_type(other)
     }
 
     pub fn match_return_type(&self, other: &FunctionType) -> bool {
