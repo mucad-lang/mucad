@@ -26,7 +26,7 @@ const mucad = new Mucad();
 const result = mucad.compile(`Circle(radius = 10mm).extrude(5mm);`);
 
 if (!result.success) {
-  console.error(result.diagnostics);
+  console.error(result.report);
 } else if (result.modelType === "3d") {
   for (const mesh of mucad.renderMeshes()) {
     // mesh.positions: Float32Array, mesh.indices: Uint32Array, mesh.color: Float32Array | undefined
@@ -46,7 +46,7 @@ rendered.
 
 | Method | Returns |
 |---|---|
-| `compile(code)` | `CompileResult` with `success`, `diagnostics` (errors and warnings as text) and `modelType` (`"2d"`, `"3d"`, `"mixed"` or `"none"`) |
+| `compile(code)` | `CompileResult` with `success`, `diagnostics` (see below), `report` (the diagnostics as text) and `modelType` (`"2d"`, `"3d"`, `"mixed"` or `"none"`) |
 | `setResolution(mm)` | Sets the linear render resolution, e.g. `0.1` for smoother circles (default `0.25`) |
 
 ### Colors

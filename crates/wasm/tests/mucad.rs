@@ -3,7 +3,7 @@
 
 //! Tests of the WebAssembly interface, which run natively.
 
-use mucad_wasm::Mucad;
+use mucad_wasm::{Mucad, Severity};
 
 const CSG_CUBE: &str = include_str!("../../../examples/csg_cube.mu");
 const DRILL_PLATE: &str = include_str!("../../../examples/drill_plate.mu");
@@ -12,7 +12,7 @@ const DRILL_PLATE: &str = include_str!("../../../examples/drill_plate.mu");
 fn compiled(code: &str, model_type: &str) -> Mucad {
     let mut mucad = Mucad::new();
     let result = mucad.compile(code);
-    assert!(result.success(), "{}", result.diagnostics());
+    assert!(result.success(), "{}", result.report());
     assert_eq!(result.model_type(), model_type);
     mucad
 }
@@ -112,11 +112,36 @@ fn compile_errors() {
     let result = mucad.compile("Unknown();");
     assert!(!result.success());
     assert!(
-        result.diagnostics().contains("Unresolved symbol"),
+        result.report().contains("Unresolved symbol"),
         "{}",
-        result.diagnostics()
+        result.report()
     );
     assert_eq!(result.model_type(), "none");
     assert!(mucad.render_meshes().is_err());
     assert!(mucad.export_svg().is_err());
+}
+
+/// Diagnostics have a range with lines and UTF-16 columns from 1, e.g. for editor markers.
+#[test]
+fn diagnostics() {
+    let mut mucad = Mucad::new();
+    // `µ` and `🚀` are 2 and 4 bytes, but 1 and 2 UTF-16 code units.
+    let result = mucad.compile("// µ\nx = \"🚀\"; Unknown();");
+    assert!(!result.success());
+
+    let diagnostics = result.diagnostics();
+    let unresolved = diagnostics
+        .iter()
+        .find(|diagnostic| diagnostic.message().contains("Unresolved symbol"))
+        .expect("An unresolved symbol");
+    assert_eq!(unresolved.severity(), Severity::Error);
+    assert_eq!(
+        (
+            unresolved.start_line_no(),
+            unresolved.start_column(),
+            unresolved.end_line_no(),
+            unresolved.end_column()
+        ),
+        (2, 11, 2, 18)
+    );
 }
