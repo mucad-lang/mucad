@@ -9,10 +9,26 @@ use mucad_lang_base::{Identifier, PushIssue, Refer, SrcRef, SrcReferrer};
 use mucad_lang_resolve::library::symbol::{self, ExprSpec};
 use mucad_lang_types::{
     Color, Value, ValueError,
-    model::{Attribute, Attributes},
+    model::{Attribute, Attributes, attribute::ExportCommand},
 };
 
 use crate::{Eval, EvalContext, EvalErrorKind, EvalResult};
+
+/// Evaluate the attributes of a model, e.g. `#[color = "red"]`.
+///
+/// Invalid values are reported and skipped.
+impl Eval<Attributes> for symbol::ModelAttributes {
+    fn eval(&self, context: &mut EvalContext) -> EvalResult<Attributes> {
+        let mut attributes = Attributes::default();
+        if let Some(color) = attribute_value::<Color>("color", self.color.as_ref(), context) {
+            attributes.set(Attribute::Color(color));
+        }
+        if let Some(resolution) = attribute_value("resolution", self.resolution.as_ref(), context) {
+            attributes.set(Attribute::Resolution(resolution));
+        }
+        Ok(attributes)
+    }
+}
 
 /// Attach model attributes, e.g. `#[color = "red"]`, to the root of a model.
 ///
@@ -62,20 +78,42 @@ pub(crate) fn attach_attributes(
     Ok(Value::Model(tree))
 }
 
-/// Evaluate the attributes of a model, e.g. `#[color = "red"]`.
+/// Attach the export attributes of a source statement, e.g. `#[export = "file.svg"]`, to the
+/// root of a model.
 ///
-/// Invalid values are reported and skipped.
-impl Eval<Attributes> for symbol::ModelAttributes {
-    fn eval(&self, context: &mut EvalContext) -> EvalResult<Attributes> {
-        let mut attributes = Attributes::default();
-        if let Some(color) = attribute_value::<Color>("color", self.color.as_ref(), context) {
-            attributes.set(Attribute::Color(color));
-        }
-        if let Some(resolution) = attribute_value("resolution", self.resolution.as_ref(), context) {
-            attributes.set(Attribute::Resolution(resolution));
-        }
-        Ok(attributes)
+/// A value without a model stays unchanged, other values cannot be exported.
+pub(crate) fn attach_exports(
+    exports: &[symbol::ExportAttribute],
+    value: Value,
+    context: &mut EvalContext,
+) -> EvalResult<Value> {
+    if value.is_none() {
+        return Ok(value);
     }
+    let Some(first) = exports.first() else {
+        return Ok(value);
+    };
+    let Value::Model(mut tree) = value else {
+        context.push_err(EvalErrorKind::CannotAttachAttributes {
+            src_ref: first.src_ref,
+            value: value.to_string(),
+        });
+        return Ok(value);
+    };
+
+    let model = Rc::make_mut(&mut tree).root_model_mut();
+    for export in exports {
+        let path = match &export.file {
+            // The file is named after the statement when exporting.
+            None => None,
+            Some(file) => match attribute_value::<String>("export", Some(file), context) {
+                Some(path) => Some(path),
+                None => continue,
+            },
+        };
+        model.attr.set(Attribute::Export(ExportCommand { path }));
+    }
+    Ok(Value::Model(tree))
 }
 
 /// The value of an attribute converted to `T`, or `None` if it is missing or invalid.

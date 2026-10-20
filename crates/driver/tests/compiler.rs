@@ -747,3 +747,72 @@ fn complete_no_number() {
     let compiler = std_compiler();
     assert!(completion_names(&compiler, "x = 12|").is_empty());
 }
+
+/// The export paths of the root model of a model tree, `None` for `#[export]` without file.
+fn exports(model: &mu::ModelTree) -> Vec<Option<String>> {
+    use mu::types::model::Attribute;
+    model
+        .root()
+        .attr
+        .iter()
+        .filter_map(|attr| match attr {
+            Attribute::Export(export) => Some(export.path.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Export attributes of source statements are attached to their models.
+#[test]
+fn compile_export_attributes() {
+    let mut compiler = compiler();
+    let (model, diags) = compiler
+        .compile(
+            r#"
+            #[export]
+            shape = __mu::geo2d::Circle(radius = 1mm);
+
+            #[export = "mylogo.svg"]
+            #[export("mylogo.dxf")]
+            logo = __mu::geo2d::Circle(radius = 2mm);
+
+            #[export = "logo.stl"]
+            logo.__mu::ops::extrude(height = 1mm, scale_x = 1.0, scale_y = 1.0, twist = 0°);
+            "#,
+        )
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+
+    // Properties of source statements are hidden.
+    let property = |name: &str| match model.root().get_property_value(name) {
+        mu::Value::Model(model) => exports(&model),
+        value => panic!("A model: {value}"),
+    };
+    assert_eq!(property("shape"), [None]);
+    assert_eq!(
+        property("logo"),
+        [Some("mylogo.svg".into()), Some("mylogo.dxf".into())]
+    );
+
+    let extruded = model.root().children().next().expect("A child");
+    let extruded = mu::ModelTree::new(extruded.get().clone());
+    assert_eq!(exports(&extruded), [Some("logo.stl".into())]);
+}
+
+/// Exports need a file name without statement name, are only allowed in source files and
+/// their file names are strings.
+#[test]
+fn compile_invalid_export_attributes() {
+    let mut compiler = compiler();
+    for source in [
+        "#[export]\n__mu::geo2d::Circle(radius = 1mm);",
+        "sketch S() {\n    #[export = \"s.svg\"]\n    __mu::geo2d::Circle(radius = 1mm);\n}\nS();",
+        "#[export = 42]\nc = __mu::geo2d::Circle(radius = 1mm);",
+        "#[export = \"x.svg\"]\nx = 42;",
+    ] {
+        let diags = match compiler.compile(source) {
+            Ok((_, diags)) | Err(diags) => diags,
+        };
+        assert!(diags.has_errors(), "{source}");
+    }
+}

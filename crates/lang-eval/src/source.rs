@@ -6,13 +6,14 @@
 use mucad_lang_resolve::library::symbol;
 use mucad_lang_types::{
     ModelTree, Value,
-    model::{ModelTreeBuilderMut, Property, PropertyType},
+    model::{Attribute, ModelTreeBuilderMut, Property, PropertyType, attribute::ExportCommand},
 };
 
 use mucad_lang_base::PushIssue;
 
 use crate::{
-    Eval, EvalContext, EvalErrorKind, EvalResult, attribute::attach_attributes,
+    Eval, EvalContext, EvalErrorKind, EvalResult,
+    attribute::{attach_attributes, attach_exports},
     context::SourceFrame,
 };
 
@@ -20,6 +21,7 @@ impl Eval<()> for symbol::SourceStatement {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<()> {
         let value = self.expression.eval(context)?;
         let value = attach_attributes(&self.attr, value, context)?;
+        let value = attach_exports(&self.exports, value, context)?;
         match &self.name {
             // If we have an id, this becomes a property in the current model
             Some(name) => {

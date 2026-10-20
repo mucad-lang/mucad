@@ -366,6 +366,7 @@ impl<'a, 'lib, 'ctx> visitor::SourceVisitorMut for ResolveVisitor<'a, 'lib, 'ctx
             self.visit_name(name);
         }
         self.visit_model_attributes(&mut statement.attr);
+        self.visit_export_attributes(&mut statement.exports);
         self.visit_workbench_expr(&mut statement.expression);
         if let Some(name) = &mut statement.name {
             self.declare_property(name.clone());

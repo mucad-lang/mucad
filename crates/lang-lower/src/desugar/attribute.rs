@@ -5,7 +5,7 @@ use crate::desugar::{extract_statements, for_each_statement};
 use crate::ir::source::ExportAttribute;
 use crate::{Desugar, LowerContext, LowerError, LowerResult, ir};
 
-use mucad_lang_base::{PushIssue, SingleIdentifier, SpanToSrcRef};
+use mucad_lang_base::{PushIssue, SingleIdentifier, SpanToSrcRef, SrcReferrer};
 use mucad_lang_parse::ast;
 
 /// Helper function to get outer attributes
@@ -252,23 +252,42 @@ impl Desugar<ast::StatementList> for ir::Attributes {
 }
 
 impl ir::Attributes {
+    /// The export attributes: `#[export]`, `#[export = "file.svg"]` or `#[export("file.svg")]`.
     pub(crate) fn fetch_exports(&self) -> LowerResult<Box<[ExportAttribute]>> {
-        let exports: Vec<_> = self
+        let is_export = |path: &ir::Path| {
+            path.single_identifier()
+                .is_some_and(|ident| ident.as_str() == "export")
+        };
+
+        let tags = self
+            .tags
+            .iter()
+            .filter(|tag| tag.name.as_str() == "export")
+            .map(|tag| ExportAttribute {
+                file: None,
+                src_ref: tag.src_ref(),
+            });
+        let kv_exprs = self
+            .kv_exprs
+            .iter()
+            .filter(|kv_expr| is_export(&kv_expr.name))
+            .map(|kv_expr| ExportAttribute {
+                file: Some(kv_expr.expr.clone()),
+                src_ref: kv_expr.src_ref,
+            });
+        let commands = self
             .commands
             .iter()
-            .filter_map(|command| match command.path.single_identifier() {
-                Some(ident) => match ident.as_str() {
-                    "export" => command
-                        .argument_list
-                        .extract_named_arg_expr("file")
-                        .or(command.argument_list.extract_first_unnamed_arg_expr())
-                        .map(|expr| ExportAttribute { file: expr.clone() }),
-                    _ => None,
-                },
-                _ => None,
-            })
-            .collect();
+            .filter(|command| is_export(&command.path))
+            .map(|command| ExportAttribute {
+                file: command
+                    .argument_list
+                    .extract_named_arg_expr("file")
+                    .or(command.argument_list.extract_first_unnamed_arg_expr())
+                    .cloned(),
+                src_ref: command.src_ref,
+            });
 
-        Ok(exports.into_boxed_slice())
+        Ok(tags.chain(kv_exprs).chain(commands).collect())
     }
 }

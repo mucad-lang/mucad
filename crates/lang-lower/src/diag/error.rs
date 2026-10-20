@@ -1,11 +1,11 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use miette::Diagnostic;
 use mucad_builtin::BuiltinError;
 use mucad_lang_base::{Identifier, IdentifierList, Refer, SrcRef, SrcReferrer};
 use mucad_lang_parse::ast;
 use mucad_lang_types::{TypeError, ValueError};
-use miette::Diagnostic;
 use thiserror::Error;
 
 use crate::ir;
@@ -211,6 +211,23 @@ pub enum LowerError {
         #[label("missing argument")]
         src_ref: SrcRef,
     },
+
+    #[error("Export attributes are only allowed in source workbenches")]
+    #[diagnostic(code(mucad::lower::export_not_allowed))]
+    ExportNotAllowed {
+        #[label("export attribute")]
+        src_ref: SrcRef,
+    },
+
+    #[error("An export of a statement without name requires a file name")]
+    #[diagnostic(
+        code(mucad::lower::export_without_file),
+        help("Add a file name, e.g. #[export = \"model.stl\"], or assign the model to a name")
+    )]
+    ExportWithoutFile {
+        #[label("export attribute")]
+        src_ref: SrcRef,
+    },
 }
 
 impl SrcReferrer for LowerError {
@@ -246,6 +263,7 @@ impl SrcReferrer for LowerError {
             DuplicateAttribute { src_ref, .. } => *src_ref,
             InvalidVersionString { src_ref, .. } => *src_ref,
             MissingAttributeArgument { src_ref, .. } => *src_ref,
+            ExportNotAllowed { src_ref } | ExportWithoutFile { src_ref } => *src_ref,
         }
     }
 }

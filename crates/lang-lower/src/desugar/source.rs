@@ -41,8 +41,19 @@ impl Desugar<ast::Attributes> for Box<[ir::ExportAttribute]> {
 
 impl Desugar<ast::ExpressionStatement> for ir::SourceStatement {
     fn desugar(node: &ast::ExpressionStatement, context: &mut LowerContext) -> LowerResult<Self> {
+        let exports: Box<[ir::ExportAttribute]> = Box::desugar(&node.attr, context)?;
+        // Without a name, the file cannot be named after the statement.
+        exports
+            .iter()
+            .filter(|export| export.file.is_none())
+            .for_each(|export| {
+                context.push_err(LowerError::ExportWithoutFile {
+                    src_ref: export.src_ref,
+                })
+            });
+
         Ok(Self {
-            exports: Box::desugar(&node.attr, context)?,
+            exports,
             attr: ir::ModelAttributes::desugar(&node.attr, context)?,
             src_ref: context.span_to_src_ref(&node.span),
             name: None,

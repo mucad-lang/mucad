@@ -165,6 +165,7 @@ impl Desugar<ast::Body> for ir::Group {
             Ok(())
         })?;
 
+        reject_exports(ir::Attributes::desugar(statements, context)?, context)?;
         Ok(Self {
             src_ref: context.span_to_src_ref(&node.span),
             attr: ir::ModelAttributes::desugar(statements, context)?.into(),
@@ -265,8 +266,19 @@ impl Desugar<ast::StatementList> for Vec<ir::Init> {
     }
 }
 
+/// Report export attributes, which are only allowed in source files.
+fn reject_exports(attr: ir::Attributes, context: &mut LowerContext) -> LowerResult<()> {
+    attr.fetch_exports()?.iter().for_each(|export| {
+        context.push_err(LowerError::ExportNotAllowed {
+            src_ref: export.src_ref,
+        })
+    });
+    Ok(())
+}
+
 impl Desugar<ast::LocalAssignment> for ir::WorkbenchStatement {
     fn desugar(node: &ast::LocalAssignment, context: &mut LowerContext) -> LowerResult<Self> {
+        reject_exports(ir::Attributes::desugar(&node.attr, context)?, context)?;
         Ok(Self {
             attr: ir::ModelAttributes::desugar(&node.attr, context)?,
             src_ref: context.span_to_src_ref(&node.span),
@@ -281,6 +293,7 @@ impl Desugar<ast::LocalAssignment> for ir::WorkbenchStatement {
 
 impl Desugar<ast::PropertyAssignment> for ir::WorkbenchStatement {
     fn desugar(node: &ast::PropertyAssignment, context: &mut LowerContext) -> LowerResult<Self> {
+        reject_exports(ir::Attributes::desugar(&node.attr, context)?, context)?;
         Ok(Self {
             attr: ir::ModelAttributes::desugar(&node.attr, context)?,
             src_ref: context.span_to_src_ref(&node.span),
@@ -320,6 +333,7 @@ impl Desugar<ast::Attributes> for ir::ModelAttributes {
 
 impl Desugar<ast::ExpressionStatement> for ir::WorkbenchStatement {
     fn desugar(node: &ast::ExpressionStatement, context: &mut LowerContext) -> LowerResult<Self> {
+        reject_exports(ir::Attributes::desugar(&node.attr, context)?, context)?;
         Ok(Self {
             attr: ir::ModelAttributes::desugar(&node.attr, context)?,
             src_ref: context.span_to_src_ref(&node.span),
