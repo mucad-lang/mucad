@@ -271,7 +271,16 @@ pub trait SourceVisitor: WorkbenchExpressionVisitor {
             self.visit_name(name);
         }
         self.visit_model_attributes(&statement.attr);
+        self.visit_export_attributes(&statement.exports);
         self.visit_workbench_expr(&statement.expression);
+    }
+
+    /// Visit the file expressions of export attributes, e.g. `#[export = "file.svg"]`.
+    fn visit_export_attributes(&mut self, exports: &[ir::ExportAttribute]) {
+        exports
+            .iter()
+            .filter_map(|export| export.file.as_ref())
+            .for_each(|file| self.visit_constant_expr(file));
     }
 }
 

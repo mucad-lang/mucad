@@ -8,9 +8,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::ir;
 
+/// Export attribute of a source statement: `#[export]`, `#[export = "file.svg"]` or
+/// `#[export("file.svg")]`.
 #[derive(Debug, Clone, Hash, PartialEq, Serialize, Deserialize)]
 pub struct ExportAttribute {
-    pub file: ir::ConstantExpression,
+    /// The file to export into, without file the name of the statement is used.
+    pub file: Option<ir::ConstantExpression>,
+    pub src_ref: SrcRef,
 }
 
 /// A statement in a source file.

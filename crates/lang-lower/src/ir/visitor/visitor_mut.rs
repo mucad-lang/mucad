@@ -265,7 +265,16 @@ pub trait SourceVisitorMut: ConstantVisitorMut + WorkbenchVisitorMut {
             self.visit_name(name);
         }
         self.visit_model_attributes(&mut statement.attr);
+        self.visit_export_attributes(&mut statement.exports);
         self.visit_workbench_expr(&mut statement.expression);
+    }
+
+    /// Visit the file expressions of export attributes, e.g. `#[export = "file.svg"]`.
+    fn visit_export_attributes(&mut self, exports: &mut [ir::ExportAttribute]) {
+        exports
+            .iter_mut()
+            .filter_map(|export| export.file.as_mut())
+            .for_each(|file| self.visit_constant_expr(file));
     }
 }
 
