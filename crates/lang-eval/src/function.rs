@@ -124,7 +124,7 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
                     }),
                 }
             }
-            path => context.catch(EvalError::new(EvalErrorKind::SymbolCannotBeCalled {
+            _ => context.catch(EvalError::new(EvalErrorKind::SymbolCannotBeCalled {
                 path: context.current_symbol_name().unwrap_or_default(),
                 src_ref: self.src_ref,
             })),

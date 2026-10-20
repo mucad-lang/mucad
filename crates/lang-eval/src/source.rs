@@ -6,7 +6,7 @@
 use mucad_lang_resolve::library::symbol;
 use mucad_lang_types::{
     ModelTree, Value,
-    model::{Attribute, ModelTreeBuilderMut, Property, PropertyType, attribute::ExportCommand},
+    model::{ModelTreeBuilderMut, Property, PropertyType},
 };
 
 use mucad_lang_base::PushIssue;
