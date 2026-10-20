@@ -58,6 +58,13 @@ impl Ast {
     }
 }
 
+/// The syntax tree with all nodes and their spans.
+impl std::fmt::Display for Ast {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:#?}", self.tree)
+    }
+}
+
 impl From<Ast> for ast::Source {
     fn from(ast: Ast) -> Self {
         ast.tree

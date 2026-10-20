@@ -316,3 +316,47 @@ fn export_resolution() {
         .failure()
         .stderr(predicate::str::contains("Invalid resolution"));
 }
+
+/// The artifacts of a source file are displayed in the order of the compiler stages.
+#[test]
+fn compile_displays_artifacts() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = source_file(&dir, "valid.mu", VALID);
+
+    mucad()
+        .arg("compile")
+        .arg(&input)
+        .args(["--display", "model"])
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with("Group"));
+
+    mucad()
+        .arg("compile")
+        .arg(&input)
+        .args(["--display", "model,ast,lib,ir"])
+        .assert()
+        .success()
+        .stdout(
+            predicate::str::is_match("(?s)--- AST ---.*--- IR ---.*--- Library ---.*--- Model ---")
+                .expect("A regex"),
+        );
+}
+
+/// A library has no AST, IR and model to display, only its symbols.
+#[test]
+fn compile_displays_library() {
+    let library = Path::new(env!("CARGO_MANIFEST_DIR")).join("../driver/tests/data/lib/std");
+
+    mucad()
+        .arg("compile")
+        .arg(&library)
+        .args(["--display", "library,model"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--- Library ---"))
+        .stdout(predicate::str::contains("Circle: Workbench"))
+        .stderr(predicate::str::contains(
+            "Cannot display Model: only available for source files",
+        ));
+}

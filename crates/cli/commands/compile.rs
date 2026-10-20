@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use miette::IntoDiagnostic;
-use mucad_driver::prelude::{self as mu, Artifact, traits::RenderDiag};
+use mucad_driver::prelude::{self as mu, Artifact, base::DisplayWithCtx, traits::RenderDiag};
 
 use crate::{Cli, commands::RunCommand};
 
@@ -40,6 +40,36 @@ impl std::str::FromStr for EmitTarget {
     }
 }
 
+/// A compiler artifact to display.
+#[derive(clap::ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DisplayTarget {
+    /// The syntax tree of a source file.
+    Ast,
+    /// The intermediate representation of a source file.
+    Ir,
+    /// The resolved symbols of a source file or library.
+    #[value(alias = "lib")]
+    Library,
+    /// The model tree of a source file.
+    Model,
+}
+
+impl DisplayTarget {
+    /// The artifacts in the order of the compiler stages.
+    const ALL: [DisplayTarget; 4] = [Self::Ast, Self::Ir, Self::Library, Self::Model];
+}
+
+impl std::fmt::Display for DisplayTarget {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Ast => "AST",
+            Self::Ir => "IR",
+            Self::Library => "Library",
+            Self::Model => "Model",
+        })
+    }
+}
+
 /// Compile a µcad file or library and output artifacts for debugging
 #[derive(clap::Parser)]
 pub struct Compile {
@@ -58,6 +88,11 @@ pub struct Compile {
     /// Emit Model Tree (optionally specify a custom path)
     #[arg(long, num_args = 0..=1, default_value = "none", default_missing_value = "auto")]
     pub emit_model: EmitTarget,
+
+    /// Display compiler artifacts, e.g. `--display ast,model`.
+    /// AST, IR and model are only available for source files.
+    #[arg(long, value_delimiter = ',', num_args = 1..)]
+    pub display: Vec<DisplayTarget>,
 }
 
 impl RunCommand<()> for Compile {
@@ -83,13 +118,14 @@ impl Compile {
     fn compile_source(&self, compiler: &mut mu::Compiler, input: &str) -> mu::Result {
         let source = mu::Source::load(input).into_diagnostic()?;
 
-        match compiler.compile(source.clone()) {
+        let model = match compiler.compile(source.clone()) {
             Ok((model, diag)) => {
                 eprintln!("{}", compiler.render_diag_to_string(&diag));
 
                 if let Some(path) = self.emit_model.path(input) {
                     model.emit(path)?;
                 }
+                Some(model)
             }
             Err(err) => {
                 eprintln!(
@@ -100,8 +136,9 @@ impl Compile {
                 if !matches!(self.emit_model, EmitTarget::NoEmit) {
                     eprintln!("Compilation failed, cannot emit model");
                 }
+                None
             }
-        }
+        };
 
         if let Some(path) = self.emit_ast.path(input) {
             compiler.emit_ast(source.hash_id(), path)?;
@@ -110,7 +147,37 @@ impl Compile {
             compiler.emit_ir(source.hash_id(), path)?;
         }
 
+        self.display(|target| {
+            match target {
+                DisplayTarget::Ast => compiler.with_ast(source.hash_id(), |ast| ast.to_string()),
+                DisplayTarget::Ir => compiler.with_ir(source.hash_id(), |ir| ir.to_string()),
+                DisplayTarget::Library => compiler.library().map(|lib| lib.to_string()),
+                DisplayTarget::Model => model
+                    .as_ref()
+                    .map(|model| model.to_string_with_ctx(&mu::BuiltinLibrary::new())),
+            }
+            .ok_or("compilation failed")
+        });
+
         Ok(())
+    }
+
+    /// Print the requested artifacts in the order of the compiler stages, `artifact` returns
+    /// the text of an artifact or the reason why it is not available.
+    ///
+    /// Several artifacts are printed with a heading each.
+    fn display(&self, mut artifact: impl FnMut(DisplayTarget) -> Result<String, &'static str>) {
+        let targets: Vec<_> = DisplayTarget::ALL
+            .into_iter()
+            .filter(|target| self.display.contains(target))
+            .collect();
+        for target in &targets {
+            match artifact(*target) {
+                Ok(text) if targets.len() > 1 => println!("--- {target} ---\n{text}"),
+                Ok(text) => println!("{text}"),
+                Err(reason) => eprintln!("Cannot display {target}: {reason}"),
+            }
+        }
     }
 
     /// Compile the library in the directory `input`.
@@ -129,6 +196,12 @@ impl Compile {
                     Some(info) => eprintln!("Compiled library {info}"),
                     None => eprintln!("Compiled library {input}"),
                 }
+                self.display(|target| match target {
+                    DisplayTarget::Library => Ok(lib.to_string()),
+                    DisplayTarget::Ast | DisplayTarget::Ir | DisplayTarget::Model => {
+                        Err("only available for source files")
+                    }
+                });
                 Ok(())
             }
             Err(err) => Err(miette::miette!(

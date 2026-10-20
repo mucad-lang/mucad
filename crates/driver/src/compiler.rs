@@ -133,6 +133,16 @@ impl Compiler {
             })
     }
 
+    /// The library of the most recent compilation of a source, see [`Compiler::compile`].
+    ///
+    /// If the last compilation failed while loading, the library of the compilation before is
+    /// returned.
+    pub fn library(&self) -> Option<mu::Shared<mu::Library>> {
+        self.resolve_context
+            .lib_cache()
+            .with_read(|lib_cache| lib_cache.get(&mu::base::LibraryId::ROOT))
+    }
+
     /// Returns `true` if `path` is a library directory, which is compiled with
     /// [`Compiler::compile_lib`], see [`mu::locate::is_library_dir`].
     pub fn is_library_dir(&self, path: impl AsRef<std::path::Path>) -> bool {
