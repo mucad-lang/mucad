@@ -10,7 +10,7 @@ expression: "ir.to_ron().expect(\"No error\")"
     ),
     payload: (
         input_hash: "0xa18f78da53e23991",
-        output_hash: "0xccad832258739cf6",
+        output_hash: "0x10e461a31afe0e8c",
         tree: (
             root: (
                 index1: 1,
@@ -141,6 +141,100 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                         attr: (
                                                             doc: (
                                                                 content: "",
+                                                                src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..166)",
+                                                            ),
+                                                        ),
+                                                        id: ((
+                                                            value: "radius",
+                                                            src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..172)",
+                                                        )),
+                                                        ty: (
+                                                            ty: Quantity(Length),
+                                                            src_ref: "6:27 @ 0xa5eb23e1ba0633ef (174..180)",
+                                                        ),
+                                                        default_value: None,
+                                                        src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..180)",
+                                                    ),
+                                                    (
+                                                        attr: (
+                                                            doc: (
+                                                                content: "",
+                                                                src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..182)",
+                                                            ),
+                                                        ),
+                                                        id: ((
+                                                            value: "center",
+                                                            src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..188)",
+                                                        )),
+                                                        ty: (
+                                                            ty: Any,
+                                                            src_ref: "None",
+                                                        ),
+                                                        default_value: Some(Value((
+                                                            value: Tuple((
+                                                                positional: [],
+                                                                named: [
+                                                                    (((
+                                                                        value: "x",
+                                                                        src_ref: "6:45 @ 0xa5eb23e1ba0633ef (192..193)",
+                                                                    )), Quantity("0mm")),
+                                                                    (((
+                                                                        value: "y",
+                                                                        src_ref: "6:56 @ 0xa5eb23e1ba0633ef (203..204)",
+                                                                    )), Quantity("0mm")),
+                                                                ],
+                                                            )),
+                                                            src_ref: "None",
+                                                        ))),
+                                                        src_ref: "6:34 @ 0xa5eb23e1ba0633ef (181..213)",
+                                                    ),
+                                                ],
+                                                src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..213)",
+                                            ),
+                                            statements: [
+                                                (
+                                                    name: ((
+                                                        value: "radius",
+                                                        src_ref: "None",
+                                                    )),
+                                                    expression: Path(HumanReadable(
+                                                        name: "radius",
+                                                        id: Local("radius"),
+                                                    )),
+                                                    src_ref: "None",
+                                                ),
+                                                (
+                                                    name: ((
+                                                        value: "center",
+                                                        src_ref: "None",
+                                                    )),
+                                                    expression: Path(HumanReadable(
+                                                        name: "center",
+                                                        id: Local("center"),
+                                                    )),
+                                                    src_ref: "None",
+                                                ),
+                                            ],
+                                            keyword_ref: "None",
+                                            attr: (
+                                                doc: (
+                                                    content: "",
+                                                    src_ref: "None",
+                                                ),
+                                                ver: (
+                                                    introduced: None,
+                                                    stability: Stable,
+                                                ),
+                                            ),
+                                            src_ref: "None",
+                                        ),
+                                        (
+                                            parameters: (
+                                                parameters: [
+                                                    (
+                                                        attr: (
+                                                            doc: (
+                                                                content: "",
                                                                 src_ref: "7:10 @ 0xa5eb23e1ba0633ef (226..226)",
                                                             ),
                                                         ),
@@ -263,100 +357,6 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                 ),
                                             ),
                                             src_ref: "7:5 @ 0xa5eb23e1ba0633ef (221..323)",
-                                        ),
-                                        (
-                                            parameters: (
-                                                parameters: [
-                                                    (
-                                                        attr: (
-                                                            doc: (
-                                                                content: "",
-                                                                src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..166)",
-                                                            ),
-                                                        ),
-                                                        id: ((
-                                                            value: "radius",
-                                                            src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..172)",
-                                                        )),
-                                                        ty: (
-                                                            ty: Quantity(Length),
-                                                            src_ref: "6:27 @ 0xa5eb23e1ba0633ef (174..180)",
-                                                        ),
-                                                        default_value: None,
-                                                        src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..180)",
-                                                    ),
-                                                    (
-                                                        attr: (
-                                                            doc: (
-                                                                content: "",
-                                                                src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..182)",
-                                                            ),
-                                                        ),
-                                                        id: ((
-                                                            value: "center",
-                                                            src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..188)",
-                                                        )),
-                                                        ty: (
-                                                            ty: Any,
-                                                            src_ref: "None",
-                                                        ),
-                                                        default_value: Some(Value((
-                                                            value: Tuple((
-                                                                positional: [],
-                                                                named: [
-                                                                    (((
-                                                                        value: "x",
-                                                                        src_ref: "6:45 @ 0xa5eb23e1ba0633ef (192..193)",
-                                                                    )), Quantity("0mm")),
-                                                                    (((
-                                                                        value: "y",
-                                                                        src_ref: "6:56 @ 0xa5eb23e1ba0633ef (203..204)",
-                                                                    )), Quantity("0mm")),
-                                                                ],
-                                                            )),
-                                                            src_ref: "None",
-                                                        ))),
-                                                        src_ref: "6:34 @ 0xa5eb23e1ba0633ef (181..213)",
-                                                    ),
-                                                ],
-                                                src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..213)",
-                                            ),
-                                            statements: [
-                                                (
-                                                    name: ((
-                                                        value: "radius",
-                                                        src_ref: "None",
-                                                    )),
-                                                    expression: Path(HumanReadable(
-                                                        name: "radius",
-                                                        id: Local("radius"),
-                                                    )),
-                                                    src_ref: "None",
-                                                ),
-                                                (
-                                                    name: ((
-                                                        value: "center",
-                                                        src_ref: "None",
-                                                    )),
-                                                    expression: Path(HumanReadable(
-                                                        name: "center",
-                                                        id: Local("center"),
-                                                    )),
-                                                    src_ref: "None",
-                                                ),
-                                            ],
-                                            keyword_ref: "None",
-                                            attr: (
-                                                doc: (
-                                                    content: "",
-                                                    src_ref: "None",
-                                                ),
-                                                ver: (
-                                                    introduced: None,
-                                                    stability: Stable,
-                                                ),
-                                            ),
-                                            src_ref: "None",
                                         ),
                                     ],
                                 ),

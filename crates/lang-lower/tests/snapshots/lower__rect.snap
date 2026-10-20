@@ -5,9 +5,9 @@ expression: ir
 pub rect: Source
 └── pub Rect: Workbench = sketch(width: Length, height: Length, x: Length, y: Length)
         inits:
+        - init(width: Length, height: Length, x: Length, y: Length)
         - init(width: Length, height: Length)
         - init(size: Length)
-        - init(width: Length, height: Length, x: Length, y: Length)
     
         statements:
         - prop Call(__mu::geo2d::Rect[0x889349cd5d718d8e](width? = Path(width), height? =…

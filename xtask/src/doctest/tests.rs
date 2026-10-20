@@ -1,8 +1,6 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use mucad_driver::prelude::Artifact;
-
 use super::*;
 
 fn test_case_from_header(header: &str) -> Result<Option<TestCase>, String> {

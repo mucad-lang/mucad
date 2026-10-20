@@ -399,15 +399,13 @@ impl Desugar<ast::def::Workbench> for ir::desugared::Workbench {
     fn desugar(node: &ast::def::Workbench, context: &mut LowerContext) -> LowerResult<Self> {
         let parameters = ir::ParameterList::desugar(&node.parameters, context)?;
         let mut inits: Vec<ir::Init> = Vec::desugar(&node.body.statements, context)?;
+        // Add parameters as default initializer.
+        // This makes evaluation easier, because then we can simply trait the workbench parameters as default initializer.
+        inits.insert(0, ir::Init::default_init(parameters.clone()));
 
         inits
             .iter_mut()
             .for_each(|init| init.fill_up_and_check(&parameters, context));
-
-        // Add parameters as default initializer.
-        // This makes evaluation easier, because then we can simply trait the workbench parameters as default initializer.
-        // It is checked last, because the first matching initializer in definition order is chosen.
-        inits.push(ir::Init::default_init(parameters.clone()));
 
         Ok(Self {
             meta: ir::Meta {
