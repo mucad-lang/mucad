@@ -165,7 +165,7 @@ pub trait Artifact: Sized + Serialize {
         envelope.unwrap(Self::kind())
     }
 
-    /// Write the artifact into `path` with the extension of its kind, e.g. `circle.mu.ast`.
+    /// Write the artifact into `path` with the extension of its kind, e.g. `circle.muast`.
     ///
     /// Returns the path of the written file.
     #[cfg(feature = "io")]

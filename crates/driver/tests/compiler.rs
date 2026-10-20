@@ -816,3 +816,24 @@ fn compile_invalid_export_attributes() {
         assert!(diags.has_errors(), "{source}");
     }
 }
+
+/// A directory with `mu.toml` and `lib.mu` is a library.
+#[test]
+fn library_dir() {
+    let compiler = compiler();
+    assert!(compiler.is_library_dir("tests/data/lib/std"));
+    // No `mu.toml`.
+    assert!(!compiler.is_library_dir("tests/data/lib"));
+    assert!(!compiler.is_library_dir("tests/data/lib/std/lib.mu"));
+}
+
+/// A library is compiled from its directory.
+#[test]
+fn compile_lib() {
+    let mut compiler = compiler();
+    let (lib, diags) = compiler
+        .compile_lib("tests/data/lib/std")
+        .expect("A library");
+    assert!(!diags.has_errors(), "{diags:?}");
+    assert_eq!(lib.name().map(|name| name.as_str()), Some("std"));
+}

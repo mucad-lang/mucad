@@ -129,6 +129,13 @@ pub fn lib_mu_path(
     Err(LocateError::FileNotFound { path })
 }
 
+/// Returns `true` if `path` is the directory of a library with a manifest (`mu.toml`) and an
+/// entry point (`lib.mu`).
+pub fn is_library_dir(fs: &dyn FileSystem, path: impl AsRef<std::path::Path>) -> bool {
+    let path = path.as_ref();
+    fs.is_dir(path) && fs.is_file(&mu_toml_path(path)) && lib_mu_path(fs, path).is_ok()
+}
+
 /// The root of the library, which contains the source file at `path`.
 ///
 /// This is either the directory of a library with a `mu.toml` file or the topmost source file,

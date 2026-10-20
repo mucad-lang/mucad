@@ -6,6 +6,7 @@
 use std::path::{Path, PathBuf};
 
 use assert_cmd::Command;
+use mucad_driver::prelude::ArtifactKind;
 use predicates::prelude::*;
 
 /// A valid source using the standard library.
@@ -153,8 +154,8 @@ fn compile_emits_artifacts() {
         .assert()
         .success();
 
-    for ext in ["ast", "ir", "model"] {
-        let artifact = dir.path().join(format!("valid.mu.{ext}"));
+    for kind in [ArtifactKind::Ast, ArtifactKind::Ir, ArtifactKind::ModelTree] {
+        let artifact = dir.path().join(format!("valid.{ext}", ext = kind.ext()));
         assert!(artifact.is_file(), "{artifact:?} is missing");
     }
 }
@@ -173,8 +174,8 @@ fn compile_emits_model_to_path() {
         .assert()
         .success();
 
-    assert!(dir.path().join("out.model").is_file());
-    assert!(!dir.path().join("valid.mu.model").exists());
+    assert!(dir.path().join("out.mumodel").is_file());
+    assert!(!dir.path().join("valid.mumodel").exists());
 }
 
 #[test]
@@ -189,7 +190,7 @@ fn compile_parse_error_emits_no_model() {
         .assert()
         .stderr(predicate::str::contains("cannot emit model"));
 
-    assert!(!dir.path().join("parse_error.mu.model").exists());
+    assert!(!dir.path().join("parse_error.mumodel").exists());
 }
 
 #[test]

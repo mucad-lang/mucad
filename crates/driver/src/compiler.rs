@@ -133,6 +133,21 @@ impl Compiler {
             })
     }
 
+    /// Returns `true` if `path` is a library directory, which is compiled with
+    /// [`Compiler::compile_lib`], see [`mu::locate::is_library_dir`].
+    pub fn is_library_dir(&self, path: impl AsRef<std::path::Path>) -> bool {
+        let file_system = self.resolve_context.file_system();
+        mu::locate::is_library_dir(file_system.as_ref(), path)
+    }
+
+    /// Compile the library in the directory `path`, see [`mu::locate::is_library_dir`].
+    ///
+    /// The library is resolved with its dependencies, but not evaluated.
+    pub fn compile_lib(&mut self, path: impl AsRef<std::path::Path>) -> CompileResult<mu::Library> {
+        self.load_std()
+            .then(|()| mu::resolve::resolve(path, &mut self.resolve_context).into_compile_result())
+    }
+
     /// All source files the most recent compilation depends on, e.g. to watch them for changes.
     ///
     /// These are the compiled source, its file modules and the source files of the libraries
@@ -173,7 +188,7 @@ impl Compiler {
         self.resolve_context.with_ir(id, f)
     }
 
-    /// Write the AST of the source `id` into `path` with the extension `ast`, e.g. `circle.mu.ast`.
+    /// Write the AST of the source `id` into `path` with the extension `ast`, e.g. `circle.muast`.
     ///
     /// Returns the path of the written file.
     pub fn emit_ast(
@@ -184,7 +199,7 @@ impl Compiler {
         self.resolve_context.emit_ast(id, path)
     }
 
-    /// Write the IR of the source `id` into `path` with the extension `ir`, e.g. `circle.mu.ir`.
+    /// Write the IR of the source `id` into `path` with the extension `ir`, e.g. `circle.muir`.
     ///
     /// Returns the path of the written file.
     pub fn emit_ir(

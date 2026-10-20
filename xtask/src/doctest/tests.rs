@@ -1,6 +1,8 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use mucad_driver::prelude::Artifact;
+
 use super::*;
 
 fn test_case_from_header(header: &str) -> Result<Option<TestCase>, String> {
@@ -332,7 +334,10 @@ fn run_in_dir(header: &str, code: &str) -> tempfile::TempDir {
 fn emit_artifacts() {
     let dir = run_in_dir("mu,circle?mode=compile&emit=model,ir,ast", CIRCLE);
     let log = std::fs::read_to_string(dir.path().join(".test/circle.log")).expect("A log");
-    for ext in ["model", "ir", "ast"] {
+
+    use mu::ArtifactKind::*;
+    for kind in [Ast, Ir, ModelTree] {
+        let ext = kind.ext();
         assert!(
             dir.path().join(format!(".test/circle.{ext}")).is_file(),
             "{ext}"
@@ -359,8 +364,8 @@ fn emit_nothing() {
 fn emit_when_parsing() {
     let dir = run_in_dir("mu,circle?mode=parse&emit=ast,ir", CIRCLE);
     let log = std::fs::read_to_string(dir.path().join(".test/circle.log")).expect("A log");
-    assert!(dir.path().join(".test/circle.ast").is_file());
-    assert!(log.contains("Emitted 'circle.ast'."), "{log}");
+    assert!(dir.path().join(".test/circle.muast").is_file());
+    assert!(log.contains("Emitted 'circle.muast'."), "{log}");
     assert!(
         log.contains("Only the AST is emitted when parsing"),
         "{log}"
