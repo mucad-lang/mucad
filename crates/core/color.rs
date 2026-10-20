@@ -166,6 +166,13 @@ impl FromStr for Color {
     }
 }
 
+/// A color as `r, g, b, a` from `0.0` to `1.0`.
+impl From<Color> for [f32; 4] {
+    fn from(color: Color) -> Self {
+        [color.r, color.g, color.b, color.a]
+    }
+}
+
 use thiserror::Error;
 
 /// An error when parsing a color from a string
