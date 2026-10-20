@@ -3,6 +3,7 @@
 
 import * as monaco from "monaco-editor/editor/editor.api";
 import EditorWorker from "monaco-editor/editor/editor.worker?worker";
+import { type Diagnostic, Severity } from "mucad-wasm";
 import { theme } from "./theme";
 
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
@@ -77,6 +78,36 @@ function defineTheme() {
 }
 
 /** Create a µcad code editor in `element`, `onChange` is called after each edit. */
+/** The owner of the markers of the compiler. */
+const MARKER_OWNER = "mucad";
+
+/** Show diagnostics of the compiler as markers in the code, e.g. squiggles below errors. */
+export function setDiagnostics(
+  editor: monaco.editor.IStandaloneCodeEditor,
+  diagnostics: Diagnostic[],
+) {
+  const model = editor.getModel();
+  if (!model) return;
+  monaco.editor.setModelMarkers(model, MARKER_OWNER, diagnostics.map(marker));
+}
+
+/** The Monaco marker of a diagnostic. */
+function marker(diagnostic: Diagnostic): monaco.editor.IMarkerData {
+  return {
+    message: diagnostic.message,
+    severity: {
+      [Severity.Error]: monaco.MarkerSeverity.Error,
+      [Severity.Warning]: monaco.MarkerSeverity.Warning,
+      [Severity.Advice]: monaco.MarkerSeverity.Hint,
+    }[diagnostic.severity],
+    startLineNumber: diagnostic.startLineNo,
+    startColumn: diagnostic.startColumn,
+    endLineNumber: diagnostic.endLineNo,
+    endColumn: diagnostic.endColumn,
+    source: "µcad",
+  };
+}
+
 export function createEditor(element: HTMLElement, onChange: (code: string) => void) {
   registerLanguage();
   defineTheme();

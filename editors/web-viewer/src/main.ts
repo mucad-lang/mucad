@@ -3,7 +3,7 @@
 
 import init, { Mucad } from "mucad-wasm";
 import { Dock } from "./dock";
-import { createEditor } from "./editor";
+import { createEditor, setDiagnostics } from "./editor";
 import { examples } from "./examples";
 import { Viewer } from "./viewer";
 import "./style.css";
@@ -34,7 +34,8 @@ let modelType: string | undefined;
 /** Compile `code` and show its model, diagnostics and status. */
 function compile(code: string) {
   const result = mucad.compile(code);
-  diagnostics.textContent = result.diagnostics;
+  diagnostics.textContent = result.report;
+  setDiagnostics(editor, result.diagnostics);
   diagnostics.classList.toggle("error", !result.success);
   modelType = result.success ? result.modelType : undefined;
 
