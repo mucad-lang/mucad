@@ -4,8 +4,8 @@
 //! A compiler artifact to be persisted, e.g. an IR written and read from file.
 
 use derive_more::{Display, FromStr};
-use mucad_hash::HashId;
 use miette::Diagnostic as MietteDiagnostic;
+use mucad_hash::HashId;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -56,10 +56,10 @@ pub enum ArtifactKind {
 impl ArtifactKind {
     pub fn ext(&self) -> &'static str {
         match self {
-            ArtifactKind::Ast => "ast",
-            ArtifactKind::Ir => "ir",
-            ArtifactKind::Library => "lib",
-            ArtifactKind::ModelTree => "model",
+            ArtifactKind::Ast => "muast",
+            ArtifactKind::Ir => "muir",
+            ArtifactKind::Library => "mulib",
+            ArtifactKind::ModelTree => "mumodel",
         }
     }
 }
@@ -172,7 +172,7 @@ pub trait Artifact: Sized + Serialize {
     fn emit(&self, path: impl AsRef<std::path::Path>) -> miette::Result<std::path::PathBuf> {
         use miette::IntoDiagnostic;
         let mut path = path.as_ref().to_path_buf();
-        path.add_extension(Self::kind().ext());
+        path.set_extension(Self::kind().ext());
         std::fs::write(&path, self.to_ron()?).into_diagnostic()?;
         Ok(path)
     }
