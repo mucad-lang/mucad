@@ -10,7 +10,7 @@ use mu::types::{ModelType, model::NodeExt};
 /// Exports a compiled model into a file, e.g. an SVG for a sketch or an STL for a part.
 #[derive(Debug, Default)]
 pub struct Exporter {
-    config: mu::ExportConfig,
+    config: mu::ExporterConfig,
     resolution: mu::RenderResolution,
 }
 
@@ -19,7 +19,7 @@ impl Exporter {
         Self::default()
     }
 
-    pub fn with_config(mut self, config: mu::ExportConfig) -> Self {
+    pub fn with_config(mut self, config: mu::ExporterConfig) -> Self {
         self.config = config;
         self
     }

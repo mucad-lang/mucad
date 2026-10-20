@@ -3,8 +3,8 @@
 
 //! µcad driver config.
 
-use mucad_render::RenderResolution;
 use miette::IntoDiagnostic;
+use mucad_render::RenderResolution;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
@@ -17,7 +17,7 @@ pub struct DriverConfig {
     pub default_extension: String,
 
     /// Export settings.
-    pub export: ExportConfig,
+    pub export: ExporterConfig,
 
     /// Format config
     pub format: FormatConfig,
@@ -69,14 +69,14 @@ impl DriverConfig {
 
 /// Export settings.
 #[derive(Deserialize, Clone, Debug)]
-pub struct ExportConfig {
+pub struct ExporterConfig {
     /// Default sketch exporter.
     pub sketch: String,
     /// Default part exporter.
     pub part: String,
 }
 
-impl Default for ExportConfig {
+impl Default for ExporterConfig {
     fn default() -> Self {
         Self {
             sketch: "svg".into(),
@@ -85,7 +85,7 @@ impl Default for ExportConfig {
     }
 }
 
-impl ExportConfig {
+impl ExporterConfig {
     pub fn render_resolution(&self) -> RenderResolution {
         todo!()
     }
