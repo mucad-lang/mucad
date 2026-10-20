@@ -62,7 +62,7 @@ default-members = [
 resolver = "2"
 
 [workspace.package]
-description = "µcad: A CAD system for the 21st century"
+description = "µcad: A CAD programming language for everybody"
 authors = [
     "Michael Winkelmann (michael@winkelmann.site)",
 ]
