@@ -168,7 +168,8 @@ impl Export for SvgExporter {
         let Some(content_rect) = bounds.enlarge(2.0 * settings.padding_factor).rect() else {
             return Err(ExportError::Custom("Nothing to be exported".into()));
         };
-        let canvas = Canvas::new_centered(content_rect, bounds.size(), Some(1.0));
+        // The canvas has the size of the content with padding, in millimeters.
+        let canvas = Canvas::new_centered(content_rect, None, Some(1.0));
         let mut writer = SvgWriter::new(writer, canvas);
         writer.style(&SvgExporter::theme_to_svg_style(&self.theme))?;
         geometry.write_svg_mapped(&mut writer)?;

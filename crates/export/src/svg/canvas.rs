@@ -8,9 +8,7 @@ use mucad_core::{
     Bounds2D, Circle, Geometries2D, Geometry, Geometry2D, Line, LineString, MultiLineString, Point,
     Polygon, Rect, Scalar, Size2, Vec2, geo2d,
 };
-use mucad_render::{
-    GeometryNodeData, GeometryNodeMut, GeometryOutput, GeometryOutputs, GeometryTree,
-};
+use mucad_render::{GeometryNodeData, GeometryOutput, GeometryOutputs, GeometryTree};
 
 use crate::svg::CenteredText;
 
@@ -192,10 +190,12 @@ impl MapToCanvas for Circle {
     }
 }
 
+/// A coordinate is a point, e.g. of a polygon.
 impl MapToCanvas for Coord {
     fn map_to_canvas(&mut self, canvas: &Canvas) {
-        self.x.map_to_canvas(canvas);
-        self.y.map_to_canvas(canvas);
+        let mut xy = self.x_y();
+        xy.map_to_canvas(canvas);
+        *self = xy.into();
     }
 }
 
@@ -296,12 +296,12 @@ impl MapToCanvas for GeometryNodeData {
     }
 }
 
+/// All nodes are mapped, the SVG writer writes the outputs of children if a node has none.
 impl MapToCanvas for GeometryTree {
     fn map_to_canvas(&mut self, canvas: &Canvas) {
-        fn recurse(mut node: GeometryNodeMut, canvas: &Canvas) {
-            node.get_mut().map_to_canvas(canvas);
+        let nodes: Vec<_> = self.root.descendants(&self.arena).collect();
+        for node in nodes {
+            self.arena[node].get_mut().map_to_canvas(canvas);
         }
-
-        recurse(self.root_mut(), canvas)
     }
 }

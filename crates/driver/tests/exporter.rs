@@ -106,9 +106,7 @@ fn export_resolution() {
     let triangles = |resolution: &str| {
         let path = dir.path().join(format!("{resolution}.stl"));
         mu::Exporter::new()
-            .with_resolution(
-                mucad_driver::resolution_from_str(resolution).expect("A resolution"),
-            )
+            .with_resolution(mucad_driver::resolution_from_str(resolution).expect("A resolution"))
             .export(&compile(PART), "model.mu", Some(&path))
             .expect("An STL");
         std::fs::read_to_string(path)
@@ -118,4 +116,59 @@ fn export_resolution() {
     };
 
     assert!(triangles("1mm") < triangles("0.1mm"));
+}
+
+/// The bounds `(min_x, min_y, max_x, max_y)` of the path coordinates and the size of the
+/// view box of an SVG.
+fn svg_bounds(svg: &str) -> ((f64, f64, f64, f64), (f64, f64)) {
+    let numbers = |s: &str| -> Vec<f64> {
+        s.split(|c: char| !(c.is_ascii_digit() || c == '.' || c == '-' || c == 'e'))
+            .filter_map(|n| n.parse().ok())
+            .collect()
+    };
+    let view_box = svg.split("viewBox='").nth(1).expect("A view box");
+    let view_box = numbers(view_box.split('\'').next().expect("A view box"));
+
+    let mut bounds = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
+    for path in svg.split("<path d=\"").skip(1) {
+        let path = path.split('"').next().expect("A path");
+        // Paths of the theme, e.g. arrow markers, are not geometry.
+        if !path.starts_with('M') || path.starts_with("M 0 0") {
+            continue;
+        }
+        for point in numbers(path).chunks(2) {
+            bounds.0 = bounds.0.min(point[0]);
+            bounds.1 = bounds.1.min(point[1]);
+            bounds.2 = bounds.2.max(point[0]);
+            bounds.3 = bounds.3.max(point[1]);
+        }
+    }
+    (bounds, (view_box[2], view_box[3]))
+}
+
+/// A sketch is centered in the SVG with a padding, also if it is not at the origin.
+#[test]
+fn export_svg_centered() {
+    use mu::export::{Export, svg::SvgExporter};
+
+    let model = compile(
+        "__mu::geo2d::Rect(width = 20mm, height = 10mm, x = 0mm, y = 0mm)
+            .__mu::ops::translate(x = 30mm, y = -40mm, z = 0mm);",
+    );
+    let mut svg = Vec::new();
+    SvgExporter::default()
+        .export(&model, &mut svg)
+        .expect("An SVG");
+    let svg = String::from_utf8(svg).expect("UTF-8");
+
+    let ((min_x, min_y, max_x, max_y), (width, height)) = svg_bounds(&svg);
+    let close = |a: f64, b: f64| (a - b).abs() < 1e-6;
+    // 5% padding on each side.
+    assert!(
+        close(max_x - min_x, 20.0) && close(max_y - min_y, 10.0),
+        "{svg}"
+    );
+    assert!(close(width, 22.0) && close(height, 11.0), "{svg}");
+    assert!(close(min_x, width - max_x) && close(min_x, 1.0), "{svg}");
+    assert!(close(min_y, height - max_y) && close(min_y, 0.5), "{svg}");
 }
