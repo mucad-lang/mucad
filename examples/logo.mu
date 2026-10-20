@@ -78,7 +78,6 @@ shape = shapes::Mu(SIZE * 50%, SIZE * 10%);
 
 // Let's construct a µ-gear with custom shape and ...
 #[export = "mylogo.svg"] // Export under custom name `mylogo.svg` by default.
-#[color = (fill = "#100000", stroke = "#100000")]
 logo = MuGear(SIZE, shape);
 
 // ... turn it into 3D.
