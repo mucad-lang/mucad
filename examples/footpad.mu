@@ -30,8 +30,6 @@ part FootPad(
         top_right = (x = s.x, y = s.y);
         bottom_left = (x = -s.x, y = -s.y);
         bottom_right = (x = s.x, y = -s.y);
-        (Circle(radius, c = (x = top_left.x, y = bottom_right.y)).hull()
-        | Circle(radius, c = (x = top_right.x, y = bottom_left.y)).hull());
     }
     .extrude(base_upper_height)
     .translate(z = base_lower_height);

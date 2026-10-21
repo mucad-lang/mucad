@@ -1,9 +1,0 @@
-# Copyright © 2026 The µcad authors <info@mucad.org>
-# SPDX-License-Identifier: MIT
-
-[library]
-name = "keypad"
-description = "µcad keypad library"
-version = "0.1.0"
-authors = ["Michael Winkelmann <michael@winkelmann.site>"]
-license = "MIT"
