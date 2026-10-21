@@ -21,7 +21,7 @@ use std::rc::Rc;
 use fixed::traits::ToFixed;
 pub use list::*;
 pub use matrix::*;
-use mucad_lang_base::{CompactString, ToCompactString};
+use mucad_lang_base::{CompactString, DisplayOneLine, ToCompactString};
 pub use quantity::*;
 pub use tuple::*;
 pub use value_access::*;
@@ -61,6 +61,8 @@ pub enum Value {
     /// A model tree
     Model(Rc<ModelTree>),
 }
+
+impl DisplayOneLine for Value {}
 
 /// Builder methods, mainly for testing
 impl Value {

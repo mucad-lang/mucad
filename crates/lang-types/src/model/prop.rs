@@ -3,7 +3,7 @@
 
 //! Model properties type.
 
-use mucad_lang_base::{Identifier, SrcRef};
+use mucad_lang_base::{DisplayOneLine, Identifier, SrcRef};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::Deref;
@@ -69,7 +69,7 @@ impl std::fmt::Display for Property {
                 PropertyType::Output => " [out]",
             },
             ty = self.value.ty(),
-            value = self.value
+            value = self.value.to_string_one_line()
         )
     }
 }
