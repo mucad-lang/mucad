@@ -5,11 +5,26 @@
 
 use std::f64::consts::PI;
 
-use cgmath::{Matrix, Point3, SquareMatrix, Transform, Vector3};
+use cgmath::{Point3, SquareMatrix, Transform, Vector3};
 
 use geo::{MultiPolygon, TriangulateEarcut};
 
 use crate::*;
+
+/// The transform of a 2D profile to `angle` around the Z axis, e.g. to revolve it.
+///
+/// The profile's X is the distance from the axis and its Y the height (Z).
+/// A positive angle rotates counter-clockwise (right-hand rule), from the X towards the Y axis.
+fn revolve_matrix(angle: Angle) -> Mat4 {
+    // Columns: X stays X, Y becomes Z, Z becomes Y.
+    let profile_to_xz = Mat4::new(
+        1.0, 0.0, 0.0, 0.0, //
+        0.0, 0.0, 1.0, 0.0, //
+        0.0, 1.0, 0.0, 0.0, //
+        0.0, 0.0, 0.0, 1.0, //
+    );
+    Mat4::from_angle_z(angle) * profile_to_xz
+}
 
 /// A type of an extrusion with certain parameters.
 pub enum Extrusion {
@@ -85,21 +100,16 @@ pub trait Extrude {
 
         let delta = angle / segments as Scalar;
 
-        // Generate all rotation matrices
         let transforms: Vec<_> = (0..=segments)
-            .map(|i| {
-                let a = delta * i as Scalar;
-                let mut mat = Mat4::from_angle_y(a);
-                mat.swap_rows(2, 1); // Align to Z plane
-                mat
-            })
+            .map(|i| revolve_matrix(delta * i as Scalar))
             .collect();
 
         // For each segment, extrude between slice i and i+1
         for i in 0..segments {
             let m_a = &transforms[i];
             let m_b = &transforms[i + 1];
-            let slice = self.extrude_slice(m_a, m_b);
+            // The profile's normal points against the sweep, so slices run backwards.
+            let slice = self.extrude_slice(m_b, m_a);
             mesh.append(&slice);
         }
 
@@ -107,8 +117,8 @@ pub trait Extrude {
         if angle.0 < PI * 2.0 {
             let m_start = &transforms[0];
             let m_end = transforms.last().expect("Transform");
-            mesh.append(&self.cap(m_start, true));
-            mesh.append(&self.cap(m_end, false));
+            mesh.append(&self.cap(m_start, false));
+            mesh.append(&self.cap(m_end, true));
         }
 
         let bounds = mesh.calc_bounds_3d();
@@ -162,10 +172,8 @@ pub trait Extrude {
 
                 // Rotate around the Z axis like `revolve_extrude`,
                 // where the profile's X is the distance from the axis and its Y is the height.
-                let mut mat = Mat4::from_angle_y(cgmath::Rad(angle_i));
-                mat.swap_rows(2, 1);
-
-                mat * Mat4::from_translation(Vec3::new(radius_i, height_i, 0.0))
+                revolve_matrix(cgmath::Rad(angle_i))
+                    * Mat4::from_translation(Vec3::new(radius_i, height_i, 0.0))
             })
             .collect();
 
@@ -173,7 +181,8 @@ pub trait Extrude {
         for i in 0..total_segments {
             let m_a = &transforms[i];
             let m_b = &transforms[i + 1];
-            let slice = self.extrude_slice(m_a, m_b);
+            // The profile's normal points against the sweep, so slices run backwards.
+            let slice = self.extrude_slice(m_b, m_a);
             mesh.append(&slice);
         }
 
@@ -181,8 +190,8 @@ pub trait Extrude {
         {
             let m_start = &transforms[0];
             let m_end = transforms.last().expect("Transform");
-            mesh.append(&self.cap(m_start, true));
-            mesh.append(&self.cap(m_end, false));
+            mesh.append(&self.cap(m_start, false));
+            mesh.append(&self.cap(m_end, true));
         }
 
         let bounds = mesh.calc_bounds_3d();

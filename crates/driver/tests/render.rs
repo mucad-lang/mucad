@@ -171,3 +171,65 @@ fn render_spiralize() {
         "{min:?} {max:?}"
     );
 }
+
+/// A box of 10 × 1 × 2 mm with its corner at the origin, rotated by `rotation`.
+fn rotated_box(rotation: &str) -> String {
+    format!(
+        "Rect(width = 10mm, height = 1mm, x = 0mm, y = 0mm)\
+            .extrude(height = 2mm).rotate({rotation});"
+    )
+}
+
+/// The size of the bounds in X, Y and Z, rounded to 1/1000 mm.
+fn size(tree: &mu::render::GeometryTree) -> [f64; 3] {
+    let bounds = tree.bounds();
+    let round = |value: f64| (value * 1000.0).round() / 1000.0;
+    [
+        round(bounds.max.x - bounds.min.x),
+        round(bounds.max.y - bounds.min.y),
+        round(bounds.max.z - bounds.min.z),
+    ]
+}
+
+/// Rotations are right-handed and Euler angles follow FreeCAD: roll about X, then pitch about Y,
+/// then yaw about Z, the axes stay fixed.
+#[test]
+fn render_rotate_conventions() {
+    let mut session = Session::new();
+    for (rotation, expected) in [
+        // Counter-clockwise about the X axis: Y becomes Z.
+        ("roll = 90°", [10.0, 2.0, 1.0]),
+        // Counter-clockwise about the Z axis: X becomes Y.
+        ("yaw = 90°", [1.0, 10.0, 2.0]),
+        // First roll (Y becomes Z), then yaw (X becomes Y).
+        ("roll = 90°, yaw = 90°", [2.0, 10.0, 1.0]),
+        ("xyz = (x = 90°, y = 0°, z = 90°)", [2.0, 10.0, 1.0]),
+        // First about Z (X becomes Y), then about X (Y becomes Z).
+        ("zyx = (x = 90°, y = 0°, z = 90°)", [1.0, 2.0, 10.0]),
+        ("zyx = (x = 90°, y = 0°, z = 0°)", [10.0, 2.0, 1.0]),
+    ] {
+        let tree = session.render(&rotated_box(rotation));
+        assert_eq!(size(&tree), expected, "rotate({rotation})");
+    }
+
+    // Counter-clockwise: the box rotated about Z lies on the negative X side.
+    let tree = session.render(&rotated_box("yaw = 90°"));
+    assert!(tree.bounds().max.x < 1e-6, "{:?}", tree.bounds());
+}
+
+/// A positive angle revolves and spirals counter-clockwise about the Z axis, from X towards Y.
+#[test]
+fn render_revolve_and_spiral_direction() {
+    let mut session = Session::new();
+    for code in [
+        "Rect(width = 1mm, height = 2mm, x = 5mm, y = 0mm).revolve(90°);",
+        "Rect(width = 1mm, height = 2mm, x = 5mm, y = 0mm)\
+            .std::ops::spiralize(inner_radius = 0mm, outer_radius = 0mm, angle = 90°, height = 10mm);",
+    ] {
+        let bounds = session.render(code).bounds();
+        assert!(bounds.min.y > -1e-6, "{code}: {bounds:?}");
+        assert!(bounds.max.y > 5.9, "{code}: {bounds:?}");
+        // The profile's Y is the height.
+        assert!(bounds.min.z > -1e-6, "{code}: {bounds:?}");
+    }
+}

@@ -100,7 +100,9 @@ pub op reflect(x = 0.0mm, y = 0.0mm, z = 0.0mm, n: Vec3) {
     );
 }
 
-/// Revolve a geometry around 360°.
+/// Revolve a 2D geometry about the Z axis, its Y axis becomes the Z axis.
+///
+/// A positive angle revolves counter-clockwise (right-hand rule), from the X towards the Y axis.
 pub op revolve(angle = 360°) {
     @input.__mu::ops::revolve(angle);
 }
@@ -124,42 +126,48 @@ pub op rotate(matrix: Matrix3) {
         matrix = __mu::math::rotate_around_axis(angle, x = axis.x, y = axis.y, z = axis.z);
     }
 
-    /// Euler rotation around X, Y, Z.
+    /// Rotation about the X, then the Y, then the Z axis by Euler angles.
+    ///
+    /// The axes stay fixed, positive angles rotate counter-clockwise (right-hand rule).
     ///
     /// * `x` - X angle.
     /// * `y` - Y angle.
     /// * `z` - Z angle.
     ///
     /// Examples:
-    /// * `Cube(42mm).rotate(45°, (1, 0, 0));`: Rotates a cylinder by 45° around X axis (unnamed tuple).
+    /// * `Cube(42mm).rotate(x = 45°);`: Rotates a cube by 45° about the X axis.
+    /// * `Cube(42mm).rotate(x = 90°, z = 90°);`: Rotates a cube about the X axis, then about the Z axis.
     init(x = 0°, y = 0°, z = 0°) {
-        matrix = __mu::math::rotate_xyz(x, y, z);
+        matrix = __mu::math::rotate_xyz(x = x, y = y, z = z);
     }
 
-    /// Euler rotation around X, Y, Z (nautical angles)
+    /// Rotation by yaw, pitch and roll like in FreeCAD: rotates about the X axis by `roll`,
+    /// then about the Y axis by `pitch`, then about the Z axis by `yaw`.
     ///
-    /// * `roll` - Roll angle, rotates around X axis.
-    /// * `pitch` - Pitch angle, rotates around Y axis.
-    /// * `yaw` - Yaw angle, rotates around Z axis.
+    /// The axes stay fixed, positive angles rotate counter-clockwise (right-hand rule).
+    ///
+    /// * `roll` - Roll angle, rotates about the X axis.
+    /// * `pitch` - Pitch angle, rotates about the Y axis.
+    /// * `yaw` - Yaw angle, rotates about the Z axis.
     ///
     /// Example:
-    /// * `Cube(42mm).rotate(roll = 30°)`: Rotates a cylinder by 45° around X axis.
+    /// * `Cube(42mm).rotate(roll = 30°);`: Rotates a cube by 30° about the X axis.
     init(roll = 0°, pitch = 0°, yaw = 0°) {
-        matrix = __mu::math::rotate_xyz(roll, pitch, yaw);
+        matrix = __mu::math::rotate_xyz(x = roll, y = pitch, z = yaw);
     }
 
-    /// Euler rotation around X, Y and Z axis (with a vector of angles)
+    /// Rotation about the X, then the Y, then the Z axis (with a tuple of angles).
     ///
-    /// * `Cube(42mm).rotate(xyz = (30°,20°,10°))`: Euler rotation for a cube around X, Y, Z axis.
-    init(xyz = (x = 0°,y = 0°,z = 0°)) {
-        matrix = __mu::math::rotate_xyz(xyz.x, xyz.y, xyz.z);
+    /// * `Cube(42mm).rotate(xyz = (x = 30°, y = 20°, z = 10°));`: Rotates a cube about X, then Y, then Z.
+    init(xyz = (x = 0°, y = 0°, z = 0°)) {
+        matrix = __mu::math::rotate_xyz(x = xyz.x, y = xyz.y, z = xyz.z);
     }
 
-    /// Euler rotation around Z, Y and X axis (with a vector of angles)
+    /// Rotation about the Z, then the Y, then the X axis (with a tuple of angles).
     ///
-    /// * `Cube(42mm).rotate(zyx = (30°,20°,10°));`: Euler rotation for a cube around Z, Y, X axis.
+    /// * `Cube(42mm).rotate(zyx = (x = 30°, y = 20°, z = 10°));`: Rotates a cube about Z, then Y, then X.
     init(zyx = (x = 0°, y = 0°, z = 0°)) {
-        matrix = __mu::math::rotate_zyx(zyx.z, zyx.y, zyx.x);
+        matrix = __mu::math::rotate_zyx(x = zyx.x, y = zyx.y, z = zyx.z);
     }
 
     @input.__mu::ops::rotate(matrix);
@@ -194,7 +202,9 @@ pub op scale(v: Vec3) {
     @input.__mu::ops::scale(x = v.x, y = v.y, z = v.z);
 }
 
-/// Create a spiral with a height and an inner and outer radius.
+/// Create a spiral with a height and an inner and outer radius about the Z axis.
+///
+/// A positive angle makes a right-handed spiral, which turns counter-clockwise upwards.
 pub op spiralize(
     inner_radius: Length,
     outer_radius: Length,

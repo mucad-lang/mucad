@@ -60,7 +60,7 @@ impl AffineTransform {
                 math::mat3_to_mat4(math::rotate_xyz(*x, *y, *z))
             }
             AffineTransform::EulerRotateZYX { x, y, z } => {
-                math::mat3_to_mat4(math::rotate_zyx(*z, *y, *x))
+                math::mat3_to_mat4(math::rotate_zyx(*x, *y, *z))
             }
             AffineTransform::Scale(v) => {
                 let mat_f = Mat4F::from_nonuniform_scale(

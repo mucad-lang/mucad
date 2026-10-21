@@ -486,6 +486,7 @@ pub mod math {
         Ok(mucad_lang_types::math::rotate_around_axis(angle, x, y, z).into())
     }
 
+    /// Rotation about the X, then the Y, then the Z axis, like roll, pitch and yaw.
     #[builtin_fn(math::rotate_xyz(x: Angle, y: Angle, z: Angle) -> Mat3)]
     pub fn rotate_xyz(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let x: Angle = args.try_get("x")?;
@@ -494,12 +495,13 @@ pub mod math {
         Ok(mucad_lang_types::math::rotate_xyz(x, y, z).into())
     }
 
+    /// Rotation about the Z, then the Y, then the X axis.
     #[builtin_fn(math::rotate_zyx(x: Angle, y: Angle, z: Angle) -> Mat3)]
     pub fn rotate_zyx(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let x: Angle = args.try_get("x")?;
         let y: Angle = args.try_get("y")?;
         let z: Angle = args.try_get("z")?;
-        Ok(mucad_lang_types::math::rotate_zyx(z, y, x).into())
+        Ok(mucad_lang_types::math::rotate_zyx(x, y, z).into())
     }
 }
 
@@ -978,21 +980,21 @@ pub mod ops {
         ctx: &mut BuiltinEvalContext,
     ) -> Result<ModelTree, BuiltinError>;
 
-    /// Revolve a 2D model around the Y axis.
+    /// Revolve a 2D model counter-clockwise about the Z axis, its Y axis becomes the Z axis.
     #[builtin_op(Geometry2D -> Geometry3D)]
     pub struct Revolve {
         /// Revolve angle.
         pub angle: Angle,
     }
 
-    /// Revolve a 2D model around the Y axis.
+    /// Revolve a 2D model counter-clockwise about the Z axis, its Y axis becomes the Z axis.
     #[builtin_op]
     pub fn revolve(
         args: Arguments,
         ctx: &mut BuiltinEvalContext,
     ) -> Result<ModelTree, BuiltinError>;
 
-    /// Create a spiral from a 2D model.
+    /// Create a right-handed spiral about the Z axis from a 2D model, its Y axis becomes the Z axis.
     #[builtin_op(Geometry2D -> Geometry3D)]
     pub struct Spiralize {
         /// Height of the spiral.
@@ -1005,7 +1007,7 @@ pub mod ops {
         pub angle: Angle,
     }
 
-    /// Create a spiral from a 2D model.
+    /// Create a right-handed spiral about the Z axis from a 2D model, its Y axis becomes the Z axis.
     #[builtin_op]
     pub fn spiralize(
         args: Arguments,

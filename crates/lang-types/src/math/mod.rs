@@ -30,14 +30,21 @@ pub fn rotate_around_axis(angle: Angle, x: Scalar, y: Scalar, z: Scalar) -> Mat3
     Mat3F::from_axis_angle(axis.into_float(), angle).into_fixed()
 }
 
+/// Rotation about the X, then the Y, then the Z axis, which stay fixed (`Rz·Ry·Rx`).
+///
+/// This is the yaw-pitch-roll rotation of FreeCAD with roll `x`, pitch `y` and yaw `z`.
+/// Positive angles rotate counter-clockwise, seen from the positive end of the axis.
 pub fn rotate_xyz(x: Angle, y: Angle, z: Angle) -> Mat3 {
     let (x, y, z) = rotation_matrices_xyz(x, y, z);
-    (x * y * z).into_fixed()
+    (z * y * x).into_fixed()
 }
 
-pub fn rotate_zyx(z: Angle, y: Angle, x: Angle) -> Mat3 {
+/// Rotation about the Z, then the Y, then the X axis, which stay fixed (`Rx·Ry·Rz`).
+///
+/// Positive angles rotate counter-clockwise, seen from the positive end of the axis.
+pub fn rotate_zyx(x: Angle, y: Angle, z: Angle) -> Mat3 {
     let (x, y, z) = rotation_matrices_xyz(x, y, z);
-    (z * y * x).into_fixed()
+    (x * y * z).into_fixed()
 }
 
 /// Rotation matrix to orient a vector
