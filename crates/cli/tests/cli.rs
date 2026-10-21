@@ -360,3 +360,30 @@ fn compile_displays_library() {
             "Cannot display Model: only available for source files",
         ));
 }
+
+/// Without output, a source is exported into the files of its export attributes.
+#[test]
+fn export_attributes() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = source_file(
+        &dir,
+        "logo.mu",
+        "#[export]\nshape = std::geo2d::Circle(radius = 1mm);\n\
+         #[export = \"disc.stl\"]\nshape.std::ops::extrude(height = 1mm);\n",
+    );
+
+    mucad()
+        .arg("export")
+        .arg(&input)
+        .arg("--dry-run")
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("logo__shape.svg"))
+        .stderr(predicate::str::contains("disc.stl"));
+    assert!(!dir.path().join("disc.stl").exists());
+
+    mucad().arg("export").arg(&input).assert().success();
+    assert!(dir.path().join("logo__shape.svg").is_file());
+    assert!(dir.path().join("disc.stl").is_file());
+    assert!(!dir.path().join("logo.svg").exists());
+}

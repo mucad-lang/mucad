@@ -17,7 +17,7 @@ use mucad_lang_parse::ParseIssue;
 use mucad_lang_types::Value;
 
 pub use compiler::Compiler;
-pub use exporter::Exporter;
+pub use exporter::{ExportFile, Exporter};
 pub use formatter::Formatter;
 
 /// We use [`miette::Result`] throught-out this crate.

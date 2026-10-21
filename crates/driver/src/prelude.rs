@@ -135,7 +135,7 @@ pub mod export {
     pub use mucad_export::*;
 }
 
-pub use crate::{Exporter, config::ExporterConfig};
+pub use crate::{ExportFile, Exporter, config::ExporterConfig};
 
 // =========================================================================
 // --- Traits Namespace ---

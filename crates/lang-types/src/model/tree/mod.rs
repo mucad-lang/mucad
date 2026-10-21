@@ -271,6 +271,15 @@ impl From<Value> for ModelTree {
     }
 }
 
+/// A copy of the subtree of a node, e.g. to export a part of a model.
+impl From<NodeRef<'_>> for ModelTree {
+    fn from(node: NodeRef<'_>) -> Self {
+        let mut arena = Arena::default();
+        let root = tree::adopt_tree_to_arena(&mut arena, node.id, node.arena);
+        Self { root, arena }
+    }
+}
+
 impl From<Model> for ModelTree {
     fn from(model: Model) -> Self {
         Self::new(model)

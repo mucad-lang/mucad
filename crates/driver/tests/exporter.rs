@@ -172,3 +172,59 @@ fn export_svg_centered() {
     assert!(close(min_x, width - max_x) && close(min_x, 1.0), "{svg}");
     assert!(close(min_y, height - max_y) && close(min_y, 0.5), "{svg}");
 }
+
+/// A source with export attributes, like `examples/logo_letters.mu`.
+const EXPORTS: &str = r#"
+#[export]
+shape = __mu::geo2d::Circle(radius = 1mm);
+
+#[export = "mylogo.svg"]
+logo = __mu::geo2d::Rect(width = 4mm, height = 2mm, x = 0mm, y = 0mm);
+
+#[export = "logo.stl"]
+logo.__mu::ops::extrude(height = 1mm, scale_x = 1.0, scale_y = 1.0, twist = 0°);
+
+// Without export attribute.
+__mu::geo2d::Circle(radius = 3mm);
+"#;
+
+/// The export attributes of the source statements become export files.
+#[test]
+fn export_files() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = dir.path().join("logo.mu");
+    let model = compile(EXPORTS);
+    let exporter = mu::Exporter::new();
+
+    let files = exporter.export_files(&model, &input).expect("Export files");
+    let mut paths: Vec<_> = files.iter().map(|file| file.path.clone()).collect();
+    paths.sort();
+    assert_eq!(
+        paths,
+        [
+            dir.path().join("logo.stl"),
+            // Named after the input and the statement, with the extension for sketches.
+            dir.path().join("logo__shape.svg"),
+            dir.path().join("mylogo.svg"),
+        ]
+    );
+
+    for file in &files {
+        let path = exporter.export_file(file).expect("An exported file");
+        assert!(path.is_file(), "{path:?}");
+    }
+    let stl = std::fs::read_to_string(dir.path().join("logo.stl")).expect("An STL");
+    assert!(stl.contains("facet"), "{stl}");
+    let svg = std::fs::read_to_string(dir.path().join("mylogo.svg")).expect("An SVG");
+    assert!(svg.contains("<path"), "{svg}");
+}
+
+/// A model without export attributes has no export files.
+#[test]
+fn export_files_without_attributes() {
+    let model = compile(SKETCH);
+    let files = mu::Exporter::new()
+        .export_files(&model, "model.mu")
+        .expect("Export files");
+    assert!(files.is_empty());
+}

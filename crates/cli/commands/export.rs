@@ -10,7 +10,10 @@ use crate::{Cli, commands::RunCommand};
 pub struct Export {
     pub input: String,
 
-    /// Output file (e.g. an SVG or STL).
+    /// Output file (e.g. an SVG or STL) for the whole model.
+    ///
+    /// Without output, the model is exported into the files of its export attributes
+    /// (e.g. `#[export = "logo.svg"]`) or, without any, next to the input.
     pub output: Option<std::path::PathBuf>,
 
     /// The resolution of this export.
@@ -31,6 +34,24 @@ impl RunCommand for Export {
         let model = cli.compile(&mut compiler, &self.input)?;
 
         let exporter = cli.exporter(&self.resolution)?;
+
+        // Without output, the export attributes of the source decide the files, if it has some.
+        let files = match &self.output {
+            Some(_) => Vec::new(),
+            None => exporter.export_files(&model, &self.input)?,
+        };
+        if !files.is_empty() {
+            for file in &files {
+                if self.dry_run {
+                    eprintln!("Export target: {}", file.path.display());
+                } else {
+                    let path = exporter.export_file(file)?;
+                    eprintln!("Exported '{}'.", path.display());
+                }
+            }
+            return Ok(());
+        }
+
         if self.dry_run {
             let path = exporter.output_path(&model, &self.input, self.output.as_deref())?;
             eprintln!("Export target: {}", path.display());
