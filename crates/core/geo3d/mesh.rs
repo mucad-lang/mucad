@@ -170,31 +170,23 @@ impl TriangleMesh {
 
         self.positions = new_positions;
 
-        // 2. Remap triangle indices and remove degenerate triangles (zero area or repeated vertices)
-        let mut new_triangles = Vec::with_capacity(self.triangle_indices.len());
-
-        for tri in &self.triangle_indices {
-            let tri_idx = crate::Triangle(
-                remap[tri.0 as usize],
-                remap[tri.1 as usize],
-                remap[tri.2 as usize],
-            );
-
-            if tri_idx.is_degenerated() {
-                continue;
-            }
-
-            // Optional: check zero-area triangle by computing cross product
-            let tri = self.fetch_triangle(tri_idx);
-
-            if tri.area() < 1e-8 {
-                continue; // Degenerate triangle
-            }
-
-            new_triangles.push(tri_idx);
-        }
-
-        self.triangle_indices = new_triangles;
+        // 2. Remap triangle indices and remove triangles with repeated vertices.
+        //
+        // Triangles of three distinct vertices are kept, even without area: their edges are
+        // shared with neighbouring triangles, e.g. of the triangulation of a profile with steep
+        // teeth, so removing them would leave holes and the mesh would not be a manifold.
+        self.triangle_indices = self
+            .triangle_indices
+            .iter()
+            .map(|tri| {
+                crate::Triangle(
+                    remap[tri.0 as usize],
+                    remap[tri.1 as usize],
+                    remap[tri.2 as usize],
+                )
+            })
+            .filter(|tri| !tri.is_degenerated())
+            .collect();
     }
 }
 
