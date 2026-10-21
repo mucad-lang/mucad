@@ -3,7 +3,7 @@
 
 //! Model properties type.
 
-use mucad_lang_base::{DisplayOneLine, Identifier, SrcRef};
+use mucad_lang_base::{DisplayOneLine, DisplayWithCtx, Identifier, SrcRef};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::ops::Deref;

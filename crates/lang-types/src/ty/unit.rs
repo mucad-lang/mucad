@@ -271,14 +271,6 @@ impl Unit {
         }
     }
 
-    /// The number of decimals of a value in this unit within the resolution of a [`Scalar`],
-    /// e.g. 9 for `mm` and 7 for `°`.
-    pub fn decimals(&self) -> usize {
-        // In `f64`, because the resolution is smaller than a `Scalar` for large factors.
-        let resolution = Scalar::DELTA.to_num::<f64>() / self.factor().to_num::<f64>();
-        (-resolution.log10()).floor().max(0.0) as usize
-    }
-
     /// Normalize value to base unit.
     ///
     /// The product with the precise factor is rounded only once, e.g. `1000µm` is `1mm`.

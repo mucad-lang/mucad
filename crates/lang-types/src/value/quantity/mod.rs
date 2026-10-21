@@ -13,6 +13,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::{Integer, Length, Scalar};
 
+const DISPLAY_DECIMALS: usize = 5;
+
 /// A numeric value
 #[derive(Clone, Debug)]
 pub struct Quantity {
@@ -93,9 +95,8 @@ impl std::fmt::Display for Quantity {
         let display_value = self.unit.denormalize(self.value);
         let num_str = match f.precision() {
             Some(precision) => format!("{:.precision$}", display_value, precision = precision),
-            // Only the decimals within the resolution, e.g. `90°` instead of `89.9999999965°`.
             None => {
-                let decimals = self.unit.decimals();
+                let decimals = DISPLAY_DECIMALS;
                 let num_str = format!("{:.decimals$}", display_value.to_num::<f64>());
                 match num_str.contains('.') {
                     true => num_str
