@@ -15,6 +15,7 @@ const element = <T extends HTMLElement>(id: string) => document.getElementById(i
 const select = element<HTMLSelectElement>("examples");
 const status = element<HTMLSpanElement>("status");
 const exportButton = element<HTMLButtonElement>("export");
+const formatButton = element<HTMLButtonElement>("format");
 const diagnostics = element<HTMLPreElement>("diagnostics");
 
 const dock = new Dock(element("dock"), [
@@ -61,7 +62,8 @@ function compile(code: string) {
   exportButton.textContent = modelType === "2d" ? "Export SVG" : "Export STL";
 }
 
-function format(code: string) {
+function format() {
+  const code = editor.getValue();
   const formatted = mucad.format(code);
   if (formatted.success && formatted.formatted) {
       editor.setValue(formatted.code);
@@ -99,6 +101,8 @@ if (versionTag) {
 examples.forEach((example, index) => select.add(new Option(example.name, String(index))));
 select.addEventListener("change", () => editor.setValue(examples[Number(select.value)].code));
 exportButton.addEventListener("click", exportModel);
+formatButton.addEventListener("click", format);
+
 
 // The first example or the one given by the URL, e.g. `?example=1`.
 select.value = String(Number(new URLSearchParams(location.search).get("example")) || 0);
