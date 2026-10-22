@@ -17,6 +17,3 @@ sketch RustGear(r = 50mm) {
 }
 
 RustGear().extrude(10mm);
-
-mod rust_r;
-rust_r::RustR().extrude(5mm);
