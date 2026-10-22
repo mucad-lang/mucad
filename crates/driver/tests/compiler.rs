@@ -817,68 +817,30 @@ fn compile_lib() {
     assert_eq!(lib.name().map(|name| name.as_str()), Some("std"));
 }
 
-/// The errors of compiling `source`.
-fn errors(compiler: &mut Compiler, source: &str) -> Vec<String> {
+/// The messages of the errors of compiling `source`.
+fn error_messages(compiler: &mut Compiler, source: &str) -> Vec<String> {
     let diags = match compiler.compile(source) {
         Ok((_, diags)) | Err(diags) => diags,
     };
     diags
         .iter()
         .filter(|diag| diag.severity() == Some(mu::base::Severity::Error))
-        .map(|diag| diag.to_string())
+        .map(|diag| diag.report.to_string())
         .collect()
 }
 
 /// Parameters need a type or a default value, which must match the type.
-#[test]
-fn type_check_parameters() {
-    let mut compiler = compiler();
-    for (source, error) in [
-        (
-            "sketch S(x) {}",
-            Some("Parameter `x` needs a type or a default value"),
-        ),
-        ("sketch S(x: Any) {}", None),
-        (
-            "sketch S(x: Length = 5) {}",
-            Some("Type mismatch: Length != Integer"),
-        ),
-        ("sketch S(x: Scalar = 5) {}", None),
-        (
-            "const SIZE = 10;\nsketch S(x: Length = SIZE) {}",
-            Some("Type mismatch: Length != Integer"),
-        ),
-        // The return type of a built-in.
-        ("sketch S(b: Bool = 1mm > 2mm) {}", None),
-        (
-            "sketch S(b: Length = 1mm > 2mm) {}",
-            Some("Type mismatch: Length != Bool"),
-        ),
-        (
-            "fn f(x: Bool = 1mm) { return x; }",
-            Some("Type mismatch: Bool != Length"),
-        ),
-    ] {
-        let errors = errors(&mut compiler, source);
-        match error {
-            Some(error) => assert!(
-                errors.iter().any(|e| e.contains(error)),
-                "{source}: {errors:?}"
-            ),
-            None => assert!(errors.is_empty(), "{source}: {errors:?}"),
-        }
-    }
-}
-
-/// Parameters of the building plan are checked once,
-/// although the implicit initializer of the building plan has them, too.
-#[test]
-fn type_check_building_plan_once() {
-    let mut compiler = compiler();
-    for source in ["sketch S(x: Length = 5) {}", "sketch S(x) {}"] {
-        let errors = errors(&mut compiler, source);
-        assert_eq!(errors.len(), 1, "{source}: {errors:?}");
-    }
+/// Parameters of the building plan are checked once, although its implicit initializer has them.
+#[test_case::test_case("sketch S(x) {}" => vec!["Parameter `x` needs a type or a default value"]; "without type")]
+#[test_case::test_case("sketch S(x: Any) {}" => Vec::<String>::new(); "any")]
+#[test_case::test_case("sketch S(x: Length = 5) {}" => vec!["Type mismatch: Length != Integer"]; "integer for length")]
+#[test_case::test_case("sketch S(x: Scalar = 5) {}" => Vec::<String>::new(); "integer for scalar")]
+#[test_case::test_case("const SIZE = 10;\nsketch S(x: Length = SIZE) {}" => vec!["Type mismatch: Length != Integer"]; "constant")]
+#[test_case::test_case("sketch S(b: Bool = 1mm > 2mm) {}" => Vec::<String>::new(); "return type of built-in")]
+#[test_case::test_case("sketch S(b: Length = 1mm > 2mm) {}" => vec!["Type mismatch: Length != Bool"]; "wrong return type of built-in")]
+#[test_case::test_case("fn f(x: Bool = 1mm) { return x; }" => vec!["Type mismatch: Bool != Length"]; "function")]
+fn type_check_parameters(source: &str) -> Vec<String> {
+    error_messages(&mut compiler(), source)
 }
 
 /// A parameter without type gets the type of its default value.
@@ -921,164 +883,68 @@ fn type_check_infers_parameter_types() {
 }
 
 /// Default values of symbols of other libraries are checked, too.
-#[test]
-fn type_check_parameters_of_other_libraries() {
-    let mut compiler = fixture_std_compiler();
-    let source = "sketch S(x: Bool = std::geo2d::RADIUS) {}";
-    let mismatch = errors(&mut compiler, source);
-    assert!(
-        mismatch
-            .iter()
-            .any(|e| e.contains("Type mismatch: Bool != Length")),
-        "{source}: {mismatch:?}"
-    );
-    assert!(errors(&mut compiler, "sketch S(x: Length = std::geo2d::RADIUS) {}").is_empty());
+#[test_case::test_case("sketch S(x: Bool = std::geo2d::RADIUS) {}" => vec!["Type mismatch: Bool != Length"]; "mismatch")]
+#[test_case::test_case("sketch S(x: Length = std::geo2d::RADIUS) {}" => Vec::<String>::new(); "match")]
+fn type_check_parameters_of_other_libraries(source: &str) -> Vec<String> {
+    error_messages(&mut fixture_std_compiler(), source)
 }
 
 /// The expression of a statement with type must match the type.
-#[test]
-fn type_check_statements() {
-    let mut compiler = compiler();
-    for (source, error) in [
-        // Source statements.
-        ("x: Length = 1mm;", None),
-        ("x: Scalar = 1;", None),
-        ("x: Bool = 1mm;", Some("Type mismatch: Bool != Length")),
-        // Workbench statements, properties and statements of groups.
-        (
-            "sketch S() { x: Length = true; }",
-            Some("Type mismatch: Length != Bool"),
-        ),
-        ("sketch S() { prop x: Length = 1mm; }", None),
-        (
-            "sketch S() { prop x: Bool = 2mm; }",
-            Some("Type mismatch: Bool != Length"),
-        ),
-        (
-            "sketch S() { { y: Length = 1mm > 2mm; } }",
-            Some("Type mismatch: Length != Bool"),
-        ),
-        // Local assignments, also in scopes.
-        ("fn f() { x: Length = 1mm; x }", None),
-        (
-            "fn f() { x: Length = 1mm > 2mm; x }",
-            Some("Type mismatch: Length != Bool"),
-        ),
-        (
-            "fn f() { if true { y: Bool = 3; } 1 }",
-            Some("Type mismatch: Bool != Integer"),
-        ),
-        // Models of workbenches.
-        (
-            "sketch S() {}\nx: Length = S();",
-            Some("Type mismatch: Length != Model(2D)"),
-        ),
-        ("part P() {}\nx: Model = P();", None),
-    ] {
-        let errors = errors(&mut compiler, source);
-        match error {
-            Some(error) => assert!(
-                errors.iter().any(|e| e.contains(error)),
-                "{source}: {errors:?}"
-            ),
-            None => assert!(errors.is_empty(), "{source}: {errors:?}"),
-        }
-    }
+// Source statements.
+#[test_case::test_case("x: Length = 1mm;" => Vec::<String>::new(); "source")]
+#[test_case::test_case("x: Scalar = 1;" => Vec::<String>::new(); "integer for scalar")]
+#[test_case::test_case("x: Bool = 1mm;" => vec!["Type mismatch: Bool != Length"]; "source mismatch")]
+// Workbench statements, properties and statements of groups.
+#[test_case::test_case("sketch S() { x: Length = true; }" => vec!["Type mismatch: Length != Bool"]; "workbench")]
+#[test_case::test_case("sketch S() { prop x: Length = 1mm; }" => Vec::<String>::new(); "property")]
+#[test_case::test_case("sketch S() { prop x: Bool = 2mm; }" => vec!["Type mismatch: Bool != Length"]; "property mismatch")]
+#[test_case::test_case("sketch S() { { y: Length = 1mm > 2mm; } }" => vec!["Type mismatch: Length != Bool"]; "group")]
+// Local assignments, also in scopes.
+#[test_case::test_case("fn f() { x: Length = 1mm; x }" => Vec::<String>::new(); "local")]
+#[test_case::test_case("fn f() { x: Length = 1mm > 2mm; x }" => vec!["Type mismatch: Length != Bool"]; "local mismatch")]
+#[test_case::test_case("fn f() { if true { y: Bool = 3; } 1 }" => vec!["Type mismatch: Bool != Integer"]; "scope")]
+// Models of workbenches.
+#[test_case::test_case("sketch S() {}\nx: Length = S();" => vec!["Type mismatch: Length != Model(2D)"]; "sketch")]
+#[test_case::test_case("part P() {}\nx: Model = P();" => Vec::<String>::new(); "part")]
+fn type_check_statements(source: &str) -> Vec<String> {
+    error_messages(&mut compiler(), source)
 }
 
 /// The primary output of a sketch (statements without name) must be 2D models, of a part 3D models.
-#[test]
-fn type_check_workbench_output() {
-    let mut compiler = compiler();
-    let circle = "__mu::geo2d::Circle(radius = 1mm)";
-    let sphere = "__mu::geo3d::Sphere(radius = 1mm)";
-    for (source, error) in [
-        (format!("sketch S() {{ {circle}; }}"), None),
-        (format!("part P() {{ {sphere}; }}"), None),
-        (
-            format!("sketch S() {{ {sphere}; }}"),
-            Some("A sketch must output a Model(2D), not a Model(3D)"),
-        ),
-        (
-            format!("part P() {{ {circle}; }}"),
-            Some("A part must output a Model(3D), not a Model(2D)"),
-        ),
-        // Models of workbenches.
-        (
-            "sketch A() {}\npart P() { A(); }".into(),
-            Some("A part must output a Model(3D), not a Model(2D)"),
-        ),
-        (
-            "sketch S() { 1mm; }".into(),
-            Some("A sketch must output a Model(2D), not a Length"),
-        ),
-        // Statements without name in groups and branches of `if`s.
-        (format!("sketch S() {{ {{ {circle}; }} }}"), None),
-        (
-            format!("sketch S() {{ {{ {{ {sphere}; }} }} }}"),
-            Some("A sketch must output a Model(2D), not a Model(3D)"),
-        ),
-        (
-            format!(
-                "sketch S() {{ if true {{ {circle}; }} else if false {{ {circle}; }} else {{ {sphere}; }} }}"
-            ),
-            Some("A sketch must output a Model(2D), not a Model(3D)"),
-        ),
-        // Named statements and properties are no primary output, also not their statements.
-        (format!("part P() {{ c = {circle}; }}"), None),
-        (format!("sketch S() {{ c = {{ {sphere}; }}; }}"), None),
-        (format!("sketch S() {{ prop c = {{ {sphere}; }}; }}"), None),
-        (format!("sketch S() {{ {{ c = {sphere}; }} }}"), None),
-        // Operations and unknown types are not checked.
-        (format!("op O() {{ {sphere}; }}"), None),
-        ("sketch S() { __mu::debug::print(\"x\"); }".into(), None),
-    ] {
-        let errors = errors(&mut compiler, &source);
-        match error {
-            Some(error) => assert!(
-                errors.iter().any(|e| e.contains(error)),
-                "{source}: {errors:?}"
-            ),
-            None => assert!(errors.is_empty(), "{source}: {errors:?}"),
-        }
-    }
+#[test_case::test_case("sketch S() { __mu::geo2d::Circle(radius = 1mm); }" => Vec::<String>::new(); "sketch")]
+#[test_case::test_case("part P() { __mu::geo3d::Sphere(radius = 1mm); }" => Vec::<String>::new(); "part")]
+#[test_case::test_case("sketch S() { __mu::geo3d::Sphere(radius = 1mm); }" => vec!["A sketch must output a Model(2D), not a Model(3D)"]; "3D in sketch")]
+#[test_case::test_case("part P() { __mu::geo2d::Circle(radius = 1mm); }" => vec!["A part must output a Model(3D), not a Model(2D)"]; "2D in part")]
+// Models of workbenches.
+#[test_case::test_case("sketch A() {}\npart P() { A(); }" => vec!["A part must output a Model(3D), not a Model(2D)"]; "sketch in part")]
+#[test_case::test_case("sketch S() { 1mm; }" => vec!["A sketch must output a Model(2D), not a Length"]; "length in sketch")]
+// Statements without name in groups and branches of `if`s.
+#[test_case::test_case("sketch S() { { __mu::geo2d::Circle(radius = 1mm); } }" => Vec::<String>::new(); "group")]
+#[test_case::test_case("sketch S() { { { __mu::geo3d::Sphere(radius = 1mm); } } }" => vec!["A sketch must output a Model(2D), not a Model(3D)"]; "nested group")]
+#[test_case::test_case("sketch S() { if true { __mu::geo2d::Circle(radius = 1mm); } else if false { __mu::geo2d::Circle(radius = 1mm); } else { __mu::geo3d::Sphere(radius = 1mm); } }" => vec!["A sketch must output a Model(2D), not a Model(3D)"]; "if")]
+// Named statements and properties are no primary output, also not their statements.
+#[test_case::test_case("part P() { c = __mu::geo2d::Circle(radius = 1mm); }" => Vec::<String>::new(); "named")]
+#[test_case::test_case("sketch S() { c = { __mu::geo3d::Sphere(radius = 1mm); }; }" => Vec::<String>::new(); "named group")]
+#[test_case::test_case("sketch S() { prop c = { __mu::geo3d::Sphere(radius = 1mm); }; }" => Vec::<String>::new(); "property group")]
+#[test_case::test_case("sketch S() { { c = __mu::geo3d::Sphere(radius = 1mm); } }" => Vec::<String>::new(); "named in group")]
+// Operations and unknown types are not checked.
+#[test_case::test_case("op O() { __mu::geo3d::Sphere(radius = 1mm); }" => Vec::<String>::new(); "operation")]
+#[test_case::test_case("sketch S() { __mu::debug::print(\"x\"); }" => Vec::<String>::new(); "print")]
+fn type_check_workbench_output(source: &str) -> Vec<String> {
+    error_messages(&mut compiler(), source)
 }
 
 /// The value of a constant with type must match the type.
-#[test]
-fn type_check_constants() {
-    let mut compiler = compiler();
-    for (source, error) in [
-        ("const X: Length = 5mm;", None),
-        ("const X: Scalar = 5;", None),
-        ("const X = 5;", None),
-        (
-            "const X: Length = 5;",
-            Some("Type mismatch: Length != Integer"),
-        ),
-        // The type of another constant and the return type of a built-in.
-        (
-            "const A = 1mm;\nconst X: Bool = A;",
-            Some("Type mismatch: Bool != Length"),
-        ),
-        ("const X: Bool = 1mm > 2mm;", None),
-        (
-            "const X: Length = 1mm > 2mm;",
-            Some("Type mismatch: Length != Bool"),
-        ),
-        // Constants of workbenches.
-        (
-            "sketch S() { const X: Length = true; }",
-            Some("Type mismatch: Length != Bool"),
-        ),
-    ] {
-        let errors = errors(&mut compiler, source);
-        match error {
-            Some(error) => assert!(
-                errors.iter().any(|e| e.contains(error)),
-                "{source}: {errors:?}"
-            ),
-            None => assert!(errors.is_empty(), "{source}: {errors:?}"),
-        }
-    }
+#[test_case::test_case("const X: Length = 5mm;" => Vec::<String>::new(); "length")]
+#[test_case::test_case("const X: Scalar = 5;" => Vec::<String>::new(); "integer for scalar")]
+#[test_case::test_case("const X = 5;" => Vec::<String>::new(); "without type")]
+#[test_case::test_case("const X: Length = 5;" => vec!["Type mismatch: Length != Integer"]; "integer for length")]
+// The type of another constant and the return type of a built-in.
+#[test_case::test_case("const A = 1mm;\nconst X: Bool = A;" => vec!["Type mismatch: Bool != Length"]; "other constant")]
+#[test_case::test_case("const X: Bool = 1mm > 2mm;" => Vec::<String>::new(); "return type of built-in")]
+#[test_case::test_case("const X: Length = 1mm > 2mm;" => vec!["Type mismatch: Length != Bool"]; "wrong return type of built-in")]
+// Constants of workbenches.
+#[test_case::test_case("sketch S() { const X: Length = true; }" => vec!["Type mismatch: Length != Bool"]; "workbench")]
+fn type_check_constants(source: &str) -> Vec<String> {
+    error_messages(&mut compiler(), source)
 }

@@ -5849,6 +5849,7 @@ dependencies = [
  "notify",
  "serde",
  "tempfile",
+ "test-case",
  "thiserror 2.0.20",
  "toml",
  "url",
