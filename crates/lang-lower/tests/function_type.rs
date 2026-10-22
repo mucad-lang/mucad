@@ -23,13 +23,13 @@ fn functions(code: &str) -> Vec<(String, ir::Function)> {
         .collect()
 }
 
-/// Functions return their declared type, without one their result is known when calling.
+/// Functions return their declared type, without one they return nothing.
 #[test]
 fn function_types() {
     let functions = functions(
         "fn area(width: Length, height: Length) -> Area { return width * height; }\n\
          fn twice(x = 1mm) -> Length { return 2 * x; }\n\
-         fn any(x: Any) { return x; }",
+         fn nothing(x: Any) {}",
     );
     let function = |name: &str| {
         &functions
@@ -51,5 +51,7 @@ fn function_types() {
     // A parameter without type has the type of its default value.
     assert_eq!(function("twice").ty().to_string(), "(x: Length) -> Length");
 
-    assert_eq!(function("any").return_type(), Some(Type::Any));
+    // Without declared return type, a function returns nothing.
+    assert_eq!(function("nothing").return_type(), None);
+    assert_eq!(function("nothing").ty().to_string(), "(x: Any)");
 }

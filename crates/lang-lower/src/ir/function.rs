@@ -43,13 +43,11 @@ impl FunctionSignature {
 
     /// The type of the result of calling the function, e.g. `Length` for `-> Length`.
     ///
-    /// Without declared return type, the type of the result is known when calling: `Any`.
+    /// A function without declared return type returns nothing: `None`.
     pub fn return_type(&self) -> Option<Type> {
-        Some(
-            self.return_type
-                .as_ref()
-                .map_or(Type::Any, |return_type| return_type.ty.clone()),
-        )
+        self.return_type
+            .as_ref()
+            .map(|return_type| return_type.ty.clone())
     }
 }
 

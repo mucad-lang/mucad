@@ -15,6 +15,7 @@ const element = <T extends HTMLElement>(id: string) => document.getElementById(i
 const select = element<HTMLSelectElement>("examples");
 const status = element<HTMLSpanElement>("status");
 const exportButton = element<HTMLButtonElement>("export");
+const exportButtonCaption = element<HTMLDivElement>("export-btn-caption");
 const formatButton = element<HTMLButtonElement>("format");
 const diagnostics = element<HTMLPreElement>("diagnostics");
 
@@ -59,7 +60,7 @@ function compile(code: string) {
   status.textContent = modelType ? `${modelType.toUpperCase()} model` : "Errors";
   status.classList.toggle("error", !modelType);
   exportButton.disabled = modelType !== "3d" && modelType !== "2d";
-  exportButton.textContent = modelType === "2d" ? "Export SVG" : "Export STL";
+  exportButtonCaption.textContent = modelType === "2d" ? "Export SVG" : "Export STL";
 }
 
 function format() {
@@ -83,6 +84,15 @@ function exportModel() {
   link.click();
   URL.revokeObjectURL(link.href);
 }
+
+// Detect if the user is on macOS
+const isMac = /macintosh|mac os x/i.test(navigator.userAgent);
+const modifierSymbol = isMac ? '⌘' : 'Ctrl+';
+
+// Update all shortcut displays dynamically
+document.querySelectorAll('.shortcut-key').forEach((el) => {
+    el.textContent = modifierSymbol + el.textContent;
+});
 
 document.addEventListener('keydown', (e) => {
     const isCtrlOrCmd = e.ctrlKey || e.metaKey;
