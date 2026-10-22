@@ -143,7 +143,7 @@ impl std::fmt::Display for CallSignature {
 /// A type signature for any callable with return type (builtins, functions, workbenches).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct FunctionType {
-    /// Parameters, sorted by id.
+    /// Parameters in the order of their declaration.
     /// The signature is variadic of this list is none.
     pub call_ty: CallSignature,
 

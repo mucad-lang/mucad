@@ -7,7 +7,7 @@ use crate::{CastInto, ir};
 
 use derive_more::From;
 use mucad_lang_base::{SingleIdentifier, SrcRef, SrcReferrer, boxed};
-use mucad_lang_types::Value;
+use mucad_lang_types::{CallSignature, FunctionType, Ty, Type, Value};
 use serde::{Deserialize, Serialize};
 use strum::IntoStaticStr;
 
@@ -24,6 +24,47 @@ pub struct FunctionSignature {
     pub return_type: Option<ir::Type>,
     /// Source code reference
     pub src_ref: SrcRef,
+}
+
+impl FunctionSignature {
+    /// The function type of the signature: its parameter types and return type,
+    /// e.g. `(x: Length) -> Length` for `fn f(x: Length) -> Length`.
+    ///
+    /// A parameter without type has the type of its constant default value, see [`ir::Parameter`].
+    pub fn ty(&self) -> FunctionType {
+        let parameters: Vec<_> = self
+            .parameters
+            .parameters
+            .iter()
+            .map(|param| (param.id.clone(), param.ty()))
+            .collect();
+        FunctionType::new(CallSignature::new(parameters), self.return_type())
+    }
+
+    /// The type of the result of calling the function, e.g. `Length` for `-> Length`.
+    ///
+    /// Without declared return type, the type of the result is known when calling: `Any`.
+    pub fn return_type(&self) -> Option<Type> {
+        Some(
+            self.return_type
+                .as_ref()
+                .map_or(Type::Any, |return_type| return_type.ty.clone()),
+        )
+    }
+}
+
+impl Function {
+    /// The type of the result of calling the function, see [`FunctionSignature::return_type`].
+    pub fn return_type(&self) -> Option<Type> {
+        self.signature.return_type()
+    }
+}
+
+/// The function type of the signature, see [`FunctionSignature::ty`].
+impl Ty for Function {
+    fn ty(&self) -> Type {
+        Type::Function(self.signature.ty())
+    }
 }
 
 /// Builder methods for testing.
