@@ -5,8 +5,8 @@ use mucad_lang_base::{DisplayOneLine, Stability};
 use mucad_lang_lower::ir::Visibility;
 
 use crate::{
-    Library, Manifest, SymbolDef,
-    library::{SourceFile, Symbol},
+    Library, Manifest,
+    library::{SourceFile, Symbol, SymbolDef},
 };
 
 impl std::fmt::Display for Manifest {

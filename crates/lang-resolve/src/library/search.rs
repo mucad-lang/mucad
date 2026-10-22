@@ -7,8 +7,8 @@ use mucad_lang_base::{ExternalId, HashSet, Identifier, SymbolId};
 use mucad_lang_lower::ir::{Path, UnresolvedPath};
 
 use crate::{
-    Library, LookUp, SymbolDef, SymbolNodeExt, SymbolNodeRef,
-    library::{External, SymbolNodeId},
+    Library, LookUp, SymbolNodeExt, SymbolNodeRef,
+    library::{External, SymbolDef, SymbolNodeId},
 };
 
 /// The leading path part, which refers to the parent module, e.g. `super::geo::Circle`.

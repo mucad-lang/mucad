@@ -7,7 +7,6 @@ mod display;
 
 pub mod search;
 pub mod symbol;
-pub mod symbol_path;
 pub mod visitor;
 
 use std::collections::BTreeMap;
