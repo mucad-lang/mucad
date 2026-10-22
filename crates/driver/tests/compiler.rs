@@ -996,7 +996,7 @@ fn type_check_statements() {
     }
 }
 
-/// Statements without name of a sketch must be 2D models, of a part 3D models.
+/// The primary output of a sketch (statements without name) must be 2D models, of a part 3D models.
 #[test]
 fn type_check_workbench_output() {
     let mut compiler = compiler();
@@ -1022,8 +1022,24 @@ fn type_check_workbench_output() {
             "sketch S() { 1mm; }".into(),
             Some("A sketch must output a Model(2D), not a Length"),
         ),
-        // Named statements, operations and unknown types are not checked.
+        // Statements without name in groups and branches of `if`s.
+        (format!("sketch S() {{ {{ {circle}; }} }}"), None),
+        (
+            format!("sketch S() {{ {{ {{ {sphere}; }} }} }}"),
+            Some("A sketch must output a Model(2D), not a Model(3D)"),
+        ),
+        (
+            format!(
+                "sketch S() {{ if true {{ {circle}; }} else if false {{ {circle}; }} else {{ {sphere}; }} }}"
+            ),
+            Some("A sketch must output a Model(2D), not a Model(3D)"),
+        ),
+        // Named statements and properties are no primary output, also not their statements.
         (format!("part P() {{ c = {circle}; }}"), None),
+        (format!("sketch S() {{ c = {{ {sphere}; }}; }}"), None),
+        (format!("sketch S() {{ prop c = {{ {sphere}; }}; }}"), None),
+        (format!("sketch S() {{ {{ c = {sphere}; }} }}"), None),
+        // Operations and unknown types are not checked.
         (format!("op O() {{ {sphere}; }}"), None),
         ("sketch S() { __mu::debug::print(\"x\"); }".into(), None),
     ] {

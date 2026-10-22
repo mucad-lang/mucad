@@ -88,6 +88,14 @@ impl Check for TypeCheck<'_> {
     }
 }
 
+/// The expected primary output of a workbench.
+struct WorkbenchOutput {
+    kind: WorkbenchKind,
+    /// A 2D model for a sketch, a 3D model for a part.
+    expected: Type,
+    keyword_src_ref: SrcRef,
+}
+
 impl TypeCheck<'_> {
     /// Check if the statements without name of a sketch are 2D models, of a part 3D models.
     ///
@@ -97,22 +105,53 @@ impl TypeCheck<'_> {
         if kind == WorkbenchKind::Op {
             return;
         }
-        let expected = kind.ty();
-        for statement in workbench.statements.iter() {
-            if statement.name.is_some() {
-                continue;
+        let output = WorkbenchOutput {
+            kind,
+            expected: kind.ty(),
+            keyword_src_ref,
+        };
+        self.check_output(&workbench.statements, &output);
+    }
+
+    /// Check the statements of the primary output of a workbench: the statements without name,
+    /// also in groups and branches of `if`s without name.
+    ///
+    /// Named statements and properties, with all statements in them, are no primary output.
+    fn check_output(&mut self, statements: &[ir::WorkbenchStatement], output: &WorkbenchOutput) {
+        for statement in statements
+            .iter()
+            .filter(|statement| statement.name.is_none())
+        {
+            match &statement.expression {
+                ir::WorkbenchExpression::Group(group) => {
+                    self.check_output(&group.statements, output)
+                }
+                ir::WorkbenchExpression::If(if_) => self.check_output_if(if_, output),
+                expression => {
+                    let actual = expression.derive_type(&self.ctx);
+                    if !actual.matches(&output.expected) {
+                        self.issues
+                            .push_err(ResolveErrorKind::WorkbenchOutputMismatch {
+                                kind: output.kind.to_string(),
+                                expected: output.expected.clone(),
+                                actual,
+                                src_ref: expression.src_ref(),
+                                keyword_src_ref: output.keyword_src_ref,
+                            });
+                    }
+                }
             }
-            let actual = statement.expression.derive_type(&self.ctx);
-            if !actual.matches(&expected) {
-                self.issues
-                    .push_err(ResolveErrorKind::WorkbenchOutputMismatch {
-                        kind: kind.to_string(),
-                        expected: expected.clone(),
-                        actual,
-                        src_ref: statement.expression.src_ref(),
-                        keyword_src_ref,
-                    });
-            }
+        }
+    }
+
+    /// Check the branches of an `if` of the primary output, see [`Self::check_output`].
+    fn check_output_if(&mut self, if_: &ir::workbench::WorkbenchIf, output: &WorkbenchOutput) {
+        self.check_output(&if_.body.statements, output);
+        if let Some(body_else) = &if_.body_else {
+            self.check_output(&body_else.statements, output);
+        }
+        if let Some(next_if) = &if_.next_if {
+            self.check_output_if(next_if, output);
         }
     }
 
