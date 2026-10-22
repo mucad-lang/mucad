@@ -1,12 +1,9 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-op polar_array(n: Integer, r: Length) {
-    @input.translate(x = r)
-        .rotate([1..n] / n * 360°)
-}
-
 sketch RustGear(r = 50mm) {
+    use std::ops::polar_array;
+
     r_i = r * 80%;
 
     rim = Circle(r) - Circle(r = r_i);
