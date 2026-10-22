@@ -2,32 +2,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 
-/// Some public module with shapes.
+/// Some public module with shapes used by the logos.
 pub mod shapes {
     use std::geo2d::*;
     use std::ops::*;
 
-    /// The µ shape.
-    pub sketch Mu(radius: Length, thickness: Length) {
-        u = Sector(radius, 180°).rotate(-90°) - Circle(r = radius - thickness);
-        r_l = Rect(
-            width = thickness,
-            height = radius * 3,
-            x = -radius,
-            y = -2 * radius,
-        );
-        r_r = Rect(
-            width = thickness,
-            height = radius * 2,
-            x = radius - thickness,
-            y = -radius,
-        );
-        (u | r_l | r_r).buffer(6.0mm).scale(100%);
-    }
+
+/// The µ shape.
+pub sketch Mu(radius: Length, thickness: Length) {
+    u = Sector(radius, 180°).rotate(-90°) - Circle(r = radius - thickness);
+    r_l = Rect(
+        width = thickness,
+        height = radius * 3,
+        x = -radius,
+        y = -2 * radius,
+    );
+
+    r_r = Rect(
+        width = thickness,
+        height = radius * 2,
+        x = radius - thickness,
+        y = -radius,
+    );
+    (u | r_l | r_r).buffer(thickness * 75%);
+}
 
     /// "C" shape.
     pub sketch C(radius: Length, thickness: Length) {
-        Arc(radius, thickness, 260°).buffer(6.0mm)
+        Arc(radius, thickness, 260°).buffer(thickness * 75%)
     }
 
     /// "A" shape.
@@ -38,7 +40,7 @@ pub mod shapes {
             height = radius * 2,
             x = radius * 0.75,
             y = -radius,
-        )).buffer(6.0mm);
+        )).buffer(thickness * 75%);
     }
 
     /// "D" shape.
@@ -49,36 +51,42 @@ pub mod shapes {
             height = radius * 3,
             x = radius * 0.75,
             y = -radius,
-        )).buffer(6.0mm);
+        )).buffer(thickness * 75%);
     }
 
-    /// Private helper: An Arc struct.
-    sketch Arc(radius: Length, thickness: Length, angle = 300°) {
+    /// An Arc struct.
+    pub sketch Arc(radius: Length, thickness: Length, angle = 310°) {
         Sector(radius, start = -angle / 2, end = angle / 2).rotate(180°)
             - Circle(radius = radius - thickness);
     }
+
+    // The official µcad gear (private sketch)
+    pub sketch MucadGear(size: Length) {
+        (std::geo2d::SinusoidalGearProfile(size * 5%, 13) - Circle(d = size)).rotate(7°);
+    }
 }
 
-// The official µcad gear (private sketch)
-sketch MuGear(radius: Length, shape: Sketch) {
-    (std::geo2d::SinusoidalGearProfile(10mm, 13) - Circle(radius)) | shape;
+// The official µcad logo (public sketch for re-use)
+pub sketch MucadLogo(size: Length) {
+    shapes::MucadGear(size) | shapes::Mu(size * 25%, size * 5%);
 }
+
+// The official µcad logo (public sketch for re-use)
+pub sketch MucadLogoBig(size: Length) {
+    use std::ops::*;
+    cutout = std::geo2d::Sector(size * 25%, start = -260° / 2, end = 260° / 2).rotate(180°).buffer(size * 5% + 1mm);
+
+    letters = {
+        shapes::Mu(size * 25%, size * 5%);
+        shapes::C(size * 25%, size * 5%);
+        shapes::A(size * 25%, size * 5%);
+        shapes::D(size * 25%, size * 5%);
+    }.std::ops::align(std::math::X, spacing = 2mm).translate(x = -size * 28.5%);
+
+    (shapes::MucadGear(size) - cutout.translate(x = size * 60%)) | letters;}
+
 
 // A constant symbol for the overall size.
 const SIZE = 10cm;
 
-// Pick any shape you like.
-#[export] // Export to `logo__shape.svg`
-shape = shapes::Mu(SIZE * 50%, SIZE * 10%);
-// shape = shapes::C(SIZE * 50%, SIZE * 10%);
-// shape = shapes::A(SIZE * 50%, SIZE * 10%);
-// shape = shapes::D(SIZE * 50%, SIZE * 10%);
-// shape = Rect(SIZE);
-
-// Let's construct a µ-gear with custom shape and ...
-#[export = "mylogo.svg"] // Export under custom name `mylogo.svg` by default.
-logo = MuGear(SIZE, shape);
-
-// ... turn it into 3D.
-#[export = "logo.stl"] // Export as `logo.stl`. File name is required.
-logo.extrude(20mm);
+MucadLogoBig(SIZE);
