@@ -7,7 +7,7 @@ pub part Dome(size: Length, strut_width = 1mm) {
     Rect(strut_width)
         .translate(x = size)
         .revolve(180°)
-        .rotate(x = -[0..6] * 180° / 6)
+        .rotate(x = [0..6] * 180° / 6)
         .rotate(z = [0..3] * 180° / 3)
         .union();
 }
