@@ -136,3 +136,44 @@ body .dockview-theme-dark {
   mask: url('codeberg.svg') no-repeat center / contain;
   flex-shrink: 0;
 }
+
+
+.rustservices-icon {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  background-color: var(--signal);
+  -webkit-mask: url('rust_services.svg') no-repeat center / contain;
+  mask: url('rust_services.svg') no-repeat center / contain;
+  flex-shrink: 0;
+}
+
+select,
+button,
+.btn-link {
+  margin-left: 0.5rem;
+  height: 2.2rem;          /* Forces an identical height across all elements */
+  padding: 0 0.6rem;       /* Horizontal padding only; vertical is handled by height */
+  border-radius: 4px;
+  background: var(--primary);
+  color: var(--signal);
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.btn-bright {
+  background: var(--bright);
+  color: var(--primary);
+  border-color: var(--bright);
+}
+
+button:disabled {
+  border-color: var(--darker);
+  color: var(--darker);
+  cursor: default;
+}

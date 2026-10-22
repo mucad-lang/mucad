@@ -18,16 +18,24 @@
                 <span id="version-tag" style="position: absolute; bottom: 2px; right: 4px; font-size: 11px"></span>
             </a>
             <label>
-                Example
                 <select id="examples"></select>
             </label>
+            <button id="format" disabled>Format</button>
             <button id="export" disabled>Export</button>
 
             <span id="status"></span>
 
-            <button id="reportbug">I found a bug</button>
-            <a id="code" href="https://codeberg.org/mucad/mucad" target="_blank" rel="noopener noreferrer">
-              <span class="codeberg-icon"></span>
+            <a href="https://codeberg.org/mucad/mucad/issues" target="_blank" rel="noopener noreferrer" class="btn-link btn-bright" id="reportbug" style="margin-left: auto;">
+                Report a bug
+            </a>
+
+            <a href="https://rust.services" target="_blank" rel="noopener noreferrer" class="btn-link" id="rust-services">
+                Proudly made by
+                <span class="rustservices-icon"></span>
+            </a>
+
+            <a href="https://codeberg.org/mucad/mucad" target="_blank" rel="noopener noreferrer" class="btn-link" id="codeberg-link">
+                <span class="codeberg-icon"></span>
             </a>
         </header>
         <main id="dock"></main>
