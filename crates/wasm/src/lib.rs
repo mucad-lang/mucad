@@ -100,6 +100,22 @@ impl Mucad {
         }
     }
 
+    /// Format source code. Returns new code as string if parsing has been successful.
+    pub fn format(&mut self, code: &str) -> FormatResult {
+        match mu::format(code, &mu::FormatConfig::default()) {
+            Ok(formatted) => FormatResult {
+                success: true,
+                formatted: formatted.formatted,
+                code: formatted.source.code().to_string(),
+            },
+            Err(_) => FormatResult {
+                success: false,
+                formatted: false,
+                code: String::new(),
+            },
+        }
+    }
+
     /// Render a 3D model into triangle meshes, one for each color.
     #[wasm_bindgen(js_name = renderMeshes)]
     pub fn render_meshes(&mut self) -> Result<Vec<geometry::Mesh>, String> {
@@ -184,6 +200,34 @@ impl Mucad {
             .export(self.model()?, &mut buffer)
             .map_err(|err| err.to_string())?;
         Ok(buffer)
+    }
+}
+
+#[wasm_bindgen]
+pub struct FormatResult {
+    success: bool,
+    formatted: bool,
+    code: String,
+}
+
+#[wasm_bindgen]
+impl FormatResult {
+    /// `true` if the code compiled without errors, so the model can be rendered and exported.
+    #[wasm_bindgen(getter)]
+    pub fn success(&self) -> bool {
+        self.success
+    }
+
+    /// `true` if the code compiled without errors, so the model can be rendered and exported.
+    #[wasm_bindgen(getter)]
+    pub fn formatted(&self) -> bool {
+        self.formatted
+    }
+
+    /// `true` if the code compiled without errors, so the model can be rendered and exported.
+    #[wasm_bindgen(getter)]
+    pub fn code(&self) -> String {
+        self.code.clone()
     }
 }
 
