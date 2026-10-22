@@ -107,6 +107,12 @@ pub op revolve(angle = 360°) {
     @input.__mu::ops::revolve(angle);
 }
 
+/// Polar array.
+pub op polar_array(n: Integer, r: Length) {
+    @input.translate(x = r)
+        .rotate([1..n] / n * 360°)
+}
+
 /// An operation that rotates a part.
 ///
 /// See the `init`s for examples on how to use this operation.
