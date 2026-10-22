@@ -2,31 +2,39 @@
 <!-- Copyright © 2026 The µcad authors <info@mucad.org> -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>µcad web viewer</title>
-  </head>
-  <body>
-    <header>
-      <span class="logo">µcad</span>
-      <label>
-        Example
-        <select id="examples"></select>
-      </label>
-      <span id="status"></span>
-      <button id="reset-layout" title="Restore the default arrangement of the panels">
-        Reset layout
-      </button>
-      <button id="export" disabled>Export</button>
-    </header>
-    <main id="dock"></main>
-    <!-- The panel contents, which are moved into the dock. -->
-    <div hidden>
-      <div id="editor" class="panel"></div>
-      <section id="view" class="panel"></section>
-      <pre id="diagnostics" class="panel"></pre>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>µcad web viewer</title>
+    </head>
+    <body>
+        <header>
+            <a href="https://mucad.org" target="_blank" rel="noopener noreferrer" class="logo" style="position: relative; display: inline-block; text-decoration: none;">
+                <img
+                    src="logo_big.svg"
+                    alt="Big Logo"
+                    style="width: auto; height: 64px"
+                />
+                <span style="position: absolute; bottom: 2px; right: 4px; font-size: 11px">v0.6.0</span>
+            </a>
+            <label>
+                Example
+                <select id="examples"></select>
+            </label>
+            <button id="export" disabled>Export</button>
+
+            <span id="status"></span>
+
+            <button id="reportbug">I found a bug</button>
+            <button id="code">Codeberg</button>
+        </header>
+        <main id="dock"></main>
+        <!-- The panel contents, which are moved into the dock. -->
+        <div hidden>
+            <div id="editor" class="panel"></div>
+            <section id="view" class="panel"></section>
+            <pre id="diagnostics" class="panel"></pre>
+        </div>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
 </html>

@@ -22,7 +22,6 @@ const dock = new Dock(element("dock"), [
   { id: "view", title: "View", element: element("view") },
   { id: "diagnostics", title: "Diagnostics", element: diagnostics },
 ]);
-element("reset-layout").addEventListener("click", () => dock.reset());
 
 await init();
 const mucad = new Mucad();

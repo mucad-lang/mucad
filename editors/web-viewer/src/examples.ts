@@ -15,11 +15,9 @@ const modules = import.meta.glob<{ [key: string]: string } | string>(
 
 // Transform the module dictionary into an Example array dynamically
 export const examples: Example[] = Object.entries(modules).map(([path, code]) => {
-  // Extract file name from path (e.g., "../../examples/csg_cube.mu" -> "csg_cube")
-  const name = path.split('/').pop()?.replace('.mu', '') || '';
-
+  console.log("Example", path, path.split('/').pop()?.toString());
   return {
-    name,
+    name: path.split('/').pop()?.toString(),
     code: code as string,
   };
 });
