@@ -1,16 +1,19 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::rc::Rc;
+
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use mucad_driver::prelude as mu;
 
 /// A triangle mesh, e.g. for a `THREE.BufferGeometry`.
+///
+/// Clones share the mesh, e.g. the triangles of a sketch.
 #[wasm_bindgen]
 #[derive(Clone, Default)]
 pub struct Mesh {
-    positions: Vec<f32>,
-    indices: Vec<u32>,
+    mesh: Rc<mu::core::TriangleMesh>,
     color: Option<[f32; 4]>,
 }
 
@@ -19,6 +22,11 @@ impl Mesh {
     pub fn with_color(mut self, color: impl Into<[f32; 4]>) -> Self {
         self.color = Some(color.into());
         self
+    }
+
+    /// The triangle mesh, e.g. to test it natively, where the JavaScript arrays are not available.
+    pub fn triangle_mesh(&self) -> &mu::core::TriangleMesh {
+        &self.mesh
     }
 }
 
@@ -33,14 +41,26 @@ impl Mesh {
 
     /// The vertex positions as `x, y, z` triples.
     #[wasm_bindgen(getter)]
-    pub fn positions(&self) -> Vec<f32> {
-        self.positions.clone()
+    pub fn positions(&self) -> js_sys::Float32Array {
+        js_sys::Float32Array::from(self.mesh.coordinates())
     }
 
     /// The vertex indices of the triangles as triples.
     #[wasm_bindgen(getter)]
-    pub fn indices(&self) -> Vec<u32> {
-        self.indices.clone()
+    pub fn indices(&self) -> js_sys::Uint32Array {
+        js_sys::Uint32Array::from(self.mesh.indices())
+    }
+
+    /// The contour edges as pairs of vertex indices, e.g. for a `THREE.LineSegments` with the
+    /// `positions` of this mesh.
+    ///
+    /// An edge is a contour, if the normals of its two triangles differ more than
+    /// `threshold_angle` (in radians), or if it has not exactly two triangles, e.g. at an open
+    /// border.
+    pub fn edges(&self, threshold_angle: f32) -> Vec<u32> {
+        self.mesh
+            .edges(cgmath::Rad(threshold_angle.into()))
+            .into_flattened()
     }
 }
 
@@ -49,40 +69,39 @@ impl Mesh {
     fn triangulate(multi_polygon: &mu::core::MultiPolygon) -> Self {
         use geo::TriangulateEarcut;
 
-        let mut mesh = Self::default();
+        let mut mesh = mu::core::TriangleMesh::default();
         for polygon in multi_polygon {
             let triangulation = polygon.earcut_triangles_raw();
-            let offset = (mesh.positions.len() / 3) as u32;
+            let offset = mesh.positions.len() as u32;
             mesh.positions.extend(
                 triangulation
                     .vertices
                     .iter()
-                    .flat_map(|[x, y]| [*x as f32, *y as f32, 0.0]),
+                    .map(|[x, y]| cgmath::Vector3::new(*x as f32, *y as f32, 0.0)),
             );
-            mesh.indices.extend(
+            mesh.triangle_indices.extend(
                 triangulation
                     .triangle_indices
+                    .as_chunks::<3>()
+                    .0
                     .iter()
-                    .map(|index| offset + *index as u32),
+                    .map(|[a, b, c]| {
+                        mu::core::Triangle(
+                            offset + *a as u32,
+                            offset + *b as u32,
+                            offset + *c as u32,
+                        )
+                    }),
             );
         }
-        mesh
+        mesh.into()
     }
 }
 
 impl From<mu::core::TriangleMesh> for Mesh {
     fn from(mesh: mu::core::TriangleMesh) -> Self {
         Self {
-            positions: mesh
-                .positions
-                .iter()
-                .flat_map(|position| [position.x, position.y, position.z])
-                .collect(),
-            indices: mesh
-                .triangle_indices
-                .iter()
-                .flat_map(|triangle| [triangle.0, triangle.1, triangle.2])
-                .collect(),
+            mesh: Rc::new(mesh),
             color: None,
         }
     }

@@ -82,6 +82,97 @@ impl TriangleMesh {
         )
     }
 
+    /// The vertex positions as flat `x, y, z` triples, without copying.
+    pub fn coordinates(&self) -> &[f32] {
+        // SAFETY: `Vector3<f32>` is `#[repr(C)]` and consists of three `f32`.
+        unsafe {
+            std::slice::from_raw_parts(
+                self.positions.as_ptr().cast::<f32>(),
+                self.positions.len() * 3,
+            )
+        }
+    }
+
+    /// The vertex indices of the triangles as flat triples, without copying.
+    pub fn indices(&self) -> &[u32] {
+        bytemuck::cast_slice(&self.triangle_indices)
+    }
+
+    /// The contour edges as pairs of vertex indices, e.g. to draw the outlines of a mesh.
+    ///
+    /// An edge is a contour, if the normals of its two triangles differ more than
+    /// `threshold_angle`, or if it has not exactly two triangles, e.g. at an open border.
+    /// Vertices at the same position are the same, triangles without area are ignored.
+    pub fn edges(&self, threshold_angle: Angle) -> Vec<[u32; 2]> {
+        use cgmath::InnerSpace;
+
+        /// An edge between two vertices with the first two of its triangles.
+        struct Edge {
+            vertices: [u32; 2],
+            triangles: [u32; 2],
+            count: u32,
+        }
+
+        // The first vertex at each position, so that equal vertices of triangles are found.
+        let mut first_at = HashMap::<[u32; 3], u32>::default();
+        first_at.reserve(self.positions.len());
+        let welded: Vec<u32> = self
+            .positions
+            .iter()
+            .enumerate()
+            .map(|(index, position)| {
+                let bits = [position.x, position.y, position.z].map(f32::to_bits);
+                *first_at.entry(bits).or_insert(index as u32)
+            })
+            .collect();
+
+        // The edges in the order they are found, with an index by their vertices.
+        let triangle_count = self.triangle_indices.len();
+        let mut normals = Vec::with_capacity(triangle_count);
+        let mut edges: Vec<Edge> = Vec::with_capacity(triangle_count * 3 / 2);
+        let mut edge_index = HashMap::<u64, u32>::default();
+        edge_index.reserve(triangle_count * 3 / 2);
+        for triangle in &self.triangle_indices {
+            let [a, b, c] = [triangle.0, triangle.1, triangle.2].map(|i| welded[i as usize]);
+            let [pa, pb, pc] = [a, b, c].map(|i| self.positions[i as usize]);
+            let (u, v) = (pb - pa, pc - pa);
+            let normal = u.cross(v);
+            // Without area, the normal of the triangle is undefined.
+            if normal.magnitude() <= f32::EPSILON * u.magnitude2().max(v.magnitude2()) {
+                continue;
+            }
+            let triangle = normals.len() as u32;
+            normals.push(normal.normalize());
+            for (v1, v2) in [(a, b), (b, c), (c, a)] {
+                let vertices = [v1.min(v2), v1.max(v2)];
+                let key = (vertices[0] as u64) << 32 | vertices[1] as u64;
+                let index = *edge_index.entry(key).or_insert_with(|| {
+                    edges.push(Edge {
+                        vertices,
+                        triangles: [triangle; 2],
+                        count: 0,
+                    });
+                    edges.len() as u32 - 1
+                });
+                let edge = &mut edges[index as usize];
+                if edge.count < 2 {
+                    edge.triangles[edge.count as usize] = triangle;
+                }
+                edge.count += 1;
+            }
+        }
+
+        let cos_threshold = threshold_angle.0.cos() as f32;
+        edges
+            .into_iter()
+            .filter(|edge| {
+                let [n1, n2] = edge.triangles.map(|t| normals[t as usize]);
+                edge.count != 2 || n1.dot(n2) < cos_threshold
+            })
+            .map(|edge| edge.vertices)
+            .collect()
+    }
+
     /// Triangles iterator.
     pub fn triangles(&'_ self) -> Triangles<'_> {
         Triangles {
@@ -394,4 +485,63 @@ fn test_triangle_mesh_transform() {
     assert_eq!(mesh.positions[0], cgmath::Vector3::new(1.0, 2.0, 3.0));
     assert_eq!(mesh.positions[1], cgmath::Vector3::new(2.0, 2.0, 3.0));
     assert_eq!(mesh.positions[2], cgmath::Vector3::new(1.0, 3.0, 3.0));
+}
+
+#[test]
+fn test_triangle_mesh_flat_slices() {
+    let mesh = TriangleMesh {
+        positions: vec![
+            cgmath::Vector3::new(0.0, 0.0, 0.0),
+            cgmath::Vector3::new(1.0, 2.0, 3.0),
+            cgmath::Vector3::new(4.0, 5.0, 6.0),
+        ],
+        normals: None,
+        triangle_indices: vec![Triangle(0, 1, 2), Triangle(2, 1, 0)],
+    };
+    assert_eq!(
+        mesh.coordinates(),
+        [0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    );
+    assert_eq!(mesh.indices(), [0, 1, 2, 2, 1, 0]);
+}
+
+#[test]
+fn test_triangle_mesh_edges() {
+    let threshold = cgmath::Deg(20.0).into();
+
+    // A flat square of two triangles: the diagonal is no contour, the open border is.
+    // The second triangle has its own vertices at the same positions.
+    let square = TriangleMesh {
+        positions: vec![
+            cgmath::Vector3::new(0.0, 0.0, 0.0),
+            cgmath::Vector3::new(1.0, 0.0, 0.0),
+            cgmath::Vector3::new(1.0, 1.0, 0.0),
+            cgmath::Vector3::new(0.0, 0.0, 0.0),
+            cgmath::Vector3::new(1.0, 1.0, 0.0),
+            cgmath::Vector3::new(0.0, 1.0, 0.0),
+        ],
+        normals: None,
+        triangle_indices: vec![Triangle(0, 1, 2), Triangle(3, 4, 5)],
+    };
+    assert_eq!(square.edges(threshold).len(), 4);
+
+    // All edges of a tetrahedron are sharp, a triangle without area is ignored.
+    let tetrahedron = TriangleMesh {
+        positions: vec![
+            cgmath::Vector3::new(0.0, 0.0, 0.0),
+            cgmath::Vector3::new(1.0, 0.0, 0.0),
+            cgmath::Vector3::new(0.0, 1.0, 0.0),
+            cgmath::Vector3::new(0.0, 0.0, 1.0),
+            cgmath::Vector3::new(0.5, 0.0, 0.0),
+        ],
+        normals: None,
+        triangle_indices: vec![
+            Triangle(0, 2, 1),
+            Triangle(0, 1, 3),
+            Triangle(1, 2, 3),
+            Triangle(2, 0, 3),
+            Triangle(0, 4, 1),
+        ],
+    };
+    assert_eq!(tetrahedron.edges(threshold).len(), 6);
 }

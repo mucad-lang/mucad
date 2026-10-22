@@ -43,16 +43,27 @@ export class Viewer {
     });
   }
 
-  /** Show 3D triangle meshes in their colors. */
+  /** Show 3D triangle meshes in their colors with contours at their sharp edges. */
   show3d(meshes: Mesh[]) {
     this.replace(
-      meshes.map((mesh) => {
+      meshes.flatMap((mesh) => {
         const material = new THREE.MeshStandardMaterial({
           ...colorParameters(mesh.color, theme.brighter),
           metalness: 0.1,
           roughness: 0.6,
+          // Move the faces back a little, so that the contours on their edges stay visible.
+          polygonOffset: true,
+          polygonOffsetFactor: 1,
+          polygonOffsetUnits: 1,
         });
-        return new THREE.Mesh(toCreasedNormals(geometry(mesh), CREASE_ANGLE), material);
+        const surface = new THREE.Mesh(toCreasedNormals(geometry(mesh), CREASE_ANGLE), material);
+        const contours = new THREE.LineSegments(
+          new THREE.BufferGeometry()
+            .setAttribute("position", new THREE.BufferAttribute(mesh.positions, 3))
+            .setIndex(new THREE.BufferAttribute(mesh.edges(CREASE_ANGLE), 1)),
+          new THREE.LineBasicMaterial({ color: theme.primary }),
+        );
+        return [surface, contours];
       }),
     );
     this.fit(new THREE.Vector3(1, -1.5, 1));

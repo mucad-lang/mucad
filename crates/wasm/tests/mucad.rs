@@ -27,11 +27,18 @@ fn render_3d() {
         panic!("A mesh with the default color");
     };
     assert_eq!(mesh.color(), None);
-    assert!(!mesh.indices().is_empty());
-    assert_eq!(mesh.indices().len() % 3, 0);
-    assert_eq!(mesh.positions().len() % 3, 0);
-    let vertices = (mesh.positions().len() / 3) as u32;
-    assert!(mesh.indices().iter().all(|index| *index < vertices));
+    // The JavaScript arrays of `positions` and `indices` are not available natively.
+    let triangle_mesh = mesh.triangle_mesh();
+    assert!(!triangle_mesh.indices().is_empty());
+    assert_eq!(triangle_mesh.indices().len() % 3, 0);
+    assert_eq!(triangle_mesh.coordinates().len() % 3, 0);
+    let vertices = (triangle_mesh.coordinates().len() / 3) as u32;
+    assert!(
+        triangle_mesh
+            .indices()
+            .iter()
+            .all(|index| *index < vertices)
+    );
 
     // Binary STL: 80 bytes header, the number of triangles and 50 bytes per triangle.
     let stl = mucad.export_stl().expect("An STL");
@@ -63,10 +70,11 @@ fn render_2d() {
     assert_eq!(lines.positions().len() % 4, 0);
 
     let triangles = sketch.triangles();
+    let triangles = triangles.triangle_mesh();
     assert!(!triangles.indices().is_empty());
     assert!(
         triangles
-            .positions()
+            .coordinates()
             .chunks(3)
             .all(|position| position[2] == 0.0)
     );
@@ -144,4 +152,31 @@ fn diagnostics() {
         ),
         (2, 11, 2, 18)
     );
+}
+
+/// The contour edges of a box are its 12 edges, the diagonals of its faces are flat.
+/// A cylinder has the edges of its two circles, its side is smooth.
+#[test]
+fn mesh_edges() {
+    let threshold = 20f32.to_radians();
+    let edges = |code: &str| {
+        let mut mucad = compiled(code, "3d");
+        let meshes = mucad.render_meshes().expect("Meshes");
+        let [mesh] = &meshes[..] else {
+            panic!("A mesh with the default color");
+        };
+        let edges = mesh.edges(threshold);
+        let vertices = (mesh.triangle_mesh().coordinates().len() / 3) as u32;
+        assert!(edges.iter().all(|index| *index < vertices));
+        assert_eq!(edges.len() % 2, 0);
+        (edges.len() / 2, mesh.triangle_mesh().indices().len() / 3)
+    };
+
+    let (box_edges, _) = edges("std::geo2d::Rect(10mm).extrude(10mm);");
+    assert_eq!(box_edges, 12);
+
+    let (cylinder_edges, triangles) = edges("std::geo2d::Circle(r = 10mm).extrude(10mm);");
+    // `n` segments: `2n` triangles of the side, `n - 2` triangles of each cap.
+    let segments = (triangles + 4) / 4;
+    assert_eq!(cylinder_edges, 2 * segments);
 }

@@ -5,7 +5,12 @@
 
 /// Triangle
 #[derive(Clone, Copy, Debug)]
+#[repr(C)]
 pub struct Triangle<T>(pub T, pub T, pub T);
+
+// Indexed triangles can be viewed as flat indices, see `TriangleMesh::indices`.
+unsafe impl bytemuck::Zeroable for Triangle<u32> {}
+unsafe impl bytemuck::Pod for Triangle<u32> {}
 
 /// Implementation for indexed triangle.
 impl Triangle<u32> {
