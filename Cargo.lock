@@ -6186,8 +6186,10 @@ dependencies = [
 name = "mucad-wasm"
 version = "0.6.0"
 dependencies = [
+ "cgmath",
  "console_error_panic_hook",
  "geo",
+ "js-sys",
  "mucad-driver",
  "wasm-bindgen",
 ]
