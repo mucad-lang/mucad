@@ -15,9 +15,8 @@ const modules = import.meta.glob<{ [key: string]: string } | string>(
 
 // Transform the module dictionary into an Example array dynamically
 export const examples: Example[] = Object.entries(modules).map(([path, code]) => {
-  console.log("Example", path, path.split('/').pop()?.toString());
   return {
-    name: path.split('/').pop()?.toString(),
+    name: path.split('/').pop() ?? 'unknown',
     code: code as string,
   };
 });

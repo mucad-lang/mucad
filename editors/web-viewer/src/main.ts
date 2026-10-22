@@ -83,7 +83,11 @@ const editor = createEditor(element("editor"), (code) => {
 
 // Set version tag
 const version = Mucad.versionString();
-document.getElementById('version-tag').textContent = "v" + version;
+const versionTag = document.getElementById('version-tag');
+
+if (versionTag) {
+    versionTag.textContent = "v" + version;
+}
 
 examples.forEach((example, index) => select.add(new Option(example.name, String(index))));
 select.addEventListener("change", () => editor.setValue(examples[Number(select.value)].code));
