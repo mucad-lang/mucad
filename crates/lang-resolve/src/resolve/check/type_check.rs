@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Type check of parameters and statements, and the inference of parameter types.
+//! Type check of parameters, constants and statements, and the inference of parameter types.
 
 use mucad_builtin::BuiltinLibrary;
 use mucad_lang_base::{IssueList, PushIssue, SrcRef, SrcReferrer, element::WorkbenchKind};
@@ -66,8 +66,9 @@ pub(crate) fn infer_parameter_types(
     }
 }
 
-/// Checks the types of parameters and statements:
+/// Checks the types of parameters, constants and statements:
 /// - a parameter needs a type or a default value, a default value must match the type,
+/// - the value of a constant with type must match the type, e.g. `const X: Length = 1mm`,
 /// - the expression of a statement with type must match the type, e.g. `x: Length = 1mm`.
 pub(crate) struct TypeCheck<'a> {
     ctx: TypeContext<'a>,
@@ -184,6 +185,11 @@ impl visitor::Visitor for TypeCheck<'_> {
 }
 
 impl visitor::ConstantVisitor for TypeCheck<'_> {
+    fn visit_constant(&mut self, constant: &ir::Constant) {
+        self.check_type(&constant.ty, &constant.expr);
+        self.visit_constant_expr(&constant.expr);
+    }
+
     fn visit_parameter(&mut self, param: &ir::Parameter) {
         match (&param.ty, &param.default_value) {
             // `Any` must be written, e.g. `x: Any`.
