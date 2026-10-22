@@ -32,8 +32,8 @@ body {
 header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
+  gap: 0.5em;
+  padding: 0.5rem 0.5rem;
   border-bottom: 1px solid var(--darker);
 }
 
@@ -167,9 +167,9 @@ button,
 }
 
 .btn-bright {
-  background: var(--bright);
+  background: var(--signal);
   color: var(--primary);
-  border-color: var(--bright);
+  border-color: var(--signal);
 }
 
 button:disabled {
