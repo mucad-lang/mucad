@@ -24,6 +24,7 @@ strum = { version = "0.28", features = ["derive"] }
 thiserror = "2.0"
 toml = "1.1.4"
 
+mucad-builtin = { workspace = true }
 mucad-lang-base = { workspace = true }
 mucad-macros = { workspace = true }
 mucad-lang-lower = { workspace = true }

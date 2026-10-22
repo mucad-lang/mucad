@@ -6,6 +6,9 @@
 //! TODO Doc
 
 mod check;
+mod derive_type;
+
+pub use derive_type::{DeriveType, TypeContext};
 mod context;
 pub mod stack;
 pub mod visitor;

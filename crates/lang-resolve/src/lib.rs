@@ -20,8 +20,8 @@ pub use diag::{
 };
 
 pub use resolve::{
-    Completion, CompletionKind, LibraryCache, Prelude, ResolveContext, ResolveLibraryContext,
-    SourceCache, library_source_files, resolve, resolve_source,
+    Completion, CompletionKind, DeriveType, LibraryCache, Prelude, ResolveContext,
+    ResolveLibraryContext, SourceCache, TypeContext, library_source_files, resolve, resolve_source,
 };
 
 pub mod library;
