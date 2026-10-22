@@ -213,30 +213,6 @@ fn compile_invalid_model_attributes() {
     }
 }
 
-/*
-
-
-/// A compiler with the standard library of this repository (relative to `crates/driver`).
-fn std_compiler() -> Compiler {
-    Compiler::from_config(&mu::DriverConfig {
-        search_paths: vec!["../std/lib".into()],
-        ..Default::default()
-    })
-}
-
-/// A source using the standard library.
-#[test]
-fn compile_with_std() {
-    let mut compiler = std_compiler();
-    let (model, diags) = compiler
-        .compile(mu::Source::from("std::geo2d::Circle(radius = 4mm);"))
-        .expect("A model");
-
-    assert!(!diags.has_errors(), "{diags:?}");
-    insta::assert_snapshot!("compile_with_std", display(&model));
-}
-*/
-
 /// A compiler with the minimal standard library in `tests/data/lib/std`.
 fn fixture_std_compiler() -> Compiler {
     Compiler::from_config(&mu::DriverConfig {
@@ -894,6 +870,17 @@ fn type_check_parameters() {
     }
 }
 
+/// Parameters of the building plan are checked once,
+/// although the implicit initializer of the building plan has them, too.
+#[test]
+fn type_check_building_plan_once() {
+    let mut compiler = compiler();
+    for source in ["sketch S(x: Length = 5) {}", "sketch S(x) {}"] {
+        let errors = errors(&mut compiler, source);
+        assert_eq!(errors.len(), 1, "{source}: {errors:?}");
+    }
+}
+
 /// A parameter without type gets the type of its default value.
 #[test]
 fn type_check_infers_parameter_types() {
@@ -1047,6 +1034,45 @@ fn type_check_workbench_output() {
         ("sketch S() { __mu::debug::print(\"x\"); }".into(), None),
     ] {
         let errors = errors(&mut compiler, &source);
+        match error {
+            Some(error) => assert!(
+                errors.iter().any(|e| e.contains(error)),
+                "{source}: {errors:?}"
+            ),
+            None => assert!(errors.is_empty(), "{source}: {errors:?}"),
+        }
+    }
+}
+
+/// The value of a constant with type must match the type.
+#[test]
+fn type_check_constants() {
+    let mut compiler = compiler();
+    for (source, error) in [
+        ("const X: Length = 5mm;", None),
+        ("const X: Scalar = 5;", None),
+        ("const X = 5;", None),
+        (
+            "const X: Length = 5;",
+            Some("Type mismatch: Length != Integer"),
+        ),
+        // The type of another constant and the return type of a built-in.
+        (
+            "const A = 1mm;\nconst X: Bool = A;",
+            Some("Type mismatch: Bool != Length"),
+        ),
+        ("const X: Bool = 1mm > 2mm;", None),
+        (
+            "const X: Length = 1mm > 2mm;",
+            Some("Type mismatch: Length != Bool"),
+        ),
+        // Constants of workbenches.
+        (
+            "sketch S() { const X: Length = true; }",
+            Some("Type mismatch: Length != Bool"),
+        ),
+    ] {
+        let errors = errors(&mut compiler, source);
         match error {
             Some(error) => assert!(
                 errors.iter().any(|e| e.contains(error)),

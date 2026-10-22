@@ -173,7 +173,19 @@ impl TypeCheck<'_> {
 }
 
 impl visitor::LeafVisitor for TypeCheck<'_> {}
-impl visitor::WorkbenchVisitor for TypeCheck<'_> {}
+impl visitor::WorkbenchVisitor for TypeCheck<'_> {
+    fn visit_workbench_signature(&mut self, signature: &ir::workbench::WorkbenchSignature) {
+        use visitor::ConstantVisitor;
+
+        self.visit_parameter_list(&signature.parameters);
+        // The implicit initializer has the parameters of the building plan, which are checked.
+        signature
+            .inits
+            .iter()
+            .filter(|init| !init.is_implicit())
+            .for_each(|init| self.visit_workbench_init(init));
+    }
+}
 impl visitor::Visitor for TypeCheck<'_> {
     fn visit_symbol(&mut self, symbol: &Symbol) {
         if let SymbolDef::Workbench(workbench) = &symbol.def {

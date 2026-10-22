@@ -144,6 +144,12 @@ pub struct Init {
 }
 
 impl Init {
+    /// Returns if this is the initializer of the building plan, which lowering adds without
+    /// `init` keyword, see [`Init::default_init`].
+    pub fn is_implicit(&self) -> bool {
+        self.keyword_ref.is_none()
+    }
+
     /// Find init statement by its name.
     pub fn find_statement(&self, name: impl AsRef<str>) -> Option<&InitStatement> {
         self.statements
