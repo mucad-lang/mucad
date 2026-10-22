@@ -49,6 +49,18 @@ pub enum ResolveErrorKind {
         src_ref: SrcRef,
     },
 
+    #[error("A {kind} must output a {expected}, not a {actual}")]
+    WorkbenchOutputMismatch {
+        /// The kind of the workbench, e.g. `sketch`.
+        kind: String,
+        expected: Type,
+        actual: Type,
+        #[label("{actual}")]
+        src_ref: SrcRef,
+        #[label("{kind}")]
+        keyword_src_ref: SrcRef,
+    },
+
     #[error("No source with hash: {0}")]
     NoSourceWithHash(HashId),
 
@@ -222,7 +234,8 @@ impl SrcReferrer for ResolveError {
             | CyclicAlias { src_ref, .. }
             | SymbolAlreadyDefined { src_ref, .. }
             | UnreachableInit { src_ref, .. }
-            | ParameterWithoutType { src_ref, .. } => *src_ref,
+            | ParameterWithoutType { src_ref, .. }
+            | WorkbenchOutputMismatch { src_ref, .. } => *src_ref,
             ParseError(err) => err.src_ref,
             LowerError(err) => err.src_ref(),
             _ => SrcRef::none(),

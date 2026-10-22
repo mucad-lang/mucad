@@ -14,6 +14,9 @@ pub const R = 4mm;
 pub mod sub {
     /// A square plate.
     pub part Plate(size: Length) {
-        __mu::geo2d::Rect(width = size, height = size, x = 0mm, y = 0mm);
+        __mu::ops::extrude(
+            self = __mu::geo2d::Rect(width = size, height = size, x = 0mm, y = 0mm),
+            height = 1mm, scale_x = 1.0, scale_y = 1.0, twist = 0°
+        );
     }
 }

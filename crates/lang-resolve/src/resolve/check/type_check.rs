@@ -4,14 +4,14 @@
 //! Type check of parameters and statements, and the inference of parameter types.
 
 use mucad_builtin::BuiltinLibrary;
-use mucad_lang_base::{IssueList, PushIssue, SrcReferrer};
+use mucad_lang_base::{IssueList, PushIssue, SrcRef, SrcReferrer, element::WorkbenchKind};
 use mucad_lang_lower::ir;
-use mucad_lang_types::Type;
+use mucad_lang_types::{Ty, Type};
 
 use super::{Check, CheckContext};
 use crate::{
-    DeriveType, Library, LibraryCache, ResolveErrorKind, ResolveIssue, TypeContext,
-    library::visitor,
+    DeriveType, Library, LibraryCache, ResolveErrorKind, ResolveIssue, SymbolDef, TypeContext,
+    library::{Symbol, visitor},
 };
 
 /// Give the parameters without type the type of their default value, if it is known,
@@ -89,6 +89,33 @@ impl Check for TypeCheck<'_> {
 }
 
 impl TypeCheck<'_> {
+    /// Check if the statements without name of a sketch are 2D models, of a part 3D models.
+    ///
+    /// The output of an operation depends on its input.
+    fn check_workbench_output(&mut self, workbench: &ir::Workbench, keyword_src_ref: SrcRef) {
+        let kind = workbench.signature.kind;
+        if kind == WorkbenchKind::Op {
+            return;
+        }
+        let expected = kind.ty();
+        for statement in workbench.statements.iter() {
+            if statement.name.is_some() {
+                continue;
+            }
+            let actual = statement.expression.derive_type(&self.ctx);
+            if !actual.matches(&expected) {
+                self.issues
+                    .push_err(ResolveErrorKind::WorkbenchOutputMismatch {
+                        kind: kind.to_string(),
+                        expected: expected.clone(),
+                        actual,
+                        src_ref: statement.expression.src_ref(),
+                        keyword_src_ref,
+                    });
+            }
+        }
+    }
+
     /// Check if the derived type of an expression matches the type `ty`.
     ///
     /// Without type, `ty` is `Any`, which matches every type.
@@ -107,7 +134,15 @@ impl TypeCheck<'_> {
 
 impl visitor::LeafVisitor for TypeCheck<'_> {}
 impl visitor::WorkbenchVisitor for TypeCheck<'_> {}
-impl visitor::Visitor for TypeCheck<'_> {}
+impl visitor::Visitor for TypeCheck<'_> {
+    fn visit_symbol(&mut self, symbol: &Symbol) {
+        if let SymbolDef::Workbench(workbench) = &symbol.def {
+            self.check_workbench_output(workbench, symbol.meta.keyword_src_ref);
+        }
+        self.visit_meta(&symbol.meta);
+        self.visit_def(&symbol.def);
+    }
+}
 
 impl visitor::ConstantVisitor for TypeCheck<'_> {
     fn visit_parameter(&mut self, param: &ir::Parameter) {

@@ -995,3 +995,45 @@ fn type_check_statements() {
         }
     }
 }
+
+/// Statements without name of a sketch must be 2D models, of a part 3D models.
+#[test]
+fn type_check_workbench_output() {
+    let mut compiler = compiler();
+    let circle = "__mu::geo2d::Circle(radius = 1mm)";
+    let sphere = "__mu::geo3d::Sphere(radius = 1mm)";
+    for (source, error) in [
+        (format!("sketch S() {{ {circle}; }}"), None),
+        (format!("part P() {{ {sphere}; }}"), None),
+        (
+            format!("sketch S() {{ {sphere}; }}"),
+            Some("A sketch must output a Model(2D), not a Model(3D)"),
+        ),
+        (
+            format!("part P() {{ {circle}; }}"),
+            Some("A part must output a Model(3D), not a Model(2D)"),
+        ),
+        // Models of workbenches.
+        (
+            "sketch A() {}\npart P() { A(); }".into(),
+            Some("A part must output a Model(3D), not a Model(2D)"),
+        ),
+        (
+            "sketch S() { 1mm; }".into(),
+            Some("A sketch must output a Model(2D), not a Length"),
+        ),
+        // Named statements, operations and unknown types are not checked.
+        (format!("part P() {{ c = {circle}; }}"), None),
+        (format!("op O() {{ {sphere}; }}"), None),
+        ("sketch S() { __mu::debug::print(\"x\"); }".into(), None),
+    ] {
+        let errors = errors(&mut compiler, &source);
+        match error {
+            Some(error) => assert!(
+                errors.iter().any(|e| e.contains(error)),
+                "{source}: {errors:?}"
+            ),
+            None => assert!(errors.is_empty(), "{source}: {errors:?}"),
+        }
+    }
+}
