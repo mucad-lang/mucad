@@ -81,6 +81,10 @@ const editor = createEditor(element("editor"), (code) => {
   timer = window.setTimeout(() => compile(code), COMPILE_DELAY_MS);
 });
 
+// Set version tag
+const version = Mucad.versionString();
+document.getElementById('version-tag').textContent = "v" + version;
+
 examples.forEach((example, index) => select.add(new Option(example.name, String(index))));
 select.addEventListener("change", () => editor.setValue(examples[Number(select.value)].code));
 exportButton.addEventListener("click", exportModel);
