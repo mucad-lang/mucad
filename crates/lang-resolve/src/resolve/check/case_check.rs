@@ -4,23 +4,24 @@
 //! Check the case of symbol names.
 
 use mucad_lang_base::{
-    SrcReferrer,
+    IssueList, PushIssue, SrcReferrer,
     element::{Case, WorkbenchKind},
 };
 
+use super::Check;
 use crate::{
-    Library, ResolveWarning, SymbolDef,
+    Library, ResolveIssue, ResolveWarning, SymbolDef,
     library::{Symbol, visitor},
 };
 
 /// Checks that symbol names are written in the case of their kind,
 /// e.g. `UPPER_SNAKE_CASE` for constants.
 #[derive(Default)]
-pub(crate) struct CaseCheck(Vec<ResolveWarning>);
+pub(crate) struct CaseCheck(IssueList<ResolveIssue>);
 
-impl CaseCheck {
-    /// Check the names of all symbols of `library`, returns a warning for each name in a wrong case.
-    pub(crate) fn check(library: &Library) -> Vec<ResolveWarning> {
+impl Check for CaseCheck {
+    /// Check the names of all symbols of `library`, a warning for each name in a wrong case.
+    fn check(library: &Library) -> IssueList<ResolveIssue> {
         use visitor::Visitor;
 
         let mut case_check = Self::default();
@@ -58,7 +59,7 @@ impl visitor::Visitor for CaseCheck {
             && name.src_ref().is_some()
             && !name.is_case(expected)
         {
-            self.0.push(ResolveWarning::WrongCase {
+            self.0.push_warn(ResolveWarning::WrongCase {
                 name: name.clone(),
                 expected,
                 src_ref: name.src_ref(),

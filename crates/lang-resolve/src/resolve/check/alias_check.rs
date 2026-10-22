@@ -3,22 +3,23 @@
 
 //! Check for cyclic aliases.
 
-use mucad_lang_base::{HashSet, SymbolId};
+use mucad_lang_base::{HashSet, IssueList, PushIssue, SymbolId};
 use mucad_lang_lower::ir::Path;
 
+use super::Check;
 use crate::{
-    Library, ResolveError, ResolveErrorKind, SymbolDef, SymbolNodeRef,
+    Library, ResolveErrorKind, ResolveIssue, SymbolDef, SymbolNodeRef,
     library::{SymbolNodeId, visitor},
 };
 
 /// Checks that aliases stand for a symbol, which is not an alias of themselves,
 /// e.g. `use d as c; use c as d;`.
 #[derive(Default)]
-pub(crate) struct AliasCheck(Vec<ResolveError>);
+pub(crate) struct AliasCheck(IssueList<ResolveIssue>);
 
-impl AliasCheck {
-    /// Check all aliases of `library`, returns an error for each cyclic alias.
-    pub(crate) fn check(library: &Library) -> Vec<ResolveError> {
+impl Check for AliasCheck {
+    /// Check all aliases of `library`, an error for each cyclic alias.
+    fn check(library: &Library) -> IssueList<ResolveIssue> {
         use visitor::Visitor;
 
         let mut alias_check = Self::default();
@@ -63,17 +64,14 @@ impl visitor::Visitor for AliasCheck {
         }
 
         let symbol = node.get();
-        self.0.push(
-            ResolveErrorKind::CyclicAlias {
-                name: symbol
-                    .meta
-                    .name
-                    .as_ref()
-                    .map(|name| name.to_string())
-                    .unwrap_or_default(),
-                src_ref: symbol.meta.src_ref,
-            }
-            .into(),
-        );
+        self.0.push_err(ResolveErrorKind::CyclicAlias {
+            name: symbol
+                .meta
+                .name
+                .as_ref()
+                .map(|name| name.to_string())
+                .unwrap_or_default(),
+            src_ref: symbol.meta.src_ref,
+        });
     }
 }

@@ -56,14 +56,15 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
     /// Resolve the paths of the loaded library, then check its symbol names, aliases and initializers.
     fn resolve(&mut self) {
         ResolveVisitor::new(self).visit();
-        DuplicateCheck::check(self.lib())
+        let issues = [
+            DuplicateCheck::check(self.lib()),
+            AliasCheck::check(self.lib()),
+            InitCheck::check(self.lib()),
+            CaseCheck::check(self.lib()),
+        ];
+        issues
             .into_iter()
-            .chain(AliasCheck::check(self.lib()))
-            .chain(InitCheck::check(self.lib()))
-            .for_each(|err| self.push_err(err));
-        CaseCheck::check(self.lib())
-            .into_iter()
-            .for_each(|warning| self.push_warn(warning));
+            .for_each(|issues| self.append_issues(issues));
     }
 
     /// Load a single file as library.

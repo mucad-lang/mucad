@@ -3,18 +3,19 @@
 
 //! Check for symbols defined twice.
 
-use mucad_lang_base::{HashSet, Identifier, SrcReferrer};
+use mucad_lang_base::{HashSet, Identifier, IssueList, PushIssue, SrcReferrer};
 
-use crate::{Library, ResolveError, ResolveErrorKind, SymbolNodeRef, library::visitor};
+use super::Check;
+use crate::{Library, ResolveErrorKind, ResolveIssue, SymbolNodeRef, library::visitor};
 
 /// Checks that the symbols of a module or workbench have unique names,
 /// e.g. no two constants `A` in the same module.
 #[derive(Default)]
-pub(crate) struct DuplicateCheck(Vec<ResolveError>);
+pub(crate) struct DuplicateCheck(IssueList<ResolveIssue>);
 
-impl DuplicateCheck {
-    /// Check the symbols of `library`, returns an error for each symbol defined again.
-    pub(crate) fn check(library: &Library) -> Vec<ResolveError> {
+impl Check for DuplicateCheck {
+    /// Check the symbols of `library`, an error for each symbol defined again.
+    fn check(library: &Library) -> IssueList<ResolveIssue> {
         use visitor::Visitor;
 
         let mut duplicate_check = Self::default();
@@ -40,14 +41,11 @@ impl visitor::Visitor for DuplicateCheck {
             .filter_map(|child| child.get().meta.name.as_ref())
         {
             match first.get(name) {
-                Some(first_name) => self.0.push(
-                    ResolveErrorKind::SymbolAlreadyDefined {
-                        name: name.to_string(),
-                        src_ref: name.src_ref(),
-                        first_src_ref: first_name.src_ref(),
-                    }
-                    .into(),
-                ),
+                Some(first_name) => self.0.push_err(ResolveErrorKind::SymbolAlreadyDefined {
+                    name: name.to_string(),
+                    src_ref: name.src_ref(),
+                    first_src_ref: first_name.src_ref(),
+                }),
                 None => {
                     first.insert(name);
                 }

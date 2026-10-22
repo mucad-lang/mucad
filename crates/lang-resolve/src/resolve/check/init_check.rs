@@ -3,10 +3,12 @@
 
 //! Check for unreachable initializers.
 
+use mucad_lang_base::{IssueList, PushIssue};
 use mucad_lang_types::Ty;
 
+use super::Check;
 use crate::{
-    Library, ResolveError, ResolveErrorKind, SymbolDef,
+    Library, ResolveErrorKind, ResolveIssue, SymbolDef,
     library::{
         Symbol,
         symbol::{Parameter, workbench::Init},
@@ -19,12 +21,12 @@ use crate::{
 /// The first matching initializer in definition order is chosen, the building plan last.
 /// So an initializer is unreachable if an earlier one matches the same arguments.
 #[derive(Default)]
-pub(crate) struct InitCheck(Vec<ResolveError>);
+pub(crate) struct InitCheck(IssueList<ResolveIssue>);
 
-impl InitCheck {
+impl Check for InitCheck {
     /// Check the initializers of all workbenches of `library`,
-    /// returns an error for each unreachable initializer.
-    pub(crate) fn check(library: &Library) -> Vec<ResolveError> {
+    /// an error for each unreachable initializer.
+    fn check(library: &Library) -> IssueList<ResolveIssue> {
         use visitor::Visitor;
 
         let mut init_check = Self::default();
@@ -82,15 +84,12 @@ impl visitor::Visitor for InitCheck {
         let inits = &workbench.signature.inits;
         for (index, init) in inits.iter().enumerate() {
             if let Some(earlier) = inits[..index].iter().find(|earlier| shadows(earlier, init)) {
-                self.0.push(
-                    ResolveErrorKind::UnreachableInit {
-                        init: init.to_string(),
-                        src_ref: init.parameters.src_ref,
-                        earlier: earlier.to_string(),
-                        earlier_src_ref: earlier.parameters.src_ref,
-                    }
-                    .into(),
-                );
+                self.0.push_err(ResolveErrorKind::UnreachableInit {
+                    init: init.to_string(),
+                    src_ref: init.parameters.src_ref,
+                    earlier: earlier.to_string(),
+                    earlier_src_ref: earlier.parameters.src_ref,
+                });
             }
         }
     }
