@@ -944,3 +944,54 @@ fn type_check_parameters_of_other_libraries() {
     );
     assert!(errors(&mut compiler, "sketch S(x: Length = std::geo2d::RADIUS) {}").is_empty());
 }
+
+/// The expression of a statement with type must match the type.
+#[test]
+fn type_check_statements() {
+    let mut compiler = compiler();
+    for (source, error) in [
+        // Source statements.
+        ("x: Length = 1mm;", None),
+        ("x: Scalar = 1;", None),
+        ("x: Bool = 1mm;", Some("Type mismatch: Bool != Length")),
+        // Workbench statements, properties and statements of groups.
+        (
+            "sketch S() { x: Length = true; }",
+            Some("Type mismatch: Length != Bool"),
+        ),
+        ("sketch S() { prop x: Length = 1mm; }", None),
+        (
+            "sketch S() { prop x: Bool = 2mm; }",
+            Some("Type mismatch: Bool != Length"),
+        ),
+        (
+            "sketch S() { { y: Length = 1mm > 2mm; } }",
+            Some("Type mismatch: Length != Bool"),
+        ),
+        // Local assignments, also in scopes.
+        ("fn f() { x: Length = 1mm; x }", None),
+        (
+            "fn f() { x: Length = 1mm > 2mm; x }",
+            Some("Type mismatch: Length != Bool"),
+        ),
+        (
+            "fn f() { if true { y: Bool = 3; } 1 }",
+            Some("Type mismatch: Bool != Integer"),
+        ),
+        // Models of workbenches.
+        (
+            "sketch S() {}\nx: Length = S();",
+            Some("Type mismatch: Length != Model(2D)"),
+        ),
+        ("part P() {}\nx: Model = P();", None),
+    ] {
+        let errors = errors(&mut compiler, source);
+        match error {
+            Some(error) => assert!(
+                errors.iter().any(|e| e.contains(error)),
+                "{source}: {errors:?}"
+            ),
+            None => assert!(errors.is_empty(), "{source}: {errors:?}"),
+        }
+    }
+}

@@ -133,3 +133,21 @@ fn display_formatting() {
     let ft_no_ret = function_type!((a: Type::Integer));
     assert_eq!(format!("{ft_no_ret}"), "(a: Integer)");
 }
+
+/// Models of any or undetermined geometry match every model, 2D and 3D models only themselves.
+#[test]
+fn model_type_match() {
+    use mucad_lang_types::ModelType;
+
+    let model = |ty| Type::Model(ty);
+    for any in [ModelType::Any, ModelType::NotDetermined] {
+        for ty in [ModelType::Geometry2D, ModelType::Geometry3D, ModelType::Any] {
+            assert!(model(ty).matches(&model(any)), "{ty} {any}");
+            assert!(model(any).matches(&model(ty)), "{any} {ty}");
+        }
+    }
+    assert!(model(ModelType::Geometry2D).matches(&model(ModelType::Geometry2D)));
+    assert!(!model(ModelType::Geometry2D).matches(&model(ModelType::Geometry3D)));
+    assert!(!model(ModelType::Geometry3D).matches(&model(ModelType::Geometry2D)));
+    assert!(!model(ModelType::Any).matches(&Type::length()));
+}

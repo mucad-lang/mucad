@@ -120,6 +120,10 @@ impl Type {
             (Type::List(ty_s), Type::List(ty_p)) => ty_s.matches(ty_p),
             (Type::Invalid, _) | (_, Type::Invalid) => false,
             (Type::Any, _) | (_, Type::Any) => true,
+            // A model of any or undetermined geometry matches every model, e.g. the result of an
+            // operation, which depends on its input.
+            (Type::Model(ModelType::Any | ModelType::NotDetermined), Type::Model(_))
+            | (Type::Model(_), Type::Model(ModelType::Any | ModelType::NotDetermined)) => true,
             _ => self == other,
         }
     }
