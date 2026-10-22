@@ -442,11 +442,11 @@ fn resolve_cyclic_dependency() {
 #[test_case::test_case("a = 5;\na = a * 2;"
     => vec!["Property `a` is already defined in this scope"]; "source")]
 #[test_case::test_case("sketch S() {\n    a = 5;\n    a = a * 2;\n}"
-    => vec!["Property `a` is already defined in this scope"]; "workbench")]
+    => vec!["Property `a` is already defined in this scope", "Unused local `a`"]; "workbench")]
 #[test_case::test_case("fn f() -> Integer {\n    a = 5;\n    a = a * 2;\n    a\n}"
     => Vec::<String>::new(); "function")]
 #[test_case::test_case("a = 5;\n{\n    a = a * 2;\n}"
-    => Vec::<String>::new(); "group is a new scope")]
+    => vec!["Unused local `a`"]; "group is a new scope")]
 #[test_case::test_case("a = 5;\nb = a * 2;"
     => Vec::<String>::new(); "different names")]
 fn resolve_property_assignment(code: &str) -> Vec<String> {
@@ -623,10 +623,38 @@ fn resolve_duplicate_symbol(code: &str) -> Vec<String> {
 #[test_case::test_case("sketch S(w: Length) {\n    init() { w = 1mm; }\n    init(a = 1mm) { w = a; }\n}"
     => Vec::<String>::new(); "earlier without parameter")]
 #[test_case::test_case("sketch S(w: Length) {\n    init(a: Length) { w = a; }\n    init(a: Angle) { w = 1mm; }\n}"
-    => Vec::<String>::new(); "different types")]
+    => vec!["Unused local `a`"]; "different types")]
 #[test_case::test_case("sketch S(w: Length) {\n    init(a: Length, ab = 1mm) { w = a + ab; }\n    init(a: Length) { w = a; }\n}"
     => Vec::<String>::new(); "short name ambiguous in earlier")]
 fn resolve_unreachable_init(code: &str) -> Vec<String> {
+    let mut ctx = ResolveContext::new();
+    let issues = match mucad_lang_resolve::resolve_source(
+        mucad_lang_base::Source::from(code),
+        &mut ctx,
+    ) {
+        Ok((_, issues)) | Err(issues) => issues,
+    };
+    issues.iter().map(|issue| issue.to_string()).collect()
+}
+
+/// Unused locals of functions, workbenches and initializers are reported.
+/// Properties of models and names starting with `_` are not.
+#[test_case::test_case("fn f(x: Integer) {}" => vec!["Unused local `x`"]; "function parameter")]
+#[test_case::test_case("fn f(x: Integer) -> Integer { x }" => Vec::<String>::new(); "used parameter")]
+#[test_case::test_case("fn f() { a = 1; }" => vec!["Unused local `a`"]; "function local")]
+#[test_case::test_case("fn f() -> Integer {\n    a = 1;\n    { a }\n}" => Vec::<String>::new(); "used in scope")]
+#[test_case::test_case("fn f() -> Integer {\n    a = 1;\n    a = 2;\n    a\n}"
+    => vec!["Unused local `a`"]; "assigned again before use")]
+#[test_case::test_case("fn f(_x: Integer) { _a = 1; }" => Vec::<String>::new(); "underscore")]
+#[test_case::test_case("sketch S() { a = 1; }" => vec!["Unused local `a`"]; "workbench statement")]
+#[test_case::test_case("sketch S() { prop a = 1; }" => Vec::<String>::new(); "property")]
+#[test_case::test_case("sketch S(w: Length) {}" => Vec::<String>::new(); "workbench parameter")]
+#[test_case::test_case("sketch S(w: Length) {\n    init(a: Length) { w = 1mm; }\n}"
+    => vec!["Unused local `a`"]; "init parameter")]
+#[test_case::test_case("sketch S(w: Length, c: Length) {\n    init(d: Length, c: Length) { w = d; }\n}"
+    => Vec::<String>::new(); "init parameter sets workbench parameter")]
+#[test_case::test_case("a = 1;" => Vec::<String>::new(); "source statement")]
+fn resolve_unused_locals(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
     let issues = match mucad_lang_resolve::resolve_source(
         mucad_lang_base::Source::from(code),

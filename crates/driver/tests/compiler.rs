@@ -623,7 +623,10 @@ fn compile_no_initialization_found() {
             S(\"text\");",
         )
         .expect_err("No model");
-    let diag = diags.iter().next().expect("An error");
+    let diag = diags
+        .iter()
+        .find(|diag| diag.severity() == Some(mu::base::Severity::Error))
+        .expect("An error");
     // The call in the fifth line (zero-based), not the definition.
     assert_eq!(diag.src_ref.line(), Some(4));
     let help = diag.report.help().expect("A help").to_string();

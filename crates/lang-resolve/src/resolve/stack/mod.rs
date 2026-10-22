@@ -183,20 +183,6 @@ impl ResolveStack {
         })
     }
 
-    /// Traverses the stack from top (innermost) to bottom (outermost) immutably.
-    /// Halts early if the closure returns `ControlFlow::Break`.
-    pub fn traversal<T>(
-        &self,
-        mut f: impl FnMut(&ResolveStackFrame) -> std::ops::ControlFlow<T>,
-    ) -> Option<T> {
-        for frame in self.0.iter().rev() {
-            if let std::ops::ControlFlow::Break(value) = f(frame) {
-                return Some(value);
-            }
-        }
-        None
-    }
-
     pub fn traversal_mut<T>(
         &mut self,
         mut f: impl FnMut(&mut ResolveStackFrame) -> std::ops::ControlFlow<T>,
@@ -207,18 +193,6 @@ impl ResolveStack {
             }
         }
         None
-    }
-
-    pub fn scope<T, Ctx>(
-        &mut self,
-        ctx: &mut Ctx,
-        frame: impl Into<ResolveStackFrame>,
-        f: impl FnOnce(&mut Self, &mut Ctx) -> T,
-    ) -> T {
-        self.push(frame);
-        let result = f(self, ctx);
-        self.pop();
-        result
     }
 }
 

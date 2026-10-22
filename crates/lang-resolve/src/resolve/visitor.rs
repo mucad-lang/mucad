@@ -4,13 +4,14 @@
 //! Resolve locals.
 
 use crate::{
-    ResolveErrorKind, ResolveLibraryContext, SymbolNodeRef,
+    ResolveErrorKind, ResolveLibraryContext, ResolveWarning, SymbolNodeRef,
     library::{Symbol, SymbolArena, SymbolNodeId, symbol, visitor},
     resolve::context::ExternalResolver,
     resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
 use mucad_lang_base::{
     Identifier, PushIssue, SingleIdentifier, SrcReferrer, SymbolId, ToCompactString,
+    element::Visibility,
 };
 
 pub struct ResolveVisitor<'a, 'lib, 'ctx> {
@@ -23,7 +24,9 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
     ///
     /// The properties of a model have unique names, so a second assignment of a name in the same
     /// scope is an error. Functions have local variables instead, which can be assigned again.
-    fn declare_property(&mut self, name: Identifier) {
+    ///
+    /// Only private properties are reported, if they are unused, see [`Self::declare`].
+    fn declare_property(&mut self, name: Identifier, report_unused: bool) {
         if self
             .stack
             .top()
@@ -36,12 +39,33 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
                     src_ref: name.src_ref(),
                 });
         }
-        self.declare_local(name);
+        self.declare(name, report_unused);
+    }
+
+    /// Declare the local `id` in the current frame, which is reported, if it is unused and
+    /// `report_unused`, e.g. not for parameters of a workbench, which are properties of its model.
+    fn declare(&mut self, id: Identifier, report_unused: bool) {
+        let replaced = self
+            .stack
+            .top_mut()
+            .local_table_mut()
+            .and_then(|locals| locals.declare(id, report_unused));
+        // A local of a function, which is assigned again before its value is used.
+        if let Some(id) = replaced {
+            self.warn_unused(id);
+        }
+    }
+
+    fn warn_unused(&mut self, id: Identifier) {
+        self.lib_ctx.push_warn(ResolveWarning::UnusedLocal {
+            src_ref: id.src_ref(),
+            name: id,
+        });
     }
 
     pub fn new(lib_ctx: &'a mut ResolveLibraryContext<'lib, 'ctx>) -> Self {
         Self {
-            stack: ResolveStack::default(),
+            stack: ResolveStack::new(),
             lib_ctx,
         }
     }
@@ -100,7 +124,10 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
 
         impl<'b, 'a, 'ctx, 'lib> Drop for PopGuard<'b, 'a, 'ctx, 'lib> {
             fn drop(&mut self) {
-                self.0.stack.pop();
+                // The locals of the frame are out of scope, so the unused ones are reported.
+                let frame = self.0.stack.pop();
+                let unused: Vec<_> = frame.unused_locals().into_iter().cloned().collect();
+                unused.into_iter().for_each(|id| self.0.warn_unused(id));
             }
         }
 
@@ -123,9 +150,7 @@ impl<'a, 'lib, 'ctx> ScopeAccess for ResolveVisitor<'a, 'lib, 'ctx> {
     }
 
     fn declare_local(&mut self, id: Identifier) {
-        if let Some(locals) = self.stack.top_mut().local_table_mut() {
-            locals.declare_local(id);
-        }
+        self.declare(id, true);
     }
 
     fn use_local(&mut self, id: &Identifier) -> bool {
@@ -144,7 +169,7 @@ impl<'a, 'lib, 'ctx> ScopeAccess for ResolveVisitor<'a, 'lib, 'ctx> {
         found.is_some()
     }
 
-    fn unused_locals(&self) -> impl Iterator<Item = &Identifier> {
+    fn unused_locals(&self) -> Vec<&Identifier> {
         self.stack.unused_locals()
     }
 
@@ -185,6 +210,7 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
         };
         match unresolved_path.single_identifier() {
             Some(id) if self.stack.is_local(id) => {
+                self.use_local(id);
                 *path = symbol::Path::Resolved(SymbolId::Local(id.to_compact_string()));
                 true
             }
@@ -283,10 +309,11 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchVisitorMut for ResolveVisitor<'a, 'lib, '
         use mucad_lang_lower::ir::visitor::ConstantVisitorMut;
 
         self.visit_parameter_list(&mut signature.parameters);
+        // Workbench parameters are properties of its model, which can be used from outside.
         signature
             .parameters
             .iter()
-            .for_each(|param| self.declare_local(param.id.clone()));
+            .for_each(|param| self.declare(param.id.clone(), false));
 
         signature
             .inits
@@ -302,11 +329,22 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchVisitorMut for ResolveVisitor<'a, 'lib, '
         self.visit_workbench_init_attr(&mut init.attr);
         self.visit_parameter_list(&mut init.parameters);
 
+        // Init parameters with the name of a workbench parameter set it,
+        // e.g. `center` in `sketch Circle(radius: Length, center: Vec2) { init(diameter: Length, center: Vec2) { … } }`.
+        let sets_parameter: Vec<_> = init
+            .parameters
+            .iter()
+            .map(|param| self.stack.is_local(&param.id))
+            .collect();
+
         // Init parameters are only visible inside the init.
         self.scope(stack::WorkbenchGroupFrame::default(), |visitor| {
             init.parameters
                 .iter()
-                .for_each(|param| visitor.declare_local(param.id.clone()));
+                .zip(sets_parameter)
+                .for_each(|(param, sets_parameter)| {
+                    visitor.declare(param.id.clone(), !sets_parameter)
+                });
 
             init.statements.iter_mut().for_each(|init_statement| {
                 visitor.visit_name(&mut init_statement.name);
@@ -333,8 +371,9 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchExpressionVisitorMut for ResolveVisitor<'
             self.visit_name(name);
         }
         self.visit_workbench_expr(&mut statement.expression);
+        // Properties (`prop`) can be used from outside.
         if let Some(name) = &mut statement.name {
-            self.declare_property(name.clone());
+            self.declare_property(name.clone(), statement.visibility != Visibility::Public);
         }
     }
 
@@ -356,7 +395,6 @@ impl<'a, 'lib, 'ctx> visitor::SourceVisitorMut for ResolveVisitor<'a, 'lib, 'ctx
                 .statements
                 .iter_mut()
                 .for_each(|stmt| visitor.visit_source_statement(stmt));
-            // TODO Output unused locals
         })
     }
 
@@ -368,8 +406,9 @@ impl<'a, 'lib, 'ctx> visitor::SourceVisitorMut for ResolveVisitor<'a, 'lib, 'ctx
         self.visit_model_attributes(&mut statement.attr);
         self.visit_export_attributes(&mut statement.exports);
         self.visit_workbench_expr(&mut statement.expression);
+        // Named statements of a source are properties of its model, which can be exported.
         if let Some(name) = &mut statement.name {
-            self.declare_property(name.clone());
+            self.declare_property(name.clone(), false);
         }
     }
 }
@@ -382,8 +421,6 @@ impl<'a, 'lib, 'ctx> visitor::FnVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
                 .statements
                 .iter_mut()
                 .for_each(|stmt| visitor.visit_fn_statement(stmt));
-
-            // TODO: Output unused locals here.
         })
     }
 
@@ -405,8 +442,6 @@ impl<'a, 'lib, 'ctx> visitor::FnVisitorMut for ResolveVisitor<'a, 'lib, 'ctx> {
                 .statements
                 .iter_mut()
                 .for_each(|stmt| ctx.visit_fn_statement(stmt))
-
-            // TODO: Output unused locals here.
         })
     }
 

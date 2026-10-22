@@ -26,12 +26,21 @@ pub enum ResolveWarning {
         #[label("Not in {expected}")]
         src_ref: SrcRef,
     },
+
+    /// A local is never used, e.g. a parameter or variable of a function.
+    #[error("Unused local `{name}`")]
+    #[diagnostic(help("Remove it or start its name with `_`, e.g. `_{name}`"))]
+    UnusedLocal {
+        name: Identifier,
+        #[label("Never used")]
+        src_ref: SrcRef,
+    },
 }
 
 impl SrcReferrer for ResolveWarning {
     fn src_ref(&self) -> SrcRef {
         match self {
-            Self::WrongCase { src_ref, .. } => *src_ref,
+            Self::WrongCase { src_ref, .. } | Self::UnusedLocal { src_ref, .. } => *src_ref,
             Self::Parse(_) | Self::Lower(_) => SrcRef::none(),
         }
     }
