@@ -1,3 +1,6 @@
+// Copyright © 2026 The µcad authors <info@mucad.org>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use mucad_driver::prelude as mu;
