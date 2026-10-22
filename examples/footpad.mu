@@ -25,15 +25,6 @@ part FootPad(
     base_upper_height = slot.x;
     base_lower_height = base.z - base_upper_height;
 
-    base_upper = {
-        top_left = (x = -s.x, y = s.y);
-        top_right = (x = s.x, y = s.y);
-        bottom_left = (x = -s.x, y = -s.y);
-        bottom_right = (x = s.x, y = -s.y);
-    }
-    .extrude(base_upper_height)
-    .translate(z = base_lower_height);
-
     center = {
         (Circle(d = center_hole.d_outer) - Circle(d = center_hole.d_inner))
             .extrude(height);
@@ -54,7 +45,7 @@ part FootPad(
             .extrude(height);
     }.union();
 
-    base_lower | base_upper | center - holes;
+    base_lower | center - holes;
 }
 
 FootPad();
