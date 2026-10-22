@@ -6033,6 +6033,7 @@ dependencies = [
  "insta",
  "log",
  "miette",
+ "mucad-builtin",
  "mucad-lang-base",
  "mucad-lang-lower",
  "mucad-lang-parse",
