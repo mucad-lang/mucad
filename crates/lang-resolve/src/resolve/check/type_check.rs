@@ -8,7 +8,7 @@ use mucad_lang_base::{IssueList, PushIssue, SrcReferrer};
 use mucad_lang_lower::ir;
 use mucad_lang_types::Type;
 
-use super::Check;
+use super::{Check, CheckContext};
 use crate::{DeriveType, Library, LibraryCache, ResolveErrorKind, ResolveIssue, TypeContext};
 
 /// Give the parameters without type the type of their default value, if it is known,
@@ -69,12 +69,10 @@ pub(crate) fn infer_parameter_types(
 pub(crate) struct TypeCheck(IssueList<ResolveIssue>);
 
 impl Check for TypeCheck {
-    /// Check the parameters of all workbenches and functions of `library`.
-    ///
-    /// Default values of symbols of other libraries have no known type here, so they match.
-    fn check(library: &Library) -> IssueList<ResolveIssue> {
-        let builtins = BuiltinLibrary::new();
-        let ctx = TypeContext::new(library, &builtins);
+    /// Check the parameters of all workbenches and functions of the library.
+    fn check(ctx: &CheckContext) -> IssueList<ResolveIssue> {
+        let library = ctx.lib;
+        let ctx = ctx.types();
 
         let mut type_check = Self::default();
         for node in library.root.descendants(&library.arena) {

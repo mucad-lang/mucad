@@ -6,9 +6,9 @@
 use mucad_lang_base::{HashSet, IssueList, PushIssue, SymbolId};
 use mucad_lang_lower::ir::Path;
 
-use super::Check;
+use super::{Check, CheckContext};
 use crate::{
-    Library, ResolveErrorKind, ResolveIssue, SymbolDef, SymbolNodeRef,
+    ResolveErrorKind, ResolveIssue, SymbolDef, SymbolNodeRef,
     library::{SymbolNodeId, visitor},
 };
 
@@ -18,12 +18,12 @@ use crate::{
 pub(crate) struct AliasCheck(IssueList<ResolveIssue>);
 
 impl Check for AliasCheck {
-    /// Check all aliases of `library`, an error for each cyclic alias.
-    fn check(library: &Library) -> IssueList<ResolveIssue> {
+    /// Check all aliases of the library, an error for each cyclic alias.
+    fn check(ctx: &CheckContext) -> IssueList<ResolveIssue> {
         use visitor::Visitor;
 
         let mut alias_check = Self::default();
-        alias_check.visit(library);
+        alias_check.visit(ctx.lib);
         alias_check.0
     }
 }

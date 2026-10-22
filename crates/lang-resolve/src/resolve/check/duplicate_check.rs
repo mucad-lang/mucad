@@ -5,8 +5,8 @@
 
 use mucad_lang_base::{HashSet, Identifier, IssueList, PushIssue, SrcReferrer};
 
-use super::Check;
-use crate::{Library, ResolveErrorKind, ResolveIssue, SymbolNodeRef, library::visitor};
+use super::{Check, CheckContext};
+use crate::{ResolveErrorKind, ResolveIssue, SymbolNodeRef, library::visitor};
 
 /// Checks that the symbols of a module or workbench have unique names,
 /// e.g. no two constants `A` in the same module.
@@ -14,12 +14,12 @@ use crate::{Library, ResolveErrorKind, ResolveIssue, SymbolNodeRef, library::vis
 pub(crate) struct DuplicateCheck(IssueList<ResolveIssue>);
 
 impl Check for DuplicateCheck {
-    /// Check the symbols of `library`, an error for each symbol defined again.
-    fn check(library: &Library) -> IssueList<ResolveIssue> {
+    /// Check the symbols of the library, an error for each symbol defined again.
+    fn check(ctx: &CheckContext) -> IssueList<ResolveIssue> {
         use visitor::Visitor;
 
         let mut duplicate_check = Self::default();
-        duplicate_check.visit(library);
+        duplicate_check.visit(ctx.lib);
         duplicate_check.0
     }
 }

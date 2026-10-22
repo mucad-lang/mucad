@@ -929,3 +929,18 @@ fn type_check_infers_parameter_types() {
         ]
     );
 }
+
+/// Default values of symbols of other libraries are checked, too.
+#[test]
+fn type_check_parameters_of_other_libraries() {
+    let mut compiler = fixture_std_compiler();
+    let source = "sketch S(x: Bool = std::geo2d::RADIUS) {}";
+    let mismatch = errors(&mut compiler, source);
+    assert!(
+        mismatch
+            .iter()
+            .any(|e| e.contains("Type mismatch: Bool != Length")),
+        "{source}: {mismatch:?}"
+    );
+    assert!(errors(&mut compiler, "sketch S(x: Length = std::geo2d::RADIUS) {}").is_empty());
+}

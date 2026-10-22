@@ -58,18 +58,25 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
     /// then check its symbol names, aliases, initializers and types.
     fn resolve(&mut self) {
         ResolveVisitor::new(self).visit();
-        {
-            let lib_cache = self.lib_cache();
+        let builtins = BuiltinLibrary::new();
+        let lib_cache = self.lib_cache();
+        let issues = {
             let lib_cache = lib_cache.read_unwrap();
-            infer_parameter_types(self.lib_mut(), &BuiltinLibrary::new(), &lib_cache);
-        }
-        let issues = [
-            TypeCheck::check(self.lib()),
-            DuplicateCheck::check(self.lib()),
-            AliasCheck::check(self.lib()),
-            InitCheck::check(self.lib()),
-            CaseCheck::check(self.lib()),
-        ];
+            infer_parameter_types(self.lib_mut(), &builtins, &lib_cache);
+
+            let ctx = CheckContext {
+                lib: self.lib(),
+                lib_cache: &lib_cache,
+                builtins: &builtins,
+            };
+            [
+                TypeCheck::check(&ctx),
+                DuplicateCheck::check(&ctx),
+                AliasCheck::check(&ctx),
+                InitCheck::check(&ctx),
+                CaseCheck::check(&ctx),
+            ]
+        };
         issues
             .into_iter()
             .for_each(|issues| self.append_issues(issues));

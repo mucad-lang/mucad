@@ -8,9 +8,9 @@ use mucad_lang_base::{
     element::{Case, WorkbenchKind},
 };
 
-use super::Check;
+use super::{Check, CheckContext};
 use crate::{
-    Library, ResolveIssue, ResolveWarning, SymbolDef,
+    ResolveIssue, ResolveWarning, SymbolDef,
     library::{Symbol, visitor},
 };
 
@@ -20,12 +20,12 @@ use crate::{
 pub(crate) struct CaseCheck(IssueList<ResolveIssue>);
 
 impl Check for CaseCheck {
-    /// Check the names of all symbols of `library`, a warning for each name in a wrong case.
-    fn check(library: &Library) -> IssueList<ResolveIssue> {
+    /// Check the names of all symbols of the library, a warning for each name in a wrong case.
+    fn check(ctx: &CheckContext) -> IssueList<ResolveIssue> {
         use visitor::Visitor;
 
         let mut case_check = Self::default();
-        case_check.visit(library);
+        case_check.visit(ctx.lib);
         case_check.0
     }
 }

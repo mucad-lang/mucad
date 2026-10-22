@@ -6,9 +6,9 @@
 use mucad_lang_base::{IssueList, PushIssue};
 use mucad_lang_types::Ty;
 
-use super::Check;
+use super::{Check, CheckContext};
 use crate::{
-    Library, ResolveErrorKind, ResolveIssue, SymbolDef,
+    ResolveErrorKind, ResolveIssue, SymbolDef,
     library::{
         Symbol,
         symbol::{Parameter, workbench::Init},
@@ -24,13 +24,13 @@ use crate::{
 pub(crate) struct InitCheck(IssueList<ResolveIssue>);
 
 impl Check for InitCheck {
-    /// Check the initializers of all workbenches of `library`,
+    /// Check the initializers of all workbenches of the library,
     /// an error for each unreachable initializer.
-    fn check(library: &Library) -> IssueList<ResolveIssue> {
+    fn check(ctx: &CheckContext) -> IssueList<ResolveIssue> {
         use visitor::Visitor;
 
         let mut init_check = Self::default();
-        init_check.visit(library);
+        init_check.visit(ctx.lib);
         init_check.0
     }
 }

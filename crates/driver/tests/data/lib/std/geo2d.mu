@@ -5,3 +5,6 @@
 pub sketch Circle(radius: Length) {
     __mu::geo2d::Circle(radius = radius);
 }
+
+/// The default radius of circles.
+pub const RADIUS = 1mm;
