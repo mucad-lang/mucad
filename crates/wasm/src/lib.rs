@@ -142,6 +142,11 @@ impl Mucad {
         })?;
         String::from_utf8(svg).map_err(|err| err.to_string())
     }
+
+    #[wasm_bindgen(js_name = versionString)]
+    pub fn version_string() -> String {
+        mu::MUCAD_VERSION.to_string()
+    }
 }
 
 impl Default for Mucad {
