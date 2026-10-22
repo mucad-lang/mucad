@@ -133,7 +133,7 @@ pub struct Hashed<T: std::hash::Hash> {
 
 impl<T: std::hash::Hash + PartialEq> PartialEq for Hashed<T> {
     fn eq(&self, other: &Self) -> bool {
-        &self.inner == &other.inner
+        self.inner == other.inner
     }
 }
 

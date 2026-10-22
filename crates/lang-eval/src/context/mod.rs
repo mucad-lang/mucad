@@ -148,6 +148,28 @@ impl EvalContext {
     }
 }
 
+/// Symbol names
+impl EvalContext {
+    /// The full name of a symbol, e.g. `std::geo2d::Circle` or `__mu::debug::assert`.
+    ///
+    /// Items refer to the current library.
+    pub fn symbol_name(&self, id: &SymbolId) -> Option<Name> {
+        use mucad_lang_resolve::SymbolNodeExt;
+
+        let (lib_id, node_id) = match id {
+            SymbolId::Builtin(builtin_id) => {
+                return self.builtins.look_up_built_in_name(builtin_id);
+            }
+            SymbolId::Local(name) => return Some(name.clone()),
+            SymbolId::Item(node_id) => (*self.lib_id.as_ref()?, *node_id),
+            SymbolId::External(external_id) => (external_id.lib_id, external_id.id),
+        };
+        let lib = self.library(&lib_id)?;
+        let path = SymbolNodeRef::new(node_id, &lib.arena).abs_path();
+        Some(path.to_compact_string())
+    }
+}
+
 /// Scope access functions
 impl EvalContext {
     pub fn scope<T>(&mut self, frame: impl Into<StackFrame>, f: impl FnOnce(&mut Self) -> T) -> T {
@@ -186,6 +208,12 @@ impl EvalContext {
     }
 }
 
+impl Default for EvalContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LookUpName for EvalContext {
     fn look_up_built_in_name(&self, builtin_id: &mucad_builtin::BuiltinId) -> Option<Name> {
         self.builtins.look_up_built_in_name(builtin_id)
@@ -197,28 +225,6 @@ impl LookUpName for EvalContext {
 
     fn look_up_external_item_name(&self, external_id: &ExternalId) -> Option<Name> {
         self.symbol_name(&SymbolId::External(external_id.clone()))
-    }
-}
-
-/// Symbol names
-impl EvalContext {
-    /// The full name of a symbol, e.g. `std::geo2d::Circle` or `__mu::debug::assert`.
-    ///
-    /// Items refer to the current library.
-    pub fn symbol_name(&self, id: &SymbolId) -> Option<Name> {
-        use mucad_lang_resolve::SymbolNodeExt;
-
-        let (lib_id, node_id) = match id {
-            SymbolId::Builtin(builtin_id) => {
-                return self.builtins.look_up_built_in_name(builtin_id);
-            }
-            SymbolId::Local(name) => return Some(name.clone()),
-            SymbolId::Item(node_id) => (*self.lib_id.as_ref()?, *node_id),
-            SymbolId::External(external_id) => (external_id.lib_id, external_id.id),
-        };
-        let lib = self.library(&lib_id)?;
-        let path = SymbolNodeRef::new(node_id, &lib.arena).abs_path();
-        Some(path.to_compact_string())
     }
 }
 

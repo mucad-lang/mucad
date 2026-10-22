@@ -19,7 +19,7 @@ impl RunCommand<()> for Format {
         let formatter = mu::Formatter::new();
 
         let source = match &self.input {
-            Some(input) => mu::Source::load(&input).into_diagnostic()?,
+            Some(input) => mu::Source::load(input).into_diagnostic()?,
             None => mu::Source::stdin().into_diagnostic()?,
         };
 

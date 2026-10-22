@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use mucad_builtin::mu as __mu;
-use mucad_core;
 use mucad_lang_types::math::IntoFloat;
 
 use crate::{RenderPrimitive, RenderResolution};
@@ -93,7 +92,7 @@ impl RenderPolygon for __mu::geo2d::Sector {
         let points: Vec<Coord> = if !sector.is_circle() && n > 0 {
             (0..=n)
                 .map(|i| {
-                    let angle = &sector.start + offset * (i as Scalar) / (n as Scalar);
+                    let angle = sector.start + offset * (i as Scalar) / (n as Scalar);
                     (angle.0.cos(), angle.0.sin())
                 })
                 .chain(
@@ -139,6 +138,5 @@ impl RenderPolygon for __mu::geo2d::SinusoidalGearProfile {
             ),
             vec![],
         )
-        .into()
     }
 }

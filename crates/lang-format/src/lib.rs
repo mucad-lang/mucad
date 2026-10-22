@@ -147,7 +147,7 @@ pub fn format(
     let code = format_ast(&ast, config);
     let source = Source::new(original_source.location.clone(), code);
     parse(&source).map(|(ast, issues)| Formatted {
-        formatted: &source != &original_source,
+        formatted: source != original_source,
         ast,
         source,
         issues,

@@ -59,7 +59,7 @@ impl<'a, 'source> Fold<'a, 'source> {
             _ => return None,
         };
 
-        match call.args.into_arguments() {
+        match call.args.to_arguments() {
             Some(arguments) => builtin_fn
                 .call(arguments, &mut BuiltinEvalContext::default())
                 .ok(),
@@ -75,7 +75,7 @@ impl<'a, 'source> Fold<'a, 'source> {
 }
 
 impl<Expr: ir::ExprSpec> ir::ArgumentList<Expr> {
-    pub(crate) fn into_arguments(&self) -> Option<Arguments> {
+    pub(crate) fn to_arguments(&self) -> Option<Arguments> {
         let mut args = Vec::new();
 
         for arg in &self.args {

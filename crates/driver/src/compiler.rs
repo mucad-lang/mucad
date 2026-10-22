@@ -309,6 +309,12 @@ impl Compiler {
     }
 }
 
+impl Default for Compiler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Diagnostics are rendered with the source code from the compiler's source cache.
 impl RenderDiag for Compiler {
     fn render_diag_with(

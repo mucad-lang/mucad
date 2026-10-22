@@ -82,10 +82,8 @@ impl TestSuite {
                 };
                 eprintln!("test {} ... {}", result.name, result.status);
 
-                if !no_output {
-                    if let Err(err) = test_case.write_result_files(&result) {
-                        eprintln!("Cannot write the result files of {}: {err}", result.name);
-                    }
+                if !no_output && let Err(err) = test_case.write_result_files(&result) {
+                    eprintln!("Cannot write the result files of {}: {err}", result.name);
                 }
                 result
             })
