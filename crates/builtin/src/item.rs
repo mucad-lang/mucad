@@ -6,7 +6,7 @@
 use derive_more::{Debug, From};
 
 use mucad_lang_base::{BuiltinId, BuiltinInfo};
-use mucad_lang_types::{Arguments, FunctionType, Model, ModelTree, Tuple, Value};
+use mucad_lang_types::{Arguments, FunctionType, Model, ModelTree, Tuple, Ty, Type, Value};
 
 use crate::{BuiltinEvalContext, BuiltinEvalFn, BuiltinFn, BuiltinResult};
 
@@ -116,6 +116,11 @@ impl BuiltinOperation {
     ) -> Self {
         Self { info, ty, f }
     }
+
+    /// Get the function type
+    pub fn ty(&self) -> FunctionType {
+        (self.ty)()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -197,6 +202,34 @@ impl BuiltinItem {
 
     pub const fn name(&self) -> &'static str {
         self.info().name
+    }
+
+    /// The type of the item: the type of the value of a constant or the function type of a
+    /// function, primitive or operation, e.g. `(lhs: Any, rhs: Any) -> Bool` for `core::gt`.
+    ///
+    /// A module has no type.
+    pub fn ty(&self) -> Option<Type> {
+        match self {
+            BuiltinItem::Constant(constant) => Some(constant.value().ty()),
+            BuiltinItem::Function(function) => Some(Type::Function(function.ty())),
+            BuiltinItem::Primitive(primitive) => Some(Type::Function(primitive.ty())),
+            BuiltinItem::Operation(operation) => Some(Type::Function(operation.ty())),
+            BuiltinItem::Module(_) => None,
+        }
+    }
+
+    /// The type of the result of calling the item: the return type of a function, primitive or
+    /// operation, e.g. `Bool` for `core::gt` or a 2D model for `geo2d::Circle`.
+    ///
+    /// Constants and modules cannot be called, functions like `debug::print` return nothing.
+    pub fn return_type(&self) -> Option<Type> {
+        let ty = match self {
+            BuiltinItem::Function(function) => function.ty(),
+            BuiltinItem::Primitive(primitive) => primitive.ty(),
+            BuiltinItem::Operation(operation) => operation.ty(),
+            BuiltinItem::Constant(_) | BuiltinItem::Module(_) => return None,
+        };
+        ty.return_ty.map(|ty| *ty)
     }
 
     pub fn value(&self) -> Value {
