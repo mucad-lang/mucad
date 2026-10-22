@@ -10,7 +10,7 @@ expression: "ir.to_ron().expect(\"No error\")"
     ),
     payload: (
         input_hash: "0xa18f78da53e23991",
-        output_hash: "0x10e461a31afe0e8c",
+        output_hash: "0xfc34b302667ee8fc",
         tree: (
             root: (
                 index1: 1,
@@ -90,10 +90,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                     value: "radius",
                                                     src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..172)",
                                                 )),
-                                                ty: (
+                                                ty: Some((
                                                     ty: Quantity(Length),
                                                     src_ref: "6:27 @ 0xa5eb23e1ba0633ef (174..180)",
-                                                ),
+                                                )),
                                                 default_value: None,
                                                 src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..180)",
                                             ),
@@ -108,10 +108,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                     value: "center",
                                                     src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..188)",
                                                 )),
-                                                ty: (
-                                                    ty: Any,
-                                                    src_ref: "None",
-                                                ),
+                                                ty: None,
                                                 default_value: Some(Value((
                                                     value: Tuple((
                                                         positional: [],
@@ -148,10 +145,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             value: "radius",
                                                             src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..172)",
                                                         )),
-                                                        ty: (
+                                                        ty: Some((
                                                             ty: Quantity(Length),
                                                             src_ref: "6:27 @ 0xa5eb23e1ba0633ef (174..180)",
-                                                        ),
+                                                        )),
                                                         default_value: None,
                                                         src_ref: "6:19 @ 0xa5eb23e1ba0633ef (166..180)",
                                                     ),
@@ -166,10 +163,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             value: "center",
                                                             src_ref: "6:35 @ 0xa5eb23e1ba0633ef (182..188)",
                                                         )),
-                                                        ty: (
-                                                            ty: Any,
-                                                            src_ref: "None",
-                                                        ),
+                                                        ty: None,
                                                         default_value: Some(Value((
                                                             value: Tuple((
                                                                 positional: [],
@@ -242,10 +236,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             value: "diameter",
                                                             src_ref: "7:10 @ 0xa5eb23e1ba0633ef (226..234)",
                                                         )),
-                                                        ty: (
+                                                        ty: Some((
                                                             ty: Quantity(Length),
                                                             src_ref: "7:20 @ 0xa5eb23e1ba0633ef (236..242)",
-                                                        ),
+                                                        )),
                                                         default_value: None,
                                                         src_ref: "7:10 @ 0xa5eb23e1ba0633ef (226..242)",
                                                     ),
@@ -260,10 +254,7 @@ expression: "ir.to_ron().expect(\"No error\")"
                                                             value: "center",
                                                             src_ref: "7:28 @ 0xa5eb23e1ba0633ef (244..250)",
                                                         )),
-                                                        ty: (
-                                                            ty: Any,
-                                                            src_ref: "None",
-                                                        ),
+                                                        ty: None,
                                                         default_value: Some(Value((
                                                             value: Tuple((
                                                                 positional: [],

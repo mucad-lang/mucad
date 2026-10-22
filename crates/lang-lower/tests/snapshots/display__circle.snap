@@ -4,10 +4,10 @@ expression: ir
 ---
 pub circle: Source
 └── /// Circle definition with an offset.
-    pub Circle: Workbench = sketch(radius: Length, center: Any = Value((x = 0mm, y = 0mm)))
+    pub Circle: Workbench = sketch(radius: Length, center = Value((x = 0mm, y = 0mm)))
         inits:
-        - init(radius: Length, center: Any = Value((x = 0mm, y = 0mm)))
-        - init(diameter: Length, center: Any = Value((x = 0mm, y = 0mm)))
+        - init(radius: Length, center = Value((x = 0mm, y = 0mm)))
+        - init(diameter: Length, center = Value((x = 0mm, y = 0mm)))
     
         statements:
         - prop Call(__mu::ops::translate[0xbdbd29f374bc5c03](self = Call(__mu::geo2d::Cir…

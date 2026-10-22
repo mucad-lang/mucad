@@ -44,7 +44,11 @@ impl Desugar<ast::Parameter> for ir::Parameter {
             )?,
             src_ref: context.span_to_src_ref(&node.span),
             id: ir::Identifier::desugar(&node.id, context)?,
-            ty: ir::Type::desugar(&node.ty, context)?,
+            ty: node
+                .ty
+                .as_ref()
+                .map(|ty| ir::Type::desugar(ty, context))
+                .transpose()?,
             default_value: node
                 .default
                 .as_ref()

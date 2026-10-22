@@ -145,7 +145,10 @@ where
 
 impl std::fmt::Display for ir::Parameter {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{id}: {ty}", id = self.id, ty = self.ty)?;
+        write!(f, "{id}", id = self.id)?;
+        if let Some(ty) = &self.ty {
+            write!(f, ": {ty}")?;
+        }
         match &self.default_value {
             Some(v) => write!(f, " = {v}"),
             _ => Ok(()),

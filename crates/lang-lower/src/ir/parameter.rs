@@ -24,8 +24,10 @@ pub struct Parameter {
     pub attr: ParameterAttributes,
     /// Name of the parameter
     pub id: Identifier,
-    /// Type of the parameter
-    pub ty: ir::Type,
+    /// Type of the parameter, `None` if it is not given, e.g. `radius = 1mm`.
+    ///
+    /// Without type, the parameter gets the type of its default value while resolving.
+    pub ty: Option<ir::Type>,
     /// default value of the parameter or `None`
     pub default_value: Option<ir::ConstantExpression>,
     /// Source code reference
@@ -38,7 +40,7 @@ impl Parameter {
         Self {
             attr: Default::default(),
             id: Identifier::from(id.as_ref()),
-            ty: ty.into(),
+            ty: Some(ty.into()),
             default_value: None,
             src_ref: SrcRef::none(),
         }
@@ -50,14 +52,21 @@ impl Parameter {
     }
 }
 
-/// Returns the type for this parameter (assuming the default value has been evaluated).
+/// The type of this parameter, or without type the type of its constant default value.
+///
+/// `Any` if neither is known, e.g. for a default value, which is evaluated when calling.
 impl Ty for Parameter {
     fn ty(&self) -> mucad_lang_types::Type {
         use crate::ir::ExprSpec;
-        self.default_value
-            .as_ref()
-            .map(|value| value.value().map(|value| value.ty()).unwrap_or_default())
-            .unwrap_or(self.ty.ty.clone())
+        match &self.ty {
+            Some(ty) => ty.ty.clone(),
+            None => self
+                .default_value
+                .as_ref()
+                .and_then(|value| value.value())
+                .map(|value| value.ty())
+                .unwrap_or_default(),
+        }
     }
 }
 
