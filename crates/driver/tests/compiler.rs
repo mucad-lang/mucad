@@ -837,3 +837,95 @@ fn compile_lib() {
     assert!(!diags.has_errors(), "{diags:?}");
     assert_eq!(lib.name().map(|name| name.as_str()), Some("std"));
 }
+
+/// The errors of compiling `source`.
+fn errors(compiler: &mut Compiler, source: &str) -> Vec<String> {
+    let diags = match compiler.compile(source) {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+    diags
+        .iter()
+        .filter(|diag| diag.severity() == Some(mu::base::Severity::Error))
+        .map(|diag| diag.to_string())
+        .collect()
+}
+
+/// Parameters need a type or a default value, which must match the type.
+#[test]
+fn type_check_parameters() {
+    let mut compiler = compiler();
+    for (source, error) in [
+        (
+            "sketch S(x) {}",
+            Some("Parameter `x` needs a type or a default value"),
+        ),
+        ("sketch S(x: Any) {}", None),
+        (
+            "sketch S(x: Length = 5) {}",
+            Some("Type mismatch: Length != Integer"),
+        ),
+        ("sketch S(x: Scalar = 5) {}", None),
+        (
+            "const SIZE = 10;\nsketch S(x: Length = SIZE) {}",
+            Some("Type mismatch: Length != Integer"),
+        ),
+        // The return type of a built-in.
+        ("sketch S(b: Bool = 1mm > 2mm) {}", None),
+        (
+            "sketch S(b: Length = 1mm > 2mm) {}",
+            Some("Type mismatch: Length != Bool"),
+        ),
+        (
+            "fn f(x: Bool = 1mm) { return x; }",
+            Some("Type mismatch: Bool != Length"),
+        ),
+    ] {
+        let errors = errors(&mut compiler, source);
+        match error {
+            Some(error) => assert!(
+                errors.iter().any(|e| e.contains(error)),
+                "{source}: {errors:?}"
+            ),
+            None => assert!(errors.is_empty(), "{source}: {errors:?}"),
+        }
+    }
+}
+
+/// A parameter without type gets the type of its default value.
+#[test]
+fn type_check_infers_parameter_types() {
+    use mu::resolve::{SymbolDef, SymbolNodeExt};
+
+    let mut compiler = compiler();
+    let (_, diags) = compiler
+        .compile("const SIZE = 10mm;\nsketch S(a = SIZE, b = 1mm > 2mm, c = 1.5, d: Any = 1mm) {}")
+        .expect("A model");
+    assert!(!diags.has_errors(), "{diags:?}");
+
+    let lib = compiler.library().expect("A library");
+    let node = lib
+        .root()
+        .descendants()
+        .find(|node| node.name().is_some_and(|name| name.as_str() == "S"))
+        .expect("A sketch");
+    let SymbolDef::Workbench(workbench) = node.def() else {
+        panic!("A workbench");
+    };
+    let types: Vec<_> = workbench
+        .signature
+        .parameters
+        .parameters
+        .iter()
+        .map(|param| param.ty.as_ref().map(|ty| ty.ty.to_string()))
+        .collect();
+    assert_eq!(
+        types,
+        [
+            Some("Length".into()),
+            Some("Bool".into()),
+            Some("Scalar".into()),
+            // An explicit `Any` stays.
+            Some("Any".into()),
+        ]
+    );
+}

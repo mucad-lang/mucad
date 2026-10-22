@@ -41,6 +41,14 @@ pub enum ResolveErrorKind {
         #[label("Actual type")]
         actual_src_ref: SrcRef,
     },
+    #[error("Parameter `{name}` needs a type or a default value")]
+    #[diagnostic(help("Give the type, e.g. `{name}: Length` or `{name}: Any` for any value"))]
+    ParameterWithoutType {
+        name: String,
+        #[label("Parameter without type")]
+        src_ref: SrcRef,
+    },
+
     #[error("No source with hash: {0}")]
     NoSourceWithHash(HashId),
 
@@ -213,7 +221,8 @@ impl SrcReferrer for ResolveError {
             | PropertyAlreadyDefined { src_ref, .. }
             | CyclicAlias { src_ref, .. }
             | SymbolAlreadyDefined { src_ref, .. }
-            | UnreachableInit { src_ref, .. } => *src_ref,
+            | UnreachableInit { src_ref, .. }
+            | ParameterWithoutType { src_ref, .. } => *src_ref,
             ParseError(err) => err.src_ref,
             LowerError(err) => err.src_ref(),
             _ => SrcRef::none(),

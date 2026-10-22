@@ -12,6 +12,7 @@ pub(crate) use case_check::CaseCheck;
 pub(crate) use duplicate_check::DuplicateCheck;
 pub(crate) use init_check::InitCheck;
 use mucad_lang_base::IssueList;
+pub(crate) use type_check::{TypeCheck, infer_parameter_types};
 
 use crate::{Library, ResolveIssue};
 

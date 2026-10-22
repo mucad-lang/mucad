@@ -3,6 +3,7 @@
 
 //! Load a library
 
+use mucad_builtin::BuiltinLibrary;
 use mucad_lang_base::{
     HashId, Identifier, PushIssue, Source, ToCompactString, element::Visibility, tree,
 };
@@ -53,10 +54,17 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         Ok(id)
     }
 
-    /// Resolve the paths of the loaded library, then check its symbol names, aliases and initializers.
+    /// Resolve the paths of the loaded library and infer the types of its parameters,
+    /// then check its symbol names, aliases, initializers and types.
     fn resolve(&mut self) {
         ResolveVisitor::new(self).visit();
+        {
+            let lib_cache = self.lib_cache();
+            let lib_cache = lib_cache.read_unwrap();
+            infer_parameter_types(self.lib_mut(), &BuiltinLibrary::new(), &lib_cache);
+        }
         let issues = [
+            TypeCheck::check(self.lib()),
             DuplicateCheck::check(self.lib()),
             AliasCheck::check(self.lib()),
             InitCheck::check(self.lib()),

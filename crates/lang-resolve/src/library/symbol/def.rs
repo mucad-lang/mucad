@@ -107,6 +107,40 @@ impl SymbolDef {
             Alias(_) | Wildcard(_) | Root(_) => None,
         }
     }
+
+    /// The parameter lists of a symbol: of a workbench (building plan and inits) or a function.
+    pub fn parameter_lists(&self) -> Vec<&ParameterList> {
+        match &self {
+            SymbolDef::Workbench(workbench) => std::iter::once(&workbench.signature.parameters)
+                .chain(
+                    workbench
+                        .signature
+                        .inits
+                        .iter()
+                        .map(|init| &init.parameters),
+                )
+                .collect(),
+            SymbolDef::Function(function) => vec![&function.signature.parameters],
+            _ => Vec::new(),
+        }
+    }
+
+    /// The parameter lists of a symbol to change them, see [`parameter_lists`].
+    pub fn parameter_lists_mut(&mut self) -> Vec<&mut ir::ParameterList> {
+        match self {
+            SymbolDef::Workbench(workbench) => std::iter::once(&mut workbench.signature.parameters)
+                .chain(
+                    workbench
+                        .signature
+                        .inits
+                        .iter_mut()
+                        .map(|init| &mut init.parameters),
+                )
+                .collect(),
+            SymbolDef::Function(function) => vec![&mut function.signature.parameters],
+            _ => Vec::new(),
+        }
+    }
 }
 
 impl From<ir::Def> for SymbolDef {
