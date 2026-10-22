@@ -14,6 +14,7 @@ use mucad_driver::prelude as mu;
 #[derive(Clone, Default)]
 pub struct Mesh {
     mesh: Rc<mu::core::TriangleMesh>,
+    edges: Vec<u32>,
     color: Option<[f32; 4]>,
 }
 
@@ -57,10 +58,8 @@ impl Mesh {
     /// An edge is a contour, if the normals of its two triangles differ more than
     /// `threshold_angle` (in radians), or if it has not exactly two triangles, e.g. at an open
     /// border.
-    pub fn edges(&self, threshold_angle: f32) -> Vec<u32> {
-        self.mesh
-            .edges(cgmath::Rad(threshold_angle.into()))
-            .into_flattened()
+    pub fn edges(&self) -> js_sys::Uint32Array {
+        js_sys::Uint32Array::from(self.edges.as_slice())
     }
 }
 
@@ -100,8 +99,10 @@ impl Mesh {
 
 impl From<mu::core::TriangleMesh> for Mesh {
     fn from(mesh: mu::core::TriangleMesh) -> Self {
+        let edges = mesh.edges(cgmath::Rad(20.0.into())).into_flattened();
         Self {
             mesh: Rc::new(mesh),
+            edges,
             color: None,
         }
     }

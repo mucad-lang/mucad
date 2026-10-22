@@ -165,7 +165,7 @@ fn mesh_edges() {
         let [mesh] = &meshes[..] else {
             panic!("A mesh with the default color");
         };
-        let edges = mesh.edges(threshold);
+        let edges = mesh.edges();
         let vertices = (mesh.triangle_mesh().coordinates().len() / 3) as u32;
         assert!(edges.iter().all(|index| *index < vertices));
         assert_eq!(edges.len() % 2, 0);

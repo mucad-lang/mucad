@@ -60,7 +60,7 @@ export class Viewer {
         const contours = new THREE.LineSegments(
           new THREE.BufferGeometry()
             .setAttribute("position", new THREE.BufferAttribute(mesh.positions, 3))
-            .setIndex(new THREE.BufferAttribute(mesh.edges(CREASE_ANGLE), 1)),
+            .setIndex(new THREE.BufferAttribute(mesh.edges(), 1)),
           new THREE.LineBasicMaterial({ color: theme.primary }),
         );
         return [surface, contours];
