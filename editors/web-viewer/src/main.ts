@@ -84,6 +84,23 @@ function exportModel() {
   URL.revokeObjectURL(link.href);
 }
 
+document.addEventListener('keydown', (e) => {
+    const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+    if (!isCtrlOrCmd) return;
+
+    // Ctrl+E or Cmd+E -> Export
+    if (e.key.toLowerCase() === 'e') {
+      e.preventDefault();
+      exportModel();
+    }
+
+    // Ctrl+F or Cmd+F -> Format
+    if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        format();
+    }
+});
+
 let timer: number | undefined;
 const editor = createEditor(element("editor"), (code) => {
   clearTimeout(timer);
