@@ -61,6 +61,13 @@ function compile(code: string) {
   exportButton.textContent = modelType === "2d" ? "Export SVG" : "Export STL";
 }
 
+function format(code: string) {
+  const formatted = mucad.format(code);
+  if (formatted.success && formatted.formatted) {
+      editor.setValue(formatted.code);
+  }
+}
+
 /** Download the model as STL (3D) or SVG (2D). */
 function exportModel() {
   const [data, type, extension] =
