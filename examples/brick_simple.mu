@@ -3,7 +3,6 @@
 
 use std::geo2d::*;
 use std::ops::*;
-use std::math::*;
 
 pub const SPACING = 8mm;
 pub const THICKNESS = 1.2mm;
@@ -37,4 +36,5 @@ pub part Brick() {
     { base; cap; knobs; }.align(Z).union();
 }
 
+#[resolution = 200%]
 Brick();
