@@ -12,10 +12,7 @@ use crate::{
     Manifest, ResolveError, ResolveErrorKind, ResolveLibraryContext, ResolveResult,
     library::{Symbol, SymbolNodeId},
     locate,
-    resolve::{
-        alias_check::AliasCheck, case_check::CaseCheck, duplicate_check::DuplicateCheck,
-        init_check::InitCheck, visitor::ResolveVisitor,
-    },
+    resolve::{check::*, visitor::ResolveVisitor},
 };
 
 impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {

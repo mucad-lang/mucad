@@ -5,13 +5,9 @@
 //!
 //! TODO Doc
 
-mod alias_check;
-mod case_check;
+mod check;
 mod context;
-mod duplicate_check;
-mod init_check;
 pub mod stack;
-mod type_check;
 pub mod visitor;
 
 use mucad_lang_base::{HashSet, IssueResult, PushIssue, Source};
