@@ -9,6 +9,7 @@ use mucad_builtin::{BuiltinEvalContext, BuiltinPrimitiveCall, mu};
 use mucad_core::Rect;
 use mucad_lang_types::{Model, Value, arguments};
 
+#[allow(unused)]
 pub fn circle(r: f64) -> Model {
     let mut ctx = BuiltinEvalContext::default();
     mu::geo2d::Circle::call(arguments!(radius = Value::mm(r)), &mut ctx).expect("No error")
