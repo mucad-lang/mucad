@@ -13,9 +13,9 @@ use thiserror::Error;
 
 #[derive(Debug, Error, Diagnostic)]
 pub enum ResolveWarning {
-    #[error("{0}")]
+    #[error(transparent)]
     Parse(#[from] ParseWarning),
-    #[error("{0}")]
+    #[error(transparent)]
     Lower(#[from] LowerWarning),
 
     /// A symbol name is not written in the case of its kind, e.g. `UPPER_SNAKE_CASE` for constants.
@@ -48,9 +48,9 @@ impl SrcReferrer for ResolveWarning {
 
 #[derive(Debug, Error, Diagnostic)]
 pub enum ResolveAdvice {
-    #[error("{0}")]
+    #[error(transparent)]
     Parse(#[from] ParseAdvice),
-    #[error("{0}")]
+    #[error(transparent)]
     Lower(#[from] LowerAdvice),
 }
 

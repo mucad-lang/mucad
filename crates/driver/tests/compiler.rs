@@ -40,6 +40,23 @@ fn compile_source() {
     insta::assert_snapshot!("compile_source", display(&model));
 }
 
+/// Errors have the code of the stage, which found them, also parse and lower errors of the
+/// source files loaded while resolving. Errors with a code of their own keep it.
+#[test_case::test_case("x = ;" => vec!["parse::error"]; "parse")]
+#[test_case::test_case("fn f() { 1mm; }" => vec!["lower::error"]; "lower")]
+#[test_case::test_case("mod a {\n    //! doc\n    const A = 1;\n    //! late\n}" => vec!["lower::inner_doc_after_inner_attr"]; "lower with own code")]
+#[test_case::test_case("Unknown();" => vec!["resolve::error"]; "resolve")]
+fn compile_error_codes(source: &str) -> Vec<String> {
+    let diags = match compiler().compile(source) {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+    diags
+        .iter()
+        .filter(|diag| diag.severity() == Some(mu::base::Severity::Error))
+        .filter_map(|diag| diag.report.code().map(|code| code.to_string()))
+        .collect()
+}
+
 /// Compilation stops after resolve errors, the source is not evaluated.
 #[test]
 fn compile_unresolved_symbol() {

@@ -188,8 +188,18 @@ impl std::error::Error for ResolveError {
 
 // 2. Delegate miette::Diagnostic to the inner kind
 impl Diagnostic for ResolveError {
+    /// The code of the error, e.g. `parse::error` or `lower::error` for errors of the source
+    /// files loaded while resolving, if they have no code of their own.
     fn code<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
-        self.0.code()
+        match &*self.0 {
+            ResolveErrorKind::ParseError(err) => {
+                err.code().or_else(|| Some(Box::new("parse::error")))
+            }
+            ResolveErrorKind::LowerError(err) => {
+                err.code().or_else(|| Some(Box::new("lower::error")))
+            }
+            kind => kind.code(),
+        }
     }
 
     fn severity(&self) -> Option<miette::Severity> {
