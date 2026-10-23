@@ -1,8 +1,0 @@
-// Copyright © 2025-2026 The µcad authors <info@mucad.org>
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-//! Build script for mucad inspector
-
-fn main() {
-    slint_build::compile("ui/mainwindow.slint").expect("No error");
-}

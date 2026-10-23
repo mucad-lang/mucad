@@ -26,7 +26,6 @@ members = [
     "crates/viewer",
     "crates/viewer-ipc",
     "crates/wasm",
-    "crates/inspector",
 
     "editors/zed",
 
