@@ -40,14 +40,37 @@ fn compile_source() {
     insta::assert_snapshot!("compile_source", display(&model));
 }
 
+/// Compilation stops after resolve errors, the source is not evaluated.
 #[test]
 fn compile_unresolved_symbol() {
     let mut compiler = compiler();
-    let (_model, diags) = compiler
+    let diags = compiler
         .compile("Unknown(radius = 4mm);")
-        .expect("A model, despite errors");
+        .expect_err("No model");
 
-    assert!(diags.has_errors(), "{diags:?}");
+    let errors: Vec<_> = diags.iter().map(|diag| diag.report.to_string()).collect();
+    assert_eq!(errors, ["Unresolved symbol: Unknown"]);
+}
+
+/// The library of a compilation with resolve errors is kept, e.g. for completions.
+#[test]
+fn compile_keeps_library_with_errors() {
+    use mu::resolve::SymbolNodeExt;
+
+    let mut compiler = compiler();
+    compiler.compile("sketch A() {}").expect("A model");
+    compiler
+        .compile("sketch B() {}\nUnknown();")
+        .expect_err("No model");
+
+    let lib = compiler.library().expect("A library");
+    let names: Vec<_> = lib
+        .root()
+        .descendants()
+        .filter_map(|node| node.name().map(|name| name.to_string()))
+        .collect();
+    assert!(names.contains(&"B".to_string()), "{names:?}");
+    assert!(!names.contains(&"A".to_string()), "{names:?}");
 }
 
 /// Built-in transforms and operations of `__mu::ops`.
@@ -564,10 +587,11 @@ fn compile_prelude_shadowed() {
 #[test]
 fn compile_prelude_no_std() {
     let mut compiler = compiler();
-    let (_, diags) = compiler
+    let diags = compiler
         .compile("Circle(radius = 1mm);")
-        .expect("A model, despite errors");
-    assert!(diags.has_errors(), "{diags:?}");
+        .expect_err("No model");
+    let errors: Vec<_> = diags.iter().map(|diag| diag.report.to_string()).collect();
+    assert_eq!(errors, ["Unresolved symbol: Circle"]);
 }
 
 /// A list argument for a parameter of its element type calls the workbench once per element.

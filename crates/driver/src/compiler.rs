@@ -37,6 +37,9 @@ pub trait CompileResultExt<T> {
     ///
     /// If this stage failed, the next stage is not run and the diagnostics are passed on.
     fn then<U>(self, next: impl FnOnce(T) -> CompileResult<U>) -> CompileResult<U>;
+
+    /// Fail, if this stage has errors, so that the next stage is not run.
+    fn stop_on_errors(self) -> CompileResult<T>;
 }
 
 impl<T> CompileResultExt<T> for CompileResult<T> {
@@ -51,6 +54,13 @@ impl<T> CompileResultExt<T> for CompileResult<T> {
                 diags.append(next_diags);
                 Err(diags)
             }
+        }
+    }
+
+    fn stop_on_errors(self) -> CompileResult<T> {
+        match self {
+            Ok((_, diags)) if diags.has_errors() => Err(diags),
+            result => result,
         }
     }
 }
@@ -123,10 +133,16 @@ impl Compiler {
                 mu::resolve::resolve_source(source, &mut self.resolve_context).into_compile_result()
             })
             .then(|lib| {
+                // The library is kept with errors, e.g. for its source files and completions.
                 let lib_cache = self.resolve_context.lib_cache();
                 let lib_id = lib_cache.with_write(|lib_cache| lib_cache.insert_root(lib));
+                Ok((lib_id, mu::Diagnostics::default()))
+            })
+            // A library with errors is not evaluated.
+            .stop_on_errors()
+            .then(|lib_id| {
                 let eval_context = mu::EvalContext::builder()
-                    .with_lib_cache(lib_cache)
+                    .with_lib_cache(self.resolve_context.lib_cache())
                     .with_lib_id(lib_id)
                     .build();
                 mu::eval::eval(eval_context).into_compile_result()
