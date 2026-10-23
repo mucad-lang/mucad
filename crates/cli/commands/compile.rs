@@ -202,6 +202,14 @@ impl Compile {
                         Err("only available for source files")
                     }
                 });
+
+                let lib_file_path = std::path::PathBuf::from(format!(
+                    "{input}/{}.{}",
+                    lib.name().unwrap(),
+                    mu::ArtifactKind::Library.ext()
+                ));
+                std::fs::write(lib_file_path, lib.to_binary()?).into_diagnostic()?;
+
                 Ok(())
             }
             Err(err) => Err(miette::miette!(
