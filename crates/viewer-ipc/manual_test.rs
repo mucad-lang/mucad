@@ -24,7 +24,10 @@ fn example_files() -> miette::Result<Vec<std::path::PathBuf>> {
         .filter_map(|entry| {
             // entry? inside filter_map must be handled manually
             let path = entry.ok()?.path();
-            mucad_lang::resolve::is_mucad_file(&path).then_some(path)
+            let extension = path.extension()?.to_str()?;
+            mucad_lang_base::MUCAD_EXTENSIONS
+                .contains(&extension)
+                .then_some(path)
         })
         .collect())
 }

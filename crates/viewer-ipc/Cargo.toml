@@ -31,6 +31,7 @@ wkt = "0.14"
 
 mucad-core = { workspace = true }
 mucad-builtin = { workspace = true }
+mucad-lang-base = { workspace = true }
 
 [lints.rust]
 missing_docs = "warn"

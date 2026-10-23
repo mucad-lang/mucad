@@ -6177,6 +6177,7 @@ dependencies = [
  "miette",
  "mucad-builtin",
  "mucad-core",
+ "mucad-lang-base",
  "serde",
  "serde_json",
  "thiserror 2.0.20",
