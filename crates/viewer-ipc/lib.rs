@@ -55,22 +55,68 @@ pub enum ViewerResponse {
     StatusMessage(String),
 }
 
-/// Our interface to the viewer process.
+/// A viewer, which can be controlled with requests, e.g. a [`ViewerProcess`].
+pub trait Viewer: std::fmt::Debug + Send + Sync {
+    /// Send a request to the viewer.
+    fn send_request(&self, request: ViewerRequest) -> miette::Result<()>;
+}
+
+/// The command to start a viewer process, which reads [`ViewerRequest`]s as JSON lines from stdin.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ViewerCommand {
+    /// The program, e.g. `mucad-viewer`.
+    pub program: String,
+    /// The arguments of the program.
+    pub args: Vec<String>,
+}
+
+impl ViewerCommand {
+    /// A command to start `program` without arguments.
+    pub fn new(program: impl Into<String>) -> Self {
+        Self {
+            program: program.into(),
+            args: Vec::new(),
+        }
+    }
+
+    /// Add an argument.
+    pub fn arg(mut self, arg: impl Into<String>) -> Self {
+        self.args.push(arg.into());
+        self
+    }
+
+    /// The µcad viewer, `mucad-viewer` or the program in the environment variable
+    /// `MICROCAD_VIEWER_BIN`, staying on top of other windows and reading requests from stdin.
+    pub fn mucad_viewer(show_window: bool) -> Self {
+        let program =
+            std::env::var("MICROCAD_VIEWER_BIN").unwrap_or_else(|_| "mucad-viewer".to_string());
+        let command = Self::new(program);
+        let command = if show_window {
+            command
+        } else {
+            command.arg("--hidden")
+        };
+        command.arg("--stay-on-top").arg("-v").arg("stdin://")
+    }
+}
+
+/// A viewer in a separate process, which gets the requests as JSON lines on its stdin.
 #[derive(Debug)]
-pub struct ViewerProcessInterface {
+pub struct ViewerProcess {
     request_sender: crossbeam::channel::Sender<ViewerRequest>,
     _response_receiver: crossbeam::channel::Receiver<ViewerResponse>,
 }
 
-impl ViewerProcessInterface {
-    /// Send a request to the viewer process.
-    pub fn send_request(&self, request: ViewerRequest) -> miette::Result<()> {
+impl Viewer for ViewerProcess {
+    fn send_request(&self, request: ViewerRequest) -> miette::Result<()> {
         self.request_sender.send(request).into_diagnostic()
     }
+}
 
-    /// Run the viewer process.
-    pub fn run(show_window: bool) -> Self {
-        log::info!("Running viewer Process");
+impl ViewerProcess {
+    /// Start the viewer process of `command`.
+    pub fn run(command: ViewerCommand) -> Self {
+        log::info!("Running viewer process {command:?}");
 
         use crossbeam::channel::*;
 
@@ -79,17 +125,8 @@ impl ViewerProcessInterface {
 
         std::thread::spawn(move || {
             // Spawn slave process
-            let mut command = std::process::Command::new(
-                std::env::var("MICROCAD_VIEWER_BIN").unwrap_or("mucad-viewer".to_string()),
-            );
-            // handle multiple search paths
-            if !show_window {
-                command.arg("--hidden");
-            }
-            let mut child = command
-                .arg("--stay-on-top")
-                .arg("-v")
-                .arg("stdin://") // run the viewer as slave via stdin.
+            let mut child = std::process::Command::new(&command.program)
+                .args(&command.args)
                 .current_dir(std::env::current_dir().expect("current dir"))
                 .stdin(std::process::Stdio::piped())
                 .stdout(std::process::Stdio::piped())

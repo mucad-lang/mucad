@@ -11,7 +11,7 @@ use crate::{
     semantic_tokens::{LEGEND_MODIFIERS, LEGEND_TYPES},
 };
 
-use mucad_viewer_ipc::{ViewerProcessInterface, ViewerRequest};
+use mucad_viewer_ipc::{Viewer, ViewerProcess, ViewerRequest};
 use tower_lsp::{
     Client, LanguageServer, async_trait,
     jsonrpc::Result,
@@ -34,7 +34,7 @@ use tower_lsp::{
 pub struct Service {
     client: Client,
     processor: mu_processor::ProcessorController,
-    viewer: OnceLock<ViewerProcessInterface>,
+    viewer: OnceLock<Box<dyn Viewer>>,
     config: ServiceConfig,
 }
 
@@ -58,14 +58,15 @@ impl Service {
             log::error!("Cannot send request to lsp processor: {err}")
         }
     }
+    /// Send a request to the viewer of the configuration, which is started with the first request.
     fn send_viewer(&self, req: ViewerRequest) -> miette::Result<()> {
-        if self.config.use_viewer {
-            self.viewer
-                .get_or_init(|| ViewerProcessInterface::run(true))
+        match &self.config.viewer {
+            Some(command) => self
+                .viewer
+                .get_or_init(|| Box::new(ViewerProcess::run(command.clone())))
                 .send_request(req)
-                .inspect_err(|err| log::error!("Cannot send request to viewer: {err}"))
-        } else {
-            Ok(())
+                .inspect_err(|err| log::error!("Cannot send request to viewer: {err}")),
+            None => Ok(()),
         }
     }
 

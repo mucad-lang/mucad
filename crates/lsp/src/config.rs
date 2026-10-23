@@ -2,11 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use mucad_driver::prelude as mu;
+use mucad_viewer_ipc::ViewerCommand;
 
 /// Configuration of the LSP serve
 #[derive(Default, Debug)]
 pub struct ServiceConfig {
-    pub use_viewer: bool,
+    /// The viewer to show the active document, e.g. [`ViewerCommand::mucad_viewer`],
+    /// or `None` for no viewer.
+    pub viewer: Option<ViewerCommand>,
 }
 
 /// µcad LSP config with driver config and service config.

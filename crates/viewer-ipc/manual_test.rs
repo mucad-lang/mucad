@@ -35,7 +35,7 @@ fn example_files() -> miette::Result<Vec<std::path::PathBuf>> {
 /// Test minimize/restoring window
 fn test_minimize_restore() -> miette::Result<()> {
     env_logger::init();
-    let viewer = ViewerProcessInterface::run(false); // Start hidden
+    let viewer = ViewerProcess::run(ViewerCommand::mucad_viewer(false)); // Start hidden
 
     let mut cycle = 0;
 
@@ -73,7 +73,7 @@ fn test_minimize_restore() -> miette::Result<()> {
 
 fn test_code_from_file() -> miette::Result<()> {
     env_logger::init();
-    let viewer = ViewerProcessInterface::run(false); // Start hidden
+    let viewer = ViewerProcess::run(ViewerCommand::mucad_viewer(false)); // Start hidden
 
     // List examples directory
     example_files()?.iter().try_for_each(|path| {
