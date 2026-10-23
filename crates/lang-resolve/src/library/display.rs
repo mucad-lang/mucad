@@ -42,7 +42,12 @@ impl std::fmt::Display for Symbol {
 impl DisplayOneLine for Symbol {
     fn to_string_one_line(&self) -> String {
         format!(
-            "{name}{def}{ver}{vis}{doc}",
+            "{vis}{keyword} {name}{def}{ver}{doc}",
+            vis = match &self.meta.vis {
+                Visibility::Public => "pub ",
+                Visibility::Private => "",
+            },
+            keyword = self.def.keyword(),
             name = {
                 match &self.meta.name {
                     Some(name) => format!("{name}: "),
@@ -54,10 +59,6 @@ impl DisplayOneLine for Symbol {
                 Stability::Experimental => "🧪 ",
                 Stability::Deprecated { .. } => "⚠️ ",
                 Stability::Stable => "",
-            },
-            vis = match &self.meta.vis {
-                Visibility::Public => " [pub]",
-                Visibility::Private => "",
             },
             doc = {
                 let doc = &self.doc.to_string_one_line();

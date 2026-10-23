@@ -2,12 +2,12 @@
 source: crates/lang-resolve/tests/library.rs
 expression: library
 ---
-Root [pub]
-└── inline_module: SourceFile Loaded(inline_module.mu) [pub]
-    ├── b: InlineModule [pub] /// This inline module has documentation
-    │   ├── d: InlineModule [pub]
-    │   │   └── E: Constant Any: Value(42mm)
-    │   ├── f: InlineModule
-    │   │   └── G: Constant Any: Value(42)
-    │   └── C: Constant Any: Value(42) [pub]
-    └── A: Constant Any: Value(Foo) [pub] /// A constant
+pub [ROOT] Root
+└── pub mod inline_module: SourceFile Loaded(inline_module.mu)
+    ├── pub mod b: InlineModule /// This inline module has documentation
+    │   ├── pub mod d: InlineModule
+    │   │   └── const E: Constant Any: Value(42mm)
+    │   ├── mod f: InlineModule
+    │   │   └── const G: Constant Any: Value(42)
+    │   └── pub const C: Constant Any: Value(42)
+    └── pub const A: Constant Any: Value(Foo) /// A constant

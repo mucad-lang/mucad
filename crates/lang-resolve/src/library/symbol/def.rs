@@ -95,6 +95,21 @@ pub enum SymbolDef {
 }
 
 impl SymbolDef {
+    pub fn keyword(&self) -> &'static str {
+        match &self {
+            SymbolDef::Root => "[ROOT]",
+            SymbolDef::InlineModule(_) | SymbolDef::SourceFile(_) => "mod",
+            SymbolDef::Workbench(workbench) => match &workbench.signature.kind {
+                WorkbenchKind::Sketch => "sketch",
+                WorkbenchKind::Part => "part",
+                WorkbenchKind::Op => "op",
+            },
+            SymbolDef::Function(_) => "fn",
+            SymbolDef::Constant(_) => "const",
+            SymbolDef::Alias(_) | SymbolDef::Wildcard(_) => "use",
+        }
+    }
+
     /// The case of the name of a symbol, e.g. `UPPER_SNAKE_CASE` for constants.
     pub fn expected_case(&self) -> Option<Case> {
         use SymbolDef::*;

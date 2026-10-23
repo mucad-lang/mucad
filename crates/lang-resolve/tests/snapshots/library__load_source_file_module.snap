@@ -2,9 +2,9 @@
 source: crates/lang-resolve/tests/library.rs
 expression: lib
 ---
-Root [pub]
-└── file_module: SourceFile Loaded(file_module.mu) [pub]
-    ├── sub: SourceFile Loaded(file_module/sub/mod.mu) [pub]
-    └── foo: SourceFile Loaded(file_module/foo.mu) [pub]
-        ├── bar: SourceFile Loaded(file_module/foo/bar.mu) [pub]
-        └── FOO: Constant Any: Value(42mm) [pub]
+pub [ROOT] Root
+└── pub mod file_module: SourceFile Loaded(file_module.mu)
+    ├── pub mod sub: SourceFile Loaded(file_module/sub/mod.mu)
+    └── pub mod foo: SourceFile Loaded(file_module/foo.mu)
+        ├── pub mod bar: SourceFile Loaded(file_module/foo/bar.mu)
+        └── pub const FOO: Constant Any: Value(42mm)
