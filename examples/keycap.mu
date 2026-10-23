@@ -52,7 +52,7 @@ sketch KeyCapBaseProfile() {
     KeyCapBaseProfile().extrude(BASE_HEIGHT);
 
 
-    cap_profile = Rect(KEYCAP_SIZE).smooth(-1.5mm);
+    cap_profile = Rect(KEYCAP_SIZE - 1mm).smooth(-1mm).buffer(0.5mm);
 
     cap_profile.extrude(THICKNESS);
     (cap_profile - Mu(4.0mm, 1mm).std::ops::center()).extrude(THICKNESS);
