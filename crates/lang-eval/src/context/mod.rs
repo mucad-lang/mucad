@@ -87,6 +87,18 @@ impl EvalContext {
         main.get().eval(self)
     }
 
+    /// Call the symbol `id` of the library being evaluated with `args`, e.g. a workbench.
+    pub fn call_library_symbol(
+        &mut self,
+        id: SymbolNodeId,
+        args: &ArgumentValueList,
+    ) -> EvalResult {
+        let Some(lib_id) = self.lib_id else {
+            return self.catch(EvalErrorKind::NoLibraryToEvaluate);
+        };
+        self.call_symbol(lib_id, id, args)
+    }
+
     /// Call the symbol `id` in library `lib_id` (e.g. a workbench).
     ///
     /// The library's read lock is held during the call.

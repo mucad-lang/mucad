@@ -20,13 +20,33 @@ pub use issue::*;
 pub use context::{EvalContext, EvalContextBuilder};
 
 use mucad_lang_base::{IssueResult, PushIssue};
+use mucad_lang_resolve::SymbolNodeId;
 use mucad_lang_types::{ArgumentValueList, ModelTree, Value};
 
 /// The eval compiler stage: evaluate the library of the context into a model tree.
 ///
 /// Recoverable errors are returned with the model, see [`IssueResult`].
 pub fn eval(mut context: EvalContext) -> IssueResult<ModelTree, EvalIssue> {
-    match context.eval_library() {
+    let result = context.eval_library();
+    into_model_tree(context, result)
+}
+
+/// Call the symbol `id` of the library of the context with `args` into a model tree,
+/// e.g. a workbench with its arguments.
+///
+/// Recoverable errors are returned with the model, see [`IssueResult`].
+pub fn call(
+    mut context: EvalContext,
+    id: SymbolNodeId,
+    args: &ArgumentValueList,
+) -> IssueResult<ModelTree, EvalIssue> {
+    let result = context.call_library_symbol(id, args);
+    into_model_tree(context, result)
+}
+
+/// The model tree of the value of an evaluation with the issues of the context.
+fn into_model_tree(context: EvalContext, result: EvalResult) -> IssueResult<ModelTree, EvalIssue> {
+    match result {
         Ok(value) => {
             let mut model_tree = ModelTree::from(value);
             model_tree.compute_hashes();

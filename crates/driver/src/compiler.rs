@@ -149,6 +149,23 @@ impl Compiler {
             })
     }
 
+    /// Call the symbol `id` of the library of the most recent compilation with `args` into a
+    /// model tree, e.g. a workbench or function, see [`Compiler::library`].
+    ///
+    /// The symbol can be found in the library, e.g. with `Library::scope_at` for a position in
+    /// a source, and its parameters with `SymbolDef::parameter_lists`.
+    pub fn call(
+        &mut self,
+        id: mu::resolve::SymbolNodeId,
+        args: &mu::ArgumentValueList,
+    ) -> CompileResult<mu::ModelTree> {
+        let eval_context = mu::EvalContext::builder()
+            .with_lib_cache(self.resolve_context.lib_cache())
+            .with_lib_id(mu::base::LibraryId::ROOT)
+            .build();
+        mu::eval::call(eval_context, id, args).into_compile_result()
+    }
+
     /// The library of the most recent compilation of a source, see [`Compiler::compile`].
     ///
     /// If the last compilation failed while loading, the library of the compilation before is

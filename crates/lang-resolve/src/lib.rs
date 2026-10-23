@@ -28,7 +28,9 @@ pub mod library;
 
 pub use library::{
     External, Library, LookUp, Manifest, ManifestError, NoExternals,
-    symbol::{SymbolDef, SymbolId, SymbolNode, SymbolNodeExt, SymbolNodeMut, SymbolNodeRef},
+    symbol::{
+        SymbolDef, SymbolId, SymbolNode, SymbolNodeExt, SymbolNodeId, SymbolNodeMut, SymbolNodeRef,
+    },
 };
 
 #[macro_export]

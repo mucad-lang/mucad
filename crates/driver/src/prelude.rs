@@ -65,7 +65,7 @@ pub mod types {
     pub use mucad_lang_types::*;
 }
 
-pub use types::{ModelTree, Value};
+pub use types::{ArgumentValue, ArgumentValueList, Arguments, ModelTree, Value};
 
 // =========================================================================
 // --- Built-in and standard library & Documentation Generation ---
