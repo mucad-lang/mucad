@@ -159,7 +159,7 @@ impl Completion {
 
         let symbol = lib.arena.get(node)?.get();
         let kind = match &symbol.def {
-            SymbolDef::Root(_) | SymbolDef::InlineModule(_) | SymbolDef::SourceFile(_) => {
+            SymbolDef::Root | SymbolDef::InlineModule(_) | SymbolDef::SourceFile(_) => {
                 CompletionKind::Module
             }
             SymbolDef::Workbench(workbench) => CompletionKind::Workbench(workbench.signature.kind),

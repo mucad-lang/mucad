@@ -76,7 +76,8 @@ pub enum SourceFile {
 /// Symbol definition
 #[derive(Debug, Clone, From, IntoStaticStr, Hash, PartialEq, Serialize, Deserialize)]
 pub enum SymbolDef {
-    Root(Option<SourceFile>),
+    /// The unnamed root of a library, which contains its sources, e.g. `std`.
+    Root,
     /// Inline Module symbol: `mod foo {}`
     InlineModule(InlineModule),
     /// Source File
@@ -104,7 +105,7 @@ impl SymbolDef {
                 WorkbenchKind::Op => Some(Case::LowerSnake),
             },
             Constant(_) => Some(Case::UpperSnake),
-            Alias(_) | Wildcard(_) | Root(_) => None,
+            Alias(_) | Wildcard(_) | Root => None,
         }
     }
 

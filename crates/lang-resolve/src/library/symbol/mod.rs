@@ -70,13 +70,14 @@ impl From<ir::Item> for Symbol {
 }
 
 impl Symbol {
-    pub fn root(lib_mu: Option<SourceFile>) -> Self {
+    /// The unnamed root of a library.
+    pub fn root() -> Self {
         Self {
             meta: Meta {
                 vis: Visibility::Public,
                 ..Default::default()
             },
-            def: SymbolDef::Root(lib_mu),
+            def: SymbolDef::Root,
             doc: Default::default(),
             ver: Default::default(),
         }

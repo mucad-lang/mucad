@@ -68,7 +68,9 @@ impl LookUp {
 pub struct Library {
     pub manifest: Option<Manifest>,
 
-    /// Symbol node id of `mu` symbol that contains all external dependencies
+    /// The libraries this library depends on by their names, e.g. `std`.
+    ///
+    /// They are not part of the symbol tree, but of the library cache.
     pub dependencies: BTreeMap<Name, LibraryId>,
 
     /// The symbol root.
@@ -87,7 +89,7 @@ impl Library {
     /// An empty lib without dependencies or source file.
     pub fn new() -> Self {
         let mut arena = SymbolArena::default();
-        let root = arena.new_node(Symbol::root(None));
+        let root = arena.new_node(Symbol::root());
         Self {
             manifest: None,
             dependencies: Default::default(),
@@ -302,7 +304,7 @@ impl Library {
             let def = &SymbolNodeRef::new(node, &self.arena).get().def;
             if matches!(
                 def,
-                SymbolDef::Root(_) | SymbolDef::InlineModule(_) | SymbolDef::SourceFile(_)
+                SymbolDef::Root | SymbolDef::InlineModule(_) | SymbolDef::SourceFile(_)
             ) {
                 return node;
             }

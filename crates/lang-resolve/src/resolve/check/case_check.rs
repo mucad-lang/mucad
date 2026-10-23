@@ -40,7 +40,7 @@ fn expected_case(def: &SymbolDef) -> Option<Case> {
             WorkbenchKind::Op => Some(Case::LowerSnake),
         },
         Constant(_) => Some(Case::UpperSnake),
-        Alias(_) | Wildcard(_) | Root(_) => None,
+        Alias(_) | Wildcard(_) | Root => None,
     }
 }
 

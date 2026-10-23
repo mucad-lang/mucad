@@ -93,7 +93,6 @@ impl std::fmt::Display for SymbolDef {
         write!(f, "{name}")?;
 
         let def = match self {
-            SymbolDef::Root(Some(source_file)) => source_file.to_string_one_line(),
             SymbolDef::SourceFile(file_module) => file_module.to_string_one_line(),
             SymbolDef::Workbench(workbench) => workbench.to_string_one_line(),
             SymbolDef::Function(function) => function.to_string_one_line(),

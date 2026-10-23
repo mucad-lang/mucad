@@ -78,7 +78,7 @@ impl EvalContext {
 
         // A single source file is loaded as child of an empty library root.
         let main = match &root.get().def {
-            symbol::SymbolDef::Root(None) => root
+            symbol::SymbolDef::Root => root
                 .children()
                 .find(|child| matches!(child.get().def, symbol::SymbolDef::SourceFile(_)))
                 .unwrap_or(root),

@@ -46,7 +46,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         self.add_implicit_dependencies();
 
         let root = self.lib().root;
-        let id = self.load_source_symbol(source, Some(root))?;
+        let id = self.load_source_symbol(source, root)?;
 
         if id.is_some() {
             self.resolve();
@@ -92,7 +92,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         self.add_implicit_dependencies();
 
         let root = self.lib().root;
-        self._load_source(&file_mu, Some(root))
+        self._load_source(&file_mu, root)
     }
 
     /// Load a library from a directory containing a `mu.toml` file.
@@ -143,7 +143,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         // The library appears in its own tree under its name, e.g. `std`, so it can refer to
         // itself with `std::geo2d::Circle` or `::std::geo2d::Circle`.
         let root = self.lib().root;
-        let Some(id) = self._load_source(&lib_mu, Some(root))? else {
+        let Some(id) = self._load_source(&lib_mu, root)? else {
             return Ok(None);
         };
         if let Some(name) = self.lib().name().cloned() {
@@ -173,26 +173,25 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         id
     }
 
-    /// Load a source file and its file modules into the symbol tree.
+    /// Load a source file and its file modules into the symbol tree as child of `parent_id`.
     ///
     /// Returns `None` if the source could not be compiled. Its issues are recorded.
     pub fn _load_source(
         &mut self,
         path: impl AsRef<std::path::Path>,
-        parent_id: Option<SymbolNodeId>,
+        parent_id: SymbolNodeId,
     ) -> ResolveResult<Option<SymbolNodeId>> {
         let source = self.ctx().file_system().load_source(path.as_ref())?;
         self.load_source_symbol(source, parent_id)
     }
 
-    /// Load a source and its file modules into the symbol tree.
+    /// Load a source and its file modules into the symbol tree as child of `parent_id`.
     ///
-    /// If `parent_id` is `None`, the source becomes the root of the library.
     /// Returns `None` if the source could not be compiled. Its issues are recorded.
     fn load_source_symbol(
         &mut self,
         source: Source,
-        parent_id: Option<SymbolNodeId>,
+        parent_id: SymbolNodeId,
     ) -> ResolveResult<Option<SymbolNodeId>> {
         let path = source.path();
         let source_name = source.to_string();
@@ -213,14 +212,8 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                     ),
                     _ => source_node.get().clone().into(),
                 };
-                let id = if let Some(parent_id) = parent_id {
-                    let id = self.arena_mut().new_node(symbol);
-                    parent_id.append(id, self.arena_mut());
-                    id
-                } else {
-                    *self.lib_mut().root_mut().get_mut() = symbol;
-                    self.lib().root
-                };
+                let id = self.arena_mut().new_node(symbol);
+                parent_id.append(id, self.arena_mut());
 
                 // Traverse children recursively
                 for child in source_node.children() {
@@ -235,7 +228,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                                     item.name(),
                                 )
                                 .map_err(ResolveError::from)
-                                .and_then(|path| Ok((self._load_source(&path, Some(id))?, path))),
+                                .and_then(|path| Ok((self._load_source(&path, id)?, path))),
                                 None => {
                                     Err(ResolveErrorKind::SourceHasNoPath(source_name.clone())
                                         .into())
@@ -247,9 +240,10 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                                 Ok((None, path)) => self
                                     .arena_mut()
                                     .new_node(Symbol::failed_source_file(item, path)),
+                                // A file module, which was not found, keeps its name.
                                 Err(err) => {
                                     self.push_err(err);
-                                    self.arena_mut().new_node(Symbol::root(None))
+                                    self.arena_mut().new_node(item.clone().into())
                                 }
                             }
                         }

@@ -37,10 +37,8 @@ impl Eval for symbol::SymbolDef {
         use symbol::SymbolDef::*;
 
         match self {
-            Root(source_file) => match source_file {
-                Some(source_file) => source_file.eval(context),
-                None => context.catch(EvalErrorKind::SourceFileNotLoaded),
-            },
+            // The sources of a library are its children, see `EvalContext::eval_library`.
+            Root => context.catch(EvalErrorKind::SourceFileNotLoaded),
 
             Constant(constant) => match constant.value() {
                 Some(value) => Ok(value.clone()),
