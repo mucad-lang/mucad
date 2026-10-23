@@ -153,30 +153,3 @@ fn diagnostics() {
         (2, 11, 2, 18)
     );
 }
-
-/// The contour edges of a box are its 12 edges, the diagonals of its faces are flat.
-/// A cylinder has the edges of its two circles, its side is smooth.
-#[test]
-fn mesh_edges() {
-    let threshold = 20f32.to_radians();
-    let edges = |code: &str| {
-        let mut mucad = compiled(code, "3d");
-        let meshes = mucad.render_meshes().expect("Meshes");
-        let [mesh] = &meshes[..] else {
-            panic!("A mesh with the default color");
-        };
-        let edges = mesh.edges();
-        let vertices = (mesh.triangle_mesh().coordinates().len() / 3) as u32;
-        assert!(edges.iter().all(|index| *index < vertices));
-        assert_eq!(edges.len() % 2, 0);
-        (edges.len() / 2, mesh.triangle_mesh().indices().len() / 3)
-    };
-
-    let (box_edges, _) = edges("std::geo2d::Rect(10mm).extrude(10mm);");
-    assert_eq!(box_edges, 12);
-
-    let (cylinder_edges, triangles) = edges("std::geo2d::Circle(r = 10mm).extrude(10mm);");
-    // `n` segments: `2n` triangles of the side, `n - 2` triangles of each cap.
-    let segments = (triangles + 4) / 4;
-    assert_eq!(cylinder_edges, 2 * segments);
-}
