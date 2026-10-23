@@ -664,3 +664,32 @@ fn resolve_unused_locals(code: &str) -> Vec<String> {
     };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
+
+/// A file module, which cannot be located, keeps its name and is not loaded,
+/// the root is the only root of the library.
+#[test]
+fn resolve_file_module_not_located() {
+    use mucad_lang_resolve::{SymbolDef, SymbolNodeExt, library::symbol::SourceFile};
+
+    let mut ctx = ResolveContext::new();
+    let source = mucad_lang_base::Source::from("mod missing;");
+    let (lib, issues) = mucad_lang_resolve::resolve_source(source, &mut ctx).expect("A library");
+    assert!(issues.has_errors(), "{issues:?}");
+
+    let roots = lib
+        .root()
+        .descendants()
+        .filter(|node| matches!(node.def(), SymbolDef::Root))
+        .count();
+    assert_eq!(roots, 1);
+
+    let missing = lib
+        .root()
+        .descendants()
+        .find(|node| node.name().is_some_and(|name| name.as_str() == "missing"))
+        .expect("The file module");
+    assert!(matches!(
+        missing.def(),
+        SymbolDef::SourceFile(SourceFile::NotLoaded)
+    ));
+}

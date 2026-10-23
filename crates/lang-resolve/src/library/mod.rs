@@ -77,6 +77,13 @@ pub struct Library {
     pub root: SymbolNodeId,
 
     pub arena: SymbolArena,
+
+    /// The directory the paths of the source files are relative to, e.g. of its `mu.toml`.
+    ///
+    /// It is set when the library is loaded and not stored, e.g. in a `.mulib` file,
+    /// so that the library can be loaded from anywhere.
+    #[serde(skip)]
+    pub dir: std::path::PathBuf,
 }
 
 impl std::hash::Hash for Library {
@@ -95,6 +102,7 @@ impl Library {
             dependencies: Default::default(),
             root,
             arena,
+            dir: Default::default(),
         }
     }
 
@@ -148,7 +156,22 @@ impl Library {
         self.root.append_value(symbol.into(), &mut self.arena)
     }
 
-    /// The paths of the source files loaded into this library, e.g. `lib.mu` and its file modules.
+    /// The path of a source file of this library relative to [`Library::dir`], e.g. `geo2d.mu`.
+    ///
+    /// A path outside of the directory stays as it is.
+    pub fn relative_path(&self, path: impl AsRef<std::path::Path>) -> std::path::PathBuf {
+        let path = path.as_ref();
+        path.strip_prefix(&self.dir).unwrap_or(path).to_path_buf()
+    }
+
+    /// The path to load a source file of this library with its path relative to [`Library::dir`],
+    /// e.g. `crates/std/lib/std/geo2d.mu` for `geo2d.mu`.
+    pub fn file_path(&self, path: impl AsRef<std::path::Path>) -> std::path::PathBuf {
+        self.dir.join(path)
+    }
+
+    /// The paths of the source files loaded into this library, e.g. `lib.mu` and its file modules,
+    /// to load them, see [`Library::file_path`].
     ///
     /// Source files with errors are included, e.g. to watch them for changes.
     pub fn source_files(&self) -> Vec<std::path::PathBuf> {
@@ -160,7 +183,7 @@ impl Library {
         let mut files = SourceFiles::default();
         node.descendants(&self.arena)
             .for_each(|id| files.visit_node(SymbolNodeRef::new(id, &self.arena)));
-        files.0
+        files.0.iter().map(|path| self.file_path(path)).collect()
     }
 
     /// The paths of the source files, which the source file at `path` loads as file modules.
@@ -174,7 +197,7 @@ impl Library {
         let is_source_file = |id: &SymbolNodeId| {
             let mut files = SourceFiles::default();
             files.visit_node(SymbolNodeRef::new(*id, &self.arena));
-            files.0.iter().any(|file| file == path)
+            files.0.iter().any(|file| self.file_path(file) == path)
         };
 
         match self.root.descendants(&self.arena).find(is_source_file) {
@@ -293,7 +316,7 @@ impl Library {
             .collect();
         source_files
             .iter()
-            .find(|(_, path)| source.path().as_ref() == Some(*path))
+            .find(|(_, path)| source.path() == Some(self.file_path(path)))
             .or(source_files.first())
             .map_or(self.root, |(id, _)| *id)
     }

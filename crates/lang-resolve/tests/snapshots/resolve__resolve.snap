@@ -2,6 +2,6 @@
 source: crates/lang-resolve/tests/resolve.rs
 expression: "&symbol"
 ---
-resolve: SourceFile Loaded(tests/test_cases/resolve.mu) [pub]
+resolve: SourceFile Loaded(resolve.mu) [pub]
 └── a: InlineModule [pub]
     └── C: Constant Any: Value(30mm) [pub]

@@ -90,3 +90,37 @@ fn load_source_file_module() {
 
     insta::assert_snapshot!("load_source_file_module", lib)
 }
+
+/// The paths of the source files are relative to the directory of the library,
+/// so a library can be stored, e.g. in a `.mulib` file, and loaded from anywhere.
+#[test]
+fn source_files_relative_to_library() {
+    use mucad_lang_base::Artifact;
+    use std::path::PathBuf;
+
+    let mut ctx = ResolveContext::new();
+    let (lib, _) = mucad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
+        .expect("A library");
+    assert_eq!(lib.dir, PathBuf::from("tests/test_cases"));
+
+    // The source files can be loaded, e.g. to watch them.
+    let files = lib.source_files();
+    assert!(files.contains(&PathBuf::from("tests/test_cases/file_module/foo.mu")));
+    assert!(files.iter().all(|file| file.exists()), "{files:?}");
+
+    // The stored library has no directory.
+    let stored = Library::from_binary(&lib.to_binary().expect("Binary")).expect("A library");
+    assert_eq!(stored.dir, PathBuf::new());
+    assert!(
+        stored
+            .source_files()
+            .contains(&PathBuf::from("file_module/foo.mu"))
+    );
+
+    // In its directory, the stored library has the same source files.
+    let loaded = Library {
+        dir: "tests/test_cases".into(),
+        ..stored
+    };
+    assert_eq!(loaded.source_files(), files);
+}

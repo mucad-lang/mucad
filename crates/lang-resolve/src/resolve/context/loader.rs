@@ -194,6 +194,13 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
         parent_id: SymbolNodeId,
     ) -> ResolveResult<Option<SymbolNodeId>> {
         let path = source.path();
+        // The main source is in the directory of the library, e.g. `lib.mu` next to `mu.toml`,
+        // the paths of all source files are relative to it.
+        if parent_id == self.lib().root
+            && let Some(dir) = path.as_deref().and_then(std::path::Path::parent)
+        {
+            self.lib_mut().dir = dir.to_path_buf();
+        }
         let source_name = source.to_string();
         let id = self.insert_source(source);
 
@@ -207,7 +214,9 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                 let symbol = match &source_node.def {
                     ir::Def::Source(source) => Symbol::loaded_source_file(
                         source_node.get(),
-                        path.clone().unwrap_or_default(),
+                        path.as_ref()
+                            .map(|path| self.lib().relative_path(path))
+                            .unwrap_or_default(),
                         source.clone(),
                     ),
                     _ => source_node.get().clone().into(),
@@ -237,9 +246,11 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                             match loaded {
                                 Ok((Some(id), _)) => id,
                                 // The issues of the file module have been recorded already.
-                                Ok((None, path)) => self
-                                    .arena_mut()
-                                    .new_node(Symbol::failed_source_file(item, path)),
+                                Ok((None, path)) => {
+                                    let path = self.lib().relative_path(path);
+                                    self.arena_mut()
+                                        .new_node(Symbol::failed_source_file(item, path))
+                                }
                                 // A file module, which was not found, keeps its name.
                                 Err(err) => {
                                     self.push_err(err);

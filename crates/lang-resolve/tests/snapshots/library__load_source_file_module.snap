@@ -1,10 +1,10 @@
 ---
 source: crates/lang-resolve/tests/library.rs
-expression: library
+expression: lib
 ---
 Root [pub]
-└── file_module: SourceFile Loaded(tests/test_cases/file_module.mu) [pub]
-    ├── sub: SourceFile Loaded(tests/test_cases/file_module/sub/mod.mu) [pub]
-    └── foo: SourceFile Loaded(tests/test_cases/file_module/foo.mu) [pub]
-        ├── bar: SourceFile Loaded(tests/test_cases/file_module/foo/bar.mu) [pub]
+└── file_module: SourceFile Loaded(file_module.mu) [pub]
+    ├── sub: SourceFile Loaded(file_module/sub/mod.mu) [pub]
+    └── foo: SourceFile Loaded(file_module/foo.mu) [pub]
+        ├── bar: SourceFile Loaded(file_module/foo/bar.mu) [pub]
         └── FOO: Constant Any: Value(42mm) [pub]
