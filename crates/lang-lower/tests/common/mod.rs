@@ -10,7 +10,7 @@ use mucad_lang_parse as parse;
 pub fn ir_from_source(source: &Source) -> IssueResult<Ir, LowerIssue> {
     let ast = parse::parse(source).expect("No parse errors").0;
     let mut context = LowerContext::from(source);
-    let (mut ir, issues) = lower::lower(&mut context, &ast)?;
+    let (mut ir, issues) = lower::lower(&ast, &mut context)?;
 
     use mucad_lang_lower::ir::visitor::VisitorMut;
     ir::visitor::MakeHumanReadable::new(&context).visit(&mut ir);

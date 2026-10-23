@@ -92,7 +92,7 @@ macro_rules! test_diagnostic {
             let no_diagnostics_expected = expected.is_empty();
 
             // Errors may be recovered from (`Ok` with issues) or not (`Err`).
-            let (ir, issues) = match lower::lower(&mut context, &ast) {
+            let (ir, issues) = match lower::lower(&ast, &mut context) {
                 Ok((ir, issues)) => (Some(ir), issues),
                 Err(issues) => (None, issues),
             };

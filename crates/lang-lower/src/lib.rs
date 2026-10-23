@@ -186,8 +186,8 @@ impl<'source> LowerContextBuilder<'source> {
 }
 
 pub fn lower<'source>(
-    context: &mut LowerContext<'source>,
     ast: &Ast,
+    context: &mut LowerContext<'source>,
 ) -> IssueResult<Ir, LowerIssue> {
     // Short-circuit on fatal errors
     let ir = match ir::desugared::Source::desugar(ast.tree(), context) {

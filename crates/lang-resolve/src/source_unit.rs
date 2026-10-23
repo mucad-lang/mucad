@@ -72,9 +72,9 @@ impl SourceUnit {
         match self {
             Self::Parsed { source, ast } => {
                 let ir = match ast.artifact() {
-                    Some(ast_artifact) => {
+                    Some(ast) => {
                         let mut lower_context = LowerContext::new(&source);
-                        StageResult::from(mucad_lang_lower::lower(&mut lower_context, ast_artifact))
+                        StageResult::from(mucad_lang_lower::lower(ast, &mut lower_context))
                     }
                     None => StageResult::default(),
                 };
