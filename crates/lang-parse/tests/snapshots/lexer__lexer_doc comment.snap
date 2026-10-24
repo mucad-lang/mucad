@@ -17,7 +17,9 @@ expression: "lex(input).collect::<Vec<_>>()"
     },
     Spanned {
         span: 20..24,
-        value: KeywordPart,
+        value: Keyword(
+            Part,
+        ),
     },
     Spanned {
         span: 24..25,

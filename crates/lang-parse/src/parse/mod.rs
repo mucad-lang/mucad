@@ -10,7 +10,7 @@ pub use diag::{ParseAdvice, ParseError, ParseErrorKind, ParseIssue, ParseWarning
 pub use parse_context::ParseContext;
 
 use crate::{
-    ast, lex,
+    Keyword, ast, lex,
     parse::{
         diag::{Rich, RichError},
         helpers::*,
@@ -140,37 +140,11 @@ fn parser<'tokens>()
     let ws = ast::Whitespace::parser().boxed();
 
     let reserved_keyword = select_ref! {
-        token @ (
-            Token::KeywordPlugin |
-            Token::KeywordAssembly |
-            Token::KeywordMaterial |
-            Token::KeywordUnit |
-            Token::KeywordEnum |
-            Token::KeywordStruct |
-            Token::KeywordMatch |
-            Token::KeywordType |
-            Token::KeywordExtern
-        ) => token.kind(),
+        token @ Token::Keyword(keyword) if keyword.is_reserved() => token.kind(),
     }
     .boxed();
     let keyword = select_ref! {
-        token @ (
-            Token::KeywordMod |
-            Token::KeywordPart |
-            Token::KeywordSketch |
-            Token::KeywordOp |
-            Token::KeywordFn |
-            Token::KeywordIf |
-            Token::KeywordElse |
-            Token::KeywordUse |
-            Token::KeywordAs |
-            Token::KeywordReturn |
-            Token::KeywordPub |
-            Token::KeywordConst |
-            Token::KeywordProp |
-            Token::KeywordInit |
-            Token::KeywordSuper
-        ) => token.kind(),
+        token @ Token::Keyword(keyword) if !keyword.is_reserved() => token.kind(),
     }
     .boxed();
 
@@ -268,7 +242,7 @@ fn parser<'tokens>()
 
     // `super` is a keyword, which is only allowed as leading parts of a path,
     // e.g. `super::super::geo::Circle`. It becomes a part named `super`.
-    let super_parts = just(Token::KeywordSuper)
+    let super_parts = just(Token::Keyword(Keyword::Super))
         .map_with(|token, e| ast::Identifier {
             span: e.span(),
             name: token.kind().into(),
@@ -497,7 +471,7 @@ fn parser<'tokens>()
 
     statement_parser.define({
         let visibility = select_ref! {
-            Token::KeywordPub => ast::def::Visibility::Public,
+            Token::Keyword(Keyword::Pub) => ast::def::Visibility::Public,
         }
         .map_with(|vis, e| Spanned::new(e.span(), vis))
         .labelled("visibility");
@@ -579,7 +553,7 @@ fn parser<'tokens>()
             .clone()
             .then(outer_attribute_parser.clone())
             .then(visibility.then_whitespace().or_not())
-            .then(just(Token::KeywordConst).map_with(|_, e| e.span()))
+            .then(just(Token::Keyword(Keyword::Const)).map_with(|_, e| e.span()))
             .then_maybe_whitespace()
             .then(identifier_parser.clone())
             .then_maybe_whitespace()
@@ -626,7 +600,7 @@ fn parser<'tokens>()
         let pub_assignment_inner = doc_block
             .clone()
             .then(outer_attribute_parser.clone())
-            .then(just(Token::KeywordPub).map_with(|_, e| e.span()))
+            .then(just(Token::Keyword(Keyword::Pub)).map_with(|_, e| e.span()))
             .then_maybe_whitespace()
             .then(identifier_parser.clone())
             .then_maybe_whitespace()
@@ -673,7 +647,7 @@ fn parser<'tokens>()
         let property_assignment_inner = doc_block
             .clone()
             .then(outer_attribute_parser.clone())
-            .then(just(Token::KeywordProp).map_with(|_, e| e.span()))
+            .then(just(Token::Keyword(Keyword::Prop)).map_with(|_, e| e.span()))
             .then_maybe_whitespace()
             .then(identifier_parser.clone())
             .then_maybe_whitespace()
@@ -839,7 +813,7 @@ fn parser<'tokens>()
             .clone()
             .then(outer_attribute_parser.clone())
             .then(visibility.then_whitespace().or_not())
-            .then(just(Token::KeywordMod).map_with(|_, e| e.span()))
+            .then(just(Token::Keyword(Keyword::Mod)).map_with(|_, e| e.span()))
             .then_whitespace()
             .then(
                 identifier_parser.clone().recover_with(via_parser(
@@ -870,7 +844,7 @@ fn parser<'tokens>()
             .clone()
             .then(outer_attribute_parser.clone())
             .then(visibility.then_whitespace().or_not())
-            .then(just(Token::KeywordMod).map_with(|_, e| e.span()))
+            .then(just(Token::Keyword(Keyword::Mod)).map_with(|_, e| e.span()))
             .then_whitespace()
             .then(
                 identifier_parser.clone().recover_with(via_parser(
@@ -938,12 +912,12 @@ fn parser<'tokens>()
         let use_statement = outer_attribute_parser
             .clone()
             .then(visibility.then_whitespace().or_not())
-            .then(just(Token::KeywordUse).map_with(|_, e| e.span()))
+            .then(just(Token::Keyword(Keyword::Use)).map_with(|_, e| e.span()))
             .then_whitespace()
             .then(use_name)
             .then(
                 select_ref! {
-                    Token::KeywordAs => (),
+                    Token::Keyword(Keyword::As) => (),
                 }
                 .then_whitespace()
                 .ignore_then(identifier_parser.clone().recover_with(via_parser(
@@ -968,16 +942,16 @@ fn parser<'tokens>()
             .boxed();
 
         let workbench_kind = select_ref! {
-            Token::KeywordSketch => ast::def::WorkbenchKind::Sketch,
-            Token::KeywordPart => ast::def::WorkbenchKind::Part,
-            Token::KeywordOp => ast::def::WorkbenchKind::Op,
+            Token::Keyword(Keyword::Sketch) => ast::def::WorkbenchKind::Sketch,
+            Token::Keyword(Keyword::Part) => ast::def::WorkbenchKind::Part,
+            Token::Keyword(Keyword::Op) => ast::def::WorkbenchKind::Op,
         }
         .boxed();
 
         let init = doc_block
             .clone()
             .then(outer_attribute_parser.clone())
-            .then(just(Token::KeywordInit).map_with(|_, e| e.span()))
+            .then(just(Token::Keyword(Keyword::Init)).map_with(|_, e| e.span()))
             .then_maybe_whitespace()
             .then(parameter_list.clone())
             .then(body.clone())
@@ -1038,7 +1012,7 @@ fn parser<'tokens>()
             )
             .boxed();
 
-        let return_statement = just(Token::KeywordReturn)
+        let return_statement = just(Token::Keyword(Keyword::Return))
             .map_with(|_, e| e.span())
             .then_maybe_whitespace()
             .then(expression_parser.clone().or_not())
@@ -1057,7 +1031,7 @@ fn parser<'tokens>()
             .clone()
             .then(outer_attribute_parser.clone())
             .then(visibility.then_whitespace().or_not())
-            .then(just(Token::KeywordFn).map_with(|_, e| e.span()))
+            .then(just(Token::Keyword(Keyword::Fn)).map_with(|_, e| e.span()))
             .then_whitespace()
             .then(
                 identifier_parser.clone().recover_with(via_parser(
@@ -1416,7 +1390,7 @@ fn parser<'tokens>()
             .boxed();
 
         if_inner.define(
-            just(Token::KeywordIf)
+            just(Token::Keyword(Keyword::If))
                 .map_with(|_, e| e.span())
                 .then_whitespace()
                 .then(expression_parser.clone())
@@ -1424,7 +1398,7 @@ fn parser<'tokens>()
                 .then(body.clone())
                 .then_maybe_whitespace()
                 .then(
-                    just(Token::KeywordElse)
+                    just(Token::Keyword(Keyword::Else))
                         .map_with(|_, e| e.span())
                         .then_maybe_whitespace()
                         .then(if_inner.clone())
@@ -1432,7 +1406,7 @@ fn parser<'tokens>()
                         .or_not(),
                 )
                 .then(
-                    just(Token::KeywordElse)
+                    just(Token::Keyword(Keyword::Else))
                         .map_with(|_, e| e.span())
                         .then_maybe_whitespace()
                         .then(body.clone())

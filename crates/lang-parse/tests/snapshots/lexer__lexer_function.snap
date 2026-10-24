@@ -5,7 +5,9 @@ expression: "lex(input).collect::<Vec<_>>()"
 [
     Spanned {
         span: 0..2,
-        value: KeywordFn,
+        value: Keyword(
+            Fn,
+        ),
     },
     Spanned {
         span: 2..3,

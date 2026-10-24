@@ -23,55 +23,6 @@ pub enum LogosToken<'a> {
     #[token("/*", callback = multi_line_comment_callback)]
     MultiLineComment(Cow<'a, str>),
 
-    #[token("mod")]
-    KeywordMod,
-    #[token("part")]
-    KeywordPart,
-    #[token("sketch")]
-    KeywordSketch,
-    #[token("op", priority = 5)]
-    KeywordOp,
-    #[token("fn", priority = 5)]
-    KeywordFn,
-    #[token("if", priority = 5)]
-    KeywordIf,
-    #[token("else")]
-    KeywordElse,
-    #[token("use")]
-    KeywordUse,
-    #[token("as", priority = 5)]
-    KeywordAs,
-    #[token("return")]
-    KeywordReturn,
-    #[token("pub")]
-    KeywordPub,
-    #[token("const")]
-    KeywordConst,
-    #[token("prop")]
-    KeywordProp,
-    #[token("init")]
-    KeywordInit,
-    #[token("super")]
-    KeywordSuper,
-    #[token("__plugin")]
-    KeywordPlugin,
-    #[token("assembly")]
-    KeywordAssembly,
-    #[token("material")]
-    KeywordMaterial,
-    #[token("unit")]
-    KeywordUnit,
-    #[token("enum")]
-    KeywordEnum,
-    #[token("struct")]
-    KeywordStruct,
-    #[token("match")]
-    KeywordMatch,
-    #[token("type")]
-    KeywordType,
-    #[token("extern")]
-    KeywordExtern,
-
     #[regex("(_|[a-zA-Z])[_a-zA-Z0-9']*", callback = token_cow, priority = 4)]
     Identifier(Cow<'a, str>),
     // `µ` (U+00B5) is the prefix of micro units, e.g. `µm` or `µl`.

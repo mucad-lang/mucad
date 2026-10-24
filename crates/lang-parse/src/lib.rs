@@ -14,6 +14,9 @@ pub mod ast;
 /// Tokens
 pub mod token;
 
+mod keyword;
+pub use keyword::Keyword;
+
 #[cfg(feature = "parser")]
 use mucad_lang_base::{IssueList, ToHash};
 #[cfg(feature = "parser")]

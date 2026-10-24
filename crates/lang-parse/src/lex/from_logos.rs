@@ -1,6 +1,7 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::Keyword;
 use crate::lex::logos::{
     LogosToken, QuoteVariant, StringFormatToken, StringToken, get_literal_string,
 };
@@ -40,53 +41,14 @@ fn map_token(token: Spanned<LogosToken>) -> impl Iterator<Item = Spanned<Token>>
         LogosToken::InnerDocComment(c) => {
             Either::Left(once(Spanned::new(token.span, Token::InnerDocComment(c))))
         }
-        LogosToken::KeywordMod => Either::Left(once(Spanned::new(token.span, Token::KeywordMod))),
-        LogosToken::KeywordPart => Either::Left(once(Spanned::new(token.span, Token::KeywordPart))),
-        LogosToken::KeywordSketch => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordSketch)))
-        }
-        LogosToken::KeywordOp => Either::Left(once(Spanned::new(token.span, Token::KeywordOp))),
-        LogosToken::KeywordFn => Either::Left(once(Spanned::new(token.span, Token::KeywordFn))),
-        LogosToken::KeywordIf => Either::Left(once(Spanned::new(token.span, Token::KeywordIf))),
-        LogosToken::KeywordElse => Either::Left(once(Spanned::new(token.span, Token::KeywordElse))),
-        LogosToken::KeywordUse => Either::Left(once(Spanned::new(token.span, Token::KeywordUse))),
-        LogosToken::KeywordAs => Either::Left(once(Spanned::new(token.span, Token::KeywordAs))),
-        LogosToken::KeywordReturn => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordReturn)))
-        }
-        LogosToken::KeywordPub => Either::Left(once(Spanned::new(token.span, Token::KeywordPub))),
-        LogosToken::KeywordConst => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordConst)))
-        }
-        LogosToken::KeywordProp => Either::Left(once(Spanned::new(token.span, Token::KeywordProp))),
-        LogosToken::KeywordInit => Either::Left(once(Spanned::new(token.span, Token::KeywordInit))),
-        LogosToken::KeywordSuper => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordSuper)))
-        }
-        LogosToken::KeywordPlugin => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordPlugin)))
-        }
-        LogosToken::KeywordAssembly => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordAssembly)))
-        }
-        LogosToken::KeywordMaterial => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordMaterial)))
-        }
-        LogosToken::KeywordUnit => Either::Left(once(Spanned::new(token.span, Token::KeywordUnit))),
-        LogosToken::KeywordEnum => Either::Left(once(Spanned::new(token.span, Token::KeywordEnum))),
-        LogosToken::KeywordStruct => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordStruct)))
-        }
-        LogosToken::KeywordMatch => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordMatch)))
-        }
-        LogosToken::KeywordType => Either::Left(once(Spanned::new(token.span, Token::KeywordType))),
-        LogosToken::KeywordExtern => {
-            Either::Left(once(Spanned::new(token.span, Token::KeywordExtern)))
-        }
-        LogosToken::Identifier(i) => {
-            Either::Left(once(Spanned::new(token.span, Token::Identifier(i))))
-        }
+        // Keywords are lexed as identifiers, e.g. `fn`.
+        LogosToken::Identifier(i) => Either::Left(once(Spanned::new(
+            token.span,
+            match i.parse::<Keyword>() {
+                Ok(keyword) => Token::Keyword(keyword),
+                Err(()) => Token::Identifier(i),
+            },
+        ))),
         LogosToken::Unit(u) => Either::Left(once(Spanned::new(token.span, Token::Unit(u)))),
         LogosToken::LiteralInt(l) => {
             Either::Left(once(Spanned::new(token.span, Token::LiteralInt(l))))

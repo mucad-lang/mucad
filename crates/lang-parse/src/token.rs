@@ -3,6 +3,8 @@
 
 use std::borrow::Cow;
 
+use crate::Keyword;
+
 pub use crate::lex::LexerError;
 
 /// Source token for µcad files
@@ -20,54 +22,8 @@ pub enum Token<'a> {
     /// An inner doc-comment, starting with `//!`
     InnerDocComment(Cow<'a, str>),
 
-    /// The `mod` keyword
-    KeywordMod,
-    /// The `part` keyword
-    KeywordPart,
-    /// The `sketch` keyword
-    KeywordSketch,
-    /// The `op` keyword
-    KeywordOp,
-    /// The `fn` keyword
-    KeywordFn,
-    /// The `if` keyword
-    KeywordIf,
-    /// The `else` keyword
-    KeywordElse,
-    /// The `use` keyword
-    KeywordUse,
-    /// The `as` keyword
-    KeywordAs,
-    /// The `return` keyword
-    KeywordReturn,
-    /// The `pub` keyword
-    KeywordPub,
-    /// The `const` keyword
-    KeywordConst,
-    /// The `prop` keyword
-    KeywordProp,
-    /// The `init` keyword
-    KeywordInit,
-    /// The `super` keyword
-    KeywordSuper,
-    /// The `__plugin` keyword
-    KeywordPlugin,
-    /// The `assembly` keyword
-    KeywordAssembly,
-    /// The `material` keyword
-    KeywordMaterial,
-    /// The `unit` keyword
-    KeywordUnit,
-    /// The `enum` keyword
-    KeywordEnum,
-    /// The `struct` keyword
-    KeywordStruct,
-    /// The `match` keyword
-    KeywordMatch,
-    /// The `type` keyword
-    KeywordType,
-    /// The `extern` keyword
-    KeywordExtern,
+    /// A keyword, e.g. `fn`.
+    Keyword(Keyword),
 
     /// An identifier, alphanumeric, starting with either an alpha character or a underscore
     Identifier(Cow<'a, str>),
@@ -199,30 +155,7 @@ impl Token<'_> {
             Token::LiteralFloat(s) => Token::LiteralFloat(s.into_owned().into()),
             Token::LiteralString(s) => Token::LiteralString(s.into_owned().into()),
 
-            Token::KeywordMod => Token::KeywordMod,
-            Token::KeywordPart => Token::KeywordPart,
-            Token::KeywordSketch => Token::KeywordSketch,
-            Token::KeywordOp => Token::KeywordOp,
-            Token::KeywordFn => Token::KeywordFn,
-            Token::KeywordIf => Token::KeywordIf,
-            Token::KeywordElse => Token::KeywordElse,
-            Token::KeywordUse => Token::KeywordUse,
-            Token::KeywordAs => Token::KeywordAs,
-            Token::KeywordReturn => Token::KeywordReturn,
-            Token::KeywordPub => Token::KeywordPub,
-            Token::KeywordConst => Token::KeywordConst,
-            Token::KeywordProp => Token::KeywordProp,
-            Token::KeywordInit => Token::KeywordInit,
-            Token::KeywordSuper => Token::KeywordSuper,
-            Token::KeywordAssembly => Token::KeywordAssembly,
-            Token::KeywordPlugin => Token::KeywordPlugin,
-            Token::KeywordMaterial => Token::KeywordMaterial,
-            Token::KeywordUnit => Token::KeywordUnit,
-            Token::KeywordEnum => Token::KeywordEnum,
-            Token::KeywordStruct => Token::KeywordStruct,
-            Token::KeywordMatch => Token::KeywordMatch,
-            Token::KeywordType => Token::KeywordType,
-            Token::KeywordExtern => Token::KeywordExtern,
+            Token::Keyword(keyword) => Token::Keyword(keyword),
             Token::LiteralBool(l) => Token::LiteralBool(l),
             Token::SigilColon => Token::SigilColon,
             Token::SigilSemiColon => Token::SigilSemiColon,
@@ -279,30 +212,7 @@ impl Token<'_> {
             Token::MultiLineComment(_) => "multi-line comment",
             Token::DocComment(_) => "doc comment",
             Token::InnerDocComment(_) => "inner doc comment",
-            Token::KeywordMod => "mod",
-            Token::KeywordPart => "part",
-            Token::KeywordSketch => "sketch",
-            Token::KeywordOp => "op",
-            Token::KeywordFn => "fn",
-            Token::KeywordIf => "if",
-            Token::KeywordElse => "else",
-            Token::KeywordUse => "use",
-            Token::KeywordAs => "as",
-            Token::KeywordReturn => "return",
-            Token::KeywordPub => "pub",
-            Token::KeywordConst => "const",
-            Token::KeywordProp => "prop",
-            Token::KeywordInit => "init",
-            Token::KeywordSuper => "super",
-            Token::KeywordPlugin => "__plugin",
-            Token::KeywordAssembly => "assembly",
-            Token::KeywordMaterial => "material",
-            Token::KeywordUnit => "unit",
-            Token::KeywordEnum => "enum",
-            Token::KeywordStruct => "struct",
-            Token::KeywordMatch => "match",
-            Token::KeywordType => "type",
-            Token::KeywordExtern => "extern",
+            Token::Keyword(keyword) => keyword.as_str(),
             Token::Identifier(_) => "identifier",
             Token::Unit(_) => "unit",
             Token::LiteralInt(_) => "integer literal",
