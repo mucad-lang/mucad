@@ -77,6 +77,20 @@ button:disabled {
   color: var(--guide);
 }
 
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--brighter);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  accent-color: var(--signal);
+  cursor: pointer;
+}
+
 #status.error,
 #diagnostics.error {
   color: var(--complementary);

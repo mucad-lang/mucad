@@ -3,7 +3,7 @@
 
 import init, { Mucad } from "mucad-wasm";
 import { Dock } from "./dock";
-import { createEditor, setDiagnostics } from "./editor";
+import { addCompileShortcut, createEditor, setDiagnostics } from "./editor";
 import { examples } from "./examples";
 import { Viewer } from "./viewer";
 import "./style.css";
@@ -17,6 +17,8 @@ const status = element<HTMLSpanElement>("status");
 const exportButton = element<HTMLButtonElement>("export");
 const exportButtonCaption = element<HTMLDivElement>("export-btn-caption");
 const formatButton = element<HTMLButtonElement>("format");
+const compileButton = element<HTMLButtonElement>("compile");
+const autoUpdate = element<HTMLInputElement>("auto-update");
 const diagnostics = element<HTMLPreElement>("diagnostics");
 
 const dock = new Dock(element("dock"), [
@@ -32,8 +34,27 @@ const viewer = new Viewer(element("view"));
 /** The model type of the last successful compilation, which decides the export format. */
 let modelType: string | undefined;
 
+/** The key of the auto-update setting in the local storage of the browser. */
+const AUTO_UPDATE_KEY = "mucad.autoUpdate";
+autoUpdate.checked = localStorage.getItem(AUTO_UPDATE_KEY) !== "false";
+
+/** The pending compilation after an edit. */
+let timer: number | undefined;
+
+/** Mark that the code has changed since it was compiled, e.g. to compile it with the button. */
+function setModified(modified: boolean) {
+  compileButton.classList.toggle("btn-bright", modified);
+}
+
+/** Compile the code of the editor at once, instead of a pending compilation. */
+function compileNow() {
+  clearTimeout(timer);
+  compile(editor.getValue());
+}
+
 /** Compile `code` and show its model, diagnostics and status. */
 function compile(code: string) {
+  setModified(false);
   const result = mucad.compile(code);
   diagnostics.textContent = result.report;
   setDiagnostics(editor, result.diagnostics);
@@ -104,6 +125,12 @@ document.addEventListener('keydown', (e) => {
       exportModel();
     }
 
+    // Ctrl+Enter or Cmd+Enter -> Compile
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        compileNow();
+    }
+
     // Ctrl+F or Cmd+F -> Format
     if (e.key.toLowerCase() === 'f') {
         e.preventDefault();
@@ -111,11 +138,16 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-let timer: number | undefined;
+// Compile after each change with auto-update, otherwise with the compile button.
 const editor = createEditor(element("editor"), (code) => {
   clearTimeout(timer);
-  timer = window.setTimeout(() => compile(code), COMPILE_DELAY_MS);
+  if (autoUpdate.checked) {
+    timer = window.setTimeout(() => compile(code), COMPILE_DELAY_MS);
+  } else {
+    setModified(true);
+  }
 });
+addCompileShortcut(editor, compileNow);
 
 // Set version tag
 const version = Mucad.versionString();
@@ -126,11 +158,24 @@ if (versionTag) {
 }
 
 examples.forEach((example, index) => select.add(new Option(example.name, String(index))));
-select.addEventListener("change", () => editor.setValue(examples[Number(select.value)].code));
+// An example is compiled at once, also without auto-update.
+select.addEventListener("change", () => {
+  editor.setValue(examples[Number(select.value)].code);
+  compileNow();
+});
 exportButton.addEventListener("click", exportModel);
 formatButton.addEventListener("click", format);
+compileButton.addEventListener("click", compileNow);
+autoUpdate.addEventListener("change", () => {
+  localStorage.setItem(AUTO_UPDATE_KEY, String(autoUpdate.checked));
+  // Changes made without auto-update are compiled, when it is switched on.
+  if (autoUpdate.checked && compileButton.classList.contains("btn-bright")) {
+    compileNow();
+  }
+});
 
 
 // The first example or the one given by the URL, e.g. `?example=1`.
 select.value = String(Number(new URLSearchParams(location.search).get("example")) || 0);
 editor.setValue(examples[Number(select.value)]?.code ?? examples[0].code);
+compileNow();

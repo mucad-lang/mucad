@@ -122,3 +122,14 @@ export function createEditor(element: HTMLElement, onChange: (code: string) => v
   editor.onDidChangeModelContent(() => onChange(editor.getValue()));
   return editor;
 }
+
+/**
+ * Run `compile` with Ctrl+Enter (Cmd+Enter on macOS), also when the editor has the focus,
+ * where Monaco would insert a line otherwise.
+ */
+export function addCompileShortcut(
+  editor: monaco.editor.IStandaloneCodeEditor,
+  compile: () => void,
+) {
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, compile);
+}
