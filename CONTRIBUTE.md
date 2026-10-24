@@ -1,6 +1,6 @@
 # Contribute
 
-Thank you for your interest in contributing to mucad!
+Thank you for your interest in contributing to µcad!
 
 The mucad community welcomes all contributions, including bug reports, feature requests, and pull requests.
 
@@ -42,6 +42,7 @@ Although the technology is evolving rapidly, our rationale is therefore as follo
   This will result in you shifting the work onto others.
   Such changes are unlikely to be accepted.
   Only submit changes that you fully understand and can justify.
+  If you ensure, please consider to file an issue with a feature or bug description first and then we can discuss things. 
 
 * LLM-generated bug reports are likely to be closed.
 
@@ -50,13 +51,16 @@ Although the technology is evolving rapidly, our rationale is therefore as follo
 * From an ethical perspective, LLM tools require large amounts of energy and exploit workers under inhumane conditions.
   We advise contributors to carefully consider these side effects.
 
-* As developers, we strongly discourage using LLM chatbots within your IDE.
-  This encourages authors to rely on artificially generated code snippets instead of using their own intelligence.
+* As developers, we see the benefit of using an LLM from time to time, as it saves a lot of typing.
+  However, this does not release you from the burden of reviewing and understanding.
+  We want encourage authors to using their own intelligence instead off relying on artificially generated code snippets.
+  Please prompt as precise and specific as possible. 
+  You will notice that once you have specific prompt, the solution is clear in your head and you don't need the LLM at all.
 
 * Both humans and AI can and will make mistakes.
   However, only humans can be responsible for the contributed code, not AI.
 
-* The mucad project's goal is to build a community, not a farm of AI agents.
+* µcad project's goal is to build a community, not a farm of AI agents.
   Unlike AI contributions, contributions from humans help mentor potential future maintainers.
 
 ## Getting started
@@ -78,138 +82,6 @@ After cloning the repository, you can build mucad using Cargo:
 ```sh
 cargo build
 ```
-
-## Documentation-driven testing
-
-Starting as a team of two, we had to chose a way to bring code and documentation into sync.
-This especially important when developing a programming language!
-
-Hence, we follow an approach called **documentation-driven development**.
-This approach guarantees to test each µcad code snippet and shows the test result in a banner above the test.
-
-### Executing tests
-
-Those tests can be run with `cargo test`.
-The produced output will be saved in folders called `.test` which is beside the source file of the test.
-
-Outdated or removed tests will be cleaned up automatically but when in doubt use `cargo clean`
-and maybe some `find -name .test | xargs rm -r`.
-
-We also commit the results to the repository to monitor any changes in our IDEs.
-
-### Writing markdown tests
-
-One may insert *µcad* code into the *markdown* files, which then will get tested automatically if you run
-`cargo test` and name them like:
-
-````md
-```mu,my_test
-````
-
-The *markdown* will be searched for any *µcad* code and appropriate *rust* tests will be
-[generated](https://codeberg.org/mucad/mucad/src/branch/main/tests/mucad_markdown_test).
-
-#### Test modes
-
-beside the name you may add a test mode (see table below):
-
-````md
-```mu,my_test#fail
-````
-
-The tests will create `.test` folders beside the *markdown* files.
-The tests will then copy an [image file (`*.svg`)](https://codeberg.org/mucad/mucad/src/branch/main/tests/images)
-for every test which signals the test result into the `.test` folder.
-They can be included in the *markdown*, if you use this code:
-
-````md
-![test](.test/my_test.svg)
-```mu,my_test
-````
-
-#### Accessing test logs
-
-You may also give the reader access to the logs by clicking on the banner with:
-
-````md
-[![test](.test/my_test.svg)](.test/my_test.log)
-```mu,my_test
-````
-
-#### Automatically update test banners
-
-There is a [script](https://codeberg.org/mucad/mucad/src/branch/main/update_md_banner.sh) which updates all
-banners automatically.
-
-#### Test results and marks
-
-| Image                                            | MD Code Type | Mark                      | Code                                     | What do do?            |
-| ------------------------------------------------ | ------------ | ------------------------- | ---------------------------------------- | ---------------------- |
-| ![fail_ok](tests/images/fail_ok.svg)             | `µcad`       | `#fail`,`#warn`           | Fails intentionally                      | ok                     |
-| ![fail_wrong](tests/images/fail_wrong.svg)       | `µcad`       | `#fail`,`#warn`           | Fails but with wrong errors or warnings  | fix test or code       |
-| ![fail](tests/images/fail.svg)                   | `µcad`       |                           | Fails                                    | fix test or code       |
-| ![ok_fail](tests/images/ok_fail.svg)             | `µcad`       | `#fail`                   | Succeeds but should fail                 | find out why           |
-| ![ok](tests/images/ok.svg)                       | `µcad`       |                           | Succeeds                                 | ok                     |
-| ![todo](tests/images/todo.svg)                   | `µcad`       | `#todo`                   | Needs more work to succeed               | create issue/implement |
-| -                                                | `µcad`       | `#no-test`                | Ignore completely                        | yolo!                  |
-
-#### Mark errors and warnings
-
-Code lines which intentionally produce errors must be marked with `// error` to make the test succeed.
-Code lines which shall produce warnings can be marked with `// warning` to check if those warnings are happening.
-Any unmarked warnings will be ignored.
-
-In the following example a warning and an error are marked with comments:
-
-````md
-```mu,missed_property#fail
-sketch Wheel(radius: Length) { // warning (no output)
-    init( width: Length ) { } // error: Workbench plan incomplete. Missing properties: radius
-}
-Wheel(width = 1.0mm);
-```
-````
-
-#### Generating exports
-
-If test code produces geometry, that will be exported by running the tests too.
-Tests are run in **low resolution** to make them faster.
-If you require a test output to be **high resolution**, then add `(hires)` to the header line:
-
-````md
-```mu,final(hires)
-````
-
-## Contributing to the books
-
-The `./books` folder contains books written in [markdown](https://rust-lang.github.io/mdBook/).
-Each book also contains µcad code snippets, from which tests are generated.
-
-Currently, the following books exist:
-
-* **[µcad Language Reference](books/language/book.toml)**.
-
-  This book contains the µcad language reference.
-  Every language feature is supposed to be documented (and tested) here.
-
-* **[Tests book](books/tests/book.toml)**
-
-  This book contains additional tests that are not part of the µcad language reference.
-
-* **[Tutorials](books/tutorials/book.toml)**
-
-  This book contains mucad tutorials dedicated to new users.
-  Tutorials are important for making mucad as user-friendly as possible, hence every contribution is welcome!
-
-* **[Concept Pool](books/concept_pool/book.toml)**
-
-  This book contains raw concepts that are not part of the language (yet), but may be included in the roadmap at some point.
-  Feel free to contribute your ideas here.
-
-* **[Examples Book](books/examples/book.toml)**
-
-  This book is auto-generated from all the examples in the `examples/` folder.
-  Instead of contributing directly to this book, please contribute examples to the `examples/` folder instead.
 
 ## ❤️ Support the project
 
