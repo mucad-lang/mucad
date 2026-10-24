@@ -89,6 +89,10 @@ pub struct Compile {
     #[arg(long, num_args = 0..=1, default_value = "none", default_missing_value = "auto")]
     pub emit_model: EmitTarget,
 
+    /// Do not write a compiled library into `<name>.mulib` in its directory.
+    #[arg(long)]
+    pub no_emit_lib: bool,
+
     /// Display compiler artifacts, e.g. `--display ast,model`.
     /// AST, IR and model are only available for source files.
     #[arg(long, value_delimiter = ',', num_args = 1..)]
@@ -180,9 +184,11 @@ impl Compile {
         }
     }
 
-    /// Compile the library in the directory `input`.
+    /// Compile the library in the directory `input` into `<name>.mulib` in that directory,
+    /// unless `--no-emit-lib` is given.
     ///
     /// A library is not evaluated, so there is no model, and it consists of several sources.
+    /// A library with errors is not written, because a `.mulib` is loaded without checking it.
     fn compile_lib(&self, compiler: &mut mu::Compiler, input: &str) -> mu::Result {
         let emits = [&self.emit_ast, &self.emit_ir, &self.emit_model];
         if emits.iter().any(|emit| **emit != EmitTarget::NoEmit) {
@@ -190,6 +196,10 @@ impl Compile {
         }
 
         match compiler.compile_lib(input) {
+            Ok((_, diag)) if diag.has_errors() => Err(miette::miette!(
+                "Library has issues:\n{err}",
+                err = compiler.render_diag_to_string(&diag)
+            )),
             Ok((lib, diag)) => {
                 eprintln!("{}", compiler.render_diag_to_string(&diag));
                 match lib.info() {
@@ -203,12 +213,15 @@ impl Compile {
                     }
                 });
 
-                let lib_file_path = std::path::PathBuf::from(format!(
-                    "{input}/{}.{}",
-                    lib.name().unwrap(),
-                    mu::ArtifactKind::Library.ext()
-                ));
-                std::fs::write(lib_file_path, lib.to_binary()?).into_diagnostic()?;
+                if !self.no_emit_lib {
+                    let Some(name) = lib.name() else {
+                        miette::bail!("The library in '{input}' has no name in its `mu.toml`");
+                    };
+                    let path = std::path::Path::new(input)
+                        .join(format!("{name}.{}", mu::ArtifactKind::Library.ext()));
+                    std::fs::write(&path, lib.to_binary()?).into_diagnostic()?;
+                    eprintln!("Wrote library {}", path.display());
+                }
 
                 Ok(())
             }

@@ -344,6 +344,7 @@ fn compile_displays_artifacts() {
 }
 
 /// A library has no AST, IR and model to display, only its symbols.
+/// The library of the tests is not written.
 #[test]
 fn compile_displays_library() {
     let library = Path::new(env!("CARGO_MANIFEST_DIR")).join("../driver/tests/data/lib/std");
@@ -351,7 +352,7 @@ fn compile_displays_library() {
     mucad()
         .arg("compile")
         .arg(&library)
-        .args(["--display", "library,model"])
+        .args(["--display", "library,model", "--no-emit-lib"])
         .assert()
         .success()
         .stdout(predicate::str::contains("--- Library ---"))
@@ -386,4 +387,57 @@ fn export_attributes() {
     assert!(dir.path().join("logo__shape.svg").is_file());
     assert!(dir.path().join("disc.stl").is_file());
     assert!(!dir.path().join("logo.svg").exists());
+}
+
+/// A library directory with `mu.toml` and `lib.mu`, without standard library.
+fn library_dir(code: &str) -> tempfile::TempDir {
+    let dir = tempfile::tempdir().expect("temp dir");
+    source_file(
+        &dir,
+        "mu.toml",
+        "[library]\nname = \"shapes\"\nversion = \"0.1.0\"\nno_std = true\n",
+    );
+    source_file(&dir, "lib.mu", code);
+    dir
+}
+
+/// A library is compiled into `<name>.mulib` in its directory, which can be loaded again.
+#[test]
+fn compile_writes_library() {
+    use mucad_driver::prelude::{Artifact, Library};
+
+    let dir = library_dir("pub const SIZE = 10mm;");
+    mucad().arg("compile").arg(dir.path()).assert().success();
+
+    let bytes = std::fs::read(dir.path().join("shapes.mulib")).expect("A library file");
+    let lib = Library::from_binary(&bytes).expect("A library");
+    assert_eq!(lib.name().map(|name| name.as_str()), Some("shapes"));
+}
+
+/// With `--no-emit-lib`, a library is only compiled.
+#[test]
+fn compile_no_emit_lib() {
+    let dir = library_dir("pub const SIZE = 10mm;");
+    mucad()
+        .arg("compile")
+        .arg(dir.path())
+        .arg("--no-emit-lib")
+        .assert()
+        .success();
+    assert!(!dir.path().join("shapes.mulib").exists());
+}
+
+/// A library with errors is not written, e.g. with a parse error or an unresolved symbol.
+#[test]
+fn compile_library_with_errors() {
+    for code in ["pub const SIZE = ;", "pub const SIZE = UNKNOWN;"] {
+        let dir = library_dir(code);
+        mucad()
+            .arg("compile")
+            .arg(dir.path())
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("Library has issues"));
+        assert!(!dir.path().join("shapes.mulib").exists(), "{code}");
+    }
 }
