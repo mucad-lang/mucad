@@ -157,8 +157,8 @@ body .dockview-theme-dark {
   width: 32px;
   height: 32px;
   background-color: var(--signal);
-  -webkit-mask: url('codeberg.svg') no-repeat center / contain;
-  mask: url('codeberg.svg') no-repeat center / contain;
+  -webkit-mask: url('./assets/codeberg.svg') no-repeat center / contain;
+  mask: url('./assets/codeberg.svg') no-repeat center / contain;
   flex-shrink: 0;
 }
 
@@ -168,8 +168,8 @@ body .dockview-theme-dark {
   width: 32px;
   height: 32px;
   background-color: var(--signal);
-  -webkit-mask: url('rust_services.svg') no-repeat center / contain;
-  mask: url('rust_services.svg') no-repeat center / contain;
+  -webkit-mask: url('./assets/rust_services.svg') no-repeat center / contain;
+  mask: url('./assets/rust_services.svg') no-repeat center / contain;
   flex-shrink: 0;
 }
 
