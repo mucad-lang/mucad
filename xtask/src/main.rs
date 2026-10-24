@@ -1,6 +1,7 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod check_readme;
 mod doctest;
 mod update_copyright;
 
@@ -27,6 +28,15 @@ struct Cli {
 enum Commands {
     /// Update copyright notices across project files
     UpdateCopyright,
+
+    /// Run the shell commands of README.md files one by one, to check them manually
+    CheckReadme {
+        /// README.md files or directories to search, by default the whole repository
+        paths: Vec<std::path::PathBuf>,
+        /// Only list the commands
+        #[arg(long)]
+        list: bool,
+    },
 
     /// Generate documentation for builtins
     DocgenBuiltin {
@@ -64,6 +74,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .with_git_exclusions()
                 .update()?;
             Ok(())
+        }
+        Commands::CheckReadme { paths, list } => {
+            let paths = if paths.is_empty() {
+                vec![std::path::PathBuf::from(".")]
+            } else {
+                paths
+            };
+            check_readme::check_readme(&paths, list)
         }
         Commands::DocgenBuiltin { output_path } => {
             let builtin_lib = mu::BuiltinLibrary::new();
