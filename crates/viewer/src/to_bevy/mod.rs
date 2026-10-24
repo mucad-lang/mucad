@@ -15,6 +15,10 @@ use bevy::{
 
 pub use mucad_driver::prelude as mu;
 
+/// The angle in degrees between faces of 3D geometries, above which an edge is shown sharp
+/// instead of smooth and gets a contour, see [`ToBevyMesh::to_bevy_edge_mesh`].
+pub const CREASE_ANGLE: f32 = 30.0;
+
 /// A trait to convert a µcad type into a bevy type.
 pub trait ToBevy<T> {
     /// Convert into bevy type.

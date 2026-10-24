@@ -81,6 +81,20 @@ pub fn create_3d_material(base_color: bevy::prelude::Color) -> bevy_types::Stand
     }
 }
 
+/// The uuid of the material of the contour edges of 3D models, which all models share.
+pub const EDGE_MATERIAL_UUID: Uuid = Uuid::from_u64_pair(BUILTIN_MATERIAL_ASSET_ID, 0xED6E);
+
+/// Create the material of contour edges (unlit), which are drawn in front of their faces.
+pub fn create_edge_material(color: bevy::prelude::Color) -> bevy_types::StandardMaterial {
+    bevy_types::StandardMaterial {
+        base_color: color,
+        unlit: true,
+        // The edges lie on the faces, so they are moved closer to the camera to stay visible.
+        depth_bias: 100.0,
+        ..Default::default()
+    }
+}
+
 /// Material plugin.
 pub struct MaterialPlugin;
 

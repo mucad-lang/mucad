@@ -21,6 +21,12 @@ pub trait ToBevyMesh {
     fn to_bevy_mesh_default(&self) -> Vec<Mesh> {
         self.to_bevy_mesh(Self::Parameters::default())
     }
+
+    /// A line mesh of the contour edges, which is drawn with the meshes of
+    /// [`ToBevyMesh::to_bevy_mesh`], `None` without contours, e.g. for 2D geometries.
+    fn to_bevy_edge_mesh(&self, _parameters: Self::Parameters) -> Option<Mesh> {
+        None
+    }
 }
 
 impl ToBevyMesh for mu::core::LineString {
@@ -237,6 +243,25 @@ impl ToBevyMesh for mu::core::TriangleMesh {
         mesh.insert_indices(Indices::U32(new_indices));
         vec![mesh]
     }
+
+    /// The edges, where the normals of the faces differ more than `threshold_degrees`,
+    /// or which have not two faces, see [`mu::core::TriangleMesh::edges`].
+    fn to_bevy_edge_mesh(&self, threshold_degrees: Self::Parameters) -> Option<Mesh> {
+        let edges = self.edges(cgmath::Rad(f64::from(threshold_degrees).to_radians()));
+        let mut mesh = Mesh::new(
+            bevy::mesh::PrimitiveTopology::LineList,
+            RenderAssetUsages::default(),
+        );
+        mesh.insert_attribute(
+            Mesh::ATTRIBUTE_POSITION,
+            self.positions
+                .iter()
+                .map(|position| [position.x, position.y, position.z])
+                .collect::<Vec<_>>(),
+        );
+        mesh.insert_indices(Indices::U32(edges.into_flattened()));
+        Some(mesh)
+    }
 }
 
 /// Create a bevy mesh from a 3D geometry.
@@ -253,6 +278,19 @@ impl ToBevyMesh for mu::core::Geometry3D {
             Geometry3D::Collection(collection) => {
                 let mesh: mu::core::TriangleMesh = collection.into();
                 mesh.to_bevy_mesh(threshold_angle)
+            }
+        }
+    }
+
+    fn to_bevy_edge_mesh(&self, threshold_angle: Self::Parameters) -> Option<Mesh> {
+        use mu::core::Geometry3D;
+        match self {
+            Geometry3D::Mesh(triangle_mesh) => triangle_mesh.to_bevy_edge_mesh(threshold_angle),
+            Geometry3D::Manifold(manifold) => mu::core::TriangleMesh::from(manifold.get_mesh_gl(0))
+                .to_bevy_edge_mesh(threshold_angle),
+            Geometry3D::Collection(collection) => {
+                let mesh: mu::core::TriangleMesh = collection.into();
+                mesh.to_bevy_edge_mesh(threshold_angle)
             }
         }
     }

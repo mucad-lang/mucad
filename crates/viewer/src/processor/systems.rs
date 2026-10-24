@@ -18,7 +18,7 @@ use crate::stdin::StdinMessageReceiver;
 use crate::view_model::ModelViewState;
 use crate::*;
 use crate::{
-    processor::{ProcessorRequest, ProcessorResponse},
+    processor::{ProcessorRequest, ProcessorResponse, registry},
     view_model::ViewerEvent,
 };
 
@@ -137,6 +137,10 @@ pub fn file_reload(state: ResMut<crate::view_model::ViewModel>) {
     }
 }
 
+/// A marker for the contour edges of a mesh, e.g. to toggle their visibility.
+#[derive(Component)]
+pub struct ContourEdges;
+
 /// This system handles responses coming from the processor and fills the Bevy command pipeline.
 pub fn handle_processor_responses(
     mut commands: Commands,
@@ -155,9 +159,12 @@ pub fn handle_processor_responses(
                 model_view_states.remove(*uuid);
                 materials.remove(*uuid);
             }),
-            ProcessorResponse::NewMeshAsset(uuid, mesh) => {
+            ProcessorResponse::NewMeshAsset(uuid, mesh, edges) => {
                 log::info!("New mesh: {uuid}");
                 let _ = meshes.insert(uuid, mesh);
+                if let Some(edges) = edges {
+                    let _ = meshes.insert(registry::edge_mesh_uuid(uuid), edges);
+                }
             }
             ProcessorResponse::NewModelInfo(uuid, info) => {
                 log::info!("New model info: {uuid}");
@@ -170,6 +177,12 @@ pub fn handle_processor_responses(
                 });
             }
             ProcessorResponse::SpawnModelInstances(uuids) => {
+                let _ = materials.insert(
+                    crate::material::EDGE_MATERIAL_UUID,
+                    crate::material::create_edge_material(
+                        view_model.config.theme.primary.to_bevy(),
+                    ),
+                );
                 // A model is spawned as one entity per mesh, which share the model's material.
                 for (uuid, view_state) in uuids
                     .iter()
@@ -180,21 +193,31 @@ pub fn handle_processor_responses(
                         mu::core::Length::mm(ground_radius.max(view_state.info().ground_radius.0));
 
                     for mesh_uuid in &view_state.info().mesh_uuids {
-                        entities.push(
-                            commands
-                                .spawn((
-                                    Mesh3d(Handle::Uuid(*mesh_uuid, PhantomData)),
-                                    MeshMaterial3d::<StandardMaterial>(Handle::Uuid(
-                                        uuid,
-                                        PhantomData,
-                                    )),
-                                    view_state.info().transform,
-                                    view_state.outline_volume.clone(),
-                                    OutlineMode::FloodFlat,
-                                    view_state.clone(),
-                                ))
-                                .id(),
-                        );
+                        let mut entity = commands.spawn((
+                            Mesh3d(Handle::Uuid(*mesh_uuid, PhantomData)),
+                            MeshMaterial3d::<StandardMaterial>(Handle::Uuid(uuid, PhantomData)),
+                            view_state.info().transform,
+                            view_state.outline_volume.clone(),
+                            OutlineMode::FloodFlat,
+                            view_state.clone(),
+                        ));
+                        // The contour edges are a child of their mesh's entity: they share its
+                        // transform and are despawned with it, but can be hidden on their own.
+                        let edge_mesh_uuid = registry::edge_mesh_uuid(*mesh_uuid);
+                        if meshes.contains(AssetId::<Mesh>::Uuid {
+                            uuid: edge_mesh_uuid,
+                        }) {
+                            entity.with_child((
+                                Mesh3d(Handle::Uuid(edge_mesh_uuid, PhantomData)),
+                                MeshMaterial3d::<StandardMaterial>(Handle::Uuid(
+                                    crate::material::EDGE_MATERIAL_UUID,
+                                    PhantomData,
+                                )),
+                                ContourEdges,
+                                bevy::picking::Pickable::IGNORE,
+                            ));
+                        }
+                        entities.push(entity.id());
                     }
                 }
             }

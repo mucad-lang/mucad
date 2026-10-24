@@ -10,7 +10,7 @@ use crate::{
         ModelInfo, ProcessorRequest, ProcessorResponse,
         context::{ProcessingState, ProcessorContext},
     },
-    to_bevy::ToBevyMesh,
+    to_bevy::{CREASE_ANGLE, ToBevyMesh},
 };
 
 /// The processor is responsible for generating bevy meshes and commands sent to the view.
@@ -195,14 +195,23 @@ impl Processor {
                 let mesh_uuids: Vec<_> = node
                     .outputs
                     .iter()
-                    .flat_map(|output| match &output.geometry {
-                        mu::core::Geometry::Geometry2D(geometry) => geometry.to_bevy_mesh_default(),
-                        mu::core::Geometry::Geometry3D(geometry) => geometry.to_bevy_mesh(30.0),
+                    .flat_map(|output| {
+                        let (meshes, mut edges) = match &output.geometry {
+                            mu::core::Geometry::Geometry2D(geometry) => {
+                                (geometry.to_bevy_mesh_default(), None)
+                            }
+                            mu::core::Geometry::Geometry3D(geometry) => (
+                                geometry.to_bevy_mesh(CREASE_ANGLE),
+                                geometry.to_bevy_edge_mesh(CREASE_ANGLE),
+                            ),
+                        };
+                        // The edges belong to the first mesh of a geometry.
+                        meshes.into_iter().map(move |mesh| (mesh, edges.take()))
                     })
                     .enumerate()
-                    .map(|(index, mesh)| {
+                    .map(|(index, (mesh, edges))| {
                         let uuid = crate::processor::registry::generate_mesh_uuid(node.hash, index);
-                        responses.push(ProcessorResponse::NewMeshAsset(uuid, mesh));
+                        responses.push(ProcessorResponse::NewMeshAsset(uuid, mesh, edges));
                         uuid
                     })
                     .collect();

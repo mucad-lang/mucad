@@ -10,6 +10,8 @@ const MODEL_UUID_SEED: u64 = 0xDEAD_BEEF_DEED_BEAF;
 
 const MESH_UUID_SEED: u64 = 0x4321_4321_4321_4321;
 
+const EDGE_MESH_UUID_SEED: u64 = 0xED6E_ED6E_ED6E_ED6E;
+
 /// Generate a Uuid for the model info of a geometry node, which is unique within its geometry tree.
 pub fn generate_model_uuid(node: mu::render::GeometryNodeRef) -> Uuid {
     Uuid::from_u64_pair(MODEL_UUID_SEED, usize::from(node.id) as u64)
@@ -18,6 +20,14 @@ pub fn generate_model_uuid(node: mu::render::GeometryNodeRef) -> Uuid {
 /// Generate a Uuid for the mesh at `index` of the geometry outputs with `hash`.
 pub fn generate_mesh_uuid(hash: mu::HashId, index: usize) -> Uuid {
     Uuid::from_u64_pair(MESH_UUID_SEED ^ index as u64, hash.raw())
+}
+
+/// The uuid of the contour edges of the mesh `mesh_uuid`, which belong to that mesh.
+///
+/// A changed mesh gets a new uuid, and so do its edges.
+pub fn edge_mesh_uuid(mesh_uuid: Uuid) -> Uuid {
+    let (high, low) = mesh_uuid.as_u64_pair();
+    Uuid::from_u64_pair(high ^ EDGE_MESH_UUID_SEED, low)
 }
 
 /// The instance registry keeps track of all Uuid that already have been rendered, so we don't have have re-render things.
