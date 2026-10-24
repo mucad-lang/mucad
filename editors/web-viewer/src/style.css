@@ -77,6 +77,17 @@ button:disabled {
   color: var(--guide);
 }
 
+#view {
+  position: relative;
+}
+
+/* A button in the view, e.g. to reset the camera. */
+.view-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
 .toggle {
   display: inline-flex;
   align-items: center;

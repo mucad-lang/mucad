@@ -158,10 +158,11 @@ if (versionTag) {
 }
 
 examples.forEach((example, index) => select.add(new Option(example.name, String(index))));
-// An example is compiled at once, also without auto-update.
+// An example is compiled at once, also without auto-update, and shown as a whole.
 select.addEventListener("change", () => {
   editor.setValue(examples[Number(select.value)].code);
   compileNow();
+  viewer.resetCamera();
 });
 exportButton.addEventListener("click", exportModel);
 formatButton.addEventListener("click", format);

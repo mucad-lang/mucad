@@ -10,6 +10,14 @@ import { theme } from "./theme";
 /** The angle between faces, above which an edge is shown sharp instead of smooth. */
 const CREASE_ANGLE = THREE.MathUtils.degToRad(20);
 
+/** The directions to look at 3D models (from the front at an angle) and 2D models (from above). */
+const VIEW_DIRECTION = {
+  "3d": new THREE.Vector3(1, -1.5, 1),
+  "2d": new THREE.Vector3(0, 0, 1),
+} as const;
+
+type ModelKind = keyof typeof VIEW_DIRECTION;
+
 /** A three.js view of µcad models, the Z axis points up like in µcad. */
 export class Viewer {
   private renderer: THREE.WebGLRenderer;
@@ -18,6 +26,8 @@ export class Viewer {
   private controls: OrbitControls;
   private model = new THREE.Group();
   private grid?: THREE.GridHelper;
+  /** The kind of the shown model, whose direction the camera was reset to. */
+  private kind?: ModelKind;
 
   constructor(private element: HTMLElement) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -35,6 +45,13 @@ export class Viewer {
     THREE.Object3D.DEFAULT_UP.set(0, 0, 1);
     this.camera.up.set(0, 0, 1);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+
+    const resetButton = document.createElement("button");
+    resetButton.className = "view-button";
+    resetButton.textContent = "Reset camera";
+    resetButton.title = "Look at the whole model";
+    resetButton.addEventListener("click", () => this.resetCamera());
+    element.appendChild(resetButton);
 
     new ResizeObserver(() => this.resize()).observe(element);
     this.renderer.setAnimationLoop(() => {
@@ -66,7 +83,7 @@ export class Viewer {
         return [surface, contours];
       }),
     );
-    this.fit(new THREE.Vector3(1, -1.5, 1));
+    this.update("3d");
   }
 
   /**
@@ -96,7 +113,7 @@ export class Viewer {
         return [fill, outline];
       }),
     );
-    this.fit(new THREE.Vector3(0, 0, 1));
+    this.update("2d");
   }
 
   /** Remove the model. */
@@ -110,20 +127,52 @@ export class Viewer {
     objects.forEach((object) => this.model.add(object));
   }
 
-  /** Move the camera to see the whole model from `direction` and add a grid below it. */
-  private fit(direction: THREE.Vector3) {
-    const box = new THREE.Box3().setFromObject(this.model);
-    if (box.isEmpty()) return;
+  /**
+   * Update the grid for a new model of `kind`, the camera stays, unless it is the first model or
+   * the kind changes, e.g. from a 3D to a 2D model.
+   */
+  private update(kind: ModelKind) {
+    const box = this.bounds();
+    if (!box) return;
+    if (this.kind !== kind) {
+      this.kind = kind;
+      this.resetCamera();
+    } else {
+      // A bigger model is not cut off.
+      const distance = this.camera.position.distanceTo(this.controls.target);
+      const radius = box.getBoundingSphere(new THREE.Sphere()).radius;
+      this.camera.far = Math.max(this.camera.far, (distance + 2 * radius) * 10);
+      this.camera.updateProjectionMatrix();
+    }
+    this.updateGrid(box);
+  }
+
+  /** Move the camera to see the whole model from the direction of its kind. */
+  resetCamera() {
+    const box = this.bounds();
+    if (!box || !this.kind) return;
     const center = box.getCenter(new THREE.Vector3());
     const radius = box.getBoundingSphere(new THREE.Sphere()).radius || 1;
     const distance = radius / Math.sin(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    const direction = VIEW_DIRECTION[this.kind].clone().normalize();
 
-    this.camera.position.copy(center).addScaledVector(direction.normalize(), distance);
+    this.camera.position.copy(center).addScaledVector(direction, distance);
     this.camera.near = distance / 100;
     this.camera.far = distance * 100;
     this.camera.updateProjectionMatrix();
     this.controls.target.copy(center);
+  }
 
+  /** The bounds of the model, `undefined` without model. */
+  private bounds(): THREE.Box3 | undefined {
+    const box = new THREE.Box3().setFromObject(this.model);
+    return box.isEmpty() ? undefined : box;
+  }
+
+  /** Add a grid below the model in `box`. */
+  private updateGrid(box: THREE.Box3) {
+    const center = box.getCenter(new THREE.Vector3());
+    const radius = box.getBoundingSphere(new THREE.Sphere()).radius || 1;
     if (this.grid) {
       this.scene.remove(this.grid);
       this.grid.dispose();
