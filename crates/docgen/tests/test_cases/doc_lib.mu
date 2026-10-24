@@ -5,7 +5,7 @@ pub sketch Disc(radius: Length) {
 
 /// Extrude a disc.
 pub op Raise(height: Length) {
-    __mu::ops::extrude(self = @input, height = height);
+    @input.__mu::ops::extrude(height = height);
 }
 
 pub const R = 4mm;
@@ -14,9 +14,9 @@ pub const R = 4mm;
 pub mod sub {
     /// A square plate.
     pub part Plate(size: Length) {
-        __mu::ops::extrude(
-            self = __mu::geo2d::Rect(width = size, height = size, x = 0mm, y = 0mm),
-            height = 1mm, scale_x = 1.0, scale_y = 1.0, twist = 0°
-        );
+        __mu::geo2d::Rect(width = size, height = size, x = 0mm, y = 0mm).
+            __mu::ops::extrude(
+                height = 1mm, scale_x = 1.0, scale_y = 1.0, twist = 0°
+            );
     }
 }
