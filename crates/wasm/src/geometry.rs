@@ -99,7 +99,7 @@ impl Mesh {
 
 impl From<mu::core::TriangleMesh> for Mesh {
     fn from(mesh: mu::core::TriangleMesh) -> Self {
-        let edges = mesh.edges(cgmath::Rad(20.0.into())).into_flattened();
+        let edges = mesh.edges(cgmath::Rad(20.0)).into_flattened();
         Self {
             mesh: Rc::new(mesh),
             edges,
