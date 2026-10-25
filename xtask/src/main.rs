@@ -50,7 +50,7 @@ enum Commands {
 
     /// Test an mdbook and update test results, if needed.
     Doctest {
-        /// Do not write any output files (no export, no banners and no logs)
+        /// Do not write any output files (no export and no logs)
         #[arg(long)]
         no_output: bool,
         /// The path to the md book
@@ -98,25 +98,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             no_output,
             wildcard,
         } => {
-            use mu::md::WriteToFile;
-
-            let mut mdbook = mu::md::MdBook::load(&mdbook_path)?;
+            let mdbook = mu::md::MdBook::load(&mdbook_path)?;
 
             let mut test_suite = TestSuite::from_mdbook(&mdbook)?;
             if let Some(wildcard) = wildcard
                 && let Ok(regex) = regex::Regex::new(&wildcard)
             {
                 test_suite.filter_test_cases(regex);
-            }
-
-            if !no_output {
-                // Only markdown files with new or changed test banners are written.
-                let src_path = mdbook_path.join(mdbook.config.src_path());
-
-                for md_file in TestSuite::set_banners(&mut mdbook) {
-                    eprintln!("Updated test banners in {}", md_file.display());
-                    mdbook.md_files[&md_file].write_to_file(src_path.join(&md_file))?;
-                }
             }
 
             let results = test_suite.run(no_output, &mu::DriverConfig::default());

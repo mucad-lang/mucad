@@ -158,11 +158,6 @@ impl TestCase {
         self.name.rsplit("::").next().unwrap_or(&self.name)
     }
 
-    /// The markdown of the test banner, which links to the test result.
-    pub fn banner(&self) -> String {
-        mu::md::CodeBlockHeader::test_banner_string(self.block_name())
-    }
-
     /// The directory `.test` next to the markdown file, which contains the test results.
     ///
     /// It is `None` if the source has no path, e.g. if it is not loaded from a markdown file.
@@ -176,8 +171,7 @@ impl TestCase {
         )
     }
 
-    /// Write the files the banner links to into `.test` next to the markdown file:
-    /// an image for the test status and the test log.
+    /// Write the test log into `.test` next to the markdown file, e.g. `.test/circle.log`.
     ///
     /// Does nothing if the source has no path, e.g. if it is not loaded from a markdown file.
     pub fn write_result_files(&self, result: &TestResult) -> std::io::Result<()> {
@@ -185,15 +179,6 @@ impl TestCase {
             return Ok(());
         };
         std::fs::create_dir_all(&dir)?;
-
-        // Link the image for the status, e.g. `xtask/images/ok.svg`.
-        let image = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("images")
-            .join(format!("{}.svg", result.status));
-        let banner = dir.join(format!("{}.svg", self.block_name()));
-        let _ = std::fs::remove_file(&banner);
-        std::fs::hard_link(&image, &banner)
-            .or_else(|_| std::fs::copy(&image, &banner).map(|_| ()))?;
 
         std::fs::write(
             dir.join(format!("{}.log", self.block_name())),

@@ -235,42 +235,6 @@ fn results_to_md() {
 }
 
 #[test]
-fn banner() {
-    assert_eq!(
-        test_case("mu,circle", CIRCLE).banner(),
-        "[![test](.test/circle.svg)](.test/circle.log)"
-    );
-}
-
-#[test]
-fn set_banners() {
-    let dir = tempfile::tempdir().expect("temp dir");
-    std::fs::write(dir.path().join("book.toml"), "[book]\ntitle = \"Test\"\n").expect("toml");
-    std::fs::create_dir(dir.path().join("src")).expect("src");
-    let md = "# Test\n\n```mu,circle\nCircle(r = 1mm);\n```\n\n```mu\nno test\n```\n";
-    std::fs::write(dir.path().join("src/test.md"), md).expect("test.md");
-    let mut mdbook = mu::md::MdBook::load(dir.path()).expect("A book");
-
-    // The banner is inserted before the test, not before the unnamed code block.
-    assert_eq!(
-        TestSuite::set_banners(&mut mdbook),
-        [std::path::PathBuf::from("test.md")]
-    );
-    let text = mdbook.md_files[std::path::Path::new("test.md")].to_string();
-    assert_eq!(text.matches("[![test]").count(), 1, "{text}");
-    assert!(
-        text.contains("[![test](.test/circle.svg)](.test/circle.log)\n\n```mu,circle"),
-        "{text}"
-    );
-
-    // The test sources have their location.
-    let suite = TestSuite::from_mdbook(&mdbook).expect("A test suite");
-    assert!(suite.test_cases[0].source.path().is_some());
-
-    assert!(TestSuite::set_banners(&mut mdbook).is_empty());
-}
-
-#[test]
 fn write_result_files() {
     let dir = tempfile::tempdir().expect("temp dir");
     let md_file = dir.path().join("test.md");
@@ -292,11 +256,8 @@ fn write_result_files() {
     }
     .run(false, &no_std());
 
-    let banner = std::fs::read(dir.path().join(".test/circle.svg")).expect("A banner image");
-    let ok_image =
-        std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("images/ok.svg"))
-            .expect("The ok image");
-    assert_eq!(banner, ok_image);
+    // Only the log is written, no image.
+    assert!(!dir.path().join(".test/circle.svg").exists());
 
     let log = std::fs::read_to_string(dir.path().join(".test/circle.log")).expect("A log");
     assert!(log.contains("Test name: test::circle"), "{log}");

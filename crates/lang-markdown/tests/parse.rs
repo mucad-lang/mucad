@@ -119,14 +119,6 @@ fn codeblock() {
     // 0-based line of the first code line in the markdown file.
     let line_offsets: Vec<_> = code_blocks.iter().map(|block| block.line_offset).collect();
     assert_eq!(line_offsets, [5, 10, 16, 22, 28]);
-
-    // Test banners belong to their code block and are not kept as paragraphs.
-    assert!(md.sections().iter().all(|section| {
-        section
-            .content
-            .iter()
-            .all(|block| !matches!(block, Block::Paragraph(text) if text.starts_with("[![test]")))
-    }));
 }
 
 #[test]
@@ -141,28 +133,46 @@ fn other_code_blocks() {
         [Block::Paragraph("Text before the first heading.".into())]
     );
 
-    // Other code blocks are kept as written.
+    // Code blocks of other languages only have their language, no name or parameters.
     let content = &md.sections()[1].content;
-    assert_eq!(
-        content[0],
-        Block::Paragraph("```sh\n# not a heading\necho \"µcad\"\n```".into())
-    );
+    let Block::CodeBlock(sh) = &content[0] else {
+        panic!("A code block: {:?}", content[0]);
+    };
+    assert_eq!(sh.header.lang.as_deref(), Some("sh"));
+    assert_eq!(sh.name(), &None);
+    assert_eq!(sh.code(), "# not a heading\necho \"µcad\"");
+    assert_eq!(sh.line_offset, 5);
+    assert!(!sh.is_mucad());
 
-    // Code inside a list item is kept as written, without the item's indentation.
-    assert_eq!(
-        content[1],
-        Block::UnorderedList(UnorderedList::new([ListItem::new("A list item")
-            .with_children([Block::Paragraph(
-                "```mu,in_list\nCircle(r = 1mm);\n```".into()
-            )])]))
-    );
+    // Code inside a list item is a code block without the item's indentation.
+    let Block::UnorderedList(list) = &content[1] else {
+        panic!("A list: {:?}", content[1]);
+    };
+    let Block::CodeBlock(in_list) = &list.0[0].children[0] else {
+        panic!("A code block: {:?}", list.0[0].children);
+    };
+    assert_eq!(in_list.code(), "Circle(r = 1mm);");
+    assert_eq!(in_list.line_offset, 12);
 
-    // Only top-level µcad code blocks become code blocks.
-    let names: Vec<_> = md
+    // All code blocks, also in lists.
+    let blocks: Vec<_> = md
         .code_blocks()
-        .map(|block| block.name().as_ref().map(|name| name.as_str()))
+        .map(|block| {
+            (
+                block.header.lang.as_deref(),
+                block.name().as_ref().map(|name| name.as_str()),
+                block.is_mucad(),
+            )
+        })
         .collect();
-    assert_eq!(names, [Some("top_level")]);
+    assert_eq!(
+        blocks,
+        [
+            (Some("sh"), None, false),
+            (Some("mu"), Some("in_list"), true),
+            (Some("mu"), Some("top_level"), true),
+        ]
+    );
 }
 
 #[test]

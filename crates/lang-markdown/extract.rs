@@ -59,6 +59,7 @@ fn main() -> miette::Result<()> {
 
     mdbook
         .code_blocks()
+        .filter(|(_, code_block)| code_block.is_mucad())
         .try_for_each(|(input_path, code_block)| {
             let Some(name) = code_block.name() else {
                 println!("❌ {} => No output: unnamed snippet", input_path.display());
@@ -67,11 +68,7 @@ fn main() -> miette::Result<()> {
             let input = input_path.display();
             let output_path = output.join(mu_base_path(&input_path, name));
 
-            let content = format!(
-                "// Extracted from: {input}\n// {}\n\n{}\n",
-                md::CodeBlockHeader::test_banner_string(name),
-                code_block.code()
-            );
+            let content = format!("// Extracted from: {input}\n\n{}\n", code_block.code());
             std::fs::write(&output_path, content).into_diagnostic()?;
 
             println!(

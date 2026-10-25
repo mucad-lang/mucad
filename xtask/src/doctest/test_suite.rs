@@ -37,25 +37,6 @@ impl TestSuite {
             .retain(|test_case| wildcard.is_match(&test_case.name));
     }
 
-    /// Insert or update the test banner of each test in the markdown files of `mdbook`.
-    ///
-    /// Returns the paths of the changed markdown files.
-    pub fn set_banners(mdbook: &mut mu::md::MdBook) -> Vec<std::path::PathBuf> {
-        mdbook
-            .md_files
-            .iter_mut()
-            .filter_map(|(path, md)| {
-                md.set_test_banners(|code_block| {
-                    TestCase::from_code_block(path, code_block)
-                        .ok()
-                        .flatten()
-                        .map(|test_case| test_case.banner())
-                })
-                .then(|| path.clone())
-            })
-            .collect()
-    }
-
     /// Run all tests with a compiler for `config` and print the status of each test,
     /// like `cargo test`.
     pub fn run(&self, no_output: bool, config: &mu::DriverConfig) -> TestResultList {

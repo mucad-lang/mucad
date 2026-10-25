@@ -51,7 +51,6 @@ impl std::str::FromStr for Markdown {
     fn from_str(text: &str) -> Result<Self, Self::Err> {
         let mut md = Markdown(vec![Section::default()]); // content before the first heading
         let mut depth = 0;
-        let mut banner: Option<String> = None;
         let mut code: Option<(CodeBlockHeader, String)> = None;
         let mut code_block_names = std::collections::HashSet::new();
 
@@ -66,19 +65,14 @@ impl std::str::FromStr for Markdown {
                     }
                     match tag {
                         Tag::Heading { level, .. } => {
-                            md.flush_banner(&mut banner);
                             md.add_section(Section {
                                 heading: Self::heading_text(raw),
                                 level: level as i64,
                                 content: Vec::new(),
                             });
                         }
-                        Tag::CodeBlock(CodeBlockKind::Fenced(info))
-                            if CodeBlockHeader::is_mucad(&info) =>
-                        {
-                            // A test banner right before the code block is kept as paragraph.
-                            md.flush_banner(&mut banner);
-                            let header: CodeBlockHeader = info.parse()?;
+                        Tag::CodeBlock(CodeBlockKind::Fenced(info)) => {
+                            let header = CodeBlockHeader::from_info(&info)?;
                             if let Some(name) = &header.name
                                 && !code_block_names.insert(name.clone())
                             {
@@ -86,24 +80,16 @@ impl std::str::FromStr for Markdown {
                             }
                             code = Some((header, String::new()));
                         }
-                        Tag::Paragraph if CodeBlockHeader::is_test_banner(raw) => {
-                            md.flush_banner(&mut banner);
-                            banner = Some(raw.trim_end().to_string());
-                        }
                         Tag::List(start) => {
                             // Consumes the events up to the end of the list.
                             let list = Self::parse_list(&mut events, text, start);
                             depth -= 1;
-                            md.push_block(&mut banner, list);
+                            md.push_block(list);
                         }
-                        Tag::Table(_) => md.push_block(&mut banner, Block::Table(Self::lines(raw))),
-                        Tag::BlockQuote(_) => {
-                            md.push_block(&mut banner, Block::BlockQuote(Self::lines(raw)))
-                        }
+                        Tag::Table(_) => md.push_block(Block::Table(Self::lines(raw))),
+                        Tag::BlockQuote(_) => md.push_block(Block::BlockQuote(Self::lines(raw))),
                         // Paragraphs, lists, other code blocks, HTML: preserved as written.
-                        _ => {
-                            md.push_block(&mut banner, Block::Paragraph(raw.trim_end().to_string()))
-                        }
+                        _ => md.push_block(Block::Paragraph(raw.trim_end().to_string())),
                     }
                 }
                 Event::Text(text) if depth == 1 => {
@@ -123,27 +109,22 @@ impl std::str::FromStr for Markdown {
                         if code.ends_with('\n') {
                             code.pop();
                         }
-                        md.push_block(
-                            &mut banner,
-                            Block::CodeBlock(CodeBlock {
-                                header,
-                                code,
-                                line_offset: line_index + 1,
-                                path: None,
-                            }),
-                        );
+                        md.push_block(Block::CodeBlock(CodeBlock {
+                            header,
+                            code,
+                            line_offset: line_index + 1,
+                            path: None,
+                        }));
                     }
                 }
                 Event::End(_) => depth -= 1,
                 // Top-level leaf, e.g. `---`
                 Event::Rule if depth == 0 => {
-                    md.push_block(&mut banner, Block::Paragraph(raw.trim_end().to_string()))
+                    md.push_block(Block::Paragraph(raw.trim_end().to_string()))
                 }
                 _ => {}
             }
         }
-        md.flush_banner(&mut banner);
-
         // No content before the first heading.
         if md.0.first().is_some_and(Section::is_empty) {
             md.0.remove(0);
@@ -155,19 +136,9 @@ impl std::str::FromStr for Markdown {
 
 /// Parse helpers
 impl Markdown {
-    /// Push a block into the current section, keeping a pending test banner as text.
-    fn push_block(&mut self, banner: &mut Option<String>, block: Block) {
-        self.flush_banner(banner);
+    /// Push a block into the current section.
+    fn push_block(&mut self, block: Block) {
         self.current_section_mut().content.push(block);
-    }
-
-    /// A test banner which is not followed by a µcad code block is kept as paragraph.
-    fn flush_banner(&mut self, banner: &mut Option<String>) {
-        if let Some(banner) = banner.take() {
-            self.current_section_mut()
-                .content
-                .push(Block::Paragraph(banner));
-        }
     }
 
     fn current_section_mut(&mut self) -> &mut Section {
@@ -238,7 +209,19 @@ impl Markdown {
                         item.children.push(Block::Paragraph(paragraph));
                     }
                 }
-                // Other blocks, e.g. code: kept as written.
+                // Code, without the item's indentation.
+                Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(info))) if depth == 0 => {
+                    Self::skip_block(events);
+                    let line_offset = Self::line_index(text, range.start) + 1;
+                    let raw = Self::dedent(text, range);
+                    item.children.push(match CodeBlockHeader::from_info(&info) {
+                        Ok(header) => {
+                            Block::CodeBlock(CodeBlock::from_fenced(header, &raw, line_offset))
+                        }
+                        Err(_) => Block::Paragraph(raw),
+                    });
+                }
+                // Other blocks: kept as written.
                 Event::Start(tag) if depth == 0 && Self::is_block(&tag) => {
                     Self::skip_block(events);
                     item.children
@@ -368,38 +351,6 @@ impl Markdown {
         Ok(md)
     }
 
-    /// Insert a test banner right before each code block, for which `banner` returns one.
-    ///
-    /// An existing test banner is overwritten.
-    /// Returns `true` if a banner has been inserted or changed.
-    pub fn set_test_banners(&mut self, banner: impl Fn(&CodeBlock) -> Option<String>) -> bool {
-        let mut changed = false;
-        for section in &mut self.0 {
-            let mut content = Vec::with_capacity(section.content.len());
-            for block in std::mem::take(&mut section.content) {
-                if let Block::CodeBlock(code_block) = &block
-                    && let Some(banner) = banner(code_block)
-                {
-                    match content.last() {
-                        Some(Block::Paragraph(text)) if *text == banner => (),
-                        Some(Block::Paragraph(text)) if CodeBlockHeader::is_test_banner(text) => {
-                            content.pop();
-                            content.push(Block::Paragraph(banner));
-                            changed = true;
-                        }
-                        _ => {
-                            content.push(Block::Paragraph(banner));
-                            changed = true;
-                        }
-                    }
-                }
-                content.push(block);
-            }
-            section.content = content;
-        }
-        changed
-    }
-
     /// Add a new section.
     pub fn add_section(&mut self, section: Section) {
         self.0.push(section)
@@ -410,32 +361,57 @@ impl Markdown {
         self.0.extend(md.0.into_iter().map(|s| s.nested(n)));
     }
 
-    /// Returns an iterator over all code blocks in the entire document.
+    /// Returns an iterator over all code blocks in the entire document, also in lists,
+    /// e.g. µcad code or shell commands, see [`CodeBlock::is_mucad`].
     pub fn code_blocks(&self) -> impl Iterator<Item = &CodeBlock> {
-        self.0
-            .iter() // Iterate over Vec<Section>
-            .flat_map(|section| section.content.iter()) // Flatten Blocks
-            .filter_map(|block| {
-                if let Block::CodeBlock(block) = block {
-                    Some(block)
-                } else {
-                    None
+        fn collect<'a>(blocks: &'a [Block], code_blocks: &mut Vec<&'a CodeBlock>) {
+            for block in blocks {
+                match block {
+                    Block::CodeBlock(code_block) => code_blocks.push(code_block),
+                    Block::UnorderedList(list) => list
+                        .0
+                        .iter()
+                        .for_each(|item| collect(&item.children, code_blocks)),
+                    Block::OrderedList(list) => list
+                        .items
+                        .iter()
+                        .for_each(|item| collect(&item.children, code_blocks)),
+                    _ => {}
                 }
-            })
+            }
+        }
+
+        let mut code_blocks = Vec::new();
+        self.0
+            .iter()
+            .for_each(|section| collect(&section.content, &mut code_blocks));
+        code_blocks.into_iter()
     }
 
-    /// Returns an mut iterator over all code blocks in the entire document.
+    /// Returns an mut iterator over all code blocks in the entire document, also in lists.
     pub fn code_blocks_mut(&mut self) -> impl Iterator<Item = &mut CodeBlock> {
-        self.0
-            .iter_mut() // Iterate over Vec<Section>
-            .flat_map(|section| section.content.iter_mut()) // Flatten Blocks
-            .filter_map(|block| {
-                if let Block::CodeBlock(block) = block {
-                    Some(block)
-                } else {
-                    None
+        fn collect<'a>(blocks: &'a mut [Block], code_blocks: &mut Vec<&'a mut CodeBlock>) {
+            for block in blocks {
+                match block {
+                    Block::CodeBlock(code_block) => code_blocks.push(code_block),
+                    Block::UnorderedList(list) => list
+                        .0
+                        .iter_mut()
+                        .for_each(|item| collect(&mut item.children, code_blocks)),
+                    Block::OrderedList(list) => list
+                        .items
+                        .iter_mut()
+                        .for_each(|item| collect(&mut item.children, code_blocks)),
+                    _ => {}
                 }
-            })
+            }
+        }
+
+        let mut code_blocks = Vec::new();
+        self.0
+            .iter_mut()
+            .for_each(|section| collect(&mut section.content, &mut code_blocks));
+        code_blocks.into_iter()
     }
 }
 

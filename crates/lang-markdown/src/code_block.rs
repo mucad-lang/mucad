@@ -22,13 +22,19 @@ pub struct CodeBlockHeader {
 
 /// A code block header with, e.g.: `µcad#ok(hires)`
 impl CodeBlockHeader {
-    /// Test banner to show test result and access logs.
-    pub fn test_banner_string(name: &str) -> String {
-        format!("[![test](.test/{name}.svg)](.test/{name}.log)")
-    }
-
-    pub(crate) fn is_test_banner(line: &str) -> bool {
-        line.starts_with("[![test]")
+    /// The header of a fenced code block with the info string `info`, e.g. `mu,circle` or `sh`.
+    ///
+    /// Only µcad code blocks have names and parameters, of other languages only the language is
+    /// taken, e.g. `rust` for `rust,ignore`.
+    pub(crate) fn from_info(info: &str) -> Result<Self, ParseError> {
+        if Self::is_mucad(info) {
+            return info.parse();
+        }
+        Ok(Self {
+            lang: info.split_whitespace().next().map(str::to_string),
+            name: None,
+            query: HashMap::default(),
+        })
     }
 
     /// Returns true if the info string of a fenced code block starts with a µcad language,
@@ -178,6 +184,34 @@ impl CodeBlock {
 
     pub fn code(&self) -> &str {
         &self.code
+    }
+
+    /// Returns true if this is a µcad code block, e.g. ```` ```mu ````.
+    pub fn is_mucad(&self) -> bool {
+        self.header
+            .lang
+            .as_deref()
+            .is_some_and(|lang| mucad_lang_base::MUCAD_EXTENSIONS.contains(&lang))
+    }
+
+    /// A code block from its text as written, e.g. in a list item, with its opening fence at line
+    /// `line_offset` (starting at 1).
+    pub(crate) fn from_fenced(header: CodeBlockHeader, raw: &str, line_offset: usize) -> Self {
+        let is_fence = |line: &str| {
+            let line = line.trim();
+            line.starts_with("```") || line.starts_with("~~~")
+        };
+        let mut code: Vec<_> = raw.lines().skip(1).collect();
+        // An unclosed code block has no closing fence.
+        if code.last().is_some_and(|line| is_fence(line)) {
+            code.pop();
+        }
+        Self {
+            header,
+            code: code.join("\n"),
+            line_offset,
+            path: None,
+        }
     }
 
     /// Returns true if this code block can be formatted.
