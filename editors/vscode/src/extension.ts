@@ -72,7 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         client = new LanguageClient(
             'mucadLSP',
-            'Microcad Language Server',
+            'µcad Language Server',
             serverOptions,
             clientOptions
         );
@@ -126,12 +126,12 @@ export async function activate(context: vscode.ExtensionContext) {
     // 2. Register the Restart Command
     const restartCommand = vscode.commands.registerCommand('mucad.restartServer', async () => {
         if (!client) {
-            vscode.window.showWarningMessage('Microcad server is not running.');
+            vscode.window.showWarningMessage('µcad Language Server is not running.');
             startLanguageServer();
             return;
         }
 
-        vscode.window.showInformationMessage('Restarting Microcad Language Server...');
+        vscode.window.showInformationMessage('Restarting µcad Language Server...');
 
         try {
             // Stop the current active process cleanly
@@ -140,7 +140,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             // Fire up a brand new process instance
             startLanguageServer();
-            vscode.window.showInformationMessage('Microcad Language Server restarted successfully!');
+            vscode.window.showInformationMessage('µcad Language Server restarted successfully!');
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to restart server: ${error}`);
         }
