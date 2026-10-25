@@ -10,7 +10,7 @@ use bevy::{ecs::resource::Resource, window::Window};
 
 use crate::{
     Config,
-    plugin::MicrocadPluginInput,
+    plugin::MucadPluginInput,
     processor::{ProcessingState, ProcessorInterface},
     scene::Scene,
 };
@@ -26,7 +26,7 @@ pub struct Cursor;
 #[derive(Resource)]
 pub struct ViewModel {
     /// Input interface (e.g. file or stdin).
-    pub input: Option<MicrocadPluginInput>,
+    pub input: Option<MucadPluginInput>,
     /// The configuration settings of loaded at startup.
     pub config: Config,
     /// The scene entities to be spawned and rendered.
@@ -41,7 +41,7 @@ pub struct ViewModel {
 
 impl ViewModel {
     /// Create new state from arguments.
-    pub fn new(input: Option<MicrocadPluginInput>, config: Config) -> Self {
+    pub fn new(input: Option<MucadPluginInput>, config: Config) -> Self {
         Self {
             input,
             config,

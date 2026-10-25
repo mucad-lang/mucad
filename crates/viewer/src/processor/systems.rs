@@ -53,13 +53,13 @@ pub fn initialize_processor(mut state: ResMut<crate::view_model::ViewModel>) {
         })
         .expect("No error");
 
-    use crate::plugin::MicrocadPluginInput;
+    use crate::plugin::MucadPluginInput;
     let reload_delay = state.config.reload_delay;
 
     let mut requests = Vec::new();
 
     match &mut state.input {
-        Some(MicrocadPluginInput::File {
+        Some(MucadPluginInput::File {
             path,
             symbol: _,
             line,
@@ -97,7 +97,7 @@ pub fn initialize_processor(mut state: ResMut<crate::view_model::ViewModel>) {
                 }
             });
         }
-        Some(MicrocadPluginInput::Stdin(stdin)) => {
+        Some(MucadPluginInput::Stdin(stdin)) => {
             log::info!("Run viewer in stdin remote controlled mode.");
             *stdin = Some(StdinMessageReceiver::run());
         }
@@ -110,7 +110,7 @@ pub fn initialize_processor(mut state: ResMut<crate::view_model::ViewModel>) {
 }
 
 pub fn file_reload(state: ResMut<crate::view_model::ViewModel>) {
-    use crate::plugin::MicrocadPluginInput::*;
+    use crate::plugin::MucadPluginInput::*;
 
     match &state.input {
         Some(File {

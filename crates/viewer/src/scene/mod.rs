@@ -8,6 +8,7 @@ use bevy::prelude::*;
 
 mod angle;
 mod camera;
+pub use camera::CameraView;
 mod grid;
 mod lighting;
 mod overlay;

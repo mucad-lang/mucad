@@ -23,7 +23,7 @@ use crate::{stdin::StdinMessageReceiver, *};
 /// * File: file://my_file.mu?symbol=my::mod::MyPart#L11
 /// * Stdin: stdin://
 #[derive(Clone)]
-pub enum MicrocadPluginInput {
+pub enum MucadPluginInput {
     /// Load and watch an input file.
     File {
         /// File path that is loaded.
@@ -44,11 +44,11 @@ pub enum MicrocadPluginInput {
     Stdin(Option<StdinMessageReceiver>),
 }
 
-impl MicrocadPluginInput {
+impl MucadPluginInput {
     /// Construct input from URL.
     pub fn from_url(url: Url) -> miette::Result<Self> {
         match url.scheme() {
-            "file" => Ok(MicrocadPluginInput::File {
+            "file" => Ok(MucadPluginInput::File {
                 path: url.to_file_path().expect("Valid file path").to_path_buf(),
                 symbol: url.query_pairs().find_map(|(key, value)| {
                     if key == "symbol" {
@@ -71,7 +71,7 @@ impl MicrocadPluginInput {
     /// Get the URL for the input.
     pub fn get_url(&self) -> Url {
         match self {
-            MicrocadPluginInput::File {
+            MucadPluginInput::File {
                 path, symbol, line, ..
             } => {
                 // Start with base: file://<path>
@@ -95,7 +95,7 @@ impl MicrocadPluginInput {
                 url
             }
 
-            MicrocadPluginInput::Stdin(stdin) => {
+            MucadPluginInput::Stdin(stdin) => {
                 let default = Url::parse("stdin://").expect("No error");
                 match stdin {
                     Some(stdin) => stdin.current_path().as_ref().map_or(default, |path| {
@@ -129,21 +129,21 @@ impl MicrocadPluginInput {
     }
 }
 
-impl std::fmt::Display for MicrocadPluginInput {
+impl std::fmt::Display for MucadPluginInput {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.display_url_human_readable())
     }
 }
 
 /// The mucad plugin.
-pub struct MicrocadPlugin {
+pub struct MucadPlugin {
     /// The input for the plugin (e.g. file or stdin).
-    pub input: Option<MicrocadPluginInput>,
+    pub input: Option<MucadPluginInput>,
     /// The viewer configuration.
     pub config: Config,
 }
 
-impl Plugin for MicrocadPlugin {
+impl Plugin for MucadPlugin {
     fn build(&self, app: &mut App) {
         app.init_asset::<view_model::ModelViewState>()
             .add_message::<view_model::ViewerEvent>()
@@ -152,6 +152,7 @@ impl Plugin for MicrocadPlugin {
             .add_plugins(processor::ProcessorPlugin)
             .add_plugins(material::MaterialPlugin)
             .add_plugins(scene::ScenePlugin)
+            .add_plugins(crate::screenshot::ScreenshotPlugin)
             .add_plugins((OutlinePlugin, MeshPickingPlugin))
             .add_systems(Startup, apply_window_settings)
             .add_systems(Update, stdin::handle_stdin_messages)

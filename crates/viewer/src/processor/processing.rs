@@ -107,7 +107,7 @@ impl Processor {
             }),
             ProcessorRequest::Export { .. } => todo!(),
             ProcessorRequest::SetLineNumber(line_number) => {
-                self.state_change(ProcessingState::Busy(0.0));
+                // Nothing is processed, so the state stays, e.g. an error of the last compilation.
                 self.context.line_number = line_number;
                 Ok(vec![])
                 //self.respond()

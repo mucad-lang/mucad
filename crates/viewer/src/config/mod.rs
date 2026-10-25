@@ -37,6 +37,14 @@ pub struct Config {
 
     /// The viewer theme.
     pub theme: Theme,
+
+    /// The view of the camera at the start, e.g. from the command line.
+    #[serde(skip)]
+    pub camera_view: crate::scene::CameraView,
+
+    /// Save a screenshot of the model into this PNG file and exit, e.g. for documentation.
+    #[serde(skip)]
+    pub screenshot: Option<std::path::PathBuf>,
 }
 
 impl Default for Config {
@@ -49,6 +57,8 @@ impl Default for Config {
             render_resolution: mu::RenderResolution::medium().linear,
             export_resolution: mu::RenderResolution::high().linear,
             theme: Theme::default(),
+            camera_view: Default::default(),
+            screenshot: None,
         }
     }
 }

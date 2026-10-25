@@ -14,7 +14,7 @@ use bevy::prelude::{AppExit, MessageWriter};
 
 use mucad_viewer_ipc::ViewerRequest;
 
-use crate::plugin::MicrocadPluginInput;
+use crate::plugin::MucadPluginInput;
 use crate::processor::ProcessorRequest;
 use crate::view_model::ViewerEvent;
 
@@ -76,7 +76,7 @@ pub fn handle_stdin_messages(
     mut events: MessageWriter<ViewerEvent>,
 ) {
     let mut requests = Vec::new();
-    if let Some(MicrocadPluginInput::Stdin(Some(stdin))) = &mut state.input {
+    if let Some(MucadPluginInput::Stdin(Some(stdin))) = &mut state.input {
         for viewer_request in stdin.receiver.try_iter() {
             log::info!("{viewer_request:?}");
 
