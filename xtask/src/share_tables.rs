@@ -1,11 +1,8 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-//! Generate the Huffman tables of shared links from the tokens of µcad files.
-//!
-//! The code of a link is a sequence of tokens, each encoded with the table of the token kinds.
-//! The text of a token, e.g. of an identifier, is encoded with the table of the characters,
-//! followed by the end of the text.
+//! Generate the Huffman tables of shared links from the symbols of µcad files, see
+//! `mucad_driver::share`.
 
 use std::collections::{BTreeMap, BinaryHeap};
 use std::error::Error;
@@ -14,68 +11,120 @@ use std::path::{Path, PathBuf};
 
 use mucad_driver::prelude as mu;
 
+use mu::share::SharedSymbol;
+
 /// Directories, which are not searched for µcad files.
 const EXCLUDED_DIRS: &[&str] = &["target", "node_modules", "dist", "pkg", ".git"];
 
-/// The kind of tokens of other kinds in the table of token kinds.
-const OTHER_TOKEN: &str = "Other";
+/// Identifiers in at least this number of files are in the dictionary.
+const MIN_DICTIONARY_FILES: usize = 2;
 
-/// A symbol of the character table.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum TextSymbol {
-    /// A character of a text.
-    Char(char),
-    /// The end of a text.
-    End,
-    /// A character, which is not in the table, followed by its code point.
-    Other,
-}
+/// The whitespace of formatted code.
+const WHITESPACES: [&str; 3] = [" ", "\n", "\n\n"];
 
-/// The number of occurrences of the token kinds and of the characters of their texts.
+/// The symbol of escape rows, e.g. of identifiers, which are not in the dictionary.
+const ESCAPE: &str = "Escape";
+
+/// The number of occurrences of the symbols of µcad files.
 #[derive(Default)]
 pub struct Statistics {
-    /// The number of lexed files.
+    /// The number of files.
     pub files: usize,
-    /// The number of tokens of each kind, e.g. `Identifier` or `Keyword(Fn)`.
-    pub tokens: BTreeMap<String, usize>,
-    /// The texts of the kinds of tokens with a fixed text, e.g. `fn` of `Keyword(Fn)`.
-    fixed: BTreeMap<String, String>,
-    /// The number of each character in the texts of the tokens and of the ends of the texts.
-    texts: BTreeMap<TextSymbol, usize>,
+    /// The number of each whitespace.
+    whitespaces: BTreeMap<&'static str, usize>,
+    /// The number of structural tokens of each kind, e.g. `Keyword(Fn)`.
+    structurals: BTreeMap<String, usize>,
+    /// The number of each identifier and the number of files with the identifier.
+    identifiers: BTreeMap<String, (usize, usize)>,
+    /// The identifiers of each file in the order of their first occurrence.
+    file_identifiers: Vec<Vec<String>>,
+    /// The number of each character of fragments.
+    fragment_chars: BTreeMap<char, usize>,
 }
 
 impl Statistics {
-    /// Count the tokens of the µcad `code`.
+    /// Count the symbols of the µcad `code`.
     pub fn add(&mut self, code: &str) {
         self.files += 1;
-        for token in mu::share::shared_tokens(code) {
-            *self.tokens.entry(token.kind.clone()).or_default() += 1;
-            if token.fixed {
-                self.fixed.insert(token.kind, token.text);
-            } else {
-                for c in token.text.chars() {
-                    *self.texts.entry(TextSymbol::Char(c)).or_default() += 1;
+        let mut identifiers: Vec<String> = Vec::new();
+        for symbol in mu::share::shared_symbols(code) {
+            match symbol {
+                SharedSymbol::Whitespace(text) => *self.whitespaces.entry(text).or_default() += 1,
+                SharedSymbol::Structural { kind, .. } => {
+                    *self.structurals.entry(kind).or_default() += 1
                 }
-                *self.texts.entry(TextSymbol::End).or_default() += 1;
+                SharedSymbol::Identifier(name) => {
+                    let (count, files) = self.identifiers.entry(name.clone()).or_default();
+                    *count += 1;
+                    if !identifiers.contains(&name) {
+                        *files += 1;
+                        identifiers.push(name);
+                    }
+                }
+                SharedSymbol::Fragment(text) => {
+                    for c in text.chars() {
+                        *self.fragment_chars.entry(c).or_default() += 1;
+                    }
+                }
             }
         }
-        // Tokens and characters, which are not in the tables, can be encoded too.
-        self.tokens.entry(OTHER_TOKEN.into()).or_insert(1);
-        self.texts.entry(TextSymbol::Other).or_insert(1);
+        self.file_identifiers.push(identifiers);
     }
 
-    /// The number of tokens.
-    pub fn token_count(&self) -> usize {
-        self.tokens.values().sum()
+    /// If an identifier is in the dictionary.
+    fn in_dictionary(&self, name: &str) -> bool {
+        self.identifiers
+            .get(name)
+            .is_some_and(|(_, files)| *files >= MIN_DICTIONARY_FILES)
     }
 
-    /// The number of characters of the texts of the tokens.
-    pub fn char_count(&self) -> usize {
-        self.texts
-            .iter()
-            .filter(|(symbol, _)| matches!(symbol, TextSymbol::Char(_)))
-            .map(|(_, count)| count)
-            .sum()
+    /// The tables: whitespace, structural tokens, identifiers, characters of identifiers and
+    /// of fragments. The symbols are Rust literals, except for structural tokens and escapes.
+    fn tables(&self) -> [Vec<Row>; 5] {
+        // Each whitespace and structural token is in the table.
+        let whitespaces = WHITESPACES.iter().map(|text| {
+            let count = self.whitespaces.get(text).copied().unwrap_or_default();
+            (format!("{text:?}"), count.max(1))
+        });
+        let structurals = mu::share::structural_tokens().map(|(kind, _)| {
+            let count = self.structurals.get(&kind).copied().unwrap_or_default();
+            (kind, count.max(1))
+        });
+
+        let mut locals = 0;
+        let mut identifiers = Vec::new();
+        for (name, (count, _)) in &self.identifiers {
+            match self.in_dictionary(name) {
+                true => identifiers.push((format!("{name:?}"), *count)),
+                false => locals += count,
+            }
+        }
+        identifiers.push((ESCAPE.into(), locals.max(1)));
+
+        // The identifiers, which are not in the dictionary, are spelled once in each file.
+        let mut identifier_chars: BTreeMap<char, usize> = BTreeMap::new();
+        for name in self.file_identifiers.iter().flatten() {
+            if !self.in_dictionary(name) {
+                for c in name.chars() {
+                    *identifier_chars.entry(c).or_default() += 1;
+                }
+            }
+        }
+        let chars = |chars: &BTreeMap<char, usize>| {
+            let mut rows: Vec<_> = (chars.iter())
+                .map(|(c, count)| (format!("{c:?}"), *count))
+                .collect();
+            rows.push((ESCAPE.into(), 1));
+            rows
+        };
+
+        [
+            rows(whitespaces),
+            rows(structurals),
+            rows(identifiers),
+            rows(chars(&identifier_chars)),
+            rows(chars(&self.fragment_chars)),
+        ]
     }
 }
 
@@ -217,68 +266,124 @@ fn print_rows(title: &str, rows: &[Row]) {
 
 /// The code of a row in Rust, e.g. `0b0110, 4`.
 fn rust_code(row: &Row) -> String {
-    format!("0b{:0width$b}, {}", row.code, row.bits, width = row.bits as usize)
+    format!(
+        "0b{:0width$b}, {}",
+        row.code,
+        row.bits,
+        width = row.bits as usize
+    )
 }
 
-/// The Rust source of the tables.
-fn source(statistics: &Statistics, tokens: &[Row], texts: &[Row]) -> String {
-    let mut out = String::new();
+/// Write the rows of a table as Rust constant `name`, the escape row as constant `escape`.
+fn write_table(
+    out: &mut String,
+    doc: &str,
+    name: &str,
+    kind: &str,
+    rows: &[Row],
+    escape: Option<(&str, &str)>,
+) {
     let _ = writeln!(
         out,
-        "// Copyright © 2026 The µcad authors <info@mucad.org>
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-//! The Huffman tables of shared links, generated by `cargo xtask share-tables` from
-//! {} µcad files with {} tokens and {} characters, do not edit.
-//!
-//! A row is a symbol, its canonical Huffman code and the number of bits of the code.
-
-/// The codes of the token kinds, with the text of kinds with a fixed text.
-pub(super) const TOKENS: &[(&str, Option<&str>, u32, u8)] = &[",
-        statistics.files,
-        statistics.token_count(),
-        statistics.char_count(),
+        "\n/// {doc}\npub(super) const {name}: &[({kind}, u32, u8)] = &["
     );
-    let mut specials = String::new();
-    for row in tokens {
-        let code = rust_code(row);
-        if row.symbol == OTHER_TOKEN {
-            let _ = writeln!(
-                specials,
-                "\n/// The code of a token of a kind, which is not in [`TOKENS`], followed by its text.\npub(super) const TOKEN_OTHER: (u32, u8) = ({code});"
-            );
-            continue;
-        }
-        let fixed = match statistics.fixed.get(&row.symbol) {
-            Some(text) => format!("Some({text:?})"),
-            None => "None".into(),
-        };
-        let _ = writeln!(out, "    ({:?}, {fixed}, {code}),", row.symbol);
-    }
-    out.push_str("];\n\n/// The codes of the characters of the token texts.\n");
-    out.push_str("pub(super) const CHARS: &[(char, u32, u8)] = &[\n");
-    for row in texts {
-        let code = rust_code(row);
-        match row.symbol.as_str() {
-            "End" => {
-                let _ = writeln!(
-                    specials,
-                    "\n/// The code of the end of a token text.\npub(super) const TEXT_END: (u32, u8) = ({code});"
-                );
-            }
-            "Other" => {
-                let _ = writeln!(
-                    specials,
-                    "\n/// The code of a character, which is not in [`CHARS`], followed by its code point.\npub(super) const TEXT_OTHER: (u32, u8) = ({code});"
-                );
-            }
-            symbol => {
-                let _ = writeln!(out, "    ({symbol}, {code}),");
+    let mut escape_row = None;
+    for row in rows {
+        match row.symbol == ESCAPE {
+            true => escape_row = Some(row),
+            false => {
+                let _ = writeln!(out, "    ({}, {}),", row.symbol, rust_code(row));
             }
         }
     }
     out.push_str("];\n");
-    out.push_str(&specials);
+    if let (Some((name, doc)), Some(row)) = (escape, escape_row) {
+        let _ = writeln!(
+            out,
+            "\n/// {doc}\npub(super) const {name}: (u32, u8) = ({});",
+            rust_code(row)
+        );
+    }
+}
+
+/// The Rust source of the tables.
+fn source(statistics: &Statistics, tables: &[Vec<Row>; 5]) -> String {
+    let [
+        whitespaces,
+        structurals,
+        identifiers,
+        identifier_chars,
+        fragment_chars,
+    ] = tables;
+    let mut out = format!(
+        "// Copyright © 2026 The µcad authors <info@mucad.org>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+//! The Huffman tables of shared links, generated by `cargo xtask share-tables` from
+//! {} µcad files, do not edit.
+//!
+//! A row is a symbol, its canonical Huffman code and the number of bits of the code.
+",
+        statistics.files
+    );
+    write_table(
+        &mut out,
+        "The codes of whitespace.",
+        "WHITESPACES",
+        "&str",
+        whitespaces,
+        None,
+    );
+
+    let texts: BTreeMap<_, _> = mu::share::structural_tokens().collect();
+    let _ = writeln!(
+        out,
+        "\n/// The codes of the structural tokens by their kinds, with their texts.\npub(super) const STRUCTURALS: &[(&str, &str, u32, u8)] = &["
+    );
+    for row in structurals {
+        let _ = writeln!(
+            out,
+            "    ({:?}, {:?}, {}),",
+            row.symbol,
+            texts[&row.symbol],
+            rust_code(row)
+        );
+    }
+    out.push_str("];\n");
+
+    write_table(
+        &mut out,
+        "The codes of the identifiers of the dictionary.",
+        "IDENTIFIERS",
+        "&str",
+        identifiers,
+        Some((
+            "IDENTIFIER_LOCAL",
+            "The code of an identifier of the code, which is not in [`IDENTIFIERS`].",
+        )),
+    );
+    write_table(
+        &mut out,
+        "The codes of the characters of identifiers, which are not in the dictionary.",
+        "IDENTIFIER_CHARS",
+        "char",
+        identifier_chars,
+        Some((
+            "IDENTIFIER_CHAR_OTHER",
+            "The code of a character, which is not in [`IDENTIFIER_CHARS`], followed by its code point.",
+        )),
+    );
+    write_table(
+        &mut out,
+        "The codes of the characters of fragments.",
+        "FRAGMENT_CHARS",
+        "char",
+        fragment_chars,
+        Some((
+            "FRAGMENT_CHAR_OTHER",
+            "The code of a character, which is not in [`FRAGMENT_CHARS`], followed by its code point.",
+        )),
+    );
     out
 }
 
@@ -292,29 +397,24 @@ pub fn share_tables(paths: &[PathBuf], output: &Path) -> Result<(), Box<dyn Erro
         return Err("no µcad files found".into());
     }
 
-    let tokens = rows(statistics.tokens.clone());
-    let texts = rows(statistics.texts.iter().map(|(symbol, count)| {
-        let symbol = match symbol {
-            TextSymbol::Char(c) => format!("{c:?}"),
-            TextSymbol::End => "End".into(),
-            TextSymbol::Other => "Other".into(),
-        };
-        (symbol, *count)
-    }));
-    if let Some(row) = tokens.iter().chain(&texts).find(|row| row.bits > 32) {
+    let tables = statistics.tables();
+    if let Some(row) = tables.iter().flatten().find(|row| row.bits > 32) {
         return Err(format!("the code of {} has more than 32 bits", row.symbol).into());
     }
 
-    println!(
-        "{} µcad files, {} tokens, {} characters",
-        statistics.files,
-        statistics.token_count(),
-        statistics.char_count()
-    );
-    print_rows("Token kinds", &tokens);
-    print_rows("Characters", &texts);
+    println!("{} µcad files", statistics.files);
+    let titles = [
+        "Whitespace",
+        "Structural tokens",
+        "Identifiers",
+        "Characters of identifiers",
+        "Characters of fragments",
+    ];
+    for (title, rows) in titles.iter().zip(&tables) {
+        print_rows(title, rows);
+    }
 
-    std::fs::write(output, source(&statistics, &tokens, &texts))?;
+    std::fs::write(output, source(&statistics, &tables))?;
     println!("\nWritten to {}", output.display());
     Ok(())
 }
@@ -346,20 +446,31 @@ mod tests {
         assert_eq!(canonical_codes(&[3]), [(0, 1)]);
     }
 
-    /// Tokens are counted by their kind, characters of their texts with the ends of the texts.
+    /// Identifiers in several files are in the dictionary, the others are spelled once in
+    /// each file.
     #[test]
-    fn count_tokens() {
+    fn count_symbols() {
         let mut statistics = Statistics::default();
-        statistics.add("fn f() {}");
-        assert_eq!(statistics.tokens["Keyword(Fn)"], 1);
-        assert_eq!(statistics.tokens["Identifier"], 1);
-        assert_eq!(statistics.tokens["Whitespace"], 2);
-        assert_eq!(statistics.tokens[OTHER_TOKEN], 1);
-        assert_eq!(statistics.fixed["Keyword(Fn)"], "fn");
-        assert_eq!(statistics.texts[&TextSymbol::Char(' ')], 2);
-        assert_eq!(statistics.texts[&TextSymbol::Char('f')], 1);
-        // The texts of the identifier and of the two whitespaces end.
-        assert_eq!(statistics.texts[&TextSymbol::End], 3);
-        assert_eq!(statistics.char_count(), 3);
+        statistics.add("x = a + a;");
+        statistics.add("y = a + 1mm;");
+        assert_eq!(statistics.whitespaces[" "], 8);
+        assert_eq!(statistics.structurals["OperatorAssignment"], 2);
+        assert_eq!(statistics.identifiers["a"], (3, 2));
+        assert!(statistics.in_dictionary("a"));
+        assert!(!statistics.in_dictionary("x"));
+        // A unit is an identifier.
+        assert_eq!(statistics.fragment_chars[&'1'], 1);
+        assert_eq!(statistics.identifiers["mm"], (1, 1));
+
+        let [_, _, identifiers, identifier_chars, _] = statistics.tables();
+        let count = |rows: &[Row], symbol: &str| {
+            rows.iter()
+                .find(|row| row.symbol == symbol)
+                .map(|row| row.count)
+        };
+        assert_eq!(count(&identifiers, "\"a\""), Some(3));
+        // `x`, `y` and `mm` are escaped.
+        assert_eq!(count(&identifiers, ESCAPE), Some(3));
+        assert_eq!(count(&identifier_chars, "'x'"), Some(1));
     }
 }

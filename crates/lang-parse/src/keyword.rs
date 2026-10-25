@@ -84,6 +84,13 @@ impl Keyword {
         Self::TEXTS[self as usize]
     }
 
+    /// All keywords in the order of their variants.
+    pub fn all() -> impl Iterator<Item = Self> {
+        Self::TEXTS
+            .iter()
+            .map(|text| text.parse().expect("The text of a keyword"))
+    }
+
     /// Returns if the keyword is reserved for the future, e.g. `enum`:
     /// it has no meaning yet, but cannot be used as an identifier.
     pub fn is_reserved(self) -> bool {
@@ -113,5 +120,7 @@ mod tests {
         assert!(!Keyword::Fn.is_reserved());
         assert!(Keyword::Enum.is_reserved());
         assert_eq!("function".parse::<Keyword>(), Err(()));
+        assert_eq!(Keyword::all().count(), Keyword::TEXTS.len());
+        assert_eq!(Keyword::all().next(), Some(Keyword::As));
     }
 }

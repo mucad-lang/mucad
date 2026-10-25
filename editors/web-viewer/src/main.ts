@@ -96,7 +96,7 @@ function format() {
 const SHARED_CODE = "shared";
 
 /**
- * The code of a shared link in the URL: in the fragment, e.g. `#wrUEAAYAOyNL82VFEihFbq2o00U5XL8`, or as
+ * The code of a shared link in the URL: in the fragment, e.g. `#wrUEAAYAGUCa-FjWm2NSCw`, or as
  * query parameter `?code=`. Without a shared link, there is neither code nor error.
  */
 function sharedLink(): { code?: string; error?: string } {

@@ -25,6 +25,15 @@ impl BitWriter {
         }
     }
 
+    /// Write the number `n` > 0 in Elias gamma code: the number of its bits - 1 as 0 bits,
+    /// followed by its bits, e.g. `1` for 1 and `00101` for 5.
+    pub fn write_gamma(&mut self, n: u32) {
+        debug_assert!(n > 0, "Elias gamma code needs a positive number");
+        let bits = 32 - n.leading_zeros() as u8;
+        self.write(0, bits - 1);
+        self.write(n, bits);
+    }
+
     /// The written bytes, the last byte is filled with 1 bits.
     pub fn finish(mut self) -> Vec<u8> {
         if self.used > 0 {
@@ -58,6 +67,19 @@ impl<'a> BitReader<'a> {
     pub fn read_bits(&mut self, bits: u8) -> Option<u32> {
         (0..bits).try_fold(0, |code, _| Some(code << 1 | self.read()? as u32))
     }
+
+    /// The next number in Elias gamma code, see [`BitWriter::write_gamma`], `None` at the end
+    /// or for a number with more than 32 bits.
+    pub fn read_gamma(&mut self) -> Option<u32> {
+        let mut zeros = 0;
+        while !self.read()? {
+            zeros += 1;
+            if zeros >= 32 {
+                return None;
+            }
+        }
+        Some(1 << zeros | self.read_bits(zeros)?)
+    }
 }
 
 #[cfg(test)]
@@ -79,5 +101,22 @@ mod tests {
         assert_eq!(reader.read_bits(5), Some(0b11111));
         assert_eq!(reader.read(), None);
         assert_eq!(BitWriter::default().finish(), Vec::<u8>::new());
+    }
+
+    /// Numbers are written and read in Elias gamma code.
+    #[test]
+    fn gamma() {
+        let mut writer = BitWriter::default();
+        for n in [1, 2, 5, 1000, u32::MAX] {
+            writer.write_gamma(n);
+        }
+        let bytes = writer.finish();
+        // 1, 010 and 00101.
+        assert_eq!(bytes[0], 0b1010_0010);
+        let mut reader = BitReader::new(&bytes);
+        for n in [1, 2, 5, 1000, u32::MAX] {
+            assert_eq!(reader.read_gamma(), Some(n));
+        }
+        assert_eq!(BitReader::new(&[0, 0, 0, 0, 0]).read_gamma(), None);
     }
 }
