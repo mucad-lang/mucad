@@ -10,7 +10,7 @@ expression: "ir.to_ron().expect(\"No error\")"
     ),
     payload: (
         input_hash: "0xa18f78da53e23991",
-        output_hash: "0xfc34b302667ee8fc",
+        output_hash: "0xe943f85c528134cc",
         tree: (
             root: (
                 index1: 1,

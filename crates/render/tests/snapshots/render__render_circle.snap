@@ -2,4 +2,4 @@
 source: crates/render/tests/render.rs
 expression: geometry
 ---
-2D[1][0x44b79301ffea4b6e] @0.25mm => 2D
+2D[1][0x6580eb0379afc0c4] @0.25mm => 2D

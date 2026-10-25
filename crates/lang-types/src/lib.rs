@@ -38,7 +38,7 @@ use crate::math::ScalarF;
 
 pub type Integer = fixed::FixedI64<fixed::types::extra::U0>;
 
-pub type Scalar = fixed::FixedI128<fixed::types::extra::U32>;
+pub type Scalar = fixed::FixedI128<fixed::types::extra::U64>;
 
 /// 2D vector type.
 pub type Vec2 = cgmath::Vector2<Scalar>;

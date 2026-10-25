@@ -6,8 +6,8 @@ Replication
 ├── Workpiece(op)
 │   │   - angle [in]: Angle = 120deg
 │   │   - r [in]: Length = 10mm
-│   └── Builtin(RotateMatrix(Matrix3 [[-0.5, 0.8660254038404673, 0.0], [-0.8660254038404673, -0.5, 0.0], [0.0, 0.0, 1.0]]))
-│       │   - matrix: Matrix3x3 = Matrix3 [[-0.5, 0.8660254038, 0], [-0.8660254038, -0.5, 0], [0, 0, 1]]
+│   └── Builtin(RotateMatrix(Matrix3 [[-0.4999999999999998, 0.8660254037844387, 0.0], [-0.8660254037844387, -0.4999999999999998, 0.0], [0.0, 0.0, 1.0]]))
+│       │   - matrix: Matrix3x3 = Matrix3 [[-0.49999999999999977796, 0.8660254037844387076, 0], [-0.8660254037844…
 │       └── Builtin(Translate(10mm, 0mm, 0mm))
 │           │   - x: Length = 10mm
 │           │   - y: Length = 0mm
@@ -17,8 +17,8 @@ Replication
 ├── Workpiece(op)
 │   │   - angle [in]: Angle = 240deg
 │   │   - r [in]: Length = 10mm
-│   └── Builtin(RotateMatrix(Matrix3 [[-0.5, -0.8660254038404673, 0.0], [0.8660254038404673, -0.5, 0.0], [0.0, 0.0, 1.0]]))
-│       │   - matrix: Matrix3x3 = Matrix3 [[-0.5, -0.8660254038, 0], [0.8660254038, -0.5, 0], [0, 0, 1]]
+│   └── Builtin(RotateMatrix(Matrix3 [[-0.5000000000000004, -0.8660254037844384, 0.0], [0.8660254037844384, -0.5000000000000004, 0.0], [0.0, 0.0, 1.0]]))
+│       │   - matrix: Matrix3x3 = Matrix3 [[-0.5000000000000004441, -0.86602540378443837454, 0], [0.8660254037844…
 │       └── Builtin(Translate(10mm, 0mm, 0mm))
 │           │   - x: Length = 10mm
 │           │   - y: Length = 0mm
@@ -28,8 +28,8 @@ Replication
 └── Workpiece(op)
     │   - angle [in]: Angle = 360deg
     │   - r [in]: Length = 10mm
-    └── Builtin(RotateMatrix(Matrix3 [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]))
-        │   - matrix: Matrix3x3 = Matrix3 [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    └── Builtin(RotateMatrix(Matrix3 [[1.0, -2.4492127076447545e-16, 0.0], [2.4492127076447545e-16, 1.0, 0.0], [0.0, 0.0, 1.0]]))
+        │   - matrix: Matrix3x3 = Matrix3 [[1, -0.0000000000000002449, 0], [0.0000000000000002449, 1, 0], [0, 0, …
         └── Builtin(Translate(10mm, 0mm, 0mm))
             │   - x: Length = 10mm
             │   - y: Length = 0mm
