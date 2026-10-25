@@ -4685,6 +4685,7 @@ dependencies = [
  "geo",
  "js-sys",
  "mucad-driver",
+ "qrcode",
  "wasm-bindgen",
 ]
 
