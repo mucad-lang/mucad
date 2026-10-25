@@ -7,6 +7,8 @@ use std::error::Error;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use mucad_driver::prelude as mu;
+
 /// The languages of code blocks with shell commands.
 const SHELL_LANGUAGES: &[&str] = &["sh", "bash", "shell", "zsh", "console"];
 
@@ -57,41 +59,42 @@ pub fn readme_files(paths: &[PathBuf]) -> Vec<PathBuf> {
     files
 }
 
-/// The shell commands in the code blocks of the markdown `text` of `file`.
+/// The shell commands in the code blocks of the markdown `text` of `file`, also in lists.
+///
+/// Fails, if the markdown is invalid, e.g. with an unclosed code block.
+pub fn commands(file: &Path, text: &str) -> Result<Vec<Command>, mu::md::ParseError> {
+    let md: mu::md::Markdown = text.parse()?;
+    Ok(md
+        .code_blocks()
+        .filter(|block| {
+            block
+                .header
+                .lang
+                .as_deref()
+                .is_some_and(|lang| SHELL_LANGUAGES.contains(&lang))
+        })
+        .flat_map(|block| block_commands(file, block))
+        .collect())
+}
+
+/// The commands of a shell code block of `file`.
 ///
 /// Commands are written for the repository root, a `cd` changes the directory of the following
-/// commands of its code block.
-pub fn commands(file: &Path, text: &str) -> Vec<Command> {
+/// commands of the code block.
+fn block_commands(file: &Path, block: &mu::md::CodeBlock) -> Vec<Command> {
+    // A console block contains commands after a prompt, and their output.
+    let console = block.header.lang.as_deref() == Some("console");
     let mut commands = Vec::new();
-    // The language of the current code block, `None` outside of code blocks.
-    let mut block: Option<String> = None;
-    // The directory of the commands in the current code block.
+    // The directory of the following commands.
     let mut dir = PathBuf::from(".");
     // A command continued with `\` on the next line, with its first line.
     let mut continued: Option<(usize, String)> = None;
 
-    for (index, line) in text.lines().enumerate() {
+    for (index, line) in block.code().lines().enumerate() {
         let trimmed = line.trim();
-        if let Some(info) = trimmed.strip_prefix("```") {
-            block = match block {
-                Some(_) => None,
-                None => Some(info.split_whitespace().next().unwrap_or("").to_string()),
-            };
-            continued = None;
-            dir = PathBuf::from(".");
-            continue;
-        }
-        let Some(language) = &block else {
-            continue;
-        };
-        if !SHELL_LANGUAGES.contains(&language.as_str()) {
-            continue;
-        }
-
         let part = match &continued {
             Some(_) => trimmed,
-            // A console block contains commands after a prompt, and their output.
-            None if language == "console" => match trimmed.strip_prefix("$ ") {
+            None if console => match trimmed.strip_prefix("$ ") {
                 Some(command) => command,
                 None => continue,
             },
@@ -101,7 +104,9 @@ pub fn commands(file: &Path, text: &str) -> Vec<Command> {
             continue;
         }
 
-        let (line_no, mut command) = continued.take().unwrap_or((index + 1, String::new()));
+        // The first line of the code is the line after the line offset.
+        let line_no = block.line_offset + index + 1;
+        let (line_no, mut command) = continued.take().unwrap_or((line_no, String::new()));
         match part.strip_suffix('\\') {
             Some(start) => {
                 command.push_str(start.trim_end());
@@ -161,7 +166,11 @@ pub fn check_readme(paths: &[PathBuf], list: bool) -> Result<(), Box<dyn Error>>
     let mut all = Vec::new();
     for file in readme_files(paths) {
         let text = std::fs::read_to_string(&file)?;
-        all.extend(commands(&file, &text));
+        match commands(&file, &text) {
+            Ok(commands) => all.extend(commands),
+            // The other files are still checked.
+            Err(err) => eprintln!("⚠️  {} is skipped: {err}", file.display()),
+        }
     }
 
     if list {
@@ -261,6 +270,7 @@ mod tests {
 
     fn command_texts(text: &str) -> Vec<(usize, String)> {
         commands(Path::new("README.md"), text)
+            .expect("Valid markdown")
             .into_iter()
             .map(|command| (command.line, command.command))
             .collect()
@@ -319,6 +329,7 @@ cargo test
 ```
 ";
         let commands: Vec<_> = commands(Path::new("README.md"), text)
+            .expect("Valid markdown")
             .into_iter()
             .map(|command| (command.command, command.dir))
             .collect();
@@ -336,5 +347,22 @@ cargo test
                 ("cargo test".to_string(), PathBuf::from(".")),
             ]
         );
+    }
+
+    /// Commands in list items are found, invalid markdown fails.
+    #[test]
+    fn list_items_and_errors() {
+        let text = "\
+# Build
+
+1. Install the dependencies:
+
+   ```sh
+   npm install
+   ```
+";
+        assert_eq!(command_texts(text), [(6, "npm install".to_string())]);
+
+        assert!(commands(Path::new("README.md"), "```sh\nnpm install\n").is_err());
     }
 }
