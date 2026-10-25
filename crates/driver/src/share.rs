@@ -11,8 +11,11 @@ use base64::{
     },
 };
 
-/// The web viewer, which shows the code of a link.
-pub const PLAY_URL: &str = "https://play.mucad.org/";
+/// The web viewer, which shows the code of a link in its fragment.
+///
+/// The fragment is not sent to the server, so the web viewer can be a static page, and the code
+/// is not logged by the server.
+pub const PLAY_URL: &str = "https://play.mucad.org/#";
 
 /// The maximum size of the code in a link, in bytes of its UTF-8 encoding.
 pub const MAX_CODE_BYTES: usize = 2048;
@@ -32,7 +35,7 @@ pub enum ShareError {
 }
 
 /// The link to the web viewer with `code`, which is embedded as URL-safe base64,
-/// e.g. `https://play.mucad.org/Q2lyY2xlKHIgPSAxbW0pOw` for `Circle(r = 1mm);`.
+/// e.g. `https://play.mucad.org/#Q2lyY2xlKHIgPSAxbW0pOw` for `Circle(r = 1mm);`.
 ///
 /// Fails, if the code has more than [`MAX_CODE_BYTES`] bytes.
 pub fn link(code: &str) -> Result<String, ShareError> {
@@ -57,7 +60,9 @@ pub fn decode(link: &str) -> Result<String, ShareError> {
             .find_map(|parameter| parameter.strip_prefix("code="))
             .unwrap_or(query)
     } else {
-        link.strip_prefix(PLAY_URL).unwrap_or(link)
+        // Former links have the code in their path.
+        link.strip_prefix(PLAY_URL.trim_end_matches('#'))
+            .unwrap_or(link)
     };
 
     // A longer link contains more code than allowed, which is not decoded.
@@ -86,7 +91,7 @@ mod tests {
     fn link_with_code() {
         assert_eq!(
             link("Circle(r = 1mm);"),
-            Ok("https://play.mucad.org/Q2lyY2xlKHIgPSAxbW0pOw".to_string())
+            Ok("https://play.mucad.org/#Q2lyY2xlKHIgPSAxbW0pOw".to_string())
         );
         // UTF-8 encoded, e.g. `µ`, with URL-safe characters only.
         let link = link("// µcad?>>").expect("A link");
@@ -118,7 +123,7 @@ mod tests {
         for link in [
             link.clone(),
             data.to_string(),
-            format!("https://play.mucad.org/#{data}"),
+            format!("https://play.mucad.org/{data}"),
             format!("#{data}"),
             format!("https://play.mucad.org/?code={data}"),
             format!("?example=1&code={data}"),

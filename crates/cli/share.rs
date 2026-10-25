@@ -8,8 +8,7 @@ pub fn qr_code(link: &str) -> Result<String, String> {
     use qrcode::render::unicode::Dense1x2;
 
     // The lowest error correction holds the most data, e.g. the longest link of 2754 bytes.
-    let code = qrcode::QrCode::with_error_correction_level(link.as_bytes(), qrcode::EcLevel::L)
-        .map_err(|err| err.to_string())?;
+    let code = qrcode::QrCode::new(link.as_bytes()).map_err(|err| err.to_string())?;
     // On a dark background, the dark modules are the background and the light ones are drawn.
     Ok(code
         .render::<Dense1x2>()

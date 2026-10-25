@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use miette::IntoDiagnostic;
-use mucad_driver::prelude::{
-    self as mu, Artifact, base::DisplayWithCtx, share, traits::RenderDiag,
-};
+use mucad_driver::prelude::{self as mu, Artifact, base::DisplayWithCtx, traits::RenderDiag};
 
-use crate::{Cli, commands::RunCommand, share};
+use crate::{Cli, commands::RunCommand};
 
 /// Defines where an artifact should be emitted.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -177,12 +175,12 @@ impl Compile {
                     .map(|model| model.to_string_with_ctx(&mu::BuiltinLibrary::new())),
                 // The code is shared, also with errors.
                 DisplayTarget::Link => {
-                    return mu_share::link(source.code()).map_err(|err| err.to_string());
+                    return mu::share::link(source.code()).map_err(|err| err.to_string());
                 }
                 DisplayTarget::Qrcode => {
-                    return mu_share::link(source.code())
+                    return mu::share::link(source.code())
                         .map_err(|err| err.to_string())
-                        .and_then(|link| share::qr_code(&link));
+                        .and_then(|link| crate::share::qr_code(&link));
                 }
             };
             compiled.ok_or_else(|| "compilation failed".to_string())

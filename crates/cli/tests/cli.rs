@@ -6,7 +6,7 @@
 use std::path::{Path, PathBuf};
 
 use assert_cmd::Command;
-use mucad_driver::prelude::ArtifactKind;
+use mucad_driver::prelude as mu;
 use predicates::prelude::*;
 
 /// A valid source using the standard library.
@@ -154,7 +154,8 @@ fn compile_emits_artifacts() {
         .assert()
         .success();
 
-    for kind in [ArtifactKind::Ast, ArtifactKind::Ir, ArtifactKind::ModelTree] {
+    use mu::ArtifactKind::*;
+    for kind in [Ast, Ir, ModelTree] {
         let artifact = dir.path().join(format!("valid.{ext}", ext = kind.ext()));
         assert!(artifact.is_file(), "{artifact:?} is missing");
     }
@@ -404,13 +405,12 @@ fn library_dir(code: &str) -> tempfile::TempDir {
 /// A library is compiled into `<name>.mulib` in its directory, which can be loaded again.
 #[test]
 fn compile_writes_library() {
-    use mucad_driver::prelude::{Artifact, Library};
-
     let dir = library_dir("pub const SIZE = 10mm;");
     mucad().arg("compile").arg(dir.path()).assert().success();
 
+    use mu::Artifact;
     let bytes = std::fs::read(dir.path().join("shapes.mulib")).expect("A library file");
-    let lib = Library::from_binary(&bytes).expect("A library");
+    let lib = mu::Library::from_binary(&bytes).expect("A library");
     assert_eq!(lib.name().map(|name| name.as_str()), Some("shapes"));
 }
 
@@ -454,9 +454,10 @@ fn compile_displays_link() {
         .args(["--display", "link,qrcode"])
         .assert()
         .success()
-        .stdout(predicate::str::contains(
-            "--- Link ---\nhttps://play.mucad.org/Q2lyY2xlKHIgPSAxMG1tKTsK\n--- QR code ---\n",
-        ))
+        .stdout(predicate::str::contains(format!(
+            "--- Link ---\n{}Q2lyY2xlKHIgPSAxMG1tKTsK\n--- QR code ---\n",
+            mu::share::PLAY_URL
+        )))
         .stdout(predicate::str::contains('█'));
 }
 
