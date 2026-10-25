@@ -92,6 +92,46 @@ function format() {
   }
 }
 
+/** The value of the example selection for the code of a shared link. */
+const SHARED_CODE = "shared";
+
+/**
+ * The code of a shared link in the URL: in the fragment, e.g. `#Q2lyY2xlKHIgPSAxMG1tKTsK`, or as
+ * query parameter `?code=`. Without a shared link, there is neither code nor error.
+ */
+function sharedLink(): { code?: string; error?: string } {
+  const link =
+    location.hash.length > 1
+      ? location.hash
+      : new URLSearchParams(location.search).has("code")
+        ? location.search
+        : undefined;
+  if (link === undefined) return {};
+  try {
+    return { code: Mucad.decodeLink(link) };
+  } catch (error) {
+    return { error: String(error) };
+  }
+}
+
+/** Show the code of a shared link formatted, compile it and look at the whole model. */
+function showSharedCode(code: string) {
+  if (!select.querySelector(`option[value="${SHARED_CODE}"]`)) {
+    select.add(new Option("Shared code", SHARED_CODE), 0);
+  }
+  select.value = SHARED_CODE;
+  const formatted = mucad.format(code);
+  editor.setValue(formatted.success && formatted.formatted ? formatted.code : code);
+  compileNow();
+  viewer.resetCamera();
+}
+
+/** Show the error of a shared link in front of the diagnostics of the shown code. */
+function showLinkError(error: string) {
+  diagnostics.textContent = `Cannot open the shared link: ${error}\n\n${diagnostics.textContent}`;
+  diagnostics.classList.add("error");
+}
+
 /** Download the model as STL (3D) or SVG (2D). */
 function exportModel() {
   const [data, type, extension] =
@@ -175,8 +215,21 @@ autoUpdate.addEventListener("change", () => {
   }
 });
 
+// The code of a shared link, otherwise the first example or the one given by the URL,
+// e.g. `?example=1`.
+const shared = sharedLink();
+if (shared.code !== undefined) {
+  showSharedCode(shared.code);
+} else {
+  select.value = String(Number(new URLSearchParams(location.search).get("example")) || 0);
+  editor.setValue(examples[Number(select.value)]?.code ?? examples[0].code);
+  compileNow();
+  if (shared.error) showLinkError(shared.error);
+}
 
-// The first example or the one given by the URL, e.g. `?example=1`.
-select.value = String(Number(new URLSearchParams(location.search).get("example")) || 0);
-editor.setValue(examples[Number(select.value)]?.code ?? examples[0].code);
-compileNow();
+// A shared link opened while the viewer runs, e.g. pasted into the address bar.
+window.addEventListener("hashchange", () => {
+  const shared = sharedLink();
+  if (shared.code !== undefined) showSharedCode(shared.code);
+  else if (shared.error) showLinkError(shared.error);
+});
