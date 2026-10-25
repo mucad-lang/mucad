@@ -71,7 +71,7 @@ homepage = "https://mucad.org"
 repository = "https://codeberg.org/mucad/mucad"
 rust-version = "1.91"
 license = "AGPL-3.0-or-later"
-keywords = ["cad", "geometry", "3d", "cnc", "openscad"]
+keywords = ["cad", "dsl", "geometry", "programming-language"]
 
 [workspace.dependencies]
 mucad-builtin = { path = "crates/builtin", version = "0.6.0" }
