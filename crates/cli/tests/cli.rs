@@ -475,6 +475,6 @@ fn compile_link_too_long() {
         .success()
         .stdout(predicate::str::contains("https://").not())
         .stderr(predicate::str::contains(
-            "Cannot display Link: the file has 2070 bytes, a link can contain at most 2048 bytes",
+            "Cannot display Link: the code has 2070 bytes, a link can contain at most 2048 bytes",
         ));
 }

@@ -9,6 +9,7 @@ mod exporter;
 mod formatter;
 
 pub mod prelude;
+pub mod share;
 //mod session;
 mod watcher;
 

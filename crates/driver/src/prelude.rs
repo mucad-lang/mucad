@@ -137,6 +137,8 @@ pub mod export {
 
 pub use crate::{ExportFile, Exporter, config::ExporterConfig};
 
+pub use crate::share;
+
 // =========================================================================
 // --- Traits Namespace ---
 // =========================================================================
