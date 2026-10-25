@@ -22,8 +22,11 @@ use base64::{
         DecodePaddingMode, GeneralPurpose, GeneralPurposeConfig, general_purpose::URL_SAFE_NO_PAD,
     },
 };
-use mucad_lang_base::{ArtifactHeader, ArtifactKind};
-use mucad_lang_parse::token::Token;
+
+use crate::prelude as mu;
+
+use mu::base::{ArtifactHeader, ArtifactKind};
+use mu::parse::token::Token;
 
 use bits::{BitReader, BitWriter};
 
@@ -80,7 +83,7 @@ pub struct SharedToken {
 pub fn shared_tokens(code: &str) -> Vec<SharedToken> {
     let mut tokens = Vec::new();
     let mut previous: Option<Token> = None;
-    for token in mucad_lang_parse::lex(code) {
+    for token in mu::parse::lex(code) {
         let (text, fixed) = match token_text(&token, previous.as_ref()) {
             Some(text) => (text.into_owned(), false),
             None => match fixed_text(&token) {
@@ -293,7 +296,7 @@ pub fn serialize(code: &str) -> Result<Vec<u8>, ShareError> {
 
     // The deserialized code must have the same tokens.
     let text: String = tokens.iter().map(|token| token.text.as_str()).collect();
-    let values = |code| mucad_lang_parse::lex(code).map(|token| token.value);
+    let values = |code| mu::parse::lex(code).map(|token| token.value);
     if !values(code).eq(values(&text)) {
         return Err(ShareError::Unsupported);
     }
@@ -442,10 +445,7 @@ pub fn decode(link: &str) -> Result<String, ShareError> {
         .decode(data)
         .map_err(|err| ShareError::InvalidBase64(err.to_string()))?;
     let code = deserialize(&bytes)?;
-    Ok(
-        mucad_lang_format::format_code(&code, &mucad_lang_format::FormatConfig::default())
-            .unwrap_or(code),
-    )
+    Ok(mu::format::format_code(&code, &mu::FormatConfig::default()).unwrap_or(code))
 }
 
 #[cfg(test)]
@@ -454,9 +454,7 @@ mod tests {
 
     /// The tokens of `code`.
     fn tokens(code: &str) -> Vec<Token<'_>> {
-        mucad_lang_parse::lex(code)
-            .map(|token| token.value)
-            .collect()
+        mu::parse::lex(code).map(|token| token.value).collect()
     }
 
     /// The codes are complete prefix codes: no code is the start of another one, and the
