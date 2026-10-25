@@ -441,3 +441,40 @@ fn compile_library_with_errors() {
         assert!(!dir.path().join("shapes.mulib").exists(), "{code}");
     }
 }
+
+/// A source file is shared as link to the web viewer, with its QR code below.
+#[test]
+fn compile_displays_link() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let input = source_file(&dir, "disc.mu", "Circle(r = 10mm);\n");
+
+    mucad()
+        .arg("compile")
+        .arg(&input)
+        .args(["--display", "link,qrcode"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "--- Link ---\nhttps://play.mucad.org/Q2lyY2xlKHIgPSAxMG1tKTsK\n--- QR code ---\n",
+        ))
+        .stdout(predicate::str::contains('█'));
+}
+
+/// A source file with more than 2048 bytes is too long for a link.
+#[test]
+fn compile_link_too_long() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let code = format!("// {}\nCircle(r = 10mm);\n", "x".repeat(2048));
+    let input = source_file(&dir, "long.mu", &code);
+
+    mucad()
+        .arg("compile")
+        .arg(&input)
+        .args(["--display", "link"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("https://").not())
+        .stderr(predicate::str::contains(
+            "Cannot display Link: the file has 2070 bytes, a link can contain at most 2048 bytes",
+        ));
+}

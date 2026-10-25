@@ -4,7 +4,7 @@
 use miette::IntoDiagnostic;
 use mucad_driver::prelude::{self as mu, Artifact, base::DisplayWithCtx, traits::RenderDiag};
 
-use crate::{Cli, commands::RunCommand};
+use crate::{Cli, commands::RunCommand, share};
 
 /// Defines where an artifact should be emitted.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -52,11 +52,23 @@ pub enum DisplayTarget {
     Library,
     /// The model tree of a source file.
     Model,
+    /// A link to the web viewer with the code of a source file.
+    Link,
+    /// The QR code of the link to the web viewer.
+    #[value(alias = "qr")]
+    Qrcode,
 }
 
 impl DisplayTarget {
-    /// The artifacts in the order of the compiler stages.
-    const ALL: [DisplayTarget; 4] = [Self::Ast, Self::Ir, Self::Library, Self::Model];
+    /// The artifacts in the order of the compiler stages, then the link with its QR code below.
+    const ALL: [DisplayTarget; 6] = [
+        Self::Ast,
+        Self::Ir,
+        Self::Library,
+        Self::Model,
+        Self::Link,
+        Self::Qrcode,
+    ];
 }
 
 impl std::fmt::Display for DisplayTarget {
@@ -66,6 +78,8 @@ impl std::fmt::Display for DisplayTarget {
             Self::Ir => "IR",
             Self::Library => "Library",
             Self::Model => "Model",
+            Self::Link => "Link",
+            Self::Qrcode => "QR code",
         })
     }
 }
@@ -152,15 +166,20 @@ impl Compile {
         }
 
         self.display(|target| {
-            match target {
+            let compiled = match target {
                 DisplayTarget::Ast => compiler.with_ast(source.hash_id(), |ast| ast.to_string()),
                 DisplayTarget::Ir => compiler.with_ir(source.hash_id(), |ir| ir.to_string()),
                 DisplayTarget::Library => compiler.library().map(|lib| lib.to_string()),
                 DisplayTarget::Model => model
                     .as_ref()
                     .map(|model| model.to_string_with_ctx(&mu::BuiltinLibrary::new())),
-            }
-            .ok_or("compilation failed")
+                // The code is shared, also with errors.
+                DisplayTarget::Link => return share::link(source.code()),
+                DisplayTarget::Qrcode => {
+                    return share::link(source.code()).and_then(|link| share::qr_code(&link));
+                }
+            };
+            compiled.ok_or_else(|| "compilation failed".to_string())
         });
 
         Ok(())
@@ -170,7 +189,7 @@ impl Compile {
     /// the text of an artifact or the reason why it is not available.
     ///
     /// Several artifacts are printed with a heading each.
-    fn display(&self, mut artifact: impl FnMut(DisplayTarget) -> Result<String, &'static str>) {
+    fn display(&self, mut artifact: impl FnMut(DisplayTarget) -> Result<String, String>) {
         let targets: Vec<_> = DisplayTarget::ALL
             .into_iter()
             .filter(|target| self.display.contains(target))
@@ -208,9 +227,11 @@ impl Compile {
                 }
                 self.display(|target| match target {
                     DisplayTarget::Library => Ok(lib.to_string()),
-                    DisplayTarget::Ast | DisplayTarget::Ir | DisplayTarget::Model => {
-                        Err("only available for source files")
-                    }
+                    DisplayTarget::Ast
+                    | DisplayTarget::Ir
+                    | DisplayTarget::Model
+                    | DisplayTarget::Link
+                    | DisplayTarget::Qrcode => Err("only available for source files".into()),
                 });
 
                 if !self.no_emit_lib {

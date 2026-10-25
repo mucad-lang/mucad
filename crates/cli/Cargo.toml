@@ -26,6 +26,8 @@ dirs = "6"
 num-format = "0.4"
 rust-embed = "8.9"
 miette = { version = "7.6.0", features = ["fancy"] }
+base64 = "0.23"
+qrcode = { version = "0.14", default-features = false }
 
 mucad-driver = { workspace = true }
 

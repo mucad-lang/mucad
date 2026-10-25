@@ -7,6 +7,7 @@ extern crate clap;
 
 mod cli;
 mod commands;
+mod share;
 pub use cli::*;
 use commands::*;
 
