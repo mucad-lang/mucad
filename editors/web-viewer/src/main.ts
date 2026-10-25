@@ -20,6 +20,13 @@ const formatButton = element<HTMLButtonElement>("format");
 const compileButton = element<HTMLButtonElement>("compile");
 const autoUpdate = element<HTMLInputElement>("auto-update");
 const diagnostics = element<HTMLPreElement>("diagnostics");
+const shareButton = element<HTMLButtonElement>("share");
+const sharePanel = element<HTMLDivElement>("share-panel");
+const shareError = element<HTMLParagraphElement>("share-error");
+const copyLinkButton = element<HTMLButtonElement>("copy-link");
+const qrCanvas = element<HTMLCanvasElement>("qr-canvas");
+const qrDownloadButton = element<HTMLButtonElement>("qr-download");
+const stripComments = element<HTMLInputElement>("strip-comments");
 
 const dock = new Dock(element("dock"), [
   { id: "editor", title: "Code", element: element("editor") },
@@ -96,7 +103,7 @@ function format() {
 const SHARED_CODE = "shared";
 
 /**
- * The code of a shared link in the URL: in the fragment, e.g. `#wrUEAAYAGUCa-FjWm2NSCw`, or as
+ * The code of a shared link in the URL: in the fragment, e.g. `#tUAGABlAmvhY1ptjUgs`, or as
  * query parameter `?code=`. Without a shared link, there is neither code nor error.
  */
 function sharedLink(): { code?: string; error?: string } {
@@ -126,10 +133,119 @@ function showSharedCode(code: string) {
   viewer.resetCamera();
 }
 
+/** Show an error, e.g. of a shared link, in front of the diagnostics of the shown code. */
+function showError(error: string) {
+  diagnostics.textContent = `${error}\n\n${diagnostics.textContent}`;
+  diagnostics.classList.add("error");
+}
+
 /** Show the error of a shared link in front of the diagnostics of the shown code. */
 function showLinkError(error: string) {
-  diagnostics.textContent = `Cannot open the shared link: ${error}\n\n${diagnostics.textContent}`;
-  diagnostics.classList.add("error");
+  showError(`Cannot open the shared link: ${error}`);
+}
+
+/** The key of the strip comments setting in the local storage of the browser. */
+const STRIP_COMMENTS_KEY = "mucad.stripComments";
+stripComments.checked = localStorage.getItem(STRIP_COMMENTS_KEY) === "true";
+
+/** Show an error in the share menu, or no error. */
+function showShareError(error?: string) {
+  shareError.textContent = error ?? "";
+  shareError.hidden = error === undefined;
+}
+
+/** The link to the web viewer with the code of the editor, `undefined` after an error. */
+function shareLink(): string | undefined {
+  try {
+    return Mucad.encodeLink(editor.getValue(), stripComments.checked);
+  } catch (error) {
+    showShareError(`Cannot share the code: ${error}`);
+    return undefined;
+  }
+}
+
+/** Copy the link with the code to the clipboard. */
+async function copyLink() {
+  const link = shareLink();
+  if (link === undefined) return;
+  try {
+    await navigator.clipboard.writeText(link);
+    copyLinkButton.textContent = "Copied";
+    setTimeout(() => (copyLinkButton.textContent = "Copy link"), 1500);
+  } catch (error) {
+    showShareError(`Cannot copy the link: ${error}`);
+  }
+}
+
+/** The number of modules of the quiet zone around a QR code. */
+const QR_QUIET_ZONE = 4;
+
+/** Draw the QR code of the link with the code dark on white, returns if it is drawn. */
+function drawQrCode(): boolean {
+  const link = shareLink();
+  if (link === undefined) return false;
+  let modules: Uint8Array;
+  try {
+    modules = Mucad.qrCode(link);
+  } catch (error) {
+    showShareError(`Cannot create the QR code: ${error}`);
+    return false;
+  }
+  const width = Math.sqrt(modules.length);
+  const size = width + 2 * QR_QUIET_ZONE;
+  // At least 512 pixels for a sharp PNG.
+  const scale = Math.max(2, Math.ceil(512 / size));
+  qrCanvas.width = qrCanvas.height = size * scale;
+  const context = qrCanvas.getContext("2d")!;
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
+  context.fillStyle = "#000000";
+  modules.forEach((dark, index) => {
+    if (!dark) return;
+    const x = (index % width) + QR_QUIET_ZONE;
+    const y = Math.floor(index / width) + QR_QUIET_ZONE;
+    context.fillRect(x * scale, y * scale, scale, scale);
+  });
+  return true;
+}
+
+/**
+ * Update the share menu for the code of the editor: the QR code, or the error, e.g. of code,
+ * which is too long for a link.
+ */
+function updateShareMenu() {
+  showShareError();
+  const shareable = drawQrCode();
+  for (const element of [copyLinkButton, qrCanvas, qrDownloadButton]) {
+    element.hidden = !shareable;
+  }
+}
+
+/** Show or hide the share menu. */
+function toggleShareMenu() {
+  sharePanel.hidden = !sharePanel.hidden;
+  if (!sharePanel.hidden) updateShareMenu();
+}
+
+/** The name of the shown example or code, e.g. for downloads. */
+function modelName(): string {
+  return select.selectedOptions[0]?.textContent?.split(" ")[0] ?? "model";
+}
+
+/** Download `blob` as file `name`. */
+function download(blob: Blob, name: string) {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+/** Download the QR code as PNG. */
+function downloadQrCode() {
+  qrCanvas.toBlob((blob) => {
+    if (blob) download(blob, `${modelName()}-qr.png`);
+  }, "image/png");
 }
 
 /** Download the model as STL (3D) or SVG (2D). */
@@ -138,12 +254,7 @@ function exportModel() {
     modelType === "2d"
       ? [mucad.exportSvg(), "image/svg+xml", "svg"]
       : [new Uint8Array(mucad.exportStl()), "model/stl", "stl"];
-  const name = select.selectedOptions[0]?.textContent?.split(" ")[0] ?? "model";
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(new Blob([data], { type }));
-  link.download = `${name}.${extension}`;
-  link.click();
-  URL.revokeObjectURL(link.href);
+  download(new Blob([data], { type }), `${modelName()}.${extension}`);
 }
 
 // Detect if the user is on macOS
@@ -186,6 +297,8 @@ const editor = createEditor(element("editor"), (code) => {
   } else {
     setModified(true);
   }
+  // An open share menu shows the link of the changed code.
+  if (!sharePanel.hidden) updateShareMenu();
 });
 addCompileShortcut(editor, compileNow);
 
@@ -207,6 +320,19 @@ select.addEventListener("change", () => {
 exportButton.addEventListener("click", exportModel);
 formatButton.addEventListener("click", format);
 compileButton.addEventListener("click", compileNow);
+shareButton.addEventListener("click", toggleShareMenu);
+copyLinkButton.addEventListener("click", copyLink);
+qrDownloadButton.addEventListener("click", downloadQrCode);
+stripComments.addEventListener("change", () => {
+  localStorage.setItem(STRIP_COMMENTS_KEY, String(stripComments.checked));
+  // The shown QR code is of the link with the new setting.
+  updateShareMenu();
+});
+// The share menu is hidden by a click outside of it.
+document.addEventListener("click", (event) => {
+  const target = event.target as Node;
+  if (!sharePanel.contains(target) && !shareButton.contains(target)) sharePanel.hidden = true;
+});
 autoUpdate.addEventListener("change", () => {
   localStorage.setItem(AUTO_UPDATE_KEY, String(autoUpdate.checked));
   // Changes made without auto-update are compiled, when it is switched on.

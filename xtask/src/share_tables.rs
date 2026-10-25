@@ -47,7 +47,7 @@ impl Statistics {
     pub fn add(&mut self, code: &str) {
         self.files += 1;
         let mut identifiers: Vec<String> = Vec::new();
-        for symbol in mu::share::shared_symbols(code) {
+        for symbol in mu::share::shared_symbols(code, false) {
             match symbol {
                 SharedSymbol::Whitespace(text) => *self.whitespaces.entry(text).or_default() += 1,
                 SharedSymbol::Structural { kind, .. } => {

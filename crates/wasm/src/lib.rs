@@ -165,13 +165,37 @@ impl Mucad {
     }
 
     /// The formatted µcad code of a shared link, e.g. of
-    /// `https://play.mucad.org/#wrUEAAYAF0Ca-Fj6Y1I_`, code with errors is unformatted.
+    /// `https://play.mucad.org/#tUAGABdAmvhY-mNSPw`, code with errors is unformatted.
     ///
     /// The link may be complete, with the code in its path, after `#` or as `?code=`,
     /// or only the link data, e.g. `location.hash`. Fails, e.g. for an invalid link.
     #[wasm_bindgen(js_name = decodeLink)]
     pub fn decode_link(link: &str) -> Result<String, String> {
         mu::share::decode(link).map_err(|err| err.to_string())
+    }
+
+    /// The link to the web viewer with the µcad `code`, with `strip` without comments.
+    ///
+    /// Fails, e.g. for code with more than 2048 bytes.
+    #[wasm_bindgen(js_name = encodeLink)]
+    pub fn encode_link(code: &str, strip: bool) -> Result<String, String> {
+        mu::share::link(code, strip).map_err(|err| err.to_string())
+    }
+
+    /// The modules of the QR code of `text` row by row, 1 for a dark module, without the
+    /// quiet zone. The QR code is square, its width is the square root of the length.
+    ///
+    /// Fails, if the text is too long for a QR code.
+    #[wasm_bindgen(js_name = qrCode)]
+    pub fn qr_code(text: &str) -> Result<Vec<u8>, String> {
+        // The lowest error correction holds the most data, e.g. the longest link.
+        let code = qrcode::QrCode::with_error_correction_level(text, qrcode::EcLevel::L)
+            .map_err(|err| err.to_string())?;
+        Ok(code
+            .to_colors()
+            .into_iter()
+            .map(|color| (color == qrcode::Color::Dark) as u8)
+            .collect())
     }
 }
 

@@ -37,8 +37,8 @@ use crate::prelude as mu;
 
 use mu::base::Spanned;
 use mu::base::{ArtifactHeader, ArtifactKind};
-use mu::parse::Keyword;
 use mu::parse::token::{LexerError, Token, escape_char};
+use mu::parse::{Keyword, LexOptions, normalized_whitespace};
 
 use bits::{BitReader, BitWriter};
 
@@ -187,13 +187,12 @@ fn structural_token(kind: &str, text: &str) -> Option<Token<'static>> {
     }
 }
 
-/// The whitespace of formatted code for a whitespace `text`: a space, a new line or an empty
-/// line.
-fn whitespace(text: &str) -> &'static str {
-    match text.matches('\n').count() {
-        0 => " ",
-        1 => "\n",
-        _ => "\n\n",
+/// The lexer options for sharing code: whitespace of formatted code and optionally without
+/// comments.
+fn lex_options(strip: bool) -> LexOptions {
+    LexOptions {
+        strip_comments: strip,
+        normalize_whitespace: true,
     }
 }
 
@@ -250,17 +249,18 @@ fn source_text<'a>(token: &'a Token, previous: Option<&Token>) -> Option<Cow<'a,
     })
 }
 
-/// The symbols of the µcad `code` for sharing.
+/// The symbols of the µcad `code` for sharing, with `strip` without comments and whitespace
+/// at the start.
 ///
 /// Format strings are fragments, consecutive tokens of other kinds are one fragment, e.g.
-/// `10mm`.
-pub fn shared_symbols(code: &str) -> Vec<SharedSymbol> {
+/// `10.5`.
+pub fn shared_symbols(code: &str, strip: bool) -> Vec<SharedSymbol> {
     let mut symbols = Vec::new();
     let mut fragment = String::new();
     // The depth of nested format strings.
     let mut depth = 0usize;
     let mut previous: Option<Token> = None;
-    for token in mu::parse::lex(code) {
+    for token in mu::parse::lex_with(code, lex_options(strip)) {
         let in_string = depth > 0 || token.value == Token::FormatStringStart;
         match token.value {
             Token::FormatStringStart => depth += 1,
@@ -269,7 +269,7 @@ pub fn shared_symbols(code: &str) -> Vec<SharedSymbol> {
         }
         let symbol = match &token.value {
             _ if in_string => None,
-            Token::Whitespace(text) => Some(SharedSymbol::Whitespace(whitespace(text))),
+            Token::Whitespace(text) => Some(SharedSymbol::Whitespace(normalized_whitespace(text))),
             Token::Identifier(name) => Some(SharedSymbol::Identifier(name.to_string())),
             token => fixed_text(token).map(|text| SharedSymbol::Structural {
                 kind: token_kind(token),
@@ -293,6 +293,14 @@ pub fn shared_symbols(code: &str) -> Vec<SharedSymbol> {
     }
     if !fragment.is_empty() {
         symbols.push(SharedSymbol::Fragment(fragment));
+    }
+    // Comments at the start leave whitespace.
+    if strip {
+        let start = symbols
+            .iter()
+            .take_while(|symbol| matches!(symbol, SharedSymbol::Whitespace(_)))
+            .count();
+        symbols.drain(..start);
     }
     symbols
 }
@@ -344,7 +352,9 @@ impl SharedCode {
 fn normalized<'a>(tokens: impl Iterator<Item = Token<'a>>) -> Vec<Token<'a>> {
     tokens
         .map(|token| match token {
-            Token::Whitespace(text) => Token::Whitespace(Cow::Borrowed(whitespace(&text))),
+            Token::Whitespace(text) => {
+                Token::Whitespace(Cow::Borrowed(normalized_whitespace(&text)))
+            }
             Token::Error(_) => Token::Error(LexerError::NoValidToken),
             token => token,
         })
@@ -484,19 +494,26 @@ fn index_bits(count: usize) -> u8 {
 }
 
 /// Serialize the symbols of the µcad `code` behind an artifact header, see the
-/// [module](self).
+/// [module](self), with `strip` without comments.
 ///
-/// Fails, if the code has more than [`MAX_CODE_BYTES`] bytes or if its tokens cannot be
-/// serialized.
-pub fn serialize(code: &str) -> Result<Vec<u8>, ShareError> {
-    if code.len() > MAX_CODE_BYTES {
-        return Err(ShareError::TooLong(code.len()));
+/// Fails, if the code has more than [`MAX_CODE_BYTES`] bytes, without comments with `strip`,
+/// or if its tokens cannot be serialized.
+pub fn serialize(code: &str, strip: bool) -> Result<Vec<u8>, ShareError> {
+    let symbols = shared_symbols(code, strip);
+    let shared = SharedCode::new(&symbols)?;
+    let length = match strip {
+        true => shared.code.len(),
+        false => code.len(),
+    };
+    if length > MAX_CODE_BYTES {
+        return Err(ShareError::TooLong(length));
     }
-    let symbols = shared_symbols(code);
 
     // The deserialized code must have the same tokens.
-    let shared = SharedCode::new(&symbols)?;
-    let lexed = normalized(mu::parse::lex(code).map(|token| token.value));
+    let lexed = mu::parse::lex_with(code, lex_options(strip))
+        .map(|token| token.value)
+        .skip_while(|token| strip && matches!(token, Token::Whitespace(_)));
+    let lexed = normalized(lexed);
     if normalized(shared.tokens.into_iter().map(|token| token.value)) != lexed {
         return Err(ShareError::Unsupported);
     }
@@ -611,14 +628,15 @@ pub fn deserialize(bytes: &[u8]) -> Result<SharedCode, ShareError> {
 }
 
 /// The link to the web viewer with `code`, whose [serialized](serialize) tokens are embedded
-/// as URL-safe base64, e.g. `https://play.mucad.org/#wrUEAAYAF0Ca-Fj6Y1I_` for
+/// as URL-safe base64, e.g. `https://play.mucad.org/#tUAGABdAmvhY-mNSPw` for
 /// `Circle(r = 1mm);`.
 ///
-/// Fails, if the code cannot be serialized.
-pub fn link(code: &str) -> Result<String, ShareError> {
+/// With `strip`, the link contains the code without comments. Fails, if the code cannot be
+/// serialized.
+pub fn link(code: &str, strip: bool) -> Result<String, ShareError> {
     Ok(format!(
         "{PLAY_URL}{}",
-        URL_SAFE_NO_PAD.encode(serialize(code)?)
+        URL_SAFE_NO_PAD.encode(serialize(code, strip)?)
     ))
 }
 
@@ -642,7 +660,7 @@ fn link_data(link: &str) -> &str {
 /// The formatted code of a link, see [`link`].
 ///
 /// The link is a complete link with the code after `#`, as `?code=` or in its path, or only
-/// the link data, e.g. `wrUEAAYAF0Ca-Fj6Y1I_`. Padding with `=` is optional.
+/// the link data, e.g. `tUAGABdAmvhY-mNSPw`. Padding with `=` is optional.
 ///
 /// The tokens are parsed and the code is formatted, code with errors is returned unformatted.
 pub fn decode(link: &str) -> Result<String, ShareError> {
@@ -675,8 +693,11 @@ mod tests {
     /// Serialize and deserialize `code`: the tokens and the tokens of the source code are the
     /// tokens of the code with the whitespace of formatted code.
     fn assert_shared(code: &str) {
-        let lexed = || normalized(mu::parse::lex(code).map(|token| token.value.into_owned()));
-        let bytes = serialize(code).expect(code);
+        let lexed = || {
+            let tokens = mu::parse::lex_with(code, lex_options(false));
+            normalized(tokens.map(|token| token.value.into_owned()))
+        };
+        let bytes = serialize(code, false).expect(code);
         let shared = deserialize(&bytes).expect(code);
         let tokens = shared.tokens.iter().map(|token| token.value.clone());
         assert_eq!(normalized(tokens), lexed(), "{code}");
@@ -715,7 +736,7 @@ mod tests {
     fn symbols() {
         use SharedSymbol::*;
         assert_eq!(
-            shared_symbols("x = 10mm;\n    s = \"a {x} b\"; // c\n\n\n"),
+            shared_symbols("x = 10mm;\n    s = \"a {x} b\"; // c\n\n\n", false),
             [
                 Identifier("x".into()),
                 Whitespace(" "),
@@ -750,13 +771,46 @@ mod tests {
         );
     }
 
+    /// With `strip`, comments are removed, also before the length of the code is checked.
+    #[test]
+    fn strip_comments() {
+        use SharedSymbol::*;
+        let code = "// c\nx = 1/* y */;\n";
+        assert_eq!(
+            shared_symbols(code, true),
+            [
+                Identifier("x".into()),
+                Whitespace(" "),
+                Structural {
+                    kind: "OperatorAssignment".into(),
+                    text: "="
+                },
+                Whitespace(" "),
+                Fragment("1".into()),
+                Whitespace(" "),
+                Structural {
+                    kind: "SigilSemiColon".into(),
+                    text: ";"
+                },
+                Whitespace("\n"),
+            ]
+        );
+        let stripped = link(code, true).expect("A link");
+        assert!(stripped.len() < link(code, false).expect("A link").len());
+        assert_eq!(decode(&stripped).as_deref(), Ok("x = 1;\n"));
+
+        let long = format!("// {}\nCircle(r = 10mm);\n", "x".repeat(MAX_CODE_BYTES));
+        assert!(matches!(link(&long, false), Err(ShareError::TooLong(2070))));
+        assert!(link(&long, true).is_ok());
+    }
+
     /// The serialized code starts with the header of tokens, followed by about half the bytes
     /// of the code.
     #[test]
     fn serialize_code() {
         let code = "Circle(r = 1mm);";
-        let bytes = serialize(code).expect("Serialized code");
-        assert_eq!(bytes[..3], [0xc2, 0xb5, ArtifactKind::Tokens as u8]);
+        let bytes = serialize(code, false).expect("Serialized code");
+        assert_eq!(bytes[..2], [0xb5, (ArtifactKind::Tokens as u8) << 4]);
         assert!(bytes.len() - ArtifactHeader::SIZE < code.len() * 2 / 3);
         let shared = deserialize(&bytes).expect("Deserialized code");
         assert_eq!(shared.code, code);
@@ -802,10 +856,10 @@ mod tests {
     /// Code with more than 2048 bytes is too long for a link.
     #[test]
     fn link_too_long() {
-        assert!(link(&"a".repeat(MAX_CODE_BYTES)).is_ok());
+        assert!(link(&"a".repeat(MAX_CODE_BYTES), false).is_ok());
         // `µ` has two bytes.
         assert_eq!(
-            link(&"µ".repeat(MAX_CODE_BYTES / 2 + 1)),
+            link(&"µ".repeat(MAX_CODE_BYTES / 2 + 1), false),
             Err(ShareError::TooLong(2050))
         );
     }
@@ -814,10 +868,10 @@ mod tests {
     #[test]
     fn decode_link() {
         assert_eq!(
-            link("Circle(r = 1mm);"),
-            Ok("https://play.mucad.org/#wrUEAAYAF0Ca-Fj6Y1I_".to_string())
+            link("Circle(r = 1mm);", false),
+            Ok("https://play.mucad.org/#tUAGABdAmvhY-mNSPw".to_string())
         );
-        let link = link("// µcad?>>\nCircle( r=1mm );\n").expect("A link");
+        let link = link("// µcad?>>\nCircle( r=1mm );\n", false).expect("A link");
         let data = link.strip_prefix(PLAY_URL).expect("The web viewer");
         assert!(
             data.chars()
@@ -839,7 +893,7 @@ mod tests {
         }
 
         // Code with errors is not formatted.
-        let link = super::link("Circle( r= ;").expect("A link");
+        let link = super::link("Circle( r= ;", false).expect("A link");
         assert_eq!(decode(&link).as_deref(), Ok("Circle( r= ;"));
     }
 
@@ -854,21 +908,21 @@ mod tests {
         let code = URL_SAFE_NO_PAD.encode("Circle(r = 1mm);");
         assert!(matches!(decode(&code), Err(ShareError::InvalidData(_))));
         // Another kind of artifact.
-        let mut bytes = serialize("x = 1;").expect("Serialized code");
-        bytes[2] = ArtifactKind::Ast as u8;
+        let mut bytes = serialize("x = 1;", false).expect("Serialized code");
+        bytes[1] = (ArtifactKind::Ast as u8) << 4;
         assert!(matches!(
             deserialize(&bytes),
             Err(ShareError::InvalidData(_))
         ));
         // An incompatible version.
-        bytes[2] = ArtifactKind::Tokens as u8;
-        bytes[3] = 99;
+        bytes[1] = (ArtifactKind::Tokens as u8) << 4;
+        bytes[2] = 99;
         assert!(matches!(
             deserialize(&bytes),
             Err(ShareError::InvalidData(_))
         ));
         // Truncated data.
-        let bytes = serialize("x = 1;").expect("Serialized code");
+        let bytes = serialize("x = 1;", false).expect("Serialized code");
         assert!(deserialize(&bytes[..bytes.len() - 1]).is_err());
 
         let too_long = URL_SAFE_NO_PAD.encode(vec![0; MAX_SERIALIZED_BYTES + 3]);

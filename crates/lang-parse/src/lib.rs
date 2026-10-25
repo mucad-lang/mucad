@@ -32,7 +32,7 @@ mod lex;
 use mucad_lang_base::{HashId, IssueResult};
 use mucad_macros::Artifact;
 
-pub use lex::lex;
+pub use lex::{LexOptions, lex, lex_with, normalized_whitespace};
 
 use serde::Serialize;
 

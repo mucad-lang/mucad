@@ -89,13 +89,13 @@ impl TryFrom<u8> for ArtifactKind {
 
 /// The header of an artifact.
 ///
-/// Binary, the header has 6 bytes: the magic `µ` in UTF-8, the kind and the major, minor and
-/// patch version, e.g. `c2 b5 00 00 06 00` for an AST of version 0.6.0. Human-readable,
-/// e.g. in RON, it is a struct with the magic as text.
+/// Binary, the header has 4 bytes: the magic `µ` as its code point U+00B5, the kind and the
+/// major version in 4 bits each, the minor and the patch version, e.g. `b5 40 06 00` for tokens
+/// of version 0.6.0. Human-readable, e.g. in RON, it is a struct with the magic as text.
 #[derive(Debug, PartialEq)]
 pub struct ArtifactHeader {
     /// [`ArtifactHeader::MAGIC`]
-    pub magic: [u8; 2],
+    pub magic: u8,
     /// Increment this whenever the format changes
     pub version: LanguageVersion,
     /// The artifact type (AST, IR, etc.)
@@ -103,10 +103,10 @@ pub struct ArtifactHeader {
 }
 
 impl ArtifactHeader {
-    /// The magic at the start of an artifact, `µ` in UTF-8.
-    pub const MAGIC: [u8; 2] = [0xc2, 0xb5];
+    /// The magic at the start of an artifact, `µ` as its code point U+00B5.
+    pub const MAGIC: u8 = 0xb5;
     /// The size of the binary header in bytes.
-    pub const SIZE: usize = 6;
+    pub const SIZE: usize = 4;
 }
 
 impl From<ArtifactKind> for ArtifactHeader {
@@ -122,8 +122,9 @@ impl From<ArtifactKind> for ArtifactHeader {
 /// The human-readable form of an [`ArtifactHeader`].
 #[derive(Serialize, Deserialize)]
 #[serde(rename = "ArtifactHeader")]
-struct ReadableHeader<'a> {
-    magic: std::borrow::Cow<'a, str>,
+struct ReadableHeader {
+    /// The magic as text, `"µ"`.
+    magic: String,
     version: LanguageVersion,
     kind: ArtifactKind,
 }
@@ -133,9 +134,8 @@ impl Serialize for ArtifactHeader {
         use serde::ser::{Error, SerializeTuple};
 
         if serializer.is_human_readable() {
-            let magic = String::from_utf8_lossy(&self.magic);
             return ReadableHeader {
-                magic,
+                magic: char::from(self.magic).to_string(),
                 version: self.version.clone(),
                 kind: self.kind,
             }
@@ -143,17 +143,17 @@ impl Serialize for ArtifactHeader {
         }
 
         let version = semver::Version::from(self.version.clone());
-        let part = |part: u64| {
-            u8::try_from(part)
-                .map_err(|_| S::Error::custom(format!("version {version} has a part > 255")))
+        let part = |part: u64, max: u64| match part <= max {
+            true => Ok(part as u8),
+            false => Err(S::Error::custom(format!(
+                "version {version} has a part > {max}"
+            ))),
         };
         let bytes = [
-            self.magic[0],
-            self.magic[1],
-            self.kind as u8,
-            part(version.major)?,
-            part(version.minor)?,
-            part(version.patch)?,
+            self.magic,
+            (self.kind as u8) << 4 | part(version.major, 15)?,
+            part(version.minor, 255)?,
+            part(version.patch, 255)?,
         ];
         // A tuple has no length, unlike bytes.
         let mut tuple = serializer.serialize_tuple(Self::SIZE)?;
@@ -171,27 +171,23 @@ impl<'de> Deserialize<'de> for ArtifactHeader {
         let invalid_magic = || D::Error::custom("no µcad artifact, the magic `µ` is missing");
         if deserializer.is_human_readable() {
             let header = ReadableHeader::deserialize(deserializer)?;
-            let magic: [u8; 2] = header
-                .magic
-                .as_bytes()
-                .try_into()
-                .map_err(|_| invalid_magic())?;
-            if magic != Self::MAGIC {
+            if header.magic != char::from(Self::MAGIC).to_string() {
                 return Err(invalid_magic());
             }
             return Ok(Self {
-                magic,
+                magic: Self::MAGIC,
                 version: header.version,
                 kind: header.kind,
             });
         }
 
-        let [m0, m1, kind, major, minor, patch] = <[u8; Self::SIZE]>::deserialize(deserializer)?;
-        if [m0, m1] != Self::MAGIC {
+        let [magic, kind_major, minor, patch] = <[u8; Self::SIZE]>::deserialize(deserializer)?;
+        if magic != Self::MAGIC {
             return Err(invalid_magic());
         }
-        let kind = ArtifactKind::try_from(kind)
+        let kind = ArtifactKind::try_from(kind_major >> 4)
             .map_err(|byte| D::Error::custom(format!("unknown artifact kind {byte}")))?;
+        let major = kind_major & 0x0f;
         Ok(Self {
             magic: Self::MAGIC,
             version: semver::Version::new(major.into(), minor.into(), patch.into()).into(),
@@ -358,22 +354,30 @@ mod tests {
     use super::*;
     use crate::MUCAD_VERSION;
 
-    /// The binary header has 6 bytes: `µ`, the kind and the version.
+    /// The binary header has 4 bytes: `µ`, the kind with the major version, the minor and
+    /// the patch version.
     #[test]
     fn binary_header() {
         let header = ArtifactHeader {
             magic: ArtifactHeader::MAGIC,
-            version: "0.6.0".parse().expect("A version"),
+            version: "1.6.2".parse().expect("A version"),
             kind: ArtifactKind::Tokens,
         };
         let bytes = postcard::to_allocvec(&header).expect("A binary header");
-        assert_eq!(bytes, [0xc2, 0xb5, 4, 0, 6, 0]);
-        assert_eq!(&bytes[..2], "µ".as_bytes());
+        assert_eq!(bytes, [0xb5, 0x41, 6, 2]);
+        assert_eq!(char::from(bytes[0]), 'µ');
         assert_eq!(postcard::from_bytes::<ArtifactHeader>(&bytes), Ok(header));
 
-        assert!(postcard::from_bytes::<ArtifactHeader>(&[b'&', b'm', 4, 0, 6, 0]).is_err());
-        assert!(postcard::from_bytes::<ArtifactHeader>(&[0xc2, 0xb5, 99, 0, 6, 0]).is_err());
-        assert!(postcard::from_bytes::<ArtifactHeader>(&[0xc2, 0xb5, 4]).is_err());
+        assert!(postcard::from_bytes::<ArtifactHeader>(&[b'&', 0x41, 6, 2]).is_err());
+        assert!(postcard::from_bytes::<ArtifactHeader>(&[0xb5, 0xf0, 6, 2]).is_err());
+        assert!(postcard::from_bytes::<ArtifactHeader>(&[0xb5, 0x41]).is_err());
+        // A major version > 15 has no binary header.
+        let header = ArtifactHeader {
+            magic: ArtifactHeader::MAGIC,
+            version: "16.0.0".parse().expect("A version"),
+            kind: ArtifactKind::Tokens,
+        };
+        assert!(postcard::to_allocvec(&header).is_err());
     }
 
     /// The human-readable header has the magic as text.

@@ -111,6 +111,10 @@ pub struct Compile {
     /// AST, IR and model are only available for source files.
     #[arg(long, value_delimiter = ',', num_args = 1..)]
     pub display: Vec<DisplayTarget>,
+
+    /// Share the code without comments in the displayed link and QR code.
+    #[arg(long)]
+    pub strip: bool,
 }
 
 impl RunCommand<()> for Compile {
@@ -175,10 +179,11 @@ impl Compile {
                     .map(|model| model.to_string_with_ctx(&mu::BuiltinLibrary::new())),
                 // The code is shared, also with errors.
                 DisplayTarget::Link => {
-                    return mu::share::link(source.code()).map_err(|err| err.to_string());
+                    return mu::share::link(source.code(), self.strip)
+                        .map_err(|err| err.to_string());
                 }
                 DisplayTarget::Qrcode => {
-                    return mu::share::link(source.code())
+                    return mu::share::link(source.code(), self.strip)
                         .map_err(|err| err.to_string())
                         .and_then(|link| crate::share::qr_code(&link));
                 }

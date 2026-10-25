@@ -202,3 +202,47 @@ button:disabled {
   color: var(--darker);
   cursor: default;
 }
+
+/* A button with a panel below it, e.g. to share the code. */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-panel {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: 0.5rem;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border: 1px solid var(--darker);
+  border-radius: 4px;
+  background: var(--primary);
+}
+
+/* Hidden elements, also buttons, which are displayed as flex boxes. */
+.dropdown-panel[hidden],
+.dropdown-panel [hidden] {
+  display: none;
+}
+
+.dropdown-panel button {
+  width: 100%;
+  margin-left: 0;
+  justify-content: center;
+}
+
+#share-error {
+  max-width: 16rem;
+  margin: 0;
+  color: var(--complementary);
+}
+
+#qr-canvas {
+  width: 16rem;
+  height: 16rem;
+  image-rendering: pixelated;
+}

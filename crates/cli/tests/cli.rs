@@ -455,7 +455,7 @@ fn compile_displays_link() {
         .assert()
         .success()
         .stdout(predicate::str::contains(format!(
-            "--- Link ---\n{}wrUEAAYAGUCa-FjWm2NSCw\n--- QR code ---\n",
+            "--- Link ---\n{}tUAGABlAmvhY1ptjUgs\n--- QR code ---\n",
             mu::share::PLAY_URL
         )))
         .stdout(predicate::str::contains('█'));
@@ -478,4 +478,31 @@ fn compile_link_too_long() {
         .stderr(predicate::str::contains(
             "Cannot display Link: the code has 2070 bytes, a link can contain at most 2048 bytes",
         ));
+}
+
+/// Without comments, a long source file can be shared.
+#[test]
+fn compile_link_strip() {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let code = format!("// {}\nCircle(r = 10mm);\n", "x".repeat(2048));
+    let input = source_file(&dir, "long.mu", &code);
+
+    let output = mucad()
+        .arg("compile")
+        .arg(&input)
+        .args(["--display", "link", "--strip"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let output = String::from_utf8(output).expect("UTF-8");
+    let link = output
+        .lines()
+        .find(|line| line.starts_with(mu::share::PLAY_URL))
+        .expect("A link");
+    assert_eq!(
+        mu::share::decode(link).as_deref(),
+        Ok("Circle(r = 10mm);\n")
+    );
 }

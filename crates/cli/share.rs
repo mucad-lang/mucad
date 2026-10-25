@@ -26,7 +26,7 @@ mod tests {
     /// Even the longest link fits into a QR code.
     #[test]
     fn qr_code_of_longest_link() {
-        let link = share::link(&"a".repeat(share::MAX_CODE_BYTES)).expect("A link");
+        let link = share::link(&"a".repeat(share::MAX_CODE_BYTES), false).expect("A link");
         assert!(qr_code(&link).is_ok());
     }
 }
