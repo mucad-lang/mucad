@@ -3,6 +3,7 @@
 
 mod check_readme;
 mod doctest;
+mod share_tables;
 mod update_copyright;
 
 use clap::{Parser, Subcommand};
@@ -36,6 +37,15 @@ enum Commands {
         /// Only list the commands
         #[arg(long)]
         list: bool,
+    },
+
+    /// Generate the Huffman tables of shared links from the tokens of µcad files
+    ShareTables {
+        /// µcad files or directories to search, by default the whole repository
+        paths: Vec<std::path::PathBuf>,
+        /// The generated Rust file
+        #[arg(long, default_value = "crates/driver/src/share/tables.rs")]
+        output: std::path::PathBuf,
     },
 
     /// Generate documentation for builtins
@@ -90,6 +100,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                 paths
             };
             check_readme::check_readme(&paths, list)
+        }
+        Commands::ShareTables { paths, output } => {
+            let paths = if paths.is_empty() {
+                vec![std::path::PathBuf::from(".")]
+            } else {
+                paths
+            };
+            share_tables::share_tables(&paths, &output)
         }
         Commands::DocgenBuiltin { output_path } => {
             let builtin_lib = mu::BuiltinLibrary::new();

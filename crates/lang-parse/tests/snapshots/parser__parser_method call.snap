@@ -4,7 +4,7 @@ expression: output
 ---
 (
     header: (
-        magic: (38, 109, 117, 59),
+        magic: "µ",
         version: ("0.6.0"),
         kind: Ast,
     ),

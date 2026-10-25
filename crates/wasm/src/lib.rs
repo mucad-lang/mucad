@@ -164,11 +164,11 @@ impl Mucad {
         mu::MUCAD_VERSION.to_string()
     }
 
-    /// The µcad code of a shared link, e.g. of `https://play.mucad.org/#Q2lyY2xlKHIgPSAxbW0pOw`.
+    /// The formatted µcad code of a shared link, e.g. of
+    /// `https://play.mucad.org/#wrUEAAYAOqNL82VFEihFboRpopz_`, code with errors is unformatted.
     ///
     /// The link may be complete, with the code in its path, after `#` or as `?code=`,
-    /// or only the link data, e.g. `location.hash`. Fails, e.g. for an invalid link or code with
-    /// more than 2048 bytes.
+    /// or only the link data, e.g. `location.hash`. Fails, e.g. for an invalid link.
     #[wasm_bindgen(js_name = decodeLink)]
     pub fn decode_link(link: &str) -> Result<String, String> {
         mu::share::decode(link).map_err(|err| err.to_string())

@@ -4356,6 +4356,7 @@ dependencies = [
  "mucad-render",
  "mucad-std",
  "notify",
+ "postcard",
  "serde",
  "tempfile",
  "test-case",

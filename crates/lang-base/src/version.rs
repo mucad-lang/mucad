@@ -12,7 +12,7 @@ pub use semver::Version;
 use crate::DisplayOneLine;
 
 /// Storage for µcad language version
-#[derive(Debug, Display, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Display, Clone, PartialEq, Serialize, Deserialize)]
 #[display("{_0}")]
 pub struct LanguageVersion(Version);
 
@@ -30,6 +30,12 @@ impl LanguageVersion {
         let req = VersionReq::parse(&format!("^{}", MUCAD_VERSION)).unwrap();
 
         req.matches(&self.0)
+    }
+}
+
+impl From<Version> for LanguageVersion {
+    fn from(version: Version) -> Self {
+        Self(version)
     }
 }
 

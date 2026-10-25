@@ -154,16 +154,16 @@ fn diagnostics() {
     );
 }
 
-/// A shared link is decoded into its code, invalid links fail.
+/// A shared link is decoded into its formatted code, invalid links fail.
 #[test]
 fn decode_link() {
     assert_eq!(
-        Mucad::decode_link("https://play.mucad.org/#Q2lyY2xlKHIgPSAxMG1tKTsK"),
-        Ok("Circle(r = 10mm);\n".to_string())
+        Mucad::decode_link("https://play.mucad.org/#wrUEAAYAOqNL82VFEihFbo2o00U5XL8"),
+        Ok("Circle(r = 10mm);".to_string())
     );
     assert_eq!(
-        Mucad::decode_link("Q2lyY2xlKHIgPSAxMG1tKTsK"),
-        Ok("Circle(r = 10mm);\n".to_string())
+        Mucad::decode_link("wrUEAAYAOqNL82VFEihFbo2o00U5XL8"),
+        Ok("Circle(r = 10mm);".to_string())
     );
     assert!(Mucad::decode_link("#not base64").is_err());
 }
