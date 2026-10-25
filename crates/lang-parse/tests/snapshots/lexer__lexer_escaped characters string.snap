@@ -1,0 +1,12 @@
+---
+source: crates/lang-parse/tests/lexer.rs
+expression: "lex(input).collect::<Vec<_>>()"
+---
+[
+    Spanned {
+        span: 0..23,
+        value: LiteralString(
+            "a\nb\t\r\u{8}\u{c} \" \\ /",
+        ),
+    },
+]

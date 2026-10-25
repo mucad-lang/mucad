@@ -158,12 +158,12 @@ fn diagnostics() {
 #[test]
 fn decode_link() {
     assert_eq!(
-        Mucad::decode_link("https://play.mucad.org/#wrUEAAYAOqNL82VFEihFbo2o00U5XL8"),
-        Ok("Circle(r = 10mm);".to_string())
+        Mucad::decode_link("https://play.mucad.org/#wrUEAAYAOyNL82VFEihFbq2o00U5XL8"),
+        Ok("Circle(r = 10mm);\n".to_string())
     );
     assert_eq!(
-        Mucad::decode_link("wrUEAAYAOqNL82VFEihFbo2o00U5XL8"),
-        Ok("Circle(r = 10mm);".to_string())
+        Mucad::decode_link("wrUEAAYAOyNL82VFEihFbq2o00U5XL8"),
+        Ok("Circle(r = 10mm);\n".to_string())
     );
     assert!(Mucad::decode_link("#not base64").is_err());
 }

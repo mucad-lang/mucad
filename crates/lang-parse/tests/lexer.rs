@@ -26,6 +26,8 @@ use test_case::test_case;
 )]
 #[test_case("escaped bracket string", r#""string {{ with }} escaped bracket""#)]
 #[test_case("escaped quote string", r#""string \" with \" escaped \ quotes""#)]
+#[test_case("escaped characters string", r#""a\nb\t\r\b\f \" \\ \/""#)]
+#[test_case("escaped characters expr string", r#""{{ {x} }} \n\t \" \\""#)]
 #[test_case("basic expr string", r#""string {with} expression""#)]
 #[test_case("expr string", r#""string {more + complex} expression""#)]
 #[test_case(

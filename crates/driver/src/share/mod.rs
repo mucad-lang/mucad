@@ -25,8 +25,9 @@ use base64::{
 
 use crate::prelude as mu;
 
+use mu::base::Spanned;
 use mu::base::{ArtifactHeader, ArtifactKind};
-use mu::parse::token::Token;
+use mu::parse::token::{LexerError, Token, escape_char};
 
 use bits::{BitReader, BitWriter};
 
@@ -65,44 +66,38 @@ pub enum ShareError {
     InvalidData(String),
 }
 
-/// A token of shared code: its kind and its text in the source code.
+/// A token of shared code: its kind and its serialized text.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SharedToken {
     /// The kind of the token, e.g. `Identifier`, `Keyword(Fn)` or `SigilColon`.
     pub kind: String,
-    /// The text of the token in the source code, e.g. `fn`.
+    /// The text of the token: its value, e.g. `x` of an identifier, the text of a token with
+    /// a fixed text, e.g. `fn`, or the code of a lexer error.
     pub text: String,
     /// If all tokens of the kind have the same text, e.g. `fn`, which is not serialized.
     pub fixed: bool,
 }
 
 /// The tokens of the µcad `code` for sharing.
-///
-/// Their texts are the code again, except that whitespace in multi-line comments and the
-/// escapes of literal strings may differ, which does not change the tokens.
 pub fn shared_tokens(code: &str) -> Vec<SharedToken> {
-    let mut tokens = Vec::new();
-    let mut previous: Option<Token> = None;
-    for token in mu::parse::lex(code) {
-        let (text, fixed) = match token_text(&token, previous.as_ref()) {
-            Some(text) => (text.into_owned(), false),
-            None => match fixed_text(&token) {
-                Some(text) => (text.to_string(), true),
+    mu::parse::lex(code)
+        .map(|token| {
+            let (text, fixed) = match (token_value(&token), fixed_text(&token)) {
+                (Some(value), _) => (value.into_owned(), false),
+                (None, Some(text)) => (text.to_string(), true),
                 // The text of a lexer error is the erroneous code.
-                None => (
+                (None, None) => (
                     code.get(token.span.clone()).unwrap_or_default().to_string(),
                     false,
                 ),
-            },
-        };
-        tokens.push(SharedToken {
-            kind: token_kind(&token),
-            text,
-            fixed,
-        });
-        previous = Some(token.value);
-    }
-    tokens
+            };
+            SharedToken {
+                kind: token_kind(&token),
+                text,
+                fixed,
+            }
+        })
+        .collect()
 }
 
 /// The kind of a token, the name of its variant, with the keyword or boolean,
@@ -118,11 +113,124 @@ fn token_kind(token: &Token) -> String {
     }
 }
 
-/// The text of a token with a variable text in the source code, e.g. of an identifier.
+/// The value of a token with a variable text, e.g. the name of an identifier.
+fn token_value<'a>(token: &'a Token) -> Option<Cow<'a, str>> {
+    Some(match token {
+        Token::Whitespace(text)
+        | Token::SingleLineComment(text)
+        | Token::MultiLineComment(text)
+        | Token::DocComment(text)
+        | Token::InnerDocComment(text)
+        | Token::Identifier(text)
+        | Token::Unit(text)
+        | Token::LiteralInt(text)
+        | Token::LiteralFloat(text)
+        | Token::LiteralString(text)
+        | Token::StringContent(text)
+        | Token::StringFormatPrecision(text)
+        | Token::StringFormatWidth(text) => Cow::Borrowed(text),
+        Token::Character(c) => c.to_string().into(),
+        _ => return None,
+    })
+}
+
+/// The token of a `kind` with a `text`, see [`SharedToken`].
+fn token_from(kind: &str, text: String) -> Option<Token<'static>> {
+    if kind.starts_with("Keyword(") {
+        return text.parse().ok().map(Token::Keyword);
+    }
+    if let Some((token, _)) = FIXED_TOKENS
+        .iter()
+        .find(|(token, _)| token_kind(token) == kind)
+    {
+        return Some(token.clone());
+    }
+    let mut chars = text.chars();
+    let text = Cow::Owned(text.clone());
+    Some(match kind {
+        "Whitespace" => Token::Whitespace(text),
+        "SingleLineComment" => Token::SingleLineComment(text),
+        "MultiLineComment" => Token::MultiLineComment(text),
+        "DocComment" => Token::DocComment(text),
+        "InnerDocComment" => Token::InnerDocComment(text),
+        "Identifier" => Token::Identifier(text),
+        "Unit" => Token::Unit(text),
+        "LiteralInt" => Token::LiteralInt(text),
+        "LiteralFloat" => Token::LiteralFloat(text),
+        "LiteralString" => Token::LiteralString(text),
+        "StringContent" => Token::StringContent(text),
+        "StringFormatPrecision" => Token::StringFormatPrecision(text),
+        "StringFormatWidth" => Token::StringFormatWidth(text),
+        "Character" => match (chars.next(), chars.next()) {
+            (Some(c), None) => Token::Character(c),
+            _ => return None,
+        },
+        "Error" => Token::Error(LexerError::NoValidToken),
+        _ => return None,
+    })
+}
+
+/// The tokens with a fixed text, except keywords, with their texts.
+const FIXED_TOKENS: &[(Token<'static>, &str)] = &[
+    (Token::LiteralBool(true), "true"),
+    (Token::LiteralBool(false), "false"),
+    (Token::FormatStringStart, "\""),
+    (Token::FormatStringEnd, "\""),
+    (Token::SigilQuote, "\""),
+    (Token::StringFormatOpen, "{"),
+    (Token::StringFormatClose, "}"),
+    (Token::SigilColon, ":"),
+    (Token::SigilSemiColon, ";"),
+    (Token::SigilDoubleColon, "::"),
+    (Token::SigilOpenBracket, "("),
+    (Token::SigilCloseBracket, ")"),
+    (Token::SigilOpenSquareBracket, "["),
+    (Token::SigilCloseSquareBracket, "]"),
+    (Token::SigilOpenCurlyBracket, "{"),
+    (Token::SigilCloseCurlyBracket, "}"),
+    (Token::SigilHash, "#"),
+    (Token::SigilDot, "."),
+    (Token::SigilComma, ","),
+    (Token::SigilDoubleDot, ".."),
+    (Token::SigilAt, "@"),
+    (Token::SigilSingleArrow, "->"),
+    (Token::OperatorAdd, "+"),
+    (Token::OperatorSubtract, "-"),
+    (Token::OperatorMultiply, "*"),
+    (Token::OperatorDivide, "/"),
+    (Token::OperatorUnion, "|"),
+    (Token::OperatorIntersect, "&"),
+    (Token::OperatorPowerXor, "^"),
+    (Token::OperatorGreaterThan, ">"),
+    (Token::OperatorLessThan, "<"),
+    (Token::OperatorGreaterEqual, ">="),
+    (Token::OperatorLessEqual, "<="),
+    (Token::OperatorNear, "~"),
+    (Token::OperatorEqual, "=="),
+    (Token::OperatorNotEqual, "!="),
+    (Token::OperatorAnd, "and"),
+    (Token::OperatorOr, "or"),
+    (Token::OperatorXor, "xor"),
+    (Token::OperatorNot, "!"),
+    (Token::OperatorAssignment, "="),
+];
+
+/// The text of a token, which always has the same text, e.g. `fn`.
+fn fixed_text(token: &Token) -> Option<&'static str> {
+    match token {
+        Token::Keyword(keyword) => Some(keyword.as_str()),
+        token => FIXED_TOKENS
+            .iter()
+            .find(|(fixed, _)| fixed == token)
+            .map(|(_, text)| *text),
+    }
+}
+
+/// The text of a token in the source code, `None` for a lexer error.
 ///
 /// The format of a format string starts with `:`, which is no token, so the first format
 /// token after the `previous` token contains it.
-fn token_text<'a>(token: &'a Token, previous: Option<&Token>) -> Option<Cow<'a, str>> {
+fn source_text<'a>(token: &'a Token, previous: Option<&Token>) -> Option<Cow<'a, str>> {
     let is_format = |token: &Token| {
         matches!(
             token,
@@ -130,15 +238,6 @@ fn token_text<'a>(token: &'a Token, previous: Option<&Token>) -> Option<Cow<'a, 
         )
     };
     Some(match token {
-        Token::Whitespace(text)
-        | Token::SingleLineComment(text)
-        | Token::DocComment(text)
-        | Token::InnerDocComment(text)
-        | Token::Identifier(text)
-        | Token::Unit(text)
-        | Token::LiteralInt(text)
-        | Token::LiteralFloat(text)
-        | Token::StringContent(text) => Cow::Borrowed(text),
         Token::StringFormatPrecision(text) | Token::StringFormatWidth(text) => {
             match previous.is_some_and(is_format) {
                 true => Cow::Borrowed(text),
@@ -150,77 +249,47 @@ fn token_text<'a>(token: &'a Token, previous: Option<&Token>) -> Option<Cow<'a, 
         Token::LiteralString(text) => {
             let mut literal = String::from('"');
             for c in text.chars() {
-                match c {
-                    '"' | '\\' => literal.extend(['\\', c]),
-                    '{' | '}' => literal.extend([c, c]),
-                    c => literal.push(c),
+                match escape_char(c) {
+                    Some(escaped) => literal.push_str(escaped),
+                    None => literal.push(c),
                 }
             }
             literal.push('"');
             literal.into()
         }
-        // An escaped character is lexed without `\`, e.g. `n` for `\n`.
-        Token::Character(c) => match c {
-            '{' | '}' => format!("{c}{c}").into(),
-            c => format!("\\{c}").into(),
+        // An escaped character, e.g. `\/`, which is no escape sequence by `escape_char`.
+        Token::Character(c) => match escape_char(*c) {
+            Some(escaped) => escaped.into(),
+            None => format!("\\{c}").into(),
         },
-        _ => return None,
+        Token::Error(_) => return None,
+        token => match token_value(token) {
+            Some(value) => value,
+            None => fixed_text(token)?.into(),
+        },
     })
 }
 
-/// The text of a token, which always has the same text, e.g. `fn`.
-fn fixed_text(token: &Token) -> Option<&'static str> {
-    Some(match token {
-        Token::Keyword(keyword) => keyword.as_str(),
-        Token::LiteralBool(true) => "true",
-        Token::LiteralBool(false) => "false",
-        Token::FormatStringStart | Token::FormatStringEnd | Token::SigilQuote => "\"",
-        Token::StringFormatOpen => "{",
-        Token::StringFormatClose => "}",
-        Token::SigilColon => ":",
-        Token::SigilSemiColon => ";",
-        Token::SigilDoubleColon => "::",
-        Token::SigilOpenBracket => "(",
-        Token::SigilCloseBracket => ")",
-        Token::SigilOpenSquareBracket => "[",
-        Token::SigilCloseSquareBracket => "]",
-        Token::SigilOpenCurlyBracket => "{",
-        Token::SigilCloseCurlyBracket => "}",
-        Token::SigilHash => "#",
-        Token::SigilDot => ".",
-        Token::SigilComma => ",",
-        Token::SigilDoubleDot => "..",
-        Token::SigilAt => "@",
-        Token::SigilSingleArrow => "->",
-        Token::OperatorAdd => "+",
-        Token::OperatorSubtract => "-",
-        Token::OperatorMultiply => "*",
-        Token::OperatorDivide => "/",
-        Token::OperatorUnion => "|",
-        Token::OperatorIntersect => "&",
-        Token::OperatorPowerXor => "^",
-        Token::OperatorGreaterThan => ">",
-        Token::OperatorLessThan => "<",
-        Token::OperatorGreaterEqual => ">=",
-        Token::OperatorLessEqual => "<=",
-        Token::OperatorNear => "~",
-        Token::OperatorEqual => "==",
-        Token::OperatorNotEqual => "!=",
-        Token::OperatorAnd => "and",
-        Token::OperatorOr => "or",
-        Token::OperatorXor => "xor",
-        Token::OperatorNot => "!",
-        Token::OperatorAssignment => "=",
-        _ => return None,
-    })
+/// The source code of tokens with the texts of lexer errors.
+fn source_code<'a>(tokens: impl IntoIterator<Item = (&'a Token<'a>, &'a str)>) -> String {
+    let mut code = String::new();
+    let mut previous = None;
+    for (token, text) in tokens {
+        match source_text(token, previous) {
+            Some(source) => code.push_str(&source),
+            None => code.push_str(text),
+        }
+        previous = Some(token);
+    }
+    code
 }
 
 /// A symbol of the token table.
 #[derive(Clone, Copy)]
 enum TokenSymbol {
     /// A token of a kind in the table, with its text, if it is fixed.
-    Kind(Option<&'static str>),
-    /// A token of another kind, followed by its text.
+    Kind(&'static str, Option<&'static str>),
+    /// A token of another kind, followed by its kind and its text.
     Other,
 }
 
@@ -245,7 +314,7 @@ static TOKEN_CODES: LazyLock<HashMap<&str, (u32, u8)>> = LazyLock::new(|| {
 static TOKEN_SYMBOLS: LazyLock<HashMap<(u32, u8), TokenSymbol>> = LazyLock::new(|| {
     tables::TOKENS
         .iter()
-        .map(|(_, text, code, bits)| ((*code, *bits), TokenSymbol::Kind(*text)))
+        .map(|(kind, text, code, bits)| ((*code, *bits), TokenSymbol::Kind(kind, *text)))
         .chain([(tables::TOKEN_OTHER, TokenSymbol::Other)])
         .collect()
 });
@@ -292,12 +361,16 @@ pub fn serialize(code: &str) -> Result<Vec<u8>, ShareError> {
     if code.len() > MAX_CODE_BYTES {
         return Err(ShareError::TooLong(code.len()));
     }
+    let lexed: Vec<_> = mu::parse::lex(code).map(|token| token.value).collect();
     let tokens = shared_tokens(code);
 
-    // The deserialized code must have the same tokens.
-    let text: String = tokens.iter().map(|token| token.text.as_str()).collect();
-    let values = |code| mu::parse::lex(code).map(|token| token.value);
-    if !values(code).eq(values(&text)) {
+    // The source code of the deserialized tokens must have the same tokens.
+    let source = source_code(
+        lexed
+            .iter()
+            .zip(tokens.iter().map(|token| token.text.as_str())),
+    );
+    if !mu::parse::lex(&source).map(|token| token.value).eq(lexed) {
         return Err(ShareError::Unsupported);
     }
 
@@ -312,6 +385,7 @@ pub fn serialize(code: &str) -> Result<Vec<u8>, ShareError> {
             }
             None => {
                 writer.write(tables::TOKEN_OTHER.0, tables::TOKEN_OTHER.1);
+                write_text(&mut writer, &token.kind);
                 write_text(&mut writer, &token.text);
             }
         }
@@ -345,28 +419,38 @@ fn read_symbol<T: Copy>(
     Err(ShareError::InvalidData("unknown code".into()))
 }
 
-/// Read a text until its end into `code`.
-fn read_text(reader: &mut BitReader, code: &mut String) -> Result<(), ShareError> {
+/// Read a text until its end.
+fn read_text(reader: &mut BitReader) -> Result<String, ShareError> {
+    let mut text = String::new();
     loop {
         match read_symbol(reader, &TEXT_SYMBOLS)? {
-            Some(TextSymbol::Char(c)) => code.push(c),
-            Some(TextSymbol::End) => return Ok(()),
+            Some(TextSymbol::Char(c)) => text.push(c),
+            Some(TextSymbol::End) => return Ok(text),
             Some(TextSymbol::Other) => {
                 let c = reader
                     .read_bits(CODE_POINT_BITS)
                     .and_then(char::from_u32)
                     .ok_or_else(|| ShareError::InvalidData("invalid character".into()))?;
-                code.push(c);
+                text.push(c);
             }
             None => return Err(ShareError::InvalidData("a text has no end".into())),
         }
     }
 }
 
-/// The µcad code of serialized tokens, see [`serialize`].
+/// Deserialized code: its tokens and their source code.
+#[derive(Debug)]
+pub struct SharedCode {
+    /// The source code of the tokens.
+    pub code: String,
+    /// The tokens with their spans in the source code.
+    pub tokens: Vec<Spanned<Token<'static>>>,
+}
+
+/// The tokens of serialized code and their source code, see [`serialize`].
 ///
 /// Fails, if the bytes are no tokens of a compatible version.
-pub fn deserialize(bytes: &[u8]) -> Result<String, ShareError> {
+pub fn deserialize(bytes: &[u8]) -> Result<SharedCode, ShareError> {
     if bytes.len() > MAX_SERIALIZED_BYTES {
         return Err(ShareError::TooLong(bytes.len()));
     }
@@ -387,17 +471,27 @@ pub fn deserialize(bytes: &[u8]) -> Result<String, ShareError> {
 
     let mut reader = BitReader::new(data);
     let mut code = String::new();
+    let mut tokens: Vec<Spanned<Token>> = Vec::new();
     while let Some(symbol) = read_symbol(&mut reader, &TOKEN_SYMBOLS)? {
-        match symbol {
-            TokenSymbol::Kind(Some(text)) => code.push_str(text),
-            TokenSymbol::Kind(None) | TokenSymbol::Other => read_text(&mut reader, &mut code)?,
+        let (kind, text) = match symbol {
+            TokenSymbol::Kind(kind, Some(text)) => (kind.to_string(), text.to_string()),
+            TokenSymbol::Kind(kind, None) => (kind.to_string(), read_text(&mut reader)?),
+            TokenSymbol::Other => (read_text(&mut reader)?, read_text(&mut reader)?),
+        };
+        let token = token_from(&kind, text.clone())
+            .ok_or_else(|| ShareError::InvalidData(format!("invalid token of kind {kind}")))?;
+        let start = code.len();
+        match source_text(&token, tokens.last().map(|token| &token.value)) {
+            Some(source) => code.push_str(&source),
+            None => code.push_str(&text),
         }
+        tokens.push(Spanned::new(start..code.len(), token));
     }
-    Ok(code)
+    Ok(SharedCode { code, tokens })
 }
 
 /// The link to the web viewer with `code`, whose [serialized](serialize) tokens are embedded
-/// as URL-safe base64, e.g. `https://play.mucad.org/#wrUEAAYAOqNL82VFEihFboRpopz_` for
+/// as URL-safe base64, e.g. `https://play.mucad.org/#wrUEAAYAOyNL82VFEihFbqRpopz_` for
 /// `Circle(r = 1mm);`.
 ///
 /// Fails, if the code cannot be serialized.
@@ -428,7 +522,7 @@ fn link_data(link: &str) -> &str {
 /// The formatted code of a link, see [`link`].
 ///
 /// The link is a complete link with the code after `#`, as `?code=` or in its path, or only
-/// the link data, e.g. `wrUEAAYAOqNL82VFEihFboRpopz_`. Padding with `=` is optional.
+/// the link data, e.g. `wrUEAAYAOyNL82VFEihFbqRpopz_`. Padding with `=` is optional.
 ///
 /// The tokens are parsed and the code is formatted, code with errors is returned unformatted.
 pub fn decode(link: &str) -> Result<String, ShareError> {
@@ -444,17 +538,51 @@ pub fn decode(link: &str) -> Result<String, ShareError> {
     let bytes = engine
         .decode(data)
         .map_err(|err| ShareError::InvalidBase64(err.to_string()))?;
-    let code = deserialize(&bytes)?;
-    Ok(mu::format::format_code(&code, &mu::FormatConfig::default()).unwrap_or(code))
+    let shared = deserialize(&bytes)?;
+    let source = mu::Source::from(shared.code.as_str());
+    Ok(
+        match mu::parse::Ast::from_tokens(&shared.tokens, &(&source).into()) {
+            Ok(ast) => mu::format::format_ast(&ast, &mu::FormatConfig::default()),
+            Err(_) => shared.code,
+        },
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    /// The tokens of `code`.
-    fn tokens(code: &str) -> Vec<Token<'_>> {
-        mu::parse::lex(code).map(|token| token.value).collect()
+    /// The tokens of `code`, the kinds of lexer errors, whose spans may differ.
+    fn tokens(
+        tokens: impl IntoIterator<Item = Token<'static>>,
+    ) -> Vec<Result<Token<'static>, String>> {
+        tokens
+            .into_iter()
+            .map(|token| match token {
+                Token::Error(_) => Err(token_kind(&token)),
+                token => Ok(token),
+            })
+            .collect()
+    }
+
+    /// Serialize and deserialize `code`: the tokens and the tokens of the source code are the
+    /// tokens of the code.
+    fn assert_shared(code: &str) {
+        let lexed = || mu::parse::lex(code).map(|token| token.value.into_owned());
+        let bytes = serialize(code).expect(code);
+        let shared = deserialize(&bytes).expect(code);
+        assert_eq!(
+            tokens(shared.tokens.iter().map(|token| token.value.clone())),
+            tokens(lexed()),
+            "{code}"
+        );
+        let source_tokens = mu::parse::lex(&shared.code).map(|token| token.value.into_owned());
+        assert_eq!(tokens(source_tokens), tokens(lexed()), "{code}");
+        // The spans are in the source code.
+        assert_eq!(
+            shared.tokens.last().map_or(0, |token| token.span.end),
+            shared.code.len()
+        );
     }
 
     /// The codes are complete prefix codes: no code is the start of another one, and the
@@ -480,7 +608,10 @@ mod tests {
         let bytes = serialize(code).expect("Serialized code");
         assert_eq!(bytes[..3], [0xc2, 0xb5, ArtifactKind::Tokens as u8]);
         assert!(bytes.len() - ArtifactHeader::SIZE < code.len());
-        assert_eq!(deserialize(&bytes).as_deref(), Ok(code));
+        let shared = deserialize(&bytes).expect("Deserialized code");
+        assert_eq!(shared.code, code);
+        assert_eq!(shared.tokens[0].value, Token::Identifier("Circle".into()));
+        assert_eq!(shared.tokens[0].span, 0..6);
     }
 
     /// The tokens of code are deserialized into the code again, also tokens of unknown kinds,
@@ -491,15 +622,13 @@ mod tests {
             "",
             "// µcad\nsketch S(r: Length) {\n    Circle(r);\n}\n",
             "x = false;",
-            "s = \"a {x:05.2} b {{ \\n\";",
-            "t = \"a\\\"{{}}\";",
+            "s = \"a {x:05.2} b {{ }} \\n\";",
+            "t = \"a\\\"{{}} \\n\\t\\r\\b\\f\\\\\\/\";",
             "/*  comment */ x = 1;",
             "x = 1 ~ 2 $ ☃;",
             "a = \"unclosed",
         ] {
-            let bytes = serialize(code).expect(code);
-            let deserialized = deserialize(&bytes).expect(code);
-            assert_eq!(tokens(&deserialized), tokens(code), "{code}");
+            assert_shared(code);
         }
     }
 
@@ -513,9 +642,7 @@ mod tests {
                 if path.extension().is_some_and(|ext| ext == "mu") {
                     let code = std::fs::read_to_string(&path).expect("A file");
                     if code.len() <= MAX_CODE_BYTES {
-                        let bytes = serialize(&code).expect("Serialized code");
-                        let deserialized = deserialize(&bytes).expect("Deserialized code");
-                        assert_eq!(tokens(&deserialized), tokens(&code), "{path:?}");
+                        assert_shared(&code);
                     }
                 }
             }
@@ -538,7 +665,7 @@ mod tests {
     fn decode_link() {
         assert_eq!(
             link("Circle(r = 1mm);"),
-            Ok("https://play.mucad.org/#wrUEAAYAOqNL82VFEihFboRpopz_".to_string())
+            Ok("https://play.mucad.org/#wrUEAAYAOyNL82VFEihFbqRpopz_".to_string())
         );
         let link = link("// µcad?>>\nCircle( r=1mm );\n").expect("A link");
         let data = link.strip_prefix(PLAY_URL).expect("The web viewer");
@@ -547,7 +674,7 @@ mod tests {
                 .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
         );
 
-        let formatted = "// µcad?>>\nCircle(r = 1mm);";
+        let formatted = "// µcad?>>\nCircle(r = 1mm);\n";
         for link in [
             link.clone(),
             data.to_string(),

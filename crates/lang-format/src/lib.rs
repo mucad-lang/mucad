@@ -126,7 +126,7 @@ macro_rules! node {
 
 /// Format µcad a parsed abstract syntax tree into a string
 pub fn format_ast(ast: &Ast, config: &FormatConfig) -> String {
-    ast.format(config).to_string().trim().to_string()
+    ast.format(config).to_string()
 }
 
 /// A formatted source and AST.

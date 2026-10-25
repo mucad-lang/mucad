@@ -7,6 +7,25 @@ use crate::Keyword;
 
 pub use crate::lex::LexerError;
 
+/// The escape sequence of a character in a string, e.g. `\n` for a new line, or `None` for a
+/// character, which is not escaped.
+///
+/// `/` is not escaped, though `\/` is a valid escape sequence.
+pub fn escape_char(c: char) -> Option<&'static str> {
+    Some(match c {
+        '"' => "\\\"",
+        '\\' => "\\\\",
+        '{' => "{{",
+        '}' => "}}",
+        '\n' => "\\n",
+        '\t' => "\\t",
+        '\r' => "\\r",
+        '\u{8}' => "\\b",
+        '\u{c}' => "\\f",
+        _ => return None,
+    })
+}
+
 /// Source token for µcad files
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token<'a> {

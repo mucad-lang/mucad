@@ -330,9 +330,16 @@ fn token_cow<'a, Token: Logos<'a, Source = str>>(lex: &mut Lexer<'a, Token>) -> 
     Cow::Borrowed(lex.slice())
 }
 
+/// The character of an escape sequence, e.g. a new line for `\n`.
 fn escaped_car<'a, Token: Logos<'a, Source = str>>(lex: &mut Lexer<'a, Token>) -> char {
-    lex.slice()
-        .chars()
-        .nth(1)
-        .expect("escaped token always has 2 chars")
+    match lex.slice().chars().nth(1) {
+        Some('b') => '\u{8}',
+        Some('f') => '\u{c}',
+        Some('n') => '\n',
+        Some('r') => '\r',
+        Some('t') => '\t',
+        // `"`, `\` and `/` are escaped as themselves.
+        Some(c) => c,
+        None => unreachable!("escaped token always has 2 chars"),
+    }
 }

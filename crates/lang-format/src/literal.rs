@@ -3,7 +3,7 @@
 
 use crate::{Format, FormatConfig, Node, node};
 
-use mucad_lang_parse::ast;
+use mucad_lang_parse::{ast, token::escape_char};
 
 impl Format for ast::Literal {
     fn format(&self, f: &FormatConfig) -> Node {
@@ -26,7 +26,15 @@ impl Format for ast::LiteralKind {
 
 impl Format for ast::StringLiteral {
     fn format(&self, _: &FormatConfig) -> Node {
-        format!("\"{}\"", self.content).into()
+        let mut literal = String::from('"');
+        for c in self.content.chars() {
+            match escape_char(c) {
+                Some(escaped) => literal.push_str(escaped),
+                None => literal.push(c),
+            }
+        }
+        literal.push('"');
+        literal.into()
     }
 }
 

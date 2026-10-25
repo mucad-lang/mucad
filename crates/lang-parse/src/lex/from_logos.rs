@@ -205,7 +205,7 @@ fn map_string_token(token: Spanned<StringToken>) -> impl Iterator<Item = Spanned
             Either::Left(once(Spanned::new(token.span, Token::Character('\\'))))
         }
         StringToken::EscapedCurlyOpen => {
-            Either::Left(once(Spanned::new(token.span, Token::Character('}'))))
+            Either::Left(once(Spanned::new(token.span, Token::Character('{'))))
         }
         StringToken::EscapedCurlyClose => {
             Either::Left(once(Spanned::new(token.span, Token::Character('}'))))

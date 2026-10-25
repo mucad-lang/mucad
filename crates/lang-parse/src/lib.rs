@@ -87,7 +87,20 @@ pub trait Parse: Sized {
 impl Parse for Ast {
     fn parse(context: &ParseContext) -> Result<Self, Vec<ParseError>> {
         let tokens = lex(context.source.code()).collect::<Vec<_>>();
-        let tree = parse::parse(&tokens, context)?;
+        Self::from_tokens(&tokens, context)
+    }
+}
+
+#[cfg(feature = "parser")]
+impl Ast {
+    /// Parse the lexed `tokens` of the source of the `context`, e.g. deserialized tokens.
+    ///
+    /// The spans of the tokens are in the source of the context.
+    pub fn from_tokens(
+        tokens: &[mucad_lang_base::Spanned<token::Token>],
+        context: &ParseContext,
+    ) -> Result<Self, Vec<ParseError>> {
+        let tree = parse::parse(tokens, context)?;
 
         Ok(Self {
             input_hash: context.source.hash_id(),

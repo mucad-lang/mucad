@@ -3,7 +3,7 @@
 
 use crate::{BreakMode, Format, FormatConfig, Node, extras::leading_extras_without_newline, node};
 
-use mucad_lang_parse::ast;
+use mucad_lang_parse::{ast, token::escape_char};
 
 impl Format for ast::BinaryOperator {
     fn format(&self, _: &FormatConfig) -> Node {
@@ -87,24 +87,28 @@ impl Format for ast::StringPart {
 
 impl Format for ast::StringCharacter {
     fn format<'a>(&self, _: &FormatConfig) -> Node {
-        self.character.into()
+        // An escaped character, e.g. `\/`, which is no escape sequence by `escape_char`.
+        match escape_char(self.character) {
+            Some(escaped) => escaped.into(),
+            None => format!("\\{}", self.character).into(),
+        }
     }
 }
 
 impl Format for ast::StringExpression {
     fn format<'a>(&self, f: &FormatConfig) -> Node {
         node!(f, self.extras =>
-            '{' self.specification self.expr '}'
+            '{' self.expr self.specification '}'
         )
     }
 }
 
 impl Format for ast::StringFormatSpecification {
     fn format<'a>(&self, _f: &FormatConfig) -> Node {
-        match (&self.precision, &self.width) {
-            (Some(Ok(width)), Some(Ok(precision))) => format!("0{width}.{precision}").into(),
-            (None, Some(Ok(precision))) => format!(".{precision}").into(),
-            (Some(Ok(width)), None) => format!("0{width}").into(),
+        match (&self.width, &self.precision) {
+            (Some(Ok(width)), Some(Ok(precision))) => format!(":0{width}.{precision}").into(),
+            (None, Some(Ok(precision))) => format!(":.{precision}").into(),
+            (Some(Ok(width)), None) => format!(":0{width}").into(),
             _ => Node::Nil,
         }
     }
