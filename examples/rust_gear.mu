@@ -1,3 +1,6 @@
+// Copyright © 2026 The µcad authors <info@mucad.org>
+// SPDX-License-Identifier: MIT
+
 sketch RustGear(r = 50mm) {
     use std::ops::polar_array;
 

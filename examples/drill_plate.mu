@@ -1,3 +1,6 @@
+// Copyright © 2026 The µcad authors <info@mucad.org>
+// SPDX-License-Identifier: MIT
+
 //! A template for a drill plate. The four holes are produced via list expansion.
 
 /// A drill plate with four holes.
