@@ -65,14 +65,22 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match cli.command {
         Commands::UpdateCopyright => {
+            // Assign AGPLv3.0 license by default.
+            CopyrightUpdater::new(".")
+                .extensions(&["rs", "slint", "wgsl"], "//")
+                .exclude("target/*")
+                .with_git_exclusions()
+                .update()?;
+
+            // Assign MIT license to .mu files.
             CopyrightUpdater::new(".")
                 .extensions(MUCAD_EXTENSIONS, "//")
-                .extensions(&["rs", "slint", "wgsl"], "//")
-                .extension("toml", "#")
+                .license("MIT")
                 .exclude("target/*")
                 .exclude(format!("crates/*/tests/*.{MUCAD_EXTENSION}"))
                 .with_git_exclusions()
                 .update()?;
+
             Ok(())
         }
         Commands::CheckReadme { paths, list } => {

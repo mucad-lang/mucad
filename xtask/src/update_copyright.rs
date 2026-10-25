@@ -49,6 +49,9 @@ pub struct CopyrightUpdater {
     path: PathBuf,
     extensions: HashMap<String, String>,
     excluded_patterns: HashSet<PathBuf>,
+
+    /// SPDX-License-Identifier
+    license_id: String,
 }
 
 impl CopyrightUpdater {
@@ -57,7 +60,14 @@ impl CopyrightUpdater {
             path: path.into(),
             extensions: Default::default(),
             excluded_patterns: Default::default(),
+            license_id: "AGPL-3.0-or-later".to_string(),
         }
+    }
+
+    /// Change license id.
+    pub fn license(mut self, license: impl AsRef<str>) -> Self {
+        self.license_id = license.as_ref().to_string();
+        self
     }
 
     /// Add a single extension and its associated comment prefix (e.g. `"rs"`, `"//"`).
@@ -145,6 +155,7 @@ impl CopyrightUpdater {
 
             let content = fs::read_to_string(path)?;
 
+            let license_id = &self.license_id;
             let updated_content = if copyright_re.is_match(&content) {
                 copyright_re
                     .replace(&content, format!("Copyright © {formatted_years}"))
@@ -152,7 +163,7 @@ impl CopyrightUpdater {
             } else {
                 format!(
                     "{prefix} Copyright © {formatted_years} The µcad authors <info@mucad.org>\n\
-                     {prefix} SPDX-License-Identifier: AGPL-3.0-or-later\n\n\
+                     {prefix} SPDX-License-Identifier: {license_id}\n\n\
                      {content}"
                 )
             };
