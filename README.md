@@ -6,10 +6,10 @@
 
 ![µcad Logo](images/logo.png)
 
-µcad (pronounced *mucad*) is a description language for modeling parameterizable geometric objects.
+µcad (pronounced *mucad*) is a declarative programming language for *Computer Aided Design*.
 
 Simple basic shapes can be composed to create complex geometries which then can be rendered into STL
-or SVG files for 3D printing or CNC milling.
+or SVG files, e.g. for 3D printing or CNC milling.
 
 **Note**: This project is in an early stage of development and is not yet feature complete.
 
@@ -31,6 +31,7 @@ Feel free to [contribute](CONTRIBUTE.md) by opening issues or pull requests.
 
 *µcad* is programmed in [Rust](https://www.rust-lang.org/) which easily can be
 [installed](https://www.rust-lang.org/tools/install) on several operating systems.
+
 You can try it out with an example by using the command line tool `mucad`
 which can be installed from [crates.io](https://crates.io/crates/mucad) by using
 the following command line:
@@ -76,7 +77,7 @@ cargo install mucad
 After installing, you can run a basic example by typing:
 
 ```sh
-mucad check ./examples/bricks/brick
+mucad check ./examples/brick_simple.mu
 ```
 
 This will *check* the input file and will output the model tree.
@@ -85,15 +86,15 @@ The *check* command will not export the output geometry.
 To generate an STL model file use the `export` command with an additional output file name:
 
 ```sh
-mucad export ./examples/bricks/brick
+mucad export ./examples/brick_simple.mu
 ```
 
-The file [`brick.µcad`](examples/bricks/brick.µcad) generate a file called`brick.stl`
-which can be displayed e.g. with [MeshLab](https://www.meshlab.net/).
+The file [`brick.mu`](examples/brick.mu) generate a file called `brick.stl`
+which can be displayed e.g. with [fstl](https://github.com/fstl-app/fstl).
 
 The resulting STL mesh looks like this:
 
-![Parametric Bricks](examples/bricks/bricks.png)
+![Parametric Bricks](examples/brick_simple.png)
 
 ## Using the viewer
 
@@ -106,8 +107,13 @@ cargo install mucad-viewer
 You can run the viewer with a file:
 
 ```sh
-mucad-viewer ./examples/bricks/brick
+mucad-viewer ./examples/brick_simple.mu
 ```
+
+## Using the web viewer
+
+The web viewer is located in `editors/web-viewer`.
+Read the documentation in there in order to set it up.
 
 ## Documentation
 
