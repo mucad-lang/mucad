@@ -9,7 +9,7 @@ fn _formatted_test_case(name: &str) {
     let ast = mucad_lang_parse::parse(&source).expect("No errors").0;
 
     pretty_assertions::assert_eq!(
-        source.code().trim(),
+        source.code(),
         format_ast(&ast, &FormatConfig::default()),
         "Format error:\n{ast:#?}",
     );
