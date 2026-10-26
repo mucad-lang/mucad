@@ -9,6 +9,7 @@ repository.workspace = true
 rust-version.workspace = true
 license.workspace = true
 keywords.workspace = true
+publish = false
 
 [dependencies]
 chrono = "0.4"
