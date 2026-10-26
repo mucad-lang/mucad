@@ -12,10 +12,10 @@ This crate provides a command line interface for µcad language.
 To process a µcad file and export its geometry into an STL, use the following command:
 
 ```sh
-mucad export ./examples/bricks/brick
+mucad export ./examples/brick.mu
 ```
 
-This will export the 3D geometry description in `./examples/bricks/brick.µcad` as a `brick.stl` file.
+This will export the 3D geometry description in `./examples/brick.mu` as a `brick.stl` file.
 
 ## Installation
 
@@ -42,32 +42,15 @@ You're now ready to use µcad!
 To generate an STL model file, use the `export` command (with an optional output file name):
 
 ```sh
-mucad export ./examples/bricks/brick
+mucad export ./examples/brick.mu
 ```
 
 This will export the geometry into a `brick.stl` file.
-
-## Generate documentation
-
-You can generate documentation with `mucad doc` for source files.
-
-### Generate mdbook for built-in library
-
-```sh
-mucad doc -g mdbook __builtin --output books/builtin
-```
-
-### Generate mdbook for µcad standard library
-
-```sh
-mucad doc -g mdbook 'crates/std/lib/std/mod.µcad' --output books/std`
-```
 
 ## Resources
 
 * Documentation: <https://docs.mucad.org/latest/language/>
 * µcad Viewer: <https://crates.io/crates/mucad-viewer/>
-*
 
 ## ❤️ Support the project
 

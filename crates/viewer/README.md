@@ -30,7 +30,7 @@ mucad-viewer some_file.mu
 ### Run in workspace root using Cargo
 
 ```sh
-RUST_LOG=info cargo run --bin mucad-viewer --package mucad-viewer -- examples/csg_cube
+RUST_LOG=info cargo run --bin mucad-viewer --package mucad-viewer -- examples/csg_cube.mu
 ```
 
 ## ❤️ Support the project
