@@ -3,8 +3,8 @@
 
 //! Render issues, which are collected while rendering continues.
 
-use mucad_lang_base::{SrcRef, SrcReferrer};
 use miette::Diagnostic;
+use mucad_lang_base::{SrcRef, SrcReferrer};
 use thiserror::Error;
 
 use crate::RenderError;

@@ -7,9 +7,9 @@ mod rich;
 pub(crate) use rich::{Rich, RichError, RichPattern, RichReason};
 
 pub use error::{ParseError, ParseErrorKind};
+use miette::Diagnostic;
 use mucad_lang_base::{SrcRef, SrcReferrer};
 use mucad_macros::Issue;
-use miette::Diagnostic;
 use thiserror::Error;
 
 /// Warnings that occurred during parsing

@@ -3,9 +3,9 @@
 
 //! µcad built-in errors.
 
+use miette::Diagnostic;
 use mucad_lang_base::{BuiltinId, SrcRef, SrcReferrer};
 use mucad_lang_types::{TypeError, ValueError};
-use miette::Diagnostic;
 use thiserror::Error;
 
 #[non_exhaustive]

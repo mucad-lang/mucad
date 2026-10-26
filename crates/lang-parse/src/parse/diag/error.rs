@@ -4,9 +4,9 @@
 use crate::ParseContext;
 use crate::parse::diag::{RichError, RichPattern, RichReason};
 use crate::token::Token;
+use miette::{Diagnostic, LabeledSpan};
 use mucad_lang_base::{Span, SpanToSrcRef, SrcRef};
 use mucad_macros::SrcReferrer;
-use miette::{Diagnostic, LabeledSpan};
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::iter::once;

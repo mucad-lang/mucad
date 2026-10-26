@@ -3,8 +3,8 @@
 
 //! Markdown parse errors.
 
-use mucad_lang_base::Identifier;
 use miette::Diagnostic;
+use mucad_lang_base::Identifier;
 use thiserror::Error;
 
 #[derive(Error, Debug, Diagnostic)]

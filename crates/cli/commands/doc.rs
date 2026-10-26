@@ -18,9 +18,6 @@ pub struct Doc {
 
 impl RunCommand<()> for Doc {
     fn run(&self, _cli: &Cli) -> miette::Result<()> {
-
-
-
         todo!()
         /*use mucad_driver::prelude as mu;
         use mu::traits::*;

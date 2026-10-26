@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use derive_more::{Display, From};
+use miette::SourceSpan;
 use mucad_lang_base::{
     BuiltinId, Identifier, Name, SingleIdentifier, SrcRef, SrcReferrer, SymbolId, ToCompactString,
 };
-use miette::SourceSpan;
 use serde::{Deserialize, Serialize};
 
 /// A path that needs to be resolved.

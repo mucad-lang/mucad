@@ -138,9 +138,7 @@ pub(crate) fn builtin_fn_impl(attr: TokenStream, item: TokenStream) -> TokenStre
         // TODO: Move this block into a helper function.
         let id_doc = format!(
             "**Static ID:** `{}`",
-            mucad_hash::HashId::compile_time_hash(
-                format!("__mu::{mod_name}::{fn_name}").as_str()
-            )
+            mucad_hash::HashId::compile_time_hash(format!("__mu::{mod_name}::{fn_name}").as_str())
         );
         let fn_vis = &input_fn.vis;
         let fn_sig = &input_fn.sig;

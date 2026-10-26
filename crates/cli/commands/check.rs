@@ -1,8 +1,8 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use mucad_driver::prelude::traits::RenderDiag;
 use miette::IntoDiagnostic;
+use mucad_driver::prelude::traits::RenderDiag;
 
 use crate::{Cli, commands::RunCommand};
 

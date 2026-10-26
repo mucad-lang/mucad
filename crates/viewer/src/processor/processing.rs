@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crossbeam::channel::{Receiver, Sender};
-use mucad_driver::prelude::{self as mu, traits::RenderDiag};
 use miette::IntoDiagnostic;
+use mucad_driver::prelude::{self as mu, traits::RenderDiag};
 
 use crate::{
     processor::{

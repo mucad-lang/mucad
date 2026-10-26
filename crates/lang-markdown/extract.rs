@@ -8,8 +8,8 @@
 
 use clap::Parser;
 
-use mucad_lang_markdown as md;
 use miette::IntoDiagnostic;
+use mucad_lang_markdown as md;
 
 /// µcad md extractor command line interface
 #[derive(Parser)]

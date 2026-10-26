@@ -78,12 +78,14 @@ impl Exporter {
 
         let root = model.root();
         // The model lives as long as the tree, not as the node reference `root`.
-        let named = root.get().properties.iter().filter_map(|(name, property)| {
-            match &property.value {
-                mu::Value::Model(tree) => Some((Some(name), tree.root())),
-                _ => None,
-            }
-        });
+        let named =
+            root.get()
+                .properties
+                .iter()
+                .filter_map(|(name, property)| match &property.value {
+                    mu::Value::Model(tree) => Some((Some(name), tree.root())),
+                    _ => None,
+                });
         let unnamed = root.children().map(|node| (None, node));
 
         let mut files = Vec::new();
@@ -118,7 +120,11 @@ impl Exporter {
 
     /// Export the model of an export file and return its path.
     pub fn export_file(&self, file: &ExportFile) -> mu::Result<std::path::PathBuf> {
-        self.write(&mu::ModelTree::from(file.tree), &file.path, &file.resolution)?;
+        self.write(
+            &mu::ModelTree::from(file.tree),
+            &file.path,
+            &file.resolution,
+        )?;
         Ok(file.path.clone())
     }
 

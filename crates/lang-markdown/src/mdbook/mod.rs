@@ -6,8 +6,8 @@
 mod config;
 mod summary;
 
-use mucad_lang_base::{HashMap, WriteToFile};
 use miette::Diagnostic;
+use mucad_lang_base::{HashMap, WriteToFile};
 use thiserror::Error;
 
 pub use config::MdBookConfig;

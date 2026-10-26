@@ -4,9 +4,9 @@
 mod error;
 
 pub use error::BuiltinError;
+use miette::Diagnostic;
 use mucad_lang_base::{SrcRef, SrcReferrer};
 use mucad_lang_types::Value;
-use miette::Diagnostic;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Error, Diagnostic)]

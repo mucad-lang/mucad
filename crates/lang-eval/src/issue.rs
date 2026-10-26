@@ -3,10 +3,10 @@
 
 //! Evaluation error
 
+use miette::Diagnostic;
 use mucad_builtin::{BuiltinAdvice, BuiltinError, BuiltinIssue, BuiltinWarning};
 use mucad_lang_base::{Identifier, LibraryId, Name, SrcRef, SrcReferrer, ToCompactString};
 use mucad_lang_types::{Value, ValueError};
-use miette::Diagnostic;
 
 use thiserror::Error;
 

@@ -20,8 +20,7 @@ impl<Expr: DesugarExpr> Desugar<ast::Call> for ir::Call<Expr> {
 impl<Expr: DesugarExpr> Desugar<Vec<ast::TupleItem>> for ir::ArgumentList<Expr> {
     fn desugar(node: &Vec<ast::TupleItem>, context: &mut LowerContext) -> LowerResult<Self> {
         let mut args = Vec::new();
-        let mut names: mucad_lang_base::HashSet<Identifier> =
-            mucad_lang_base::HashSet::default();
+        let mut names: mucad_lang_base::HashSet<Identifier> = mucad_lang_base::HashSet::default();
 
         node.iter().try_for_each(|item| -> LowerResult<()> {
             let expr = Expr::desugar(&item.expr, context)?;

@@ -13,8 +13,8 @@ pub enum BuildModelTreeError {
     },
 }
 
-use mucad_lang_base::SrcRef;
 use miette::Diagnostic;
+use mucad_lang_base::SrcRef;
 use thiserror::Error;
 
 use crate::{

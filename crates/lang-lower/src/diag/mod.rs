@@ -5,9 +5,9 @@
 
 mod error;
 
+use miette::Diagnostic;
 use mucad_lang_base::{SrcRef, SrcReferrer};
 use mucad_macros::Issue;
-use miette::Diagnostic;
 use thiserror::Error;
 
 pub use error::LowerError;

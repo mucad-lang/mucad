@@ -24,8 +24,8 @@ pub use refer::*;
 pub use src_referrer::*;
 
 use derive_more::Deref;
-use mucad_hash::HashId;
 use miette::SourceSpan;
+use mucad_hash::HashId;
 use serde::{Deserialize, Serialize};
 
 /// Span for tokens or AST nodes, a range of byte offsets from the start of the source

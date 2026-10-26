@@ -301,15 +301,14 @@ fn resolve_glob_chain() {
 #[test]
 fn resolve_source_files() {
     let mut ctx = ResolveContext::new();
-    let (lib, _) = mucad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
-        .expect("No error");
+    let (lib, _) =
+        mucad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx).expect("No error");
     let files = lib.source_files();
     assert_eq!(files.len(), 4, "{files:?}");
 
     let mut ctx = ResolveContext::new();
-    let (lib, issues) =
-        mucad_lang_resolve::resolve("tests/test_cases/broken_module.mu", &mut ctx)
-            .expect("No fatal error");
+    let (lib, issues) = mucad_lang_resolve::resolve("tests/test_cases/broken_module.mu", &mut ctx)
+        .expect("No fatal error");
     assert!(issues.has_errors(), "{issues:?}");
     assert!(
         lib.source_files()
@@ -355,11 +354,9 @@ fn resolve_library_source_files() {
 
     // From a source file of a library with a dependency.
     let mut ctx = ResolveContext::new();
-    let (files, _) = mucad_lang_resolve::library_source_files(
-        "tests/test_cases/chain_outer/lib.mu",
-        &mut ctx,
-    )
-    .expect("Source files");
+    let (files, _) =
+        mucad_lang_resolve::library_source_files("tests/test_cases/chain_outer/lib.mu", &mut ctx)
+            .expect("Source files");
     assert!(ends_with(&files, "chain_outer/lib.mu"), "{files:?}");
     assert!(ends_with(&files, "chain_inner/lib.mu"), "{files:?}");
 }
@@ -368,8 +365,8 @@ fn resolve_library_source_files() {
 #[test]
 fn resolve_source_file_dependencies() {
     let mut ctx = ResolveContext::new();
-    let (lib, _) = mucad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx)
-        .expect("No error");
+    let (lib, _) =
+        mucad_lang_resolve::resolve("tests/test_cases/file_module.mu", &mut ctx).expect("No error");
     let file = |name: &str| std::path::PathBuf::from(format!("tests/test_cases/{name}"));
 
     // The subtree of module `foo` contains `foo.mu` and its file module `foo/bar.mu`.
@@ -451,12 +448,10 @@ fn resolve_cyclic_dependency() {
     => Vec::<String>::new(); "different names")]
 fn resolve_property_assignment(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match mucad_lang_resolve::resolve_source(
-        mucad_lang_base::Source::from(code),
-        &mut ctx,
-    ) {
-        Ok((_, issues)) | Err(issues) => issues,
-    };
+    let issues =
+        match mucad_lang_resolve::resolve_source(mucad_lang_base::Source::from(code), &mut ctx) {
+            Ok((_, issues)) | Err(issues) => issues,
+        };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
 
@@ -503,12 +498,10 @@ fn prelude_context(dependency: bool) -> ResolveContext {
     => vec!["Unresolved symbol: geo::Shape"]; "prelude only for names")]
 fn resolve_prelude(dependency: bool, code: &str) -> Vec<String> {
     let mut ctx = prelude_context(dependency);
-    let issues = match mucad_lang_resolve::resolve_source(
-        mucad_lang_base::Source::from(code),
-        &mut ctx,
-    ) {
-        Ok((_, issues)) | Err(issues) => issues,
-    };
+    let issues =
+        match mucad_lang_resolve::resolve_source(mucad_lang_base::Source::from(code), &mut ctx) {
+            Ok((_, issues)) | Err(issues) => issues,
+        };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
 
@@ -530,12 +523,10 @@ fn resolve_prelude(dependency: bool, code: &str) -> Vec<String> {
     "wrong functions and modules")]
 fn resolve_case_check(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match mucad_lang_resolve::resolve_source(
-        mucad_lang_base::Source::from(code),
-        &mut ctx,
-    ) {
-        Ok((_, issues)) | Err(issues) => issues,
-    };
+    let issues =
+        match mucad_lang_resolve::resolve_source(mucad_lang_base::Source::from(code), &mut ctx) {
+            Ok((_, issues)) | Err(issues) => issues,
+        };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
 
@@ -543,10 +534,8 @@ fn resolve_case_check(code: &str) -> Vec<String> {
 #[test]
 fn resolve_case_check_file_name() {
     let mut ctx = ResolveContext::new();
-    let source = mucad_lang_base::Source::new(
-        std::path::PathBuf::from("README.mu"),
-        "const A = 1;".into(),
-    );
+    let source =
+        mucad_lang_base::Source::new(std::path::PathBuf::from("README.mu"), "const A = 1;".into());
     let issues = match mucad_lang_resolve::resolve_source(source, &mut ctx) {
         Ok((_, issues)) | Err(issues) => issues,
     };
@@ -574,12 +563,10 @@ fn resolve_module_alias(external: bool, code: &str) -> Vec<String> {
             .expect("A library");
         ctx.add_implicit_dependency("globlib", lib_id);
     }
-    let issues = match mucad_lang_resolve::resolve_source(
-        mucad_lang_base::Source::from(code),
-        &mut ctx,
-    ) {
-        Ok((_, issues)) | Err(issues) => issues,
-    };
+    let issues =
+        match mucad_lang_resolve::resolve_source(mucad_lang_base::Source::from(code), &mut ctx) {
+            Ok((_, issues)) | Err(issues) => issues,
+        };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
 
@@ -599,12 +586,10 @@ fn resolve_module_alias(external: bool, code: &str) -> Vec<String> {
     => Vec::<String>::new(); "different scopes")]
 fn resolve_duplicate_symbol(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match mucad_lang_resolve::resolve_source(
-        mucad_lang_base::Source::from(code),
-        &mut ctx,
-    ) {
-        Ok((_, issues)) | Err(issues) => issues,
-    };
+    let issues =
+        match mucad_lang_resolve::resolve_source(mucad_lang_base::Source::from(code), &mut ctx) {
+            Ok((_, issues)) | Err(issues) => issues,
+        };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
 
@@ -628,12 +613,10 @@ fn resolve_duplicate_symbol(code: &str) -> Vec<String> {
     => Vec::<String>::new(); "short name ambiguous in earlier")]
 fn resolve_unreachable_init(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match mucad_lang_resolve::resolve_source(
-        mucad_lang_base::Source::from(code),
-        &mut ctx,
-    ) {
-        Ok((_, issues)) | Err(issues) => issues,
-    };
+    let issues =
+        match mucad_lang_resolve::resolve_source(mucad_lang_base::Source::from(code), &mut ctx) {
+            Ok((_, issues)) | Err(issues) => issues,
+        };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
 
@@ -656,12 +639,10 @@ fn resolve_unreachable_init(code: &str) -> Vec<String> {
 #[test_case::test_case("a = 1;" => Vec::<String>::new(); "source statement")]
 fn resolve_unused_locals(code: &str) -> Vec<String> {
     let mut ctx = ResolveContext::new();
-    let issues = match mucad_lang_resolve::resolve_source(
-        mucad_lang_base::Source::from(code),
-        &mut ctx,
-    ) {
-        Ok((_, issues)) | Err(issues) => issues,
-    };
+    let issues =
+        match mucad_lang_resolve::resolve_source(mucad_lang_base::Source::from(code), &mut ctx) {
+            Ok((_, issues)) | Err(issues) => issues,
+        };
     issues.iter().map(|issue| issue.to_string()).collect()
 }
 

@@ -4,11 +4,11 @@
 //! Tests for visitor pattern.
 
 use insta::assert_debug_snapshot;
+use miette::Severity;
 use mucad_lang_parse::{
     Ast, Parse, ParseContext,
     ast::visitor::{CommentCollector, ExpectedDiagnostic, ExpectedDiagnosticsCollector, Visit},
 };
-use miette::Severity;
 use test_case::test_case;
 
 #[test_case(

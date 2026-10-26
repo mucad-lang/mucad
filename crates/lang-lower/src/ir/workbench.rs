@@ -179,9 +179,7 @@ impl Init {
             .map(|parameter| {
                 ir::InitStatement::new(
                     parameter.id.clone(),
-                    ir::Path::Resolved(mucad_lang_base::SymbolId::Local(
-                        parameter.id.id().clone(),
-                    )),
+                    ir::Path::Resolved(mucad_lang_base::SymbolId::Local(parameter.id.id().clone())),
                 )
             })
             .collect();
