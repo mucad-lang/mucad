@@ -49,7 +49,7 @@ it are with [`cargo install`](#installation) or from the source code (see sectio
 The following µcad source code defines a *part* called `CsgCube`, which has a body of a cube with
 rounded corners and three cylinders as holes:
 
-![csg_cube](examples/csg_cube.png)
+![csg_cube](images/csg_cube.png)
 
 ```mu,first_example
 use std::math::*;
@@ -77,7 +77,7 @@ cargo install mucad
 After installing, you can run a basic example by typing:
 
 ```sh
-mucad check ./examples/brick_simple.mu
+mucad check ./examples/brick.mu
 ```
 
 This will *check* the input file and will output the model tree.
@@ -86,7 +86,7 @@ The *check* command will not export the output geometry.
 To generate an STL model file use the `export` command with an additional output file name:
 
 ```sh
-mucad export ./examples/brick_simple.mu
+mucad export ./examples/brick.mu
 ```
 
 The file [`brick.mu`](examples/brick.mu) generate a file called `brick.stl`
@@ -94,7 +94,7 @@ which can be displayed e.g. with [fstl](https://github.com/fstl-app/fstl).
 
 The resulting STL mesh looks like this:
 
-![Parametric Bricks](examples/brick_simple.png)
+![Parametric Brick](images/brick.png)
 
 ## Using the viewer
 
@@ -107,18 +107,23 @@ cargo install mucad-viewer
 You can run the viewer with a file:
 
 ```sh
-mucad-viewer ./examples/brick_simple.mu
+mucad-viewer ./examples/brick.mu
 ```
 
 ## Using the web viewer
 
-The web viewer is located in `editors/web-viewer`.
-Read the documentation in there in order to set it up.
+The web viewer that used for the [playground](https://play.mucad.org) is located in `editors/web-viewer`.
+Please read the [README.md](editors/web-viewer/README.md) in there in order to know how to set it up locally.
 
 ## Documentation
 
 - [Language reference](http://docs.mucad.org/latest/language)
 - [Contribute Documentation](CONTRIBUTE.md)
+
+## Licensing
+
+The µcad compiler is licensed under AGPLv3.0.
+The µcad standard library is licensed under MIT license.
 
 ## ❤️ Support the project
 

@@ -17,11 +17,6 @@ WebAssembly (`crates/wasm`).
 The code is compiled again shortly after each edit, errors and warnings are shown in the
 diagnostics panel.
 
-The panels *Code*, *View* and *Diagnostics* can be moved by dragging their tabs: into another
-panel's tabs, to a side of a panel to split it, or with <kbd>Shift</kbd> pressed into a floating
-panel above the others. The layout is saved in the browser and restored on the next visit.
-*Reset layout* restores the default layout.
-
 ## Build
 
 Requirements: [Rust](https://rustup.rs/) with the target `wasm32-unknown-unknown`,
@@ -43,24 +38,3 @@ An example can be opened directly with its index in the URL, e.g. `?example=1`.
 ## Examples
 
 The examples are listed in `src/examples.ts` and imported from the `examples` folder.
-To add an example, import its file and add it to the list:
-
-```ts
-import torus from "../../../examples/torus.mu?raw";
-
-export const examples: Example[] = [
-  // ...
-  { name: "Torus (3D)", code: torus },
-];
-```
-
-## Structure
-
-| File | Content |
-|---|---|
-| `src/main.ts` | Compiles the code, shows the model, the status and the diagnostics, exports |
-| `src/dock.ts` | Dockable panels, which save and restore their layout |
-| `src/editor.ts` | Monaco editor with the µcad language and theme |
-| `src/viewer.ts` | three.js scene with the model, a grid and orbit controls (Z axis up) |
-| `src/examples.ts` | The examples, which can be selected |
-| `src/theme.ts`, `src/style.css` | The µcad default theme |
