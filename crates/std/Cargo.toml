@@ -14,7 +14,7 @@ version.workspace = true
 path = "lib.rs"
 
 [dependencies]
-dirs = "6"
+dirs = "7"
 rust-embed = { version = "8.12", features = ["debug-embed"] }
 toml = "1.1.4"
 semver = { version = "1.0", features = ["serde"] }

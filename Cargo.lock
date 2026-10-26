@@ -2527,6 +2527,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dirs"
+version = "7.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d57d423b3c82e89b9a24ca3091fee61f456a26edbd28d26c65906f4bc1dcd8f"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
 name = "dirs-sys"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4111,9 +4120,9 @@ dependencies = [
 
 [[package]]
 name = "manifold-rust"
-version = "0.13.1"
+version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "895f10126b206ed4e9427f337e3a6d1c586ce7c9cd76c0ac8bca83a4f5f9eb7c"
+checksum = "a60322b26d00d2868b7adde93b823900b0ff5320fd9107498947a913b986b977"
 dependencies = [
  "clipper2-rust",
  "dashu-int",
@@ -4262,7 +4271,7 @@ dependencies = [
  "assert_cmd",
  "clap",
  "clap_complete",
- "dirs",
+ "dirs 6.0.0",
  "env_logger",
  "lazy_static",
  "log",
@@ -4283,7 +4292,7 @@ version = "0.6.0"
 dependencies = [
  "cgmath",
  "derive_more",
- "dirs",
+ "dirs 6.0.0",
  "geo",
  "log",
  "miette",
@@ -4571,7 +4580,7 @@ version = "0.6.0"
 dependencies = [
  "clap",
  "crossbeam",
- "dirs",
+ "dirs 7.0.0",
  "dissimilar",
  "env_logger",
  "log",
@@ -4623,7 +4632,7 @@ dependencies = [
 name = "mucad-std"
 version = "0.6.0"
 dependencies = [
- "dirs",
+ "dirs 7.0.0",
  "mucad-lang-base",
  "rust-embed",
  "semver",
@@ -4642,7 +4651,7 @@ dependencies = [
  "cgmath",
  "clap",
  "crossbeam",
- "dirs",
+ "dirs 7.0.0",
  "env_logger",
  "geo",
  "log",
