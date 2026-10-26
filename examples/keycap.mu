@@ -21,6 +21,7 @@ pub sketch Mu(radius: Length, thickness: Length) {
         x = radius - thickness,
         y = -radius,
     );
+
     (u | r_l | r_r).buffer(thickness * 75%);
 }
 
@@ -44,13 +45,11 @@ const BASE_HEIGHT = 5mm;
 const THICKNESS = 1mm;
 
 sketch KeyCapBaseProfile() {
-    MountProfile() |
-    Rect(KEYCAP_SIZE - THICKNESS).smooth(-1mm).contour(THICKNESS);
+    MountProfile() | Rect(KEYCAP_SIZE - THICKNESS).smooth(-1mm).contour(THICKNESS);
 }
 
 {
     KeyCapBaseProfile().extrude(BASE_HEIGHT);
-
 
     cap_profile = Rect(KEYCAP_SIZE - 1mm).smooth(-1mm).buffer(0.5mm);
 
