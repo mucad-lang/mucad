@@ -3,7 +3,13 @@
 
 import init, { Mucad } from "mucad-wasm";
 import { Dock } from "./dock";
-import { addCompileShortcut, createEditor, setDiagnostics } from "./editor";
+import {
+  addCompileShortcut,
+  addSaveShortcut,
+  createEditor,
+  replaceCode,
+  setDiagnostics,
+} from "./editor";
 import { examples } from "./examples";
 import { Viewer } from "./viewer";
 import "./style.css";
@@ -16,6 +22,7 @@ const select = element<HTMLSelectElement>("examples");
 const status = element<HTMLSpanElement>("status");
 const exportButton = element<HTMLButtonElement>("export");
 const exportButtonCaption = element<HTMLDivElement>("export-btn-caption");
+const saveButton = element<HTMLButtonElement>("save");
 const formatButton = element<HTMLButtonElement>("format");
 const compileButton = element<HTMLButtonElement>("compile");
 const autoUpdate = element<HTMLInputElement>("auto-update");
@@ -95,8 +102,65 @@ function format() {
   const code = editor.getValue();
   const formatted = mucad.format(code);
   if (formatted.success && formatted.formatted) {
-      editor.setValue(formatted.code);
+    replaceCode(editor, formatted.code);
   }
+}
+
+/** A document of the example selection: an example or the code of a shared link. */
+interface OpenDocument {
+  /** The name in the example selection. */
+  name: string;
+  /** The code when it was last saved. */
+  saved: string;
+  /** The code in the editor, also when another document is shown. */
+  code: string;
+}
+
+/** The documents by their value in the example selection, which are kept for this session. */
+const docs = new Map<string, OpenDocument>();
+
+/** The value of the shown document in the example selection. */
+let shownDocument: string | undefined;
+
+/** Add the document `value` to the documents, if it is not there yet, and return it. */
+function docOf(value: string): OpenDocument {
+  let doc = docs.get(value);
+  if (!doc) {
+    const code = examples[Number(value)]?.code ?? "";
+    doc = { name: examples[Number(value)]?.name ?? value, saved: code, code };
+    docs.set(value, doc);
+  }
+  return doc;
+}
+
+/** Show the document `value` in the editor with its unsaved changes. */
+function showDocument(value: string) {
+  select.value = value;
+  shownDocument = value;
+  editor.setValue(docOf(value).code);
+}
+
+/** Show the modified flag of each document in the example selection, and of the shown one. */
+function updateModified() {
+  for (const option of select.options) {
+    const doc = docs.get(option.value);
+    if (doc) {
+      option.textContent = doc.code === doc.saved ? doc.name : `${doc.name} ●`;
+    }
+  }
+  const doc = shownDocument === undefined ? undefined : docs.get(shownDocument);
+  saveButton.classList.toggle("btn-bright", !!doc && doc.code !== doc.saved);
+}
+
+/** Save the shown document, which formats and compiles it. */
+function save() {
+  format();
+  if (shownDocument !== undefined) {
+    const doc = docOf(shownDocument);
+    doc.saved = doc.code = editor.getValue();
+  }
+  updateModified();
+  compileNow();
 }
 
 /** The value of the example selection for the code of a shared link. */
@@ -126,9 +190,11 @@ function showSharedCode(code: string) {
   if (!select.querySelector(`option[value="${SHARED_CODE}"]`)) {
     select.add(new Option("Shared code", SHARED_CODE), 0);
   }
-  select.value = SHARED_CODE;
   const formatted = mucad.format(code);
-  editor.setValue(formatted.success && formatted.formatted ? formatted.code : code);
+  code = formatted.success && formatted.formatted ? formatted.code : code;
+  // Another shared link replaces the shared code, also its unsaved changes.
+  docs.set(SHARED_CODE, { name: "Shared code", saved: code, code });
+  showDocument(SHARED_CODE);
   compileNow();
   viewer.resetCamera();
 }
@@ -273,7 +339,13 @@ document.addEventListener('keydown', (e) => {
     // Ctrl+E or Cmd+E -> Export
     if (e.key.toLowerCase() === 'e') {
       e.preventDefault();
-      exportModel();
+      if (!exportButton.disabled) exportModel();
+    }
+
+    // Ctrl+S or Cmd+S -> Save
+    if (e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        save();
     }
 
     // Ctrl+Enter or Cmd+Enter -> Compile
@@ -291,6 +363,8 @@ document.addEventListener('keydown', (e) => {
 
 // Compile after each change with auto-update, otherwise with the compile button.
 const editor = createEditor(element("editor"), (code) => {
+  if (shownDocument !== undefined) docOf(shownDocument).code = code;
+  updateModified();
   clearTimeout(timer);
   if (autoUpdate.checked) {
     timer = window.setTimeout(() => compile(code), COMPILE_DELAY_MS);
@@ -301,6 +375,7 @@ const editor = createEditor(element("editor"), (code) => {
   if (!sharePanel.hidden) updateShareMenu();
 });
 addCompileShortcut(editor, compileNow);
+addSaveShortcut(editor, save);
 
 // Set version tag
 const version = Mucad.versionString();
@@ -312,12 +387,14 @@ if (versionTag) {
 
 examples.forEach((example, index) => select.add(new Option(example.name, String(index))));
 // An example is compiled at once, also without auto-update, and shown as a whole.
+// Its unsaved changes are kept, when another example is shown.
 select.addEventListener("change", () => {
-  editor.setValue(examples[Number(select.value)].code);
+  showDocument(select.value);
   compileNow();
   viewer.resetCamera();
 });
 exportButton.addEventListener("click", exportModel);
+saveButton.addEventListener("click", save);
 formatButton.addEventListener("click", format);
 compileButton.addEventListener("click", compileNow);
 shareButton.addEventListener("click", toggleShareMenu);
@@ -347,8 +424,8 @@ const shared = sharedLink();
 if (shared.code !== undefined) {
   showSharedCode(shared.code);
 } else {
-  select.value = String(Number(new URLSearchParams(location.search).get("example")) || 0);
-  editor.setValue(examples[Number(select.value)]?.code ?? examples[0].code);
+  const example = Number(new URLSearchParams(location.search).get("example")) || 0;
+  showDocument(String(examples[example] ? example : 0));
   compileNow();
   if (shared.error) showLinkError(shared.error);
 }

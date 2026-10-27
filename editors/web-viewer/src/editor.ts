@@ -133,3 +133,25 @@ export function addCompileShortcut(
 ) {
   editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, compile);
 }
+
+/**
+ * Run `save` with Ctrl+S (Cmd+S on macOS), also when the editor has the focus, instead of
+ * saving the page by the browser.
+ */
+export function addSaveShortcut(editor: monaco.editor.IStandaloneCodeEditor, save: () => void) {
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, save);
+}
+
+/**
+ * Replace the code of the editor as one edit, which can be undone, unlike `setValue`.
+ * The cursor stays at its line and column, as far as they still exist.
+ */
+export function replaceCode(editor: monaco.editor.IStandaloneCodeEditor, code: string) {
+  const model = editor.getModel();
+  if (!model) return;
+  const position = editor.getPosition();
+  editor.pushUndoStop();
+  editor.executeEdits("format", [{ range: model.getFullModelRange(), text: code }]);
+  editor.pushUndoStop();
+  if (position) editor.setPosition(model.validatePosition(position));
+}
