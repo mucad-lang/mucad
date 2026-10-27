@@ -103,7 +103,7 @@ impl Diagnostic {
 }
 
 /// The line and column (from 1, in UTF-16 code units) of the byte `offset` in `code`.
-fn line_column(code: &str, offset: usize) -> (u32, u32) {
+pub(crate) fn line_column(code: &str, offset: usize) -> (u32, u32) {
     let before = code.get(..offset).unwrap_or(code);
     let line_start = before.rfind('\n').map_or(0, |index| index + 1);
     (

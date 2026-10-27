@@ -63,8 +63,50 @@ pub fn resolution_from_str(s: &str) -> Result<prelude::RenderResolution> {
     }
 }
 
-/// Parse a value from a string containing a literal.
+/// Parse a value from a string containing a literal, e.g. `10mm`, `3` or `true`.
+///
+/// A leading `-` negates a quantity or an integer, e.g. `-1.5mm` or `-3`, though the sign is no
+/// part of a literal in code, but a negation. Whitespace around the literal is ignored.
 pub fn value_from_str(s: &str) -> Result<Value> {
+    use mucad_lang_types::Quantity;
+
+    let s = s.trim();
+    // A number follows the sign, e.g. not `- 3` or `--3`.
+    let positive = (s.strip_prefix('-'))
+        .filter(|rest| rest.starts_with(|c: char| c.is_ascii_digit() || c == '.'));
+    match positive {
+        Some(positive) => match literal_from_str(positive)? {
+            Value::Quantity(quantity) => Ok(Value::Quantity(Quantity {
+                value: -quantity.value,
+                ..quantity
+            })),
+            Value::Integer(integer) => Ok(Value::Integer(-integer)),
+            value => Err(miette::miette!("The literal `{value}` cannot be negated")),
+        },
+        None => literal_from_str(s),
+    }
+}
+
+/// The span and the value of the literal at byte `offset` in `code`, also with `offset` right
+/// after it, e.g. `10mm` in `r = 10mm;`, to change it in an editor, see
+/// [`mucad_lang_parse::literal_at`].
+///
+/// Only quantities, integers and bools are literals, e.g. not `10x` with an unknown unit.
+pub fn literal_at(code: &str, offset: usize) -> Option<(mucad_lang_base::Span, Value)> {
+    let span = mucad_lang_parse::literal_at(code, offset)?;
+    let value = value_from_str(&code[span.clone()]).ok()?;
+    value.literal().is_some().then_some((span, value))
+}
+
+/// The literal `literal` increased by `step` in its unit, e.g. `10.1mm` for `10mm` and `0.1`,
+/// see [`Value::step`], `None` if it is no quantity, integer or bool literal or does not change.
+pub fn step_literal(literal: &str, step: mucad_lang_types::Scalar) -> Option<String> {
+    let value = value_from_str(literal).ok()?.step(step)?;
+    Some(value.literal()?.to_string())
+}
+
+/// Parse a value from a string containing a literal without a sign, see [`value_from_str`].
+fn literal_from_str(s: &str) -> Result<Value> {
     use mu::lower::Desugar;
     use mu::parse::Parse;
     use prelude as mu;

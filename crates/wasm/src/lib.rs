@@ -9,10 +9,12 @@ use std::sync::Arc;
 mod completion;
 mod diagnostic;
 mod geometry;
+mod literal;
 mod share;
 
 pub use completion::Completion;
 pub use diagnostic::{Diagnostic, Severity};
+pub use literal::LiteralRange;
 pub use share::SharedLink;
 
 use mu::{
@@ -116,6 +118,25 @@ impl Mucad {
         (self.compiler.completions(&source, offset).into_iter())
             .map(Completion::from)
             .collect()
+    }
+
+    /// The `literal` increased by `step` in its unit, e.g. `10.1mm` for `10mm` and `0.1`,
+    /// `undefined` if it is no quantity, integer or bool literal or does not change.
+    ///
+    /// An integer changes by whole steps only, a bool is toggled by any step.
+    #[wasm_bindgen(js_name = stepLiteral)]
+    pub fn step_literal(literal: &str, step: f64) -> Option<String> {
+        literal::step(literal, step)
+    }
+
+    /// The range of the literal at a position in `code`, e.g. under the cursor, also right
+    /// after it, `undefined` if there is none.
+    ///
+    /// The line and column start at 1, the column is counted in UTF-16 code units like in
+    /// JavaScript.
+    #[wasm_bindgen(js_name = literalAt)]
+    pub fn literal_at(code: &str, line_no: u32, column: u32) -> Option<LiteralRange> {
+        literal::literal_at(code, line_no, column)
     }
 
     /// Format source code. Returns new code as string if parsing has been successful.

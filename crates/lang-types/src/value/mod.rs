@@ -7,6 +7,7 @@
 //! to process or ends up as the overall evaluation result.
 
 mod list;
+mod literal;
 mod math;
 mod matrix;
 pub mod ops;
@@ -20,6 +21,7 @@ use std::rc::Rc;
 
 use fixed::traits::ToFixed;
 pub use list::*;
+pub use literal::Literal;
 pub use matrix::*;
 use mucad_lang_base::{CompactString, DisplayOneLine, ToCompactString};
 pub use quantity::*;
@@ -100,17 +102,6 @@ impl Value {
             (Value::Quantity(lhs), Value::Integer(rhs)) => Ok(Value::Quantity(lhs.pow_int(rhs))),
             (Value::Integer(_lhs), Value::Integer(_rhs)) => todo!(),
             _ => Err(ValueError::InvalidOperator("^".to_string())),
-        }
-    }
-
-    /// Extract boolean value.
-    ///
-    /// # Panics
-    /// Panics if `self` is not a `Value::Bool`. Assumes resolver validated types.
-    pub fn as_bool_unchecked(&self) -> bool {
-        match self {
-            Value::Bool(b) => *b,
-            other => panic!("Expected Value::Bool from type checker, got {other:?}"),
         }
     }
 }

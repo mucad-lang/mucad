@@ -117,6 +117,79 @@ pub fn lex_with<'a>(
     })
 }
 
+/// The span of the literal at byte `offset` in `code`, also with `offset` right after it, e.g.
+/// `10mm` in `r = 10mm;`, to change it in an editor.
+///
+/// A literal is a number with the unit right behind it, e.g. `10mm` or `1.5`, or a bool. A `-`
+/// right in front of a number is its sign, unless it is a subtraction, e.g. not in `a-1`.
+/// Numbers in strings and comments are no literals.
+///
+/// The literal may be invalid, e.g. `10x` with an unknown unit, which the caller checks, e.g. by
+/// parsing it.
+pub fn literal_at(code: &str, offset: usize) -> Option<Span> {
+    let tokens: Vec<_> = lex(code).collect();
+    // Whether a `-` behind the token is a subtraction.
+    let is_operand = |token: &Token| {
+        matches!(
+            token,
+            Token::Identifier(_)
+                | Token::Unit(_)
+                | Token::LiteralInt(_)
+                | Token::LiteralFloat(_)
+                | Token::LiteralBool(_)
+                | Token::LiteralString(_)
+                | Token::FormatStringEnd
+                | Token::SigilCloseBracket
+                | Token::SigilCloseSquareBracket
+                | Token::SigilCloseCurlyBracket
+        )
+    };
+    let is_whitespace_or_comment = |token: &Token| {
+        matches!(
+            token,
+            Token::Whitespace(_)
+                | Token::SingleLineComment(_)
+                | Token::MultiLineComment(_)
+                | Token::DocComment(_)
+                | Token::InnerDocComment(_)
+        )
+    };
+
+    for (index, token) in tokens.iter().enumerate() {
+        let mut span = token.span.clone();
+        match token.value {
+            Token::LiteralBool(_) => (),
+            Token::LiteralInt(_) | Token::LiteralFloat(_) => {
+                // The unit right behind the number, e.g. `mm` in `10mm`.
+                if let Some(unit) = tokens.get(index + 1)
+                    && matches!(unit.value, Token::Unit(_) | Token::Identifier(_))
+                    && unit.span.start == span.end
+                {
+                    span.end = unit.span.end;
+                }
+                // The sign right in front of the number.
+                if let Some(minus) = index.checked_sub(1).map(|index| &tokens[index])
+                    && minus.value == Token::OperatorSubtract
+                    && minus.span.end == span.start
+                {
+                    let previous = tokens[..index - 1]
+                        .iter()
+                        .rev()
+                        .find(|token| !is_whitespace_or_comment(&token.value));
+                    if !previous.is_some_and(|token| is_operand(&token.value)) {
+                        span.start = minus.span.start;
+                    }
+                }
+            }
+            _ => continue,
+        }
+        if span.start <= offset && offset <= span.end {
+            return Some(span);
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -145,6 +218,44 @@ mod tests {
     #[test_case("1.5E+3", vec![LiteralFloat("1.5E+3".into())] ; "positive exponent")]
     fn minus(input: &str, expected: Vec<Token>) {
         assert_eq!(tokens_without_whitespace(input), expected);
+    }
+
+    /// The literal at the cursor `|` in `code`.
+    fn literal(code: &str) -> Option<String> {
+        let offset = code.find('|').expect("A cursor");
+        let code = code.replacen('|', "", 1);
+        literal_at(&code, offset).map(|span| code[span].to_string())
+    }
+
+    #[test_case("r = 1|0mm;", Some("10mm") ; "inside")]
+    #[test_case("r = |10mm;", Some("10mm") ; "at the start")]
+    #[test_case("r = 10mm|;", Some("10mm") ; "at the end")]
+    #[test_case("r = 10m|m;", Some("10mm") ; "in the unit")]
+    #[test_case("f(|1.5, 2)", Some("1.5") ; "argument")]
+    #[test_case("r = -1|0mm;", Some("-10mm") ; "negative")]
+    #[test_case("r = -1.|5mm;", Some("-1.5mm") ; "negative float")]
+    #[test_case("[1, -|2]", Some("-2") ; "negative in a list")]
+    #[test_case("x = a-1|0;", Some("10") ; "subtraction")]
+    #[test_case("x = (a) - 1|0;", Some("10") ; "subtraction with whitespace")]
+    #[test_case("x = a /* c */ -1|0;", Some("10") ; "subtraction with a comment")]
+    #[test_case("x = 2*-|1;", Some("-1") ; "negative factor")]
+    #[test_case("x = 1|e-3;", Some("1e-3") ; "negative exponent")]
+    #[test_case("a = 45|°;", Some("45°") ; "degrees")]
+    #[test_case("a = 5|0%;", Some("50%") ; "percent")]
+    #[test_case("v = 1|0mm/s;", Some("10mm/s") ; "compound unit")]
+    #[test_case("v = 1|0mm / 2;", Some("10mm") ; "division")]
+    #[test_case("v = 1|0x;", Some("10x") ; "unknown unit")]
+    #[test_case("b = tr|ue;", Some("true") ; "bool")]
+    #[test_case("s = \"µ\"; r = 1|0µm;", Some("10µm") ; "after other characters")]
+    #[test_case("x = x|1;", None ; "identifier")]
+    #[test_case("x |= 1;", None ; "operator")]
+    #[test_case("x = (|);", None ; "sigils")]
+    #[test_case("s = \"1|0mm\";", None ; "in a string")]
+    #[test_case("s = \"{1|0mm}\";", Some("10mm") ; "in a format expression")]
+    #[test_case("r = 1mm; // 1|0mm", None ; "in a comment")]
+    #[test_case("/* r = \n 1|0mm */", None ; "in a block comment")]
+    fn literal_at_cursor(code: &str, expected: Option<&str>) {
+        assert_eq!(literal(code).as_deref(), expected);
     }
 
     /// A subtraction without whitespace is parsed, also of floats.
