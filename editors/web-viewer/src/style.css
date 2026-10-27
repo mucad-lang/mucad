@@ -253,6 +253,70 @@ button:disabled {
   background: var(--primary);
 }
 
+/* The name of the shown document and the button of the list of documents as one field. */
+#documents {
+  /* Behind the logo, unlike the share menu. */
+  order: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+#document-name {
+  width: 11rem;
+  height: 2.2rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--darker);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+  background: var(--primary);
+  color: var(--bright);
+  font: inherit;
+}
+
+#document-name:focus {
+  outline: 1px solid var(--guide);
+}
+
+#document-list-button {
+  padding: 0 0.5rem;
+  border-color: var(--darker);
+  border-radius: 0 4px 4px 0;
+  color: var(--bright);
+}
+
+/* The shown document has unsaved changes. */
+#documents.modified::after {
+  content: "●";
+  margin-left: 0.3rem;
+  color: var(--signal);
+}
+
+#document-list {
+  align-items: stretch;
+  gap: 0.2rem;
+  min-width: 100%;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+#document-list button {
+  justify-content: flex-start;
+  border-color: transparent;
+  color: var(--bright);
+}
+
+#document-list button[aria-selected="true"] {
+  border-color: var(--darker);
+  color: var(--signal);
+}
+
+/* The groups of documents: own documents, shared code and examples. */
+.document-group {
+  margin: 0.3rem 0 0;
+  color: var(--darker);
+  font-size: 0.8rem;
+}
+
 /* Hidden elements, also buttons, which are displayed as flex boxes. */
 .dropdown-panel[hidden],
 .dropdown-panel [hidden] {
@@ -356,13 +420,15 @@ button:disabled {
     flex-wrap: nowrap;
   }
 
-  .examples {
+  #documents {
     flex: 1 1 auto;
     min-width: 0;
   }
 
-  #examples {
-    width: 100%;
+  #document-name {
+    flex: 1 1 auto;
+    width: 0;
+    min-width: 0;
   }
 
   .dropdown,

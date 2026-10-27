@@ -19,7 +19,10 @@ import "./style.css";
 const COMPILE_DELAY_MS = 500;
 
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const select = element<HTMLSelectElement>("examples");
+const documentsElement = element<HTMLSpanElement>("documents");
+const documentName = element<HTMLInputElement>("document-name");
+const documentListButton = element<HTMLButtonElement>("document-list-button");
+const documentList = element<HTMLDivElement>("document-list");
 const status = element<HTMLSpanElement>("status");
 const exportButton = element<HTMLButtonElement>("export");
 const exportButtonCaption = element<HTMLDivElement>("export-btn-caption");
@@ -109,9 +112,11 @@ function format() {
   }
 }
 
-/** A document of the example selection: an example or the code of a shared link. */
+/** A document: an example, the code of a shared link or an own document of the user. */
 interface OpenDocument {
-  /** The name in the example selection. */
+  /** Whether it is an example, shared code or an own document, which can be renamed. */
+  kind: "example" | "shared" | "own";
+  /** The name in the list of documents. */
   name: string;
   /** The name in the preamble of a shared link, e.g. of the example. */
   sharedName?: string;
@@ -121,41 +126,121 @@ interface OpenDocument {
   code: string;
 }
 
-/** The documents by their value in the example selection, which are kept for this session. */
+/**
+ * The documents by their keys, which are kept for this session: the index of an example,
+ * `SHARED_CODE` or `own-1`, `own-2`… of own documents.
+ */
 const docs = new Map<string, OpenDocument>();
 
-/** The value of the shown document in the example selection. */
+/** The key of the shown document. */
 let shownDocument: string | undefined;
 
-/** Add the document `value` to the documents, if it is not there yet, and return it. */
-function docOf(value: string): OpenDocument {
-  let doc = docs.get(value);
+/** The number of own documents, which have been created, for their keys. */
+let ownDocuments = 0;
+
+/** Add the example `key` to the documents, if it is not there yet, and return the document. */
+function docOf(key: string): OpenDocument {
+  let doc = docs.get(key);
   if (!doc) {
-    const code = examples[Number(value)]?.code ?? "";
-    const name = examples[Number(value)]?.name ?? value;
-    doc = { name, sharedName: name, saved: code, code };
-    docs.set(value, doc);
+    const code = examples[Number(key)]?.code ?? "";
+    const name = examples[Number(key)]?.name ?? key;
+    doc = { kind: "example", name, sharedName: name, saved: code, code };
+    docs.set(key, doc);
   }
   return doc;
 }
 
-/** Show the document `value` in the editor with its unsaved changes. */
-function showDocument(value: string) {
-  select.value = value;
-  shownDocument = value;
-  editor.setValue(docOf(value).code);
+/** Show the document `key` in the editor with its unsaved changes. */
+function showDocument(key: string) {
+  shownDocument = key;
+  documentName.value = docOf(key).name;
+  editor.setValue(docOf(key).code);
 }
 
-/** Show the modified flag of each document in the example selection, and of the shown one. */
-function updateModified() {
-  for (const option of select.options) {
-    const doc = docs.get(option.value);
-    if (doc) {
-      option.textContent = doc.code === doc.saved ? doc.name : `${doc.name} ●`;
+/** Show the document `key` from the list, compile it at once and look at the whole model. */
+function openDocument(key: string) {
+  showDocument(key);
+  compileNow();
+  viewer.resetCamera();
+}
+
+/**
+ * Apply the name in the name field to the shown document: an own document is renamed, an
+ * example or shared code is copied into a new own document with the name and the unsaved
+ * changes, the example keeps its saved code.
+ *
+ * The name is made unique, e.g. `gear (2)`, an empty name is not applied.
+ */
+function renameDocument() {
+  if (shownDocument === undefined) return;
+  const doc = docOf(shownDocument);
+  const name = documentName.value.trim();
+  if (!name || name === doc.name) {
+    documentName.value = doc.name;
+    return;
+  }
+  const names = new Set([...docs.values()].filter((other) => other !== doc).map((d) => d.name));
+  let unique = name;
+  for (let number = 2; names.has(unique); number++) unique = `${name} (${number})`;
+
+  if (doc.kind === "own") {
+    doc.name = doc.sharedName = unique;
+  } else {
+    const key = `own-${++ownDocuments}`;
+    const code = editor.getValue();
+    docs.set(key, { kind: "own", name: unique, sharedName: unique, saved: doc.saved, code });
+    doc.code = doc.saved;
+    shownDocument = key;
+  }
+  documentName.value = unique;
+  updateModified();
+}
+
+/** Show the documents in groups: own documents, shared code and examples. */
+function renderDocumentList() {
+  const keys = (kind: OpenDocument["kind"]) =>
+    [...docs].filter(([, doc]) => doc.kind === kind).map(([key]) => key);
+  const groups: [string, string[]][] = [
+    ["Own documents", keys("own")],
+    ["Shared code", keys("shared")],
+    ["Examples", examples.map((_, index) => String(index))],
+  ];
+  documentList.replaceChildren();
+  for (const [title, group] of groups) {
+    if (!group.length) continue;
+    const heading = document.createElement("p");
+    heading.className = "document-group";
+    heading.textContent = title;
+    documentList.append(heading);
+    for (const key of group) {
+      const doc = docOf(key);
+      const button = document.createElement("button");
+      button.setAttribute("role", "option");
+      button.setAttribute("aria-selected", String(key === shownDocument));
+      button.textContent = doc.code === doc.saved ? doc.name : `${doc.name} ●`;
+      button.addEventListener("click", () => {
+        showDocumentList(false);
+        openDocument(key);
+      });
+      documentList.append(button);
     }
   }
+}
+
+/** Show or hide the list of documents. */
+function showDocumentList(open: boolean) {
+  if (open) renderDocumentList();
+  documentList.hidden = !open;
+  documentListButton.setAttribute("aria-expanded", String(open));
+}
+
+/** Show the modified flag of the shown document, and of each one in an open list. */
+function updateModified() {
   const doc = shownDocument === undefined ? undefined : docs.get(shownDocument);
-  saveButton.classList.toggle("btn-bright", !!doc && doc.code !== doc.saved);
+  const modified = !!doc && doc.code !== doc.saved;
+  saveButton.classList.toggle("btn-bright", modified);
+  documentsElement.classList.toggle("modified", modified);
+  if (!documentList.hidden) renderDocumentList();
 }
 
 /** Save the shown document, which formats and compiles it. */
@@ -169,7 +254,7 @@ function save() {
   compileNow();
 }
 
-/** The value of the example selection for the code of a shared link. */
+/** The key of the code of a shared link. */
 const SHARED_CODE = "shared";
 
 /**
@@ -201,15 +286,11 @@ function sharedLink(): { code?: string; name?: string; error?: string } {
  * it and look at the whole model.
  */
 function showSharedCode(code: string, name?: string) {
-  if (!select.querySelector(`option[value="${SHARED_CODE}"]`)) {
-    select.add(new Option("Shared code", SHARED_CODE), 0);
-  }
   const formatted = mucad.format(code);
   code = formatted.success && formatted.formatted ? formatted.code : code;
   // Another shared link replaces the shared code, also its unsaved changes.
   const label = name === undefined ? "Shared code" : `${name} (shared)`;
-  docs.set(SHARED_CODE, { name: label, sharedName: name, saved: code, code });
-  updateModified();
+  docs.set(SHARED_CODE, { kind: "shared", name: label, sharedName: name, saved: code, code });
   showDocument(SHARED_CODE);
   compileNow();
   viewer.resetCamera();
@@ -320,9 +401,9 @@ function showMenu(open: boolean) {
   menuButton.setAttribute("aria-expanded", String(open));
 }
 
-/** The name of the shown example or code, e.g. for downloads. */
+/** The name of the shown document, e.g. for downloads. */
 function modelName(): string {
-  return select.selectedOptions[0]?.textContent?.split(" ")[0] ?? "model";
+  return (shownDocument === undefined ? undefined : docs.get(shownDocument)?.sharedName) ?? "model";
 }
 
 /** Download `blob` as file `name`. */
@@ -420,13 +501,16 @@ if (versionTag) {
     versionTag.textContent = "v" + version;
 }
 
-examples.forEach((example, index) => select.add(new Option(example.name, String(index))));
-// An example is compiled at once, also without auto-update, and shown as a whole.
-// Its unsaved changes are kept, when another example is shown.
-select.addEventListener("change", () => {
-  showDocument(select.value);
-  compileNow();
-  viewer.resetCamera();
+// A document is compiled at once, also without auto-update, and shown as a whole.
+// Its unsaved changes are kept, when another document is shown.
+documentListButton.addEventListener("click", () => showDocumentList(documentList.hidden));
+// A new name is applied with Enter or by leaving the name field, Escape restores the name.
+documentName.addEventListener("change", renameDocument);
+documentName.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && shownDocument !== undefined) {
+    documentName.value = docOf(shownDocument).name;
+  }
+  if (event.key === "Enter" || event.key === "Escape") documentName.blur();
 });
 exportButton.addEventListener("click", exportModel);
 saveButton.addEventListener("click", save);
@@ -445,9 +529,12 @@ menuButton.addEventListener("click", () => showMenu(!menu.classList.contains("op
 menu.addEventListener("click", (event) => {
   if ((event.target as Element).closest("button, a")) showMenu(false);
 });
-// The share menu and the menu are hidden by a click outside of them.
+// The list of documents, the share menu and the menu are hidden by a click outside of them.
 document.addEventListener("click", (event) => {
   const target = event.target as Node;
+  if (!documentList.contains(target) && !documentListButton.contains(target)) {
+    showDocumentList(false);
+  }
   if (!sharePanel.contains(target) && !shareButton.contains(target)) sharePanel.hidden = true;
   if (!menu.contains(target) && !menuButton.contains(target)) showMenu(false);
 });
