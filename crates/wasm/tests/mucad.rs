@@ -181,6 +181,40 @@ fn encode_link() {
     assert!(Mucad::encode_link(&"a".repeat(3000), false).is_err());
 }
 
+/// A preamble as JSON object is shared with the code, and read again.
+#[test]
+fn link_with_preamble() {
+    let link =
+        Mucad::encode_link_with_preamble("Circle( r=10mm );\n", r#"{"name":"disc.mu"}"#, false)
+            .expect("A link");
+    let shared = Mucad::decode_link_with_preamble(&link).expect("Shared code");
+    assert_eq!(shared.code(), "Circle(r = 10mm);\n");
+    assert_eq!(shared.preamble(), r#"{"name":"disc.mu"}"#);
+    // The code without the preamble.
+    assert_eq!(
+        Mucad::decode_link(&link),
+        Ok("Circle(r = 10mm);\n".to_string())
+    );
+
+    // Without a preamble, the preamble is empty and the link is the one without preamble.
+    let link =
+        Mucad::encode_link_with_preamble("Circle(r = 10mm);\n", "{}", false).expect("A link");
+    assert_eq!(
+        link,
+        Mucad::encode_link("Circle(r = 10mm);\n", false).expect("A link")
+    );
+    let shared = Mucad::decode_link_with_preamble(&link).expect("Shared code");
+    assert_eq!(shared.preamble(), "{}");
+
+    // No JSON object, or a value, which TOML has not.
+    for preamble in ["", "[1]", r#"{"name":null}"#] {
+        assert!(
+            Mucad::encode_link_with_preamble("x = 1;", preamble, false).is_err(),
+            "{preamble}"
+        );
+    }
+}
+
 /// The QR code of a link is square.
 #[test]
 fn qr_code() {

@@ -113,6 +113,8 @@ function format() {
 interface OpenDocument {
   /** The name in the example selection. */
   name: string;
+  /** The name in the preamble of a shared link, e.g. of the example. */
+  sharedName?: string;
   /** The code when it was last saved. */
   saved: string;
   /** The code in the editor, also when another document is shown. */
@@ -130,7 +132,8 @@ function docOf(value: string): OpenDocument {
   let doc = docs.get(value);
   if (!doc) {
     const code = examples[Number(value)]?.code ?? "";
-    doc = { name: examples[Number(value)]?.name ?? value, saved: code, code };
+    const name = examples[Number(value)]?.name ?? value;
+    doc = { name, sharedName: name, saved: code, code };
     docs.set(value, doc);
   }
   return doc;
@@ -170,10 +173,11 @@ function save() {
 const SHARED_CODE = "shared";
 
 /**
- * The code of a shared link in the URL: in the fragment, e.g. `#wrUBQUQABENpcmNsZShyID0gMTBtbSk7CgM`, or as
- * query parameter `?code=`. Without a shared link, there is neither code nor error.
+ * The code and the name in the preamble of a shared link in the URL: in the fragment, e.g.
+ * `#wrUBQUQABENpcmNsZShyID0gMTBtbSk7CgM`, or as query parameter `?code=`. Without a shared
+ * link, there is neither code nor error.
  */
-function sharedLink(): { code?: string; error?: string } {
+function sharedLink(): { code?: string; name?: string; error?: string } {
   const link =
     location.hash.length > 1
       ? location.hash
@@ -182,21 +186,30 @@ function sharedLink(): { code?: string; error?: string } {
         : undefined;
   if (link === undefined) return {};
   try {
-    return { code: Mucad.decodeLink(link) };
+    const shared = Mucad.decodeLinkWithPreamble(link);
+    const { code, preamble } = shared;
+    shared.free();
+    const { name } = JSON.parse(preamble);
+    return { code, name: typeof name === "string" ? name : undefined };
   } catch (error) {
     return { error: String(error) };
   }
 }
 
-/** Show the code of a shared link formatted, compile it and look at the whole model. */
-function showSharedCode(code: string) {
+/**
+ * Show the code of a shared link formatted under its `name`, e.g. `brick.mu (shared)`, compile
+ * it and look at the whole model.
+ */
+function showSharedCode(code: string, name?: string) {
   if (!select.querySelector(`option[value="${SHARED_CODE}"]`)) {
     select.add(new Option("Shared code", SHARED_CODE), 0);
   }
   const formatted = mucad.format(code);
   code = formatted.success && formatted.formatted ? formatted.code : code;
   // Another shared link replaces the shared code, also its unsaved changes.
-  docs.set(SHARED_CODE, { name: "Shared code", saved: code, code });
+  const label = name === undefined ? "Shared code" : `${name} (shared)`;
+  docs.set(SHARED_CODE, { name: label, sharedName: name, saved: code, code });
+  updateModified();
   showDocument(SHARED_CODE);
   compileNow();
   viewer.resetCamera();
@@ -223,10 +236,15 @@ function showShareError(error?: string) {
   shareError.hidden = error === undefined;
 }
 
-/** The link to the web viewer with the code of the editor, `undefined` after an error. */
+/**
+ * The link to the web viewer with the code of the editor and the name of the shown document in
+ * its preamble, `undefined` after an error.
+ */
 function shareLink(): string | undefined {
+  const name = shownDocument === undefined ? undefined : docOf(shownDocument).sharedName;
+  const preamble = JSON.stringify(name === undefined ? {} : { name });
   try {
-    return Mucad.encodeLink(editor.getValue(), stripComments.checked);
+    return Mucad.encodeLinkWithPreamble(editor.getValue(), preamble, stripComments.checked);
   } catch (error) {
     showShareError(`Cannot share the code: ${error}`);
     return undefined;
@@ -445,7 +463,7 @@ autoUpdate.addEventListener("change", () => {
 // e.g. `?example=1`.
 const shared = sharedLink();
 if (shared.code !== undefined) {
-  showSharedCode(shared.code);
+  showSharedCode(shared.code, shared.name);
 } else {
   const example = Number(new URLSearchParams(location.search).get("example")) || 0;
   showDocument(String(examples[example] ? example : 0));
@@ -456,6 +474,6 @@ if (shared.code !== undefined) {
 // A shared link opened while the viewer runs, e.g. pasted into the address bar.
 window.addEventListener("hashchange", () => {
   const shared = sharedLink();
-  if (shared.code !== undefined) showSharedCode(shared.code);
+  if (shared.code !== undefined) showSharedCode(shared.code, shared.name);
   else if (shared.error) showLinkError(shared.error);
 });

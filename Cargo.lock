@@ -4731,6 +4731,8 @@ dependencies = [
  "js-sys",
  "mucad-driver",
  "qrcode",
+ "serde_json",
+ "toml",
  "wasm-bindgen",
 ]
 

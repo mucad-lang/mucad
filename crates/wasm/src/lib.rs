@@ -9,9 +9,11 @@ use std::sync::Arc;
 mod completion;
 mod diagnostic;
 mod geometry;
+mod share;
 
 pub use completion::Completion;
 pub use diagnostic::{Diagnostic, Severity};
+pub use share::SharedLink;
 
 use mu::{
     base::DiagRenderOptions,
@@ -196,6 +198,27 @@ impl Mucad {
     #[wasm_bindgen(js_name = encodeLink)]
     pub fn encode_link(code: &str, strip: bool) -> Result<String, String> {
         mu::share::link(code, strip).map_err(|err| err.to_string())
+    }
+
+    /// The code and the preamble of a shared link, see `decodeLink`.
+    ///
+    /// The preamble is a JSON object, e.g. `{"name":"brick.mu"}`, `{}` without a preamble.
+    #[wasm_bindgen(js_name = decodeLinkWithPreamble)]
+    pub fn decode_link_with_preamble(link: &str) -> Result<SharedLink, String> {
+        share::decode(link)
+    }
+
+    /// The link to the web viewer with the µcad `code` behind a `preamble`, see `encodeLink`.
+    ///
+    /// The preamble is a JSON object, e.g. `{"name":"brick.mu"}`, which is written as TOML,
+    /// `{}` for no preamble. Fails, e.g. for values, which TOML has not, like `null`.
+    #[wasm_bindgen(js_name = encodeLinkWithPreamble)]
+    pub fn encode_link_with_preamble(
+        code: &str,
+        preamble: &str,
+        strip: bool,
+    ) -> Result<String, String> {
+        share::encode(code, preamble, strip)
     }
 
     /// The modules of the QR code of `text` row by row, 1 for a dark module, without the
