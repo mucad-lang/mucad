@@ -13,9 +13,22 @@
                 <img src="./src/assets/logo_big.svg" alt="µcad" />
                 <span id="version-tag"></span>
             </a>
-            <label class="examples">
-                <select id="examples"></select>
-            </label>
+            <span id="documents" class="dropdown">
+                <input
+                    id="document-name"
+                    aria-label="Document name"
+                    title="The name of the document, a new name of an example creates an own document"
+                    spellcheck="false"
+                    autocomplete="off"
+                />
+                <button
+                    id="document-list-button"
+                    title="Show the documents"
+                    aria-controls="document-list"
+                    aria-expanded="false"
+                >▾</button>
+                <div id="document-list" class="dropdown-panel" role="listbox" hidden></div>
+            </span>
             <span class="dropdown">
                 <button id="share" title="Export the model, or share the code as link or QR code">Share ▾</button>
                 <div id="share-panel" class="dropdown-panel" hidden>
