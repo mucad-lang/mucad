@@ -3,8 +3,9 @@
 
 //! Links to share µcad code in the web viewer, which contain the code.
 //!
-//! The code is compressed with [Brotli](https://www.rfc-editor.org/rfc/rfc7932) and embedded
-//! as URL-safe base64. The code of a link is formatted, when it is decoded.
+//! The code is compressed with [Brotli](https://www.rfc-editor.org/rfc/rfc7932) behind the
+//! [magic](MAGIC) `µ` and embedded as URL-safe base64. The code of a link is formatted, when it
+//! is decoded.
 
 use std::io::{Read, Write};
 
@@ -29,9 +30,12 @@ pub const PLAY_URL: &str = "https://play.mucad.org/#";
 /// The maximum size of the code in a link, in bytes of its UTF-8 encoding.
 pub const MAX_CODE_BYTES: usize = 2048;
 
-/// The maximum size of compressed code: Brotli adds a few bytes to code, which it cannot
-/// compress.
-const MAX_COMPRESSED_BYTES: usize = MAX_CODE_BYTES + 64;
+/// The magic in front of the compressed code: `µ` in UTF-8, the bytes `0xc2 0xb5`.
+const MAGIC: &[u8] = "µ".as_bytes();
+
+/// The maximum size of compressed code with the magic: Brotli adds a few bytes to code, which
+/// it cannot compress.
+const MAX_COMPRESSED_BYTES: usize = MAGIC.len() + MAX_CODE_BYTES + 64;
 
 /// The Brotli quality, the best compression.
 const QUALITY: u32 = 11;
@@ -83,9 +87,10 @@ fn shared_code(code: &str, strip: bool) -> String {
     shared.trim_start().to_string()
 }
 
-/// Compress `bytes` with Brotli.
+/// Compress `bytes` with Brotli behind the magic.
 fn compress(bytes: &[u8]) -> Vec<u8> {
-    let mut writer = brotli::CompressorWriter::new(Vec::new(), BUFFER_SIZE, QUALITY, WINDOW_BITS);
+    let mut writer =
+        brotli::CompressorWriter::new(MAGIC.to_vec(), BUFFER_SIZE, QUALITY, WINDOW_BITS);
     // Writing into a vector cannot fail.
     writer.write_all(bytes).expect("Compressed code");
     writer.into_inner()
@@ -93,8 +98,12 @@ fn compress(bytes: &[u8]) -> Vec<u8> {
 
 /// Decompress code, see [`compress`].
 ///
-/// Fails, if the bytes are no Brotli data, the code is no UTF-8 or longer than allowed.
+/// Fails, if the bytes do not start with the magic, are no Brotli data, the code is no UTF-8 or
+/// longer than allowed.
 fn decompress(bytes: &[u8]) -> Result<String, ShareError> {
+    let bytes = bytes
+        .strip_prefix(MAGIC)
+        .ok_or_else(|| ShareError::InvalidData("no µcad code, the magic µ is missing".into()))?;
     let mut code = Vec::new();
     // At most one byte more than allowed, so that a longer code is not decompressed completely.
     brotli::Decompressor::new(bytes, BUFFER_SIZE)
@@ -108,7 +117,7 @@ fn decompress(bytes: &[u8]) -> Result<String, ShareError> {
 }
 
 /// The link to the web viewer with `code`, which is compressed and embedded as URL-safe base64,
-/// e.g. `https://play.mucad.org/#QTwABENpcmNsZShyID0gMW1tKTsD` for `Circle(r = 1mm);`.
+/// e.g. `https://play.mucad.org/#wrVBPAAEQ2lyY2xlKHIgPSAxbW0pOwM` for `Circle(r = 1mm);`.
 ///
 /// With `strip`, the link contains the code without comments. Fails, if the code has more than
 /// [`MAX_CODE_BYTES`] bytes, without comments with `strip`.
@@ -143,7 +152,7 @@ fn link_data(link: &str) -> &str {
 /// The formatted code of a link, see [`link`].
 ///
 /// The link is a complete link with the code after `#`, as `?code=` or in its path, or only
-/// the link data, e.g. `QTwABENpcmNsZShyID0gMW1tKTsD`. Padding with `=` is optional.
+/// the link data, e.g. `wrVBPAAEQ2lyY2xlKHIgPSAxbW0pOwM`. Padding with `=` is optional.
 ///
 /// The code is parsed and formatted, code with errors is returned unformatted.
 pub fn decode(link: &str) -> Result<String, ShareError> {
@@ -170,6 +179,17 @@ pub fn decode(link: &str) -> Result<String, ShareError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The compressed code starts with the magic `µ`.
+    #[test]
+    fn magic() {
+        assert_eq!(MAGIC, [0xc2, 0xb5]);
+        assert!(compress(b"x = 1;").starts_with(MAGIC));
+        let link = link("x = 1;", false).expect("A link");
+        let data = link.strip_prefix(PLAY_URL).expect("The web viewer");
+        let bytes = URL_SAFE_NO_PAD.decode(data).expect("Base64");
+        assert!(bytes.starts_with(MAGIC));
+    }
 
     /// Code is compressed and decompressed unchanged, also unknown characters and lexer errors.
     #[test]
@@ -242,7 +262,7 @@ mod tests {
     fn decode_link() {
         assert_eq!(
             link("Circle(r = 1mm);", false),
-            Ok("https://play.mucad.org/#QTwABENpcmNsZShyID0gMW1tKTsD".to_string())
+            Ok("https://play.mucad.org/#wrVBPAAEQ2lyY2xlKHIgPSAxbW0pOwM".to_string())
         );
         let link = link("// µcad?>>\nCircle( r=1mm );\n", false).expect("A link");
         let data = link.strip_prefix(PLAY_URL).expect("The web viewer");
@@ -277,9 +297,21 @@ mod tests {
             decode("#a+b/c"),
             Err(ShareError::InvalidBase64(_))
         ));
-        // No Brotli data.
+        // No magic, e.g. Brotli data without it.
         let data = URL_SAFE_NO_PAD.encode("Circle(r = 1mm);");
         assert!(matches!(decode(&data), Err(ShareError::InvalidData(_))));
+        let bytes = compress(b"x = 1;");
+        assert!(matches!(
+            decompress(&bytes[MAGIC.len()..]),
+            Err(ShareError::InvalidData(_))
+        ));
+        assert!(matches!(decompress(b""), Err(ShareError::InvalidData(_))));
+        assert!(matches!(
+            decompress(&MAGIC[..1]),
+            Err(ShareError::InvalidData(_))
+        ));
+        // The magic without Brotli data.
+        assert!(matches!(decompress(MAGIC), Err(ShareError::InvalidData(_))));
         // Truncated data.
         let bytes = compress(b"x = 1;");
         assert!(decompress(&bytes[..bytes.len() - 1]).is_err());
