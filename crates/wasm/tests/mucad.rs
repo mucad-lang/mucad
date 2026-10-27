@@ -192,3 +192,39 @@ fn qr_code() {
     assert_eq!(width, 33);
     assert_eq!(modules[..7], [1; 7]);
 }
+
+/// The names in front of a position are completed with the symbols of the last compilation,
+/// also while typing, after characters outside of ASCII.
+#[test]
+fn complete() {
+    let mut mucad = Mucad::new();
+    let code = "/// A disc.\nsketch Disc() {}\ns = \"µ🚀\"; Disc();\n";
+    assert!(mucad.compile(code).success());
+
+    // The changed code is not compiled, its last line is `s = "µ🚀"; Di`.
+    let typed = "/// A disc.\nsketch Disc() {}\ns = \"µ🚀\"; Di";
+    let completions = mucad.complete(typed, 3, 13);
+    let disc = completions
+        .iter()
+        .find(|completion| completion.name() == "Disc")
+        .expect("Disc");
+    assert_eq!(disc.kind(), "sketch");
+    assert_eq!(disc.doc().as_deref(), Some("A disc."));
+    assert!(
+        completions
+            .iter()
+            .any(|completion| completion.name() == "std")
+    );
+
+    // The symbols of a module after `::`.
+    let completions = mucad.complete("std::geo2d::Ci", 1, 15);
+    let names: Vec<_> = completions
+        .iter()
+        .map(|completion| completion.name())
+        .collect();
+    assert!(names.contains(&"Circle".to_string()), "{names:?}");
+    assert!(!names.contains(&"Disc".to_string()), "{names:?}");
+
+    // Numbers are not completed.
+    assert!(mucad.complete("x = 12", 1, 7).is_empty());
+}

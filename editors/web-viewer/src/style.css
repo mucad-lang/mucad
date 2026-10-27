@@ -167,6 +167,14 @@ body .dockview-theme-dark {
   height: 100%;
 }
 
+/* The suggestions of the editor above the panels, e.g. their documentation beside the editor. */
+#editor-widgets {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 20;
+}
+
 #diagnostics {
   margin: 0;
   padding: 0.5rem 1rem;

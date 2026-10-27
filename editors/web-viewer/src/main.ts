@@ -5,6 +5,7 @@ import init, { Mucad } from "mucad-wasm";
 import { Dock } from "./dock";
 import {
   addCompileShortcut,
+  addCompletion,
   addSaveShortcut,
   createEditor,
   replaceCode,
@@ -384,6 +385,14 @@ const editor = createEditor(element("editor"), (code) => {
 });
 addCompileShortcut(editor, compileNow);
 addSaveShortcut(editor, save);
+// The completions are copied, so that the objects of WebAssembly can be freed at once.
+addCompletion((code, lineNo, column) =>
+  mucad.complete(code, lineNo, column).map((completion) => {
+    const { name, kind, doc } = completion;
+    completion.free();
+    return { name, kind, doc };
+  }),
+);
 
 // Set version tag
 const version = Mucad.versionString();

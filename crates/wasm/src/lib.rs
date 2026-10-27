@@ -6,9 +6,11 @@
 
 use std::sync::Arc;
 
+mod completion;
 mod diagnostic;
 mod geometry;
 
+pub use completion::Completion;
 pub use diagnostic::{Diagnostic, Severity};
 
 use mu::{
@@ -98,6 +100,20 @@ impl Mucad {
                 .render_diag_to_string_with(&diagnostics, &DIAG_OPTIONS),
             model_type: model_type.into(),
         }
+    }
+
+    /// The symbols to complete the path in front of a position in `code`, e.g. the symbols of
+    /// `std::geo2d` for `std::geo2d::Ci`, or the visible names for `Ci`, sorted by name.
+    ///
+    /// The line and column start at 1, the column is counted in UTF-16 code units like in
+    /// JavaScript. The symbols are those of the last compilation, also of another version of
+    /// the code, e.g. while typing.
+    pub fn complete(&self, code: &str, line_no: u32, column: u32) -> Vec<Completion> {
+        let source = mu::Source::from(code);
+        let offset = completion::offset(code, line_no, column);
+        (self.compiler.completions(&source, offset).into_iter())
+            .map(Completion::from)
+            .collect()
     }
 
     /// Format source code. Returns new code as string if parsing has been successful.

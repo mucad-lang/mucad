@@ -3,6 +3,8 @@
 
 import * as monaco from "monaco-editor/editor/editor.api";
 import EditorWorker from "monaco-editor/editor/editor.worker?worker";
+// The API contains no features of the editor, e.g. the suggestions of completions.
+import "monaco-editor/editor/contrib/suggest/browser/suggestController";
 import { type Diagnostic, Severity } from "mucad-wasm";
 import { theme } from "./theme";
 
@@ -10,19 +12,25 @@ self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
 
 const LANGUAGE = "mucad";
 
+/** The keywords of µcad. */
+const KEYWORDS = [
+  "as", "assembly", "const", "else", "enum", "extern", "fn", "if", "init", "match",
+  "material", "mod", "op", "part", "prop", "pub", "return", "sketch", "struct", "super",
+  "type", "unit", "use",
+];
+
+/** The built-in types of µcad. */
+const TYPES = [
+  "Integer", "Scalar", "String", "Color", "Length", "Area", "Volume", "Angle", "Weight",
+  "Density", "Bool",
+];
+
 /** Register the µcad language with keywords, types, units and comments. */
 function registerLanguage() {
   monaco.languages.register({ id: LANGUAGE, extensions: [".mu"] });
   monaco.languages.setMonarchTokensProvider(LANGUAGE, {
-    keywords: [
-      "as", "assembly", "const", "else", "enum", "extern", "fn", "if", "init", "match",
-      "material", "mod", "op", "part", "prop", "pub", "return", "sketch", "struct", "super",
-      "type", "unit", "use",
-    ],
-    types: [
-      "Integer", "Scalar", "String", "Color", "Length", "Area", "Volume", "Angle", "Weight",
-      "Density", "Bool",
-    ],
+    keywords: KEYWORDS,
+    types: TYPES,
     tokenizer: {
       root: [
         [/\/\/.*$/, "comment"],
@@ -116,6 +124,13 @@ export function createEditor(element: HTMLElement, onChange: (code: string) => v
     theme: LANGUAGE,
     automaticLayout: true,
     minimap: { enabled: false },
+    // Suggestions and their documentation may overlap other panels, outside of the dock,
+    // which clips its panels. The class gives them the colors of the theme.
+    fixedOverflowWidgets: true,
+    overflowWidgetsDomNode: Object.assign(document.body.appendChild(document.createElement("div")), {
+      id: "editor-widgets",
+      className: "monaco-editor",
+    }),
     fontSize: 14,
     tabSize: 4,
   });
@@ -154,4 +169,66 @@ export function replaceCode(editor: monaco.editor.IStandaloneCodeEditor, code: s
   editor.executeEdits("format", [{ range: model.getFullModelRange(), text: code }]);
   editor.pushUndoStop();
   if (position) editor.setPosition(model.validatePosition(position));
+}
+
+/** A symbol to complete a path with, e.g. `Circle` for `std::geo2d::Ci`. */
+export interface Completion {
+  name: string;
+  /** e.g. `sketch`, `fn` or `mod`. */
+  kind: string;
+  /** The documentation in Markdown. */
+  doc?: string;
+}
+
+/** The Monaco kinds of the kinds of completions. */
+const COMPLETION_KINDS: Record<string, monaco.languages.CompletionItemKind> = {
+  library: monaco.languages.CompletionItemKind.Module,
+  mod: monaco.languages.CompletionItemKind.Module,
+  sketch: monaco.languages.CompletionItemKind.Class,
+  part: monaco.languages.CompletionItemKind.Class,
+  op: monaco.languages.CompletionItemKind.Method,
+  fn: monaco.languages.CompletionItemKind.Function,
+  "built-in": monaco.languages.CompletionItemKind.Function,
+  const: monaco.languages.CompletionItemKind.Constant,
+};
+
+/**
+ * Complete names with the symbols of `complete` at a line and column (from 1, in UTF-16 code
+ * units), e.g. after `::`, and with keywords and types, unless the name is after `::`.
+ */
+export function addCompletion(
+  complete: (code: string, lineNo: number, column: number) => Completion[],
+) {
+  monaco.languages.registerCompletionItemProvider(LANGUAGE, {
+    // Paths are completed after `::`, like by the language server.
+    triggerCharacters: [":"],
+    provideCompletionItems(model, position) {
+      const word = model.getWordUntilPosition(position);
+      const range = new monaco.Range(
+        position.lineNumber,
+        word.startColumn,
+        position.lineNumber,
+        word.endColumn,
+      );
+      const symbols = complete(model.getValue(), position.lineNumber, position.column);
+      const suggestions: monaco.languages.CompletionItem[] = symbols.map((symbol) => ({
+        label: symbol.name,
+        kind: COMPLETION_KINDS[symbol.kind] ?? monaco.languages.CompletionItemKind.Variable,
+        detail: symbol.kind,
+        documentation: symbol.doc ? { value: symbol.doc } : undefined,
+        insertText: symbol.name,
+        range,
+      }));
+      const before = model.getLineContent(position.lineNumber).slice(0, word.startColumn - 1);
+      if (!before.endsWith("::")) {
+        const words = (names: string[], kind: monaco.languages.CompletionItemKind) =>
+          names.map((name) => ({ label: name, kind, insertText: name, range }));
+        suggestions.push(
+          ...words(KEYWORDS, monaco.languages.CompletionItemKind.Keyword),
+          ...words(TYPES, monaco.languages.CompletionItemKind.TypeParameter),
+        );
+      }
+      return { suggestions };
+    },
+  });
 }
