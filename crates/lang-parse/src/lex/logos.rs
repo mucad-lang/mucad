@@ -35,8 +35,9 @@ pub enum LogosToken<'a> {
     #[regex(r#"(0|[1-9]\d*)\.\."#, callback = token_cow)]
     LiteralIntWithRange(Cow<'a, str>),
     // ~3 times the same regex, with either the leading digits, trailing digits or exponent required
-    // this ensures we have all parts optional, but don't match a lone dot
-    #[regex(r#"((0|[1-9]\d*)\.(\d+)?((e|E)(-|\+)?(\d+))?)|(-?(0|[1-9]\d*)?\.(\d+)((e|E)(-|\+)?(\d+))?)|(-?(0|[1-9]\d*)\.?((e|E)(-|\+)?(\d+)))"#, callback = token_cow)]
+    // this ensures we have all parts optional, but don't match a lone dot.
+    // A `-` in front is no part of the number, but a subtraction or negation, e.g. `a-1.5`.
+    #[regex(r#"((0|[1-9]\d*)\.(\d+)?((e|E)(-|\+)?(\d+))?)|((0|[1-9]\d*)?\.(\d+)((e|E)(-|\+)?(\d+))?)|((0|[1-9]\d*)\.?((e|E)(-|\+)?(\d+)))"#, callback = token_cow)]
     LiteralFloat(Cow<'a, str>),
     #[regex(r#"""#, string_token_callback)]
     Quote(QuoteVariant<'a>),

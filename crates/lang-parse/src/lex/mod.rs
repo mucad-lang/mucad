@@ -120,6 +120,44 @@ pub fn lex_with<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test_case::test_case;
+
+    use Token::{Identifier, LiteralFloat, LiteralInt, OperatorMultiply, OperatorSubtract};
+
+    /// The tokens of `input` without whitespace.
+    fn tokens_without_whitespace(input: &str) -> Vec<Token<'_>> {
+        lex(input)
+            .map(|token| token.value)
+            .filter(|token| !matches!(token, Token::Whitespace(_)))
+            .collect()
+    }
+
+    /// A `-` in front of a number is no part of it, but a subtraction or a negation, unlike the
+    /// `-` of an exponent.
+    #[test_case("a-1.5", vec![Identifier("a".into()), OperatorSubtract, LiteralFloat("1.5".into())] ; "subtract float")]
+    #[test_case("3.0-1.5", vec![LiteralFloat("3.0".into()), OperatorSubtract, LiteralFloat("1.5".into())] ; "subtract float from float")]
+    #[test_case("a-1", vec![Identifier("a".into()), OperatorSubtract, LiteralInt("1".into())] ; "subtract integer")]
+    #[test_case("-1.5", vec![OperatorSubtract, LiteralFloat("1.5".into())] ; "negative float")]
+    #[test_case("-.5", vec![OperatorSubtract, LiteralFloat(".5".into())] ; "negative float without leading digits")]
+    #[test_case("-1e3", vec![OperatorSubtract, LiteralFloat("1e3".into())] ; "negative float with exponent")]
+    #[test_case("2*-1.5", vec![LiteralInt("2".into()), OperatorMultiply, OperatorSubtract, LiteralFloat("1.5".into())] ; "multiply negative float")]
+    #[test_case("1e-3", vec![LiteralFloat("1e-3".into())] ; "negative exponent")]
+    #[test_case("1.5E+3", vec![LiteralFloat("1.5E+3".into())] ; "positive exponent")]
+    fn minus(input: &str, expected: Vec<Token>) {
+        assert_eq!(tokens_without_whitespace(input), expected);
+    }
+
+    /// A subtraction without whitespace is parsed, also of floats.
+    #[cfg(feature = "parser")]
+    #[test_case("b = a-1.5;" ; "subtract float")]
+    #[test_case("b = 3.0-1.5;" ; "subtract float from float")]
+    #[test_case("b = a-1;" ; "subtract integer")]
+    #[test_case("b = -1.5mm;" ; "negative quantity")]
+    #[test_case("b = 2*-1.5;" ; "multiply negative float")]
+    fn parse_minus(code: &str) {
+        let source = mucad_lang_base::Source::from(code);
+        assert!(crate::parse(&source).is_ok(), "{code}");
+    }
 
     /// The tokens of `input` lexed with `options`.
     fn tokens(input: &str, options: LexOptions) -> Vec<Token<'_>> {
