@@ -98,11 +98,102 @@ pub fn literal_at(code: &str, offset: usize) -> Option<(mucad_lang_base::Span, V
     value.literal().is_some().then_some((span, value))
 }
 
-/// The literal `literal` increased by `step` in its unit, e.g. `10.1mm` for `10mm` and `0.1`,
-/// see [`Value::step`], `None` if it is no quantity, integer or bool literal or does not change.
-pub fn step_literal(literal: &str, step: mucad_lang_types::Scalar) -> Option<String> {
-    let value = value_from_str(literal).ok()?.step(step)?;
-    Some(value.literal()?.to_string())
+/// A literal after a step, see [`step_literal_at`].
+#[derive(Debug, Clone, PartialEq)]
+pub struct SteppedLiteral {
+    /// The literal, e.g. `1.60mm`.
+    pub text: String,
+    /// The byte span of the stepped digit in the text, e.g. to select it, `None` for a bool or a
+    /// number with an exponent.
+    pub digit: Option<mucad_lang_base::Span>,
+}
+
+/// The digits of the number in `literal`, e.g. `1.5` in `-1.5mm`, as byte span, `None` with an
+/// exponent, e.g. `1e3mm`.
+fn number_span(literal: &str) -> Option<mucad_lang_base::Span> {
+    let start = usize::from(literal.starts_with('-'));
+    let end = start
+        + literal[start..]
+            .find(|c: char| !c.is_ascii_digit() && c != '.')
+            .unwrap_or(literal.len() - start);
+    let exponent = literal[end..].starts_with(['e', 'E'])
+        && literal[end + 1..].starts_with(|c: char| c.is_ascii_digit() || c == '-' || c == '+');
+    (start < end && !exponent).then_some(start..end)
+}
+
+/// The literal `literal` stepped by the digit at byte `cursor`, e.g. `12.4mm` for `12.3mm`, the
+/// cursor in front of `3` and `factor` 1, `None` if it is no quantity, integer or bool literal.
+///
+/// The step is `factor` (e.g. `-10`) times the place of the digit, e.g. `0.1` for the first
+/// decimal: of the digit right of the cursor, else left of it, else of the last digit, e.g. with
+/// the cursor on the unit. Without digits, e.g. `1e3mm`, the step is `factor`. A bool is toggled.
+///
+/// The decimals are kept, e.g. `1.60mm` for `1.59mm` and `0.01`. The stepped digit is at the same
+/// place, also when the literal gets wider or a sign, e.g. `10.0` for `9.9`.
+pub fn step_literal_at(
+    literal: &str,
+    cursor: usize,
+    factor: mucad_lang_types::Scalar,
+) -> Option<SteppedLiteral> {
+    use mucad_lang_types::Scalar;
+
+    let value = value_from_str(literal).ok()?;
+    let is_digit = |index: usize| {
+        literal
+            .as_bytes()
+            .get(index)
+            .is_some_and(u8::is_ascii_digit)
+    };
+    // The place of the digit, e.g. `1` for tens and `-1` for tenths, and the decimals.
+    let place = number_span(literal).and_then(|number| {
+        let point = literal[number.clone()]
+            .find('.')
+            .map_or(number.end, |i| number.start + i);
+        let digit = [cursor, cursor.wrapping_sub(1)]
+            .into_iter()
+            .find(|index| number.contains(index) && is_digit(*index))
+            .or_else(|| number.clone().rev().find(|index| is_digit(*index)))?;
+        let place = match digit < point {
+            true => (point - digit - 1) as i32,
+            false => point as i32 - digit as i32,
+        };
+        let decimals = number
+            .end
+            .saturating_sub(point + 1)
+            .max((-place).max(0) as usize);
+        Some((place, decimals))
+    });
+
+    let step = match place {
+        Some((place, _)) => {
+            (0..place.unsigned_abs()).try_fold(factor, |step, _| match place > 0 {
+                true => step.checked_mul(Scalar::from_num(10)),
+                false => step.checked_div(Scalar::from_num(10)),
+            })?
+        }
+        None => factor,
+    };
+    let stepped = value.step(step)?;
+    let literal = stepped.literal()?;
+    let text = match place {
+        Some((_, decimals)) if matches!(stepped, Value::Quantity(_)) => {
+            format!("{literal:.decimals$}")
+        }
+        _ => literal.to_string(),
+    };
+
+    // The digit at the same place in the new text.
+    let digit = place.zip(number_span(&text)).map(|((place, _), number)| {
+        let point = text[number.clone()]
+            .find('.')
+            .map_or(number.end, |i| number.start + i);
+        let digit = match place >= 0 {
+            true => point.saturating_sub(place as usize + 1).max(number.start),
+            false => (point + place.unsigned_abs() as usize).min(number.end - 1),
+        };
+        digit..digit + 1
+    });
+    Some(SteppedLiteral { text, digit })
 }
 
 /// Parse a value from a string containing a literal without a sign, see [`value_from_str`].

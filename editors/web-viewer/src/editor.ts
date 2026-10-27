@@ -232,3 +232,82 @@ export function addCompletion(
     },
   });
 }
+
+/** The range of a literal in a line, e.g. under the cursor. */
+export interface LiteralRange {
+  lineNo: number;
+  startColumn: number;
+  endColumn: number;
+}
+
+/** A literal after a step, with its stepped digit in UTF-16 code units from its start. */
+export interface SteppedLiteral {
+  text: string;
+  digitStart?: number;
+  digitEnd?: number;
+}
+
+/** The factors of the steps of literals by the modifiers of the arrow keys. */
+const LITERAL_STEPS: [number, number][] = [
+  [monaco.KeyMod.Alt, 1],
+  [monaco.KeyMod.Alt | monaco.KeyMod.Shift, 10],
+];
+
+/**
+ * Step the literal under the cursor or at the start of the selection by its digit there, e.g.
+ * `12.4mm` for `12.3mm` with the cursor in front of `3`: Alt+↑/↓ by the place of the digit,
+ * Alt+Shift+↑/↓ by ten times it.
+ *
+ * The keys only step a literal, which `literalAt` finds at a line and column, `stepLiteral`
+ * steps it by the digit at a cursor in the literal. The stepped digit is selected, so that the
+ * next step is of the same digit, consecutive steps are undone at once. `onStep` is called
+ * after each step, e.g. to compile the code.
+ */
+export function addLiteralStepping(
+  editor: monaco.editor.IStandaloneCodeEditor,
+  literalAt: (code: string, lineNo: number, column: number) => LiteralRange | undefined,
+  stepLiteral: (literal: string, cursor: number, factor: number) => SteppedLiteral | undefined,
+  onStep: () => void,
+) {
+  /** The range of the literal at the start of the selection, and the start of the selection. */
+  const literalAtSelection = () => {
+    const model = editor.getModel();
+    const position = editor.getSelection()?.getStartPosition();
+    if (!model || !position) return undefined;
+    const range = literalAt(model.getValue(), position.lineNumber, position.column);
+    if (!range) return undefined;
+    const { lineNo, startColumn, endColumn } = range;
+    return { range: new monaco.Range(lineNo, startColumn, lineNo, endColumn), position };
+  };
+
+  // The keys are only bound on a literal, otherwise they keep their default behavior.
+  const onLiteral = editor.createContextKey<boolean>("mucadLiteral", false);
+  editor.onDidChangeCursorSelection(() => onLiteral.set(literalAtSelection() !== undefined));
+
+  // The version of the code after the last step: a step of the unchanged code is merged into
+  // the undo step of the steps before.
+  let steppedVersion: number | undefined;
+  const step = (factor: number) => {
+    const model = editor.getModel();
+    const literal = literalAtSelection();
+    if (!model || !literal) return;
+    const { range, position } = literal;
+    const cursor = position.column - range.startColumn;
+    const stepped = stepLiteral(model.getValueInRange(range), cursor, factor);
+    if (stepped === undefined) return;
+    if (model.getAlternativeVersionId() !== steppedVersion) editor.pushUndoStop();
+    // The stepped digit is selected, otherwise the literal, e.g. a bool.
+    const { startLineNumber: line, startColumn: start } = range;
+    const selection =
+      stepped.digitStart !== undefined && stepped.digitEnd !== undefined
+        ? new monaco.Selection(line, start + stepped.digitStart, line, start + stepped.digitEnd)
+        : new monaco.Selection(line, start, line, start + stepped.text.length);
+    editor.executeEdits("step-literal", [{ range, text: stepped.text }], [selection]);
+    steppedVersion = model.getAlternativeVersionId();
+    onStep();
+  };
+  for (const [modifiers, factor] of LITERAL_STEPS) {
+    editor.addCommand(modifiers | monaco.KeyCode.UpArrow, () => step(factor), "mucadLiteral");
+    editor.addCommand(modifiers | monaco.KeyCode.DownArrow, () => step(-factor), "mucadLiteral");
+  }
+}

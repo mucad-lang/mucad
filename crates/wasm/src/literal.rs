@@ -42,9 +42,57 @@ impl LiteralRange {
     }
 }
 
-/// The literal `literal` increased by `step` in its unit, see [`mucad_driver::step_literal`].
-pub fn step(literal: &str, step: f64) -> Option<String> {
-    mucad_driver::step_literal(literal, Scalar::checked_from_num(step)?)
+/// A literal after a step, see `Mucad.stepLiteralAt`.
+///
+/// Positions are counted in UTF-16 code units from the start of the literal, like in JavaScript.
+#[wasm_bindgen]
+#[derive(Clone, Debug, PartialEq)]
+pub struct SteppedLiteral {
+    text: String,
+    digit: Option<(u32, u32)>,
+}
+
+#[wasm_bindgen]
+impl SteppedLiteral {
+    /// The literal, e.g. `1.60mm`.
+    #[wasm_bindgen(getter)]
+    pub fn text(&self) -> String {
+        self.text.clone()
+    }
+
+    /// The start of the stepped digit, e.g. to select it, `undefined` without a digit, e.g. of a
+    /// bool.
+    #[wasm_bindgen(getter, js_name = digitStart)]
+    pub fn digit_start(&self) -> Option<u32> {
+        self.digit.map(|(start, _)| start)
+    }
+
+    /// The end of the stepped digit.
+    #[wasm_bindgen(getter, js_name = digitEnd)]
+    pub fn digit_end(&self) -> Option<u32> {
+        self.digit.map(|(_, end)| end)
+    }
+}
+
+/// The `literal` stepped by `factor` times the place of the digit at `cursor` (in UTF-16 code
+/// units), see [`mucad_driver::step_literal_at`].
+pub fn step_at(literal: &str, cursor: u32, factor: f64) -> Option<SteppedLiteral> {
+    let utf16 = |text: &str| text.encode_utf16().count() as u32;
+    let cursor = (literal.char_indices())
+        .find(|(index, _)| utf16(&literal[..*index]) >= cursor)
+        .map_or(literal.len(), |(index, _)| index);
+    let stepped =
+        mucad_driver::step_literal_at(literal, cursor, Scalar::checked_from_num(factor)?)?;
+    let digit = (stepped.digit).map(|digit| {
+        (
+            utf16(&stepped.text[..digit.start]),
+            utf16(&stepped.text[..digit.end]),
+        )
+    });
+    Some(SteppedLiteral {
+        text: stepped.text,
+        digit,
+    })
 }
 
 /// The range of the literal at a line and column (from 1, in UTF-16 code units) in `code`,

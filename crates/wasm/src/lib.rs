@@ -14,7 +14,7 @@ mod share;
 
 pub use completion::Completion;
 pub use diagnostic::{Diagnostic, Severity};
-pub use literal::LiteralRange;
+pub use literal::{LiteralRange, SteppedLiteral};
 pub use share::SharedLink;
 
 use mu::{
@@ -120,13 +120,16 @@ impl Mucad {
             .collect()
     }
 
-    /// The `literal` increased by `step` in its unit, e.g. `10.1mm` for `10mm` and `0.1`,
-    /// `undefined` if it is no quantity, integer or bool literal or does not change.
+    /// The `literal` stepped by `factor` (e.g. `1`, `-10`) times the place of the digit at
+    /// `cursor`, e.g. `12.4mm` for `12.3mm` with the cursor in front of `3`, `undefined` if it is
+    /// no quantity, integer or bool literal.
     ///
-    /// An integer changes by whole steps only, a bool is toggled by any step.
-    #[wasm_bindgen(js_name = stepLiteral)]
-    pub fn step_literal(literal: &str, step: f64) -> Option<String> {
-        literal::step(literal, step)
+    /// Without a digit at the cursor, the last digit is stepped, e.g. with the cursor on the
+    /// unit, a bool is toggled. The decimals are kept. The cursor and the stepped digit are
+    /// counted in UTF-16 code units from the start of the literal, like in JavaScript.
+    #[wasm_bindgen(js_name = stepLiteralAt)]
+    pub fn step_literal_at(literal: &str, cursor: u32, factor: f64) -> Option<SteppedLiteral> {
+        literal::step_at(literal, cursor, factor)
     }
 
     /// The range of the literal at a position in `code`, e.g. under the cursor, also right

@@ -8,6 +8,9 @@ WebAssembly (`crates/wasm`).
 - Examples from the repository's `examples` folder
 - Models in their colors, e.g. of `#[color = "red"]`
 - Errors and warnings as squiggles in the code
+- Literals under the cursor, e.g. `12.5mm`, `3` or `true`, are stepped with Alt+↑/↓ by the
+  digit at the cursor, e.g. by 0.1 in front of `5`, with Alt+Shift+↑/↓ by ten times it, bools
+  are toggled
 - Export of 3D models as STL and of 2D sketches as SVG
 - Shared links with the Brotli-compressed code, e.g.
   `https://play.mucad.org/#wrUBQUQABENpcmNsZShyID0gMTBtbSk7CgM`: the *Share* menu copies a link

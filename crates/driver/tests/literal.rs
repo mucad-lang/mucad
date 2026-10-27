@@ -35,18 +35,46 @@ fn literal_at_value() {
     );
 }
 
-#[test_case("10mm", 0.1, Some("10.1mm") ; "quantity by 0.1")]
-#[test_case("10mm", -11.0, Some("-1mm") ; "quantity below zero")]
-#[test_case("-1mm", 1.0, Some("0mm") ; "negative quantity")]
-#[test_case("2.5cm", 0.1, Some("2.6cm") ; "in its unit")]
-#[test_case("10.0", 1.0, Some("11.0") ; "scalar keeps decimal point")]
-#[test_case("3", 10.0, Some("13") ; "integer")]
-#[test_case("-7", 10.0, Some("3") ; "negative integer")]
-#[test_case("3", 0.1, None ; "integer by 0.1")]
-#[test_case("true", 1.0, Some("false") ; "bool")]
-#[test_case("\"a\"", 1.0, None ; "string")]
-#[test_case("x", 1.0, None ; "no literal")]
-fn step_literal(literal: &str, step: f64, expected: Option<&str>) {
-    let stepped = mucad_driver::step_literal(literal, Scalar::from_num(step));
-    assert_eq!(stepped.as_deref(), expected);
+/// The literal `literal` with the cursor `|` stepped by `factor`, with the stepped digit in
+/// brackets, e.g. `1[3].5mm`.
+fn step(literal: &str, factor: f64) -> Option<String> {
+    let cursor = literal.find('|').expect("A cursor");
+    let literal = literal.replacen('|', "", 1);
+    let stepped = mucad_driver::step_literal_at(&literal, cursor, Scalar::from_num(factor))?;
+    Some(match stepped.digit {
+        Some(digit) => format!(
+            "{}[{}]{}",
+            &stepped.text[..digit.start],
+            &stepped.text[digit.clone()],
+            &stepped.text[digit.end..]
+        ),
+        None => stepped.text,
+    })
+}
+
+#[test_case("|123.45mm", 1.0, Some("[2]23.45mm") ; "hundreds")]
+#[test_case("1|23.45mm", 1.0, Some("1[3]3.45mm") ; "tens")]
+#[test_case("12|3.45mm", 1.0, Some("12[4].45mm") ; "ones")]
+#[test_case("123.|45mm", 1.0, Some("123.[5]5mm") ; "tenths")]
+#[test_case("123.4|5mm", 1.0, Some("123.4[6]mm") ; "hundredths")]
+#[test_case("12|.5", 1.0, Some("1[3].5") ; "digit left of the point")]
+#[test_case("123.45|mm", -1.0, Some("123.4[4]mm") ; "last digit on the unit")]
+#[test_case("123.45m|m", 1.0, Some("123.4[6]mm") ; "last digit inside the unit")]
+#[test_case("4|5°", 1.0, Some("4[6]°") ; "degrees")]
+#[test_case("1|0mm", 10.0, Some("2[0]mm") ; "shift")]
+#[test_case("1.5|9", 1.0, Some("1.6[0]") ; "decimals are kept")]
+#[test_case("10.0|", 1.0, Some("10.[1]") ; "scalar")]
+#[test_case("9.|9", 1.0, Some("10.[0]") ; "wider")]
+#[test_case("|10mm", -1.0, Some("[0]mm") ; "narrower")]
+#[test_case("|0.5", -1.0, Some("-[0].5") ; "gets a sign")]
+#[test_case("-|0.5", 1.0, Some("[0].5") ; "loses the sign")]
+#[test_case("-1|.5mm", -1.0, Some("-[2].5mm") ; "negative")]
+#[test_case("1|23", 1.0, Some("1[3]3") ; "integer")]
+#[test_case("|3", -10.0, Some("-[7]") ; "negative integer")]
+#[test_case("1e3|mm", 1.0, Some("1001mm") ; "exponent")]
+#[test_case("tr|ue", 1.0, Some("false") ; "bool")]
+#[test_case("\"a|\"", 1.0, None ; "string")]
+#[test_case("x|", 1.0, None ; "no literal")]
+fn step_literal_at(literal: &str, factor: f64, expected: Option<&str>) {
+    assert_eq!(step(literal, factor).as_deref(), expected);
 }

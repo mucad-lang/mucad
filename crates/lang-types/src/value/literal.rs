@@ -43,7 +43,7 @@ impl Value {
 /// [`Value::literal`].
 ///
 /// Unlike the value, a quantity without unit keeps a decimal point, e.g. `10.0`, so that it is
-/// no integer.
+/// no integer. A precision is the number of decimals of a quantity, e.g. `1.60mm` for `{:.2}`.
 #[derive(Clone, Copy, Debug)]
 pub struct Literal<'a>(&'a Value);
 
@@ -51,7 +51,10 @@ impl std::fmt::Display for Literal<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.0 {
             Value::Quantity(quantity) => {
-                let literal = quantity.to_string();
+                let literal = match f.precision() {
+                    Some(precision) => format!("{quantity:.precision$}"),
+                    None => quantity.to_string(),
+                };
                 match quantity.unit.is_none() && !literal.contains(['.', 'e', 'E']) {
                     true => write!(f, "{literal}.0"),
                     false => write!(f, "{literal}"),
@@ -139,5 +142,17 @@ mod tests {
         );
         assert_eq!(literal(&Value::Bool(false)).as_deref(), Some("false"));
         assert_eq!(literal(&Value::String("a".into())), None);
+
+        // With a precision, the decimals of a quantity are kept.
+        let value = quantity(1.6, Unit::Millimeter);
+        assert_eq!(
+            format!("{:.2}", value.literal().expect("A literal")),
+            "1.60mm"
+        );
+        let value = quantity(10.0, Unit::None);
+        assert_eq!(
+            format!("{:.0}", value.literal().expect("A literal")),
+            "10.0"
+        );
     }
 }

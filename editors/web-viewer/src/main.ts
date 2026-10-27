@@ -6,6 +6,7 @@ import { Dock } from "./dock";
 import {
   addCompileShortcut,
   addCompletion,
+  addLiteralStepping,
   addSaveShortcut,
   createEditor,
   replaceCode,
@@ -617,6 +618,28 @@ const editor = createEditor(element("editor"), (code) => {
 });
 addCompileShortcut(editor, compileNow);
 addSaveShortcut(editor, save);
+// Literals are stepped with Alt+↑/↓ by the digit at the cursor, the results are copied, so that
+// the objects of WebAssembly can be freed at once. A step is compiled at once with auto-update.
+addLiteralStepping(
+  editor,
+  (code, lineNo, column) => {
+    const range = Mucad.literalAt(code, lineNo, column);
+    if (range === undefined) return undefined;
+    const { lineNo: line, startColumn, endColumn } = range;
+    range.free();
+    return { lineNo: line, startColumn, endColumn };
+  },
+  (literal, cursor, factor) => {
+    const stepped = Mucad.stepLiteralAt(literal, cursor, factor);
+    if (stepped === undefined) return undefined;
+    const { text, digitStart, digitEnd } = stepped;
+    stepped.free();
+    return { text, digitStart, digitEnd };
+  },
+  () => {
+    if (autoUpdate.checked) compileNow();
+  },
+);
 // The completions are copied, so that the objects of WebAssembly can be freed at once.
 addCompletion((code, lineNo, column) =>
   mucad.complete(code, lineNo, column).map((completion) => {
