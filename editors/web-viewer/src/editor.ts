@@ -201,7 +201,7 @@ export function addCompletion(
 ) {
   monaco.languages.registerCompletionItemProvider(LANGUAGE, {
     // Paths are completed after `::`, like by the language server.
-    triggerCharacters: [":"],
+    triggerCharacters: [":", "."],
     provideCompletionItems(model, position) {
       const word = model.getWordUntilPosition(position);
       const range = new monaco.Range(
