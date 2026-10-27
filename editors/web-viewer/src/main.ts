@@ -243,7 +243,7 @@ function updateModified() {
   if (!documentList.hidden) renderDocumentList();
 }
 
-/** Save the shown document, which formats and compiles it. */
+/** Save the shown document, which formats and compiles it and shows its link in the URL. */
 function save() {
   format();
   if (shownDocument !== undefined) {
@@ -252,6 +252,7 @@ function save() {
   }
   updateModified();
   compileNow();
+  updateUrl();
 }
 
 /** The key of the code of a shared link. */
@@ -319,13 +320,38 @@ function showShareError(error?: string) {
 
 /**
  * The link to the web viewer with the code of the editor and the name of the shown document in
- * its preamble, `undefined` after an error.
+ * its preamble, with `strip` without comments.
+ *
+ * Fails, e.g. for code, which is too long for a link.
  */
-function shareLink(): string | undefined {
+function encodeLink(strip: boolean): string {
   const name = shownDocument === undefined ? undefined : docOf(shownDocument).sharedName;
   const preamble = JSON.stringify(name === undefined ? {} : { name });
+  return Mucad.encodeLinkWithPreamble(editor.getValue(), preamble, strip);
+}
+
+/**
+ * Show the link of the code of the editor in the address bar, e.g. after saving, so that it can
+ * be bookmarked and is opened again after a reload.
+ *
+ * The URL is replaced without a new entry in the history and without opening the link again.
+ * Code, which is too long for a link, removes the link from the URL, which would be outdated.
+ */
+function updateUrl() {
+  const url = new URL(location.href);
+  url.searchParams.delete("code");
   try {
-    return Mucad.encodeLinkWithPreamble(editor.getValue(), preamble, stripComments.checked);
+    url.hash = encodeLink(false).split("#")[1];
+  } catch {
+    url.hash = "";
+  }
+  history.replaceState(null, "", url);
+}
+
+/** The link to share the code of the editor, `undefined` after an error. */
+function shareLink(): string | undefined {
+  try {
+    return encodeLink(stripComments.checked);
   } catch (error) {
     showShareError(`Cannot share the code: ${error}`);
     return undefined;
