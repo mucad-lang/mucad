@@ -34,12 +34,14 @@ const copyLinkButton = element<HTMLButtonElement>("copy-link");
 const qrCanvas = element<HTMLCanvasElement>("qr-canvas");
 const qrDownloadButton = element<HTMLButtonElement>("qr-download");
 const stripComments = element<HTMLInputElement>("strip-comments");
+const menu = element<HTMLDivElement>("menu");
+const menuButton = element<HTMLButtonElement>("menu-button");
 
 const dock = new Dock(element("dock"), [
   { id: "editor", title: "Code", element: element("editor") },
   { id: "view", title: "View", element: element("view") },
   { id: "diagnostics", title: "Diagnostics", element: diagnostics },
-]);
+], "view");
 
 await init();
 const mucad = new Mucad();
@@ -293,6 +295,12 @@ function toggleShareMenu() {
   if (!sharePanel.hidden) updateShareMenu();
 }
 
+/** Show or hide the menu of actions and links on phones. */
+function showMenu(open: boolean) {
+  menu.classList.toggle("open", open);
+  menuButton.setAttribute("aria-expanded", String(open));
+}
+
 /** The name of the shown example or code, e.g. for downloads. */
 function modelName(): string {
   return select.selectedOptions[0]?.textContent?.split(" ")[0] ?? "model";
@@ -405,10 +413,16 @@ stripComments.addEventListener("change", () => {
   // The shown QR code is of the link with the new setting.
   updateShareMenu();
 });
-// The share menu is hidden by a click outside of it.
+menuButton.addEventListener("click", () => showMenu(!menu.classList.contains("open")));
+// The menu is hidden after an action or link, but not after switching auto-update.
+menu.addEventListener("click", (event) => {
+  if ((event.target as Element).closest("button, a")) showMenu(false);
+});
+// The share menu and the menu are hidden by a click outside of them.
 document.addEventListener("click", (event) => {
   const target = event.target as Node;
   if (!sharePanel.contains(target) && !shareButton.contains(target)) sharePanel.hidden = true;
+  if (!menu.contains(target) && !menuButton.contains(target)) showMenu(false);
 });
 autoUpdate.addEventListener("change", () => {
   localStorage.setItem(AUTO_UPDATE_KEY, String(autoUpdate.checked));

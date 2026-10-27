@@ -9,42 +9,13 @@
     </head>
     <body>
         <header>
-            <a
-                href="https://mucad.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="logo"
-                style="
-                    position: relative;
-                    display: inline-block;
-                    text-decoration: none;
-                "
-            >
-                <img
-                    src="./src/assets/logo_big.svg"
-                    alt="Big Logo"
-                    style="width: auto; height: 64px"
-                />
-                <span
-                    id="version-tag"
-                    style="
-                        position: absolute;
-                        bottom: 2px;
-                        right: 4px;
-                        font-size: 11px;
-                    "
-                ></span>
+            <a href="https://mucad.org" target="_blank" rel="noopener noreferrer" class="logo">
+                <img src="./src/assets/logo_big.svg" alt="µcad" />
+                <span id="version-tag"></span>
             </a>
-            <label>
+            <label class="examples">
                 <select id="examples"></select>
             </label>
-            <button id="save" title="Save, format and compile the code">Save <kbd class="shortcut-key">S</kbd></button>
-            <button id="compile">Compile <kbd class="shortcut-key">Enter</kbd></button>
-            <label class="toggle" title="Compile after each change">
-                <input type="checkbox" id="auto-update" checked />
-                Auto-update
-            </label>
-            <button id="format">Format <kbd class="shortcut-key">F</kbd></button>
             <span class="dropdown">
                 <button id="share" title="Export the model, or share the code as link or QR code">Share ▾</button>
                 <div id="share-panel" class="dropdown-panel" hidden>
@@ -62,37 +33,52 @@
 
             <span id="status"></span>
 
-            <a
-                href="https://rust.services"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn-link"
-                id="rust-services"
-                style="margin-left: auto"
-            >
-                Proudly made by
-                <span class="rustservices-icon"></span>
-            </a>
+            <!-- The actions and links, which are a menu on phones. -->
+            <div id="menu">
+                <button id="save" title="Save, format and compile the code">Save <kbd class="shortcut-key">S</kbd></button>
+                <button id="compile">Compile <kbd class="shortcut-key">Enter</kbd></button>
+                <label class="toggle" title="Compile after each change">
+                    <input type="checkbox" id="auto-update" checked />
+                    Auto-update
+                </label>
+                <button id="format">Format <kbd class="shortcut-key">F</kbd></button>
 
-            <a
-                href="https://codeberg.org/mucad/mucad/issues"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn-link btn-bright"
-                id="reportbug"
-            >
-                Report a bug
-            </a>
+                <nav class="links">
+                    <a
+                        href="https://rust.services"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-link"
+                        id="rust-services"
+                    >
+                        <span class="made-by">Proudly made by</span>
+                        <span class="rustservices-icon"></span>
+                    </a>
 
-            <a
-                href="https://codeberg.org/mucad/mucad"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn-link"
-                id="codeberg-link"
-            >
-                <span class="codeberg-icon"></span>
-            </a>
+                    <a
+                        href="https://codeberg.org/mucad/mucad/issues"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-link btn-bright"
+                        id="reportbug"
+                    >
+                        Report a bug
+                    </a>
+
+                    <a
+                        href="https://codeberg.org/mucad/mucad"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-link"
+                        id="codeberg-link"
+                    >
+                        <span class="codeberg-icon"></span>
+                        <span class="menu-label">Codeberg</span>
+                    </a>
+                </nav>
+            </div>
+
+            <button id="menu-button" title="Menu" aria-controls="menu" aria-expanded="false">☰</button>
         </header>
         <main id="dock"></main>
         <!-- The panel contents, which are moved into the dock. -->

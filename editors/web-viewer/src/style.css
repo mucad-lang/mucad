@@ -29,24 +29,47 @@ body {
   flex-direction: column;
 }
 
+/* One row on wide screens, which wraps on narrow ones, the items themselves do not wrap. */
 header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5em;
-  padding: 0.5rem 0.5rem;
+  gap: 0.5rem;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--darker);
+  white-space: nowrap;
 }
 
 .logo {
-  color: var(--signal);
-  font-size: 1.4rem;
-  font-weight: bold;
+  position: relative;
+  display: inline-block;
   color: var(--bright);
+  text-decoration: none;
+}
+
+.logo img {
+  display: block;
+  width: auto;
+  height: 64px;
+}
+
+#version-tag {
+  position: absolute;
+  right: 4px;
+  bottom: 2px;
+  font-size: 11px;
+}
+
+/* The links on the right of the header, which wrap together. */
+.links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
 }
 
 select,
 button {
-  margin-left: 0.5rem;
   padding: 0.3rem 0.6rem;
   border: 1px solid var(--darker);
   border-radius: 4px;
@@ -176,7 +199,6 @@ body .dockview-theme-dark {
 select,
 button,
 .btn-link {
-  margin-left: 0.5rem;
   height: 2.2rem;          /* Forces an identical height across all elements */
   padding: 0 0.6rem;       /* Horizontal padding only; vertical is handled by height */
   border-radius: 4px;
@@ -211,7 +233,7 @@ button:disabled {
 .dropdown-panel {
   position: absolute;
   top: calc(100% + 0.3rem);
-  left: 0.5rem;
+  left: 0;
   z-index: 10;
   display: flex;
   flex-direction: column;
@@ -245,4 +267,142 @@ button:disabled {
   width: 16rem;
   height: 16rem;
   image-rendering: pixelated;
+}
+
+/*
+ * The menu of actions and links is a dropdown on phones only. Otherwise, its items are items
+ * of the header, which are in front of the share button and behind it.
+ */
+#menu {
+  display: contents;
+}
+
+#menu > :not(.links) {
+  order: 1;
+}
+
+.dropdown,
+#status {
+  order: 2;
+}
+
+.links {
+  order: 3;
+}
+
+#menu-button,
+.menu-label {
+  display: none;
+}
+
+/* Without enough room, the made by link is the logo only. */
+@media (max-width: 1500px) {
+  .made-by {
+    display: none;
+  }
+}
+
+/* Phones: smaller logo and buttons, and no shortcuts, which need a keyboard. */
+@media (max-width: 768px) {
+  header {
+    gap: 0.4rem;
+  }
+
+  .logo img {
+    height: 40px;
+  }
+
+  #version-tag {
+    right: 0;
+    bottom: -4px;
+    font-size: 9px;
+  }
+
+  header select,
+  header button,
+  header .btn-link {
+    padding: 0 0.4rem;
+  }
+
+  .shortcut-key {
+    display: none;
+  }
+
+  /* The share menu below the header, wherever the share button is in the wrapped header. */
+  header {
+    position: relative;
+  }
+
+  .dropdown {
+    position: static;
+  }
+
+  .dropdown-panel {
+    top: 100%;
+    right: 0.5rem;
+    left: 0.5rem;
+  }
+
+  /* One row with the menu button on the right, the example selection takes the rest. */
+  header {
+    flex-wrap: nowrap;
+  }
+
+  .examples {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  #examples {
+    width: 100%;
+  }
+
+  .dropdown,
+  #status,
+  .links,
+  #menu > :not(.links) {
+    order: 0;
+  }
+
+  #menu-button {
+    display: inline-flex;
+    margin-left: auto;
+    font-size: 1.2rem;
+  }
+
+  /* The menu below the header on the right, its items are a column. */
+  #menu {
+    display: none;
+  }
+
+  #menu.open {
+    position: absolute;
+    top: 100%;
+    right: 0.5rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding: 0.6rem;
+    border: 1px solid var(--darker);
+    border-radius: 4px;
+    background: var(--primary);
+  }
+
+  #menu .links {
+    flex-direction: column;
+    align-items: stretch;
+    margin-left: 0;
+  }
+
+  #menu button,
+  #menu .btn-link {
+    justify-content: center;
+  }
+
+  .made-by,
+  .menu-label {
+    display: inline;
+  }
 }
