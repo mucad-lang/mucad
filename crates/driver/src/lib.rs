@@ -10,7 +10,8 @@ mod formatter;
 
 pub mod prelude;
 pub mod share;
-//mod session;
+
+#[cfg(not(target_arch = "wasm32"))]
 mod watcher;
 
 use mucad_lang_base::{DiagRenderOptions, IssueList, ToDiagnostics};

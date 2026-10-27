@@ -111,7 +111,10 @@ pub mod md {
 // =========================================================================
 
 pub use crate::config::DriverConfig;
+
+#[cfg(not(target_arch = "wasm32"))]
 pub use crate::watcher::Watcher;
+
 pub use crate::{Compiler, compiler::CompileResult};
 
 pub use crate::{Report, Result, report};
