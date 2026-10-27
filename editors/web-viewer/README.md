@@ -10,7 +10,7 @@ WebAssembly (`crates/wasm`).
 - Errors and warnings as squiggles in the code
 - Export of 3D models as STL and of 2D sketches as SVG
 - Shared links with the Brotli-compressed code, e.g.
-  `https://play.mucad.org/#wrVBRAAEQ2lyY2xlKHIgPSAxMG1tKTsKAw`: the *Share* menu copies a link
+  `https://play.mucad.org/#wrUBQUQABENpcmNsZShyID0gMTBtbSk7CgM`: the *Share* menu copies a link
   with the code of the editor and shows its QR code with a PNG download, *Strip comments*
   shares the code without comments
 - Dockable panels with [Dockview](https://dockview.dev/)
