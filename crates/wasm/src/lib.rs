@@ -181,7 +181,7 @@ impl Mucad {
     }
 
     /// The formatted µcad code of a shared link, e.g. of
-    /// `https://play.mucad.org/#wrVBPAAEQ2lyY2xlKHIgPSAxbW0pOwM`, code with errors is unformatted.
+    /// `https://play.mucad.org/#wrUBQTwABENpcmNsZShyID0gMW1tKTsD`, code with errors is unformatted.
     ///
     /// The link may be complete, with the code in its path, after `#` or as `?code=`,
     /// or only the link data, e.g. `location.hash`. Fails, e.g. for an invalid link.

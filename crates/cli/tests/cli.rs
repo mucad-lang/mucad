@@ -455,7 +455,7 @@ fn compile_displays_link() {
         .assert()
         .success()
         .stdout(predicate::str::contains(format!(
-            "--- Link ---\n{}wrVBRAAEQ2lyY2xlKHIgPSAxMG1tKTsKAw\n--- QR code ---\n",
+            "--- Link ---\n{}wrUBQUQABENpcmNsZShyID0gMTBtbSk7CgM\n--- QR code ---\n",
             mu::share::PLAY_URL
         )))
         .stdout(predicate::str::contains('█'));

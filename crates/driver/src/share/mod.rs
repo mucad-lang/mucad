@@ -3,9 +3,19 @@
 
 //! Links to share µcad code in the web viewer, which contain the code.
 //!
-//! The code is compressed with [Brotli](https://www.rfc-editor.org/rfc/rfc7932) behind the
-//! [magic](MAGIC) `µ` and embedded as URL-safe base64. The code of a link is formatted, when it
-//! is decoded.
+//! A link contains URL-safe base64 of the [magic](MAGIC) `µ`, the [version](VERSION) of the
+//! encoding as one byte and the text compressed with
+//! [Brotli](https://www.rfc-editor.org/rfc/rfc7932).
+//!
+//! The text starts with an optional preamble in TOML between lines `+++`, followed by the µcad
+//! code, which is formatted when it is decoded:
+//!
+//! ```text
+//! +++
+//! name = "Test"
+//! +++
+//! Circle(r = 1mm);
+//! ```
 
 use std::io::{Read, Write};
 
@@ -30,12 +40,21 @@ pub const PLAY_URL: &str = "https://play.mucad.org/#";
 /// The maximum size of the code in a link, in bytes of its UTF-8 encoding.
 pub const MAX_CODE_BYTES: usize = 2048;
 
-/// The magic in front of the compressed code: `µ` in UTF-8, the bytes `0xc2 0xb5`.
+/// The magic at the start of the encoding: `µ` in UTF-8, the bytes `0xc2 0xb5`.
 const MAGIC: &[u8] = "µ".as_bytes();
 
-/// The maximum size of compressed code with the magic: Brotli adds a few bytes to code, which
-/// it cannot compress.
-const MAX_COMPRESSED_BYTES: usize = MAGIC.len() + MAX_CODE_BYTES + 64;
+/// The version of the encoding, the byte after the magic.
+const VERSION: u8 = 1;
+
+/// The magic and the version in front of the compressed text.
+const HEADER: [u8; 3] = [MAGIC[0], MAGIC[1], VERSION];
+
+/// The line before and after the preamble.
+const PREAMBLE_DELIMITER: &str = "+++";
+
+/// The maximum size of the encoding: Brotli adds a few bytes to text, which it cannot
+/// compress.
+const MAX_COMPRESSED_BYTES: usize = HEADER.len() + MAX_CODE_BYTES + 64;
 
 /// The Brotli quality, the best compression.
 const QUALITY: u32 = 11;
@@ -58,6 +77,18 @@ pub enum ShareError {
     /// The link contains no valid compressed code.
     #[error("the link contains no valid code: {0}")]
     InvalidData(String),
+    /// The preamble is no valid TOML, or cannot be written between its delimiters.
+    #[error("the preamble is invalid: {0}")]
+    InvalidPreamble(String),
+}
+
+/// Shared code with its preamble.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct SharedCode {
+    /// The preamble, e.g. `name = "Test"`, which is empty without a preamble.
+    pub preamble: toml::Table,
+    /// The µcad code after the preamble.
+    pub code: String,
 }
 
 /// The code to share, with `strip` without comments and whitespace at the start.
@@ -87,23 +118,87 @@ fn shared_code(code: &str, strip: bool) -> String {
     shared.trim_start().to_string()
 }
 
-/// Compress `bytes` with Brotli behind the magic.
+/// Whether `line` is the delimiter of the preamble, also with `\r\n` at its end.
+fn is_delimiter(line: &str) -> bool {
+    line.trim_end() == PREAMBLE_DELIMITER
+}
+
+/// The text to encode: the preamble between delimiters, if there is one, and the code.
+///
+/// Code, whose first line is a delimiter, gets an empty preamble, so that it is no preamble.
+/// Fails, if a line of the preamble in TOML is a delimiter, e.g. in a multi-line string.
+fn shared_text(preamble: &toml::Table, code: &str) -> Result<String, ShareError> {
+    if preamble.is_empty() && !code.lines().next().is_some_and(is_delimiter) {
+        return Ok(code.to_string());
+    }
+    let toml =
+        toml::to_string(preamble).map_err(|err| ShareError::InvalidPreamble(err.to_string()))?;
+    if toml.lines().any(is_delimiter) {
+        return Err(ShareError::InvalidPreamble(format!(
+            "a line of it is {PREAMBLE_DELIMITER}"
+        )));
+    }
+    Ok(format!(
+        "{PREAMBLE_DELIMITER}\n{toml}{PREAMBLE_DELIMITER}\n{code}"
+    ))
+}
+
+/// The preamble and the code of decoded text, see [`shared_text`].
+///
+/// Fails, if the preamble is not closed or no valid TOML.
+fn split_preamble(text: &str) -> Result<SharedCode, ShareError> {
+    let mut lines = text.split_inclusive('\n');
+    let Some(first) = lines.next().filter(|line| is_delimiter(line)) else {
+        return Ok(SharedCode {
+            preamble: toml::Table::new(),
+            code: text.to_string(),
+        });
+    };
+    let start = first.len();
+    let mut end = start;
+    for line in lines {
+        if is_delimiter(line) {
+            let preamble = text[start..end]
+                .parse()
+                .map_err(|err: toml::de::Error| ShareError::InvalidPreamble(err.to_string()))?;
+            return Ok(SharedCode {
+                preamble,
+                code: text[end + line.len()..].to_string(),
+            });
+        }
+        end += line.len();
+    }
+    Err(ShareError::InvalidData(format!(
+        "the preamble is not closed by {PREAMBLE_DELIMITER}"
+    )))
+}
+
+/// Compress `bytes` with Brotli behind the header.
 fn compress(bytes: &[u8]) -> Vec<u8> {
     let mut writer =
-        brotli::CompressorWriter::new(MAGIC.to_vec(), BUFFER_SIZE, QUALITY, WINDOW_BITS);
+        brotli::CompressorWriter::new(HEADER.to_vec(), BUFFER_SIZE, QUALITY, WINDOW_BITS);
     // Writing into a vector cannot fail.
     writer.write_all(bytes).expect("Compressed code");
     writer.into_inner()
 }
 
-/// Decompress code, see [`compress`].
+/// Decompress text, see [`compress`].
 ///
-/// Fails, if the bytes do not start with the magic, are no Brotli data, the code is no UTF-8 or
-/// longer than allowed.
+/// Fails, if the bytes do not start with the magic and the version, are no Brotli data, the
+/// text is no UTF-8 or longer than allowed.
 fn decompress(bytes: &[u8]) -> Result<String, ShareError> {
     let bytes = bytes
         .strip_prefix(MAGIC)
         .ok_or_else(|| ShareError::InvalidData("no µcad code, the magic µ is missing".into()))?;
+    let bytes = match bytes.split_first() {
+        Some((&VERSION, bytes)) => bytes,
+        Some((version, _)) => {
+            return Err(ShareError::InvalidData(format!(
+                "the version {version} of the encoding is not supported, only {VERSION}"
+            )));
+        }
+        None => return Err(ShareError::InvalidData("the version is missing".into())),
+    };
     let mut code = Vec::new();
     // At most one byte more than allowed, so that a longer code is not decompressed completely.
     brotli::Decompressor::new(bytes, BUFFER_SIZE)
@@ -116,19 +211,30 @@ fn decompress(bytes: &[u8]) -> Result<String, ShareError> {
     String::from_utf8(code).map_err(|err| ShareError::InvalidData(err.to_string()))
 }
 
-/// The link to the web viewer with `code`, which is compressed and embedded as URL-safe base64,
-/// e.g. `https://play.mucad.org/#wrVBPAAEQ2lyY2xlKHIgPSAxbW0pOwM` for `Circle(r = 1mm);`.
-///
-/// With `strip`, the link contains the code without comments. Fails, if the code has more than
-/// [`MAX_CODE_BYTES`] bytes, without comments with `strip`.
+/// The link to the web viewer with `code` without preamble, see [`link_with_preamble`],
+/// e.g. `https://play.mucad.org/#wrUBQTwABENpcmNsZShyID0gMW1tKTsD` for `Circle(r = 1mm);`.
 pub fn link(code: &str, strip: bool) -> Result<String, ShareError> {
-    let code = shared_code(code, strip);
-    if code.len() > MAX_CODE_BYTES {
-        return Err(ShareError::TooLong(code.len()));
+    link_with_preamble(code, &toml::Table::new(), strip)
+}
+
+/// The link to the web viewer with `code` behind the `preamble`, if it is not empty, which are
+/// compressed and embedded as URL-safe base64, see the [module](self).
+///
+/// With `strip`, the link contains the code without comments. Fails, if the preamble and the
+/// code have more than [`MAX_CODE_BYTES`] bytes, without comments with `strip`, or if the
+/// preamble cannot be written, see [`ShareError::InvalidPreamble`].
+pub fn link_with_preamble(
+    code: &str,
+    preamble: &toml::Table,
+    strip: bool,
+) -> Result<String, ShareError> {
+    let text = shared_text(preamble, &shared_code(code, strip))?;
+    if text.len() > MAX_CODE_BYTES {
+        return Err(ShareError::TooLong(text.len()));
     }
     Ok(format!(
         "{PLAY_URL}{}",
-        URL_SAFE_NO_PAD.encode(compress(code.as_bytes()))
+        URL_SAFE_NO_PAD.encode(compress(text.as_bytes()))
     ))
 }
 
@@ -149,13 +255,18 @@ fn link_data(link: &str) -> &str {
     }
 }
 
-/// The formatted code of a link, see [`link`].
+/// The formatted code of a link without its preamble, see [`decode_with_preamble`].
+pub fn decode(link: &str) -> Result<String, ShareError> {
+    Ok(decode_with_preamble(link)?.code)
+}
+
+/// The preamble and the formatted code of a link, see [`link_with_preamble`].
 ///
 /// The link is a complete link with the code after `#`, as `?code=` or in its path, or only
-/// the link data, e.g. `wrVBPAAEQ2lyY2xlKHIgPSAxbW0pOwM`. Padding with `=` is optional.
+/// the link data, e.g. `wrUBQTwABENpcmNsZShyID0gMW1tKTsD`. Padding with `=` is optional.
 ///
 /// The code is parsed and formatted, code with errors is returned unformatted.
-pub fn decode(link: &str) -> Result<String, ShareError> {
+pub fn decode_with_preamble(link: &str) -> Result<SharedCode, ShareError> {
     let data = link_data(link);
     // A longer link contains more code than allowed, which is not decoded.
     if data.len() > MAX_COMPRESSED_BYTES.div_ceil(3) * 4 {
@@ -168,27 +279,113 @@ pub fn decode(link: &str) -> Result<String, ShareError> {
     let bytes = engine
         .decode(data)
         .map_err(|err| ShareError::InvalidBase64(err.to_string()))?;
-    let code = decompress(&bytes)?;
-    let source = mu::Source::from(code.as_str());
-    Ok(match mu::parse::parse(&source) {
-        Ok((ast, _)) => mu::format::format_ast(&ast, &mu::FormatConfig::default()),
-        Err(_) => code,
-    })
+    let mut shared = split_preamble(&decompress(&bytes)?)?;
+    let source = mu::Source::from(shared.code.as_str());
+    if let Ok((ast, _)) = mu::parse::parse(&source) {
+        shared.code = mu::format::format_ast(&ast, &mu::FormatConfig::default());
+    }
+    Ok(shared)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    /// The compressed code starts with the magic `µ`.
+    /// The link of compressed `text`, e.g. with a preamble, which [`link`] does not write.
+    fn link_of_text(text: &str) -> String {
+        format!(
+            "{PLAY_URL}{}",
+            URL_SAFE_NO_PAD.encode(compress(text.as_bytes()))
+        )
+    }
+
+    /// The compressed code starts with the magic `µ` and the version.
     #[test]
-    fn magic() {
-        assert_eq!(MAGIC, [0xc2, 0xb5]);
-        assert!(compress(b"x = 1;").starts_with(MAGIC));
+    fn header() {
+        assert_eq!(HEADER, [0xc2, 0xb5, 1]);
+        assert!(compress(b"x = 1;").starts_with(&HEADER));
         let link = link("x = 1;", false).expect("A link");
         let data = link.strip_prefix(PLAY_URL).expect("The web viewer");
         let bytes = URL_SAFE_NO_PAD.decode(data).expect("Base64");
-        assert!(bytes.starts_with(MAGIC));
+        assert!(bytes.starts_with(&HEADER));
+    }
+
+    /// Another version of the encoding fails, also without a version.
+    #[test]
+    fn version() {
+        let mut bytes = compress(b"x = 1;");
+        bytes[MAGIC.len()] = VERSION + 1;
+        let message = |bytes: &[u8]| match decompress(bytes) {
+            Err(ShareError::InvalidData(message)) => message,
+            result => panic!("Invalid data: {result:?}"),
+        };
+        assert_eq!(
+            message(&bytes),
+            "the version 2 of the encoding is not supported, only 1"
+        );
+        assert_eq!(message(MAGIC), "the version is missing");
+    }
+
+    /// The preamble is written between delimiters in front of the code, and read again.
+    #[test]
+    fn preamble() {
+        let preamble: toml::Table = "name = \"Test\"".parse().expect("TOML");
+        assert_eq!(
+            shared_text(&preamble, "x = 1;").as_deref(),
+            Ok("+++\nname = \"Test\"\n+++\nx = 1;")
+        );
+        let link = link_with_preamble("// c\nx=1;\n", &preamble, true).expect("A link");
+        assert_eq!(
+            decode_with_preamble(&link),
+            Ok(SharedCode {
+                preamble: preamble.clone(),
+                code: "x = 1;\n".into()
+            })
+        );
+        assert_eq!(decode(&link).as_deref(), Ok("x = 1;\n"));
+
+        // Without preamble, nothing is written in front of the code.
+        assert_eq!(
+            shared_text(&toml::Table::new(), "x = 1;").as_deref(),
+            Ok("x = 1;")
+        );
+        let shared = decode_with_preamble(&super::link("x = 1;", false).expect("A link"));
+        assert_eq!(shared.map(|shared| shared.preamble), Ok(toml::Table::new()));
+
+        // Code, which starts with a delimiter, gets an empty preamble.
+        let text = shared_text(&toml::Table::new(), "+++\nx").expect("A text");
+        assert_eq!(text, "+++\n+++\n+++\nx");
+        assert_eq!(
+            split_preamble(&text).map(|shared| shared.code).as_deref(),
+            Ok("+++\nx")
+        );
+
+        // Lines may end with `\r\n`.
+        let shared = split_preamble("+++\r\nname = \"Test\"\r\n+++\r\nx = 1;").expect("Shared");
+        assert_eq!(shared.preamble, preamble);
+        assert_eq!(shared.code, "x = 1;");
+    }
+
+    /// A preamble, which is not closed or no TOML, fails, also one with a line of a delimiter.
+    #[test]
+    fn invalid_preamble() {
+        assert!(matches!(
+            decode(&link_of_text("+++\nname = \"Test\"\nx = 1;")),
+            Err(ShareError::InvalidData(_))
+        ));
+        assert!(matches!(
+            decode(&link_of_text("+++\nname = \n+++\nx = 1;")),
+            Err(ShareError::InvalidPreamble(_))
+        ));
+        // A string with a delimiter line is written escaped, or the preamble fails.
+        let preamble: toml::Table = "text = \"a\\n+++\\nb\"".parse().expect("TOML");
+        match link_with_preamble("x = 1;", &preamble, false) {
+            Ok(link) => assert_eq!(
+                decode_with_preamble(&link).map(|shared| shared.preamble),
+                Ok(preamble)
+            ),
+            Err(err) => assert!(matches!(err, ShareError::InvalidPreamble(_)), "{err}"),
+        }
     }
 
     /// Code is compressed and decompressed unchanged, also unknown characters and lexer errors.
@@ -262,7 +459,7 @@ mod tests {
     fn decode_link() {
         assert_eq!(
             link("Circle(r = 1mm);", false),
-            Ok("https://play.mucad.org/#wrVBPAAEQ2lyY2xlKHIgPSAxbW0pOwM".to_string())
+            Ok("https://play.mucad.org/#wrUBQTwABENpcmNsZShyID0gMW1tKTsD".to_string())
         );
         let link = link("// µcad?>>\nCircle( r=1mm );\n", false).expect("A link");
         let data = link.strip_prefix(PLAY_URL).expect("The web viewer");
@@ -310,8 +507,11 @@ mod tests {
             decompress(&MAGIC[..1]),
             Err(ShareError::InvalidData(_))
         ));
-        // The magic without Brotli data.
-        assert!(matches!(decompress(MAGIC), Err(ShareError::InvalidData(_))));
+        // The header without Brotli data.
+        assert!(matches!(
+            decompress(&HEADER),
+            Err(ShareError::InvalidData(_))
+        ));
         // Truncated data.
         let bytes = compress(b"x = 1;");
         assert!(decompress(&bytes[..bytes.len() - 1]).is_err());
