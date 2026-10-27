@@ -89,8 +89,6 @@ done
 
 # --- Build ------------------------------------------------------------------------------------
 
-npm audit fix --force
-
 echo "⚙️  Building the WebAssembly package..."
 npm run wasm
 # After the WebAssembly package, which is a dependency in package.json.
