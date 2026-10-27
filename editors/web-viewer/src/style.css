@@ -310,6 +310,27 @@ button:disabled {
   color: var(--signal);
 }
 
+/* A document in the list with a delete button for own documents. */
+.document-row {
+  display: flex;
+  gap: 0.2rem;
+}
+
+#document-list .document-row button[role="option"] {
+  flex: 1;
+}
+
+#document-list .document-delete {
+  width: auto;
+  justify-content: center;
+  color: var(--darker);
+}
+
+#document-list .document-delete:hover {
+  border-color: var(--complementary);
+  color: var(--complementary);
+}
+
 /* The groups of documents: own documents, shared code and examples. */
 .document-group {
   margin: 0.3rem 0 0;

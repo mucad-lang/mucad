@@ -179,21 +179,96 @@ function renameDocument() {
     documentName.value = doc.name;
     return;
   }
+  if (doc.kind === "own") {
+    doc.name = doc.sharedName = uniqueName(name, doc);
+    documentName.value = doc.name;
+  } else {
+    copyDocument(name);
+  }
+  storeDocuments();
+  updateModified();
+}
+
+/** `name` or, if another document than `doc` has it, a unique name like `gear (2)`. */
+function uniqueName(name: string, doc?: OpenDocument): string {
   const names = new Set([...docs.values()].filter((other) => other !== doc).map((d) => d.name));
   let unique = name;
   for (let number = 2; names.has(unique); number++) unique = `${name} (${number})`;
+  return unique;
+}
 
-  if (doc.kind === "own") {
-    doc.name = doc.sharedName = unique;
-  } else {
-    const key = `own-${++ownDocuments}`;
-    const code = editor.getValue();
-    docs.set(key, { kind: "own", name: unique, sharedName: unique, saved: doc.saved, code });
-    doc.code = doc.saved;
-    shownDocument = key;
-  }
+/**
+ * Copy the shown example or shared code into a new own document with `name` and show it.
+ *
+ * The own document has the unsaved changes, the example or shared code keeps its saved code,
+ * because only own documents can be changed.
+ */
+function copyDocument(name: string): OpenDocument {
+  const source = docOf(shownDocument!);
+  const unique = uniqueName(name);
+  const key = `own-${++ownDocuments}`;
+  const doc: OpenDocument = {
+    kind: "own",
+    name: unique,
+    sharedName: unique,
+    saved: source.saved,
+    code: editor.getValue(),
+  };
+  docs.set(key, doc);
+  source.code = source.saved;
+  shownDocument = key;
   documentName.value = unique;
+  return doc;
+}
+
+/** Delete the own document `key` after a confirmation, the first example is shown instead. */
+function deleteDocument(key: string) {
+  const doc = docOf(key);
+  if (!confirm(`Delete "${doc.name}"? It cannot be restored.`)) return;
+  docs.delete(key);
+  storeDocuments();
+  if (key === shownDocument) openDocument("0");
   updateModified();
+}
+
+/** The local storage key of the own documents. */
+const DOCUMENTS_KEY = "mucad.documents";
+
+/** An own document in the local storage: its name and its saved code, no unsaved changes. */
+interface StoredDocument {
+  name: string;
+  code: string;
+}
+
+/**
+ * Store the saved code of the own documents in the local storage of the browser, e.g. after
+ * saving, renaming or deleting one.
+ *
+ * The browser is asked once to keep the storage, also when it runs out of space.
+ */
+function storeDocuments() {
+  const own: StoredDocument[] = [...docs.values()]
+    .filter((doc) => doc.kind === "own")
+    .map((doc) => ({ name: doc.name, code: doc.saved }));
+  try {
+    localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(own));
+    if (own.length) navigator.storage?.persist?.();
+  } catch (error) {
+    showError(`Cannot store the documents in the browser: ${error}`);
+  }
+}
+
+/** Restore the own documents from the local storage of the browser. */
+function restoreDocuments() {
+  try {
+    const stored: StoredDocument[] = JSON.parse(localStorage.getItem(DOCUMENTS_KEY) ?? "[]");
+    for (const { name, code } of stored) {
+      const doc: OpenDocument = { kind: "own", name, sharedName: name, saved: code, code };
+      docs.set(`own-${++ownDocuments}`, doc);
+    }
+  } catch (error) {
+    showError(`Cannot restore the documents of the browser: ${error}`);
+  }
 }
 
 /** Show the documents in groups: own documents, shared code and examples. */
@@ -214,6 +289,8 @@ function renderDocumentList() {
     documentList.append(heading);
     for (const key of group) {
       const doc = docOf(key);
+      const row = document.createElement("div");
+      row.className = "document-row";
       const button = document.createElement("button");
       button.setAttribute("role", "option");
       button.setAttribute("aria-selected", String(key === shownDocument));
@@ -222,7 +299,20 @@ function renderDocumentList() {
         showDocumentList(false);
         openDocument(key);
       });
-      documentList.append(button);
+      row.append(button);
+      if (doc.kind === "own") {
+        const remove = document.createElement("button");
+        remove.className = "document-delete";
+        remove.title = `Delete ${doc.name}`;
+        remove.textContent = "✕";
+        remove.addEventListener("click", (event) => {
+          // The list stays open, also when it is rendered again.
+          event.stopPropagation();
+          deleteDocument(key);
+        });
+        row.append(remove);
+      }
+      documentList.append(row);
     }
   }
 }
@@ -243,12 +333,21 @@ function updateModified() {
   if (!documentList.hidden) renderDocumentList();
 }
 
-/** Save the shown document, which formats and compiles it and shows its link in the URL. */
+/**
+ * Save the shown document in the browser, which formats and compiles it and shows its link in
+ * the URL.
+ */
 function save() {
   format();
   if (shownDocument !== undefined) {
-    const doc = docOf(shownDocument);
+    let doc = docOf(shownDocument);
+    // An example or shared code cannot be changed, it is copied into an own document, e.g.
+    // `brick` for `brick.mu`.
+    if (doc.kind !== "own") {
+      doc = copyDocument((doc.sharedName ?? "Untitled").replace(/\.mu$/, ""));
+    }
     doc.saved = doc.code = editor.getValue();
+    storeDocuments();
   }
   updateModified();
   compileNow();
@@ -289,6 +388,14 @@ function sharedLink(): { code?: string; name?: string; error?: string } {
 function showSharedCode(code: string, name?: string) {
   const formatted = mucad.format(code);
   code = formatted.success && formatted.formatted ? formatted.code : code;
+  // The link of a saved own document, e.g. in the URL after a reload, shows the document.
+  const own = [...docs].find(
+    ([, doc]) => doc.kind === "own" && doc.sharedName === name && doc.saved === code,
+  );
+  if (own) {
+    openDocument(own[0]);
+    return;
+  }
   // Another shared link replaces the shared code, also its unsaved changes.
   const label = name === undefined ? "Shared code" : `${name} (shared)`;
   docs.set(SHARED_CODE, { kind: "shared", name: label, sharedName: name, saved: code, code });
@@ -572,8 +679,9 @@ autoUpdate.addEventListener("change", () => {
   }
 });
 
-// The code of a shared link, otherwise the first example or the one given by the URL,
-// e.g. `?example=1`.
+// The own documents of the browser, the code of a shared link, otherwise the first example or
+// the one given by the URL, e.g. `?example=1`.
+restoreDocuments();
 const shared = sharedLink();
 if (shared.code !== undefined) {
   showSharedCode(shared.code, shared.name);
@@ -589,4 +697,10 @@ window.addEventListener("hashchange", () => {
   const shared = sharedLink();
   if (shared.code !== undefined) showSharedCode(shared.code, shared.name);
   else if (shared.error) showLinkError(shared.error);
+});
+
+// Unsaved changes are not stored, the browser asks before they are lost by a reload or by
+// closing the page.
+window.addEventListener("beforeunload", (event) => {
+  if ([...docs.values()].some((doc) => doc.code !== doc.saved)) event.preventDefault();
 });
