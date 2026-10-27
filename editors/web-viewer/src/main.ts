@@ -169,7 +169,7 @@ function save() {
 const SHARED_CODE = "shared";
 
 /**
- * The code of a shared link in the URL: in the fragment, e.g. `#tUAGABlAmvhY1ptjUgs`, or as
+ * The code of a shared link in the URL: in the fragment, e.g. `#QUQABENpcmNsZShyID0gMTBtbSk7CgM`, or as
  * query parameter `?code=`. Without a shared link, there is neither code nor error.
  */
 function sharedLink(): { code?: string; error?: string } {

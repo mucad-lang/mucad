@@ -9,9 +9,10 @@ WebAssembly (`crates/wasm`).
 - Models in their colors, e.g. of `#[color = "red"]`
 - Errors and warnings as squiggles in the code
 - Export of 3D models as STL and of 2D sketches as SVG
-- Shared links with the code, e.g. `https://play.mucad.org/#tUAGABlAmvhY1ptjUgs`: the *Share*
-  menu copies a link with the code of the editor and shows its QR code with a PNG download,
-  *Strip comments* shares the code without comments
+- Shared links with the Brotli-compressed code, e.g.
+  `https://play.mucad.org/#QUQABENpcmNsZShyID0gMTBtbSk7CgM`: the *Share* menu copies a link
+  with the code of the editor and shows its QR code with a PNG download, *Strip comments*
+  shares the code without comments
 - Dockable panels with [Dockview](https://dockview.dev/)
 
 The code is compiled again shortly after each edit, errors and warnings are shown in the

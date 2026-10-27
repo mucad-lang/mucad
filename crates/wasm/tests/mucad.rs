@@ -158,11 +158,11 @@ fn diagnostics() {
 #[test]
 fn decode_link() {
     assert_eq!(
-        Mucad::decode_link("https://play.mucad.org/#tUAGABlAmvhY1ptjUgs"),
+        Mucad::decode_link("https://play.mucad.org/#QUQABENpcmNsZShyID0gMTBtbSk7CgM"),
         Ok("Circle(r = 10mm);\n".to_string())
     );
     assert_eq!(
-        Mucad::decode_link("tUAGABlAmvhY1ptjUgs"),
+        Mucad::decode_link("QUQABENpcmNsZShyID0gMTBtbSk7CgM"),
         Ok("Circle(r = 10mm);\n".to_string())
     );
     assert!(Mucad::decode_link("#not base64").is_err());
@@ -172,7 +172,10 @@ fn decode_link() {
 #[test]
 fn encode_link() {
     let link = Mucad::encode_link("Circle(r = 10mm);\n", false).expect("A link");
-    assert_eq!(link, "https://play.mucad.org/#tUAGABlAmvhY1ptjUgs");
+    assert_eq!(
+        link,
+        "https://play.mucad.org/#QUQABENpcmNsZShyID0gMTBtbSk7CgM"
+    );
     let stripped = Mucad::encode_link("// c\nCircle(r = 10mm);\n", true).expect("A link");
     assert_eq!(stripped, link);
     assert!(Mucad::encode_link(&"a".repeat(3000), false).is_err());
@@ -181,10 +184,11 @@ fn encode_link() {
 /// The QR code of a link is square.
 #[test]
 fn qr_code() {
-    let modules = Mucad::qr_code("https://play.mucad.org/#tUAGABlAmvhY1ptjUgs").expect("A QR code");
+    let modules = Mucad::qr_code("https://play.mucad.org/#QUQABENpcmNsZShyID0gMTBtbSk7CgM")
+        .expect("A QR code");
     let width = modules.len().isqrt();
     assert_eq!(width * width, modules.len());
-    // A QR code of version 3 for 42 bytes with a finder pattern in the corner.
-    assert_eq!(width, 29);
+    // A QR code of version 4 for 55 bytes with a finder pattern in the corner.
+    assert_eq!(width, 33);
     assert_eq!(modules[..7], [1; 7]);
 }
