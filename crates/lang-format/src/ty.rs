@@ -39,7 +39,8 @@ impl Format for ast::TupleType {
             .inner
             .iter()
             .map(|item| match &item.0 {
-                Some(name) => node!(f => name " = " item.1),
+                // A named tuple type has the types of its names, e.g. `(x: Length, y: Length)`.
+                Some(name) => node!(f => name ": " item.1),
                 None => item.1.format(f),
             })
             .collect();
