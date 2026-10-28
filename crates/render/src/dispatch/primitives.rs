@@ -4,7 +4,10 @@
 use mucad_builtin::mu as __mu;
 use mucad_lang_types::math::IntoFloat;
 
-use crate::{RenderPrimitive, RenderResolution};
+use crate::{
+    GeometryOutputs, GeometryTree, Render, RenderContext, RenderError, RenderPrimitive,
+    RenderResolution, bezier,
+};
 
 /// Helper trait to render a polygon.
 trait RenderPolygon {
@@ -138,5 +141,38 @@ impl RenderPolygon for __mu::geo2d::SinusoidalGearProfile {
             ),
             vec![],
         )
+    }
+}
+
+/// An SVG path is parsed into Bézier curves, which are rendered into polygons or lines.
+///
+/// An invalid path is reported as error and rendered as nothing, so that the other models are
+/// rendered.
+impl Render for __mu::geo2d::SvgPath {
+    fn render(&self, tree: &GeometryTree, context: &mut RenderContext) -> crate::RenderResult {
+        let mut subpaths = match mucad_core::svg::parse_path(&self.d) {
+            Ok(subpaths) => subpaths,
+            Err(err) => {
+                let src_ref = (context.model(tree).creator.as_ref())
+                    .map(|creator| creator.src_ref)
+                    .unwrap_or_else(mucad_lang_base::SrcRef::none);
+                context.push_error(RenderError::InvalidSvgPath {
+                    message: err.to_string(),
+                    src_ref,
+                });
+                return Ok(GeometryOutputs::default());
+            }
+        };
+        // The y axis points down in SVG and up in µcad.
+        if self.flip {
+            for curves in &mut subpaths {
+                for curve in curves {
+                    *curve = curve.apply_transformation(|point| point.with_y(-point.y));
+                }
+            }
+        }
+        let resolution = context.current_resolution(tree);
+        let geometry = bezier::render_curves(&subpaths, self.closed, &resolution);
+        Ok(mucad_core::Geometry::geo2d(geometry).into())
     }
 }

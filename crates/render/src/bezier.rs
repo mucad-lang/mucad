@@ -14,8 +14,15 @@ use crate::RenderResolution;
 /// The maximum number of line segments of a curve.
 const MAX_SEGMENTS: usize = 1024;
 
-/// The number of line segments of `curve`, which deviate from it by at most the linear
-/// resolution, after Wang's formula, e.g. one for a straight line.
+/// The length of a segment of a curve in multiples of the linear resolution, like the segments
+/// of circles, see [`RenderResolution::circular_segments`].
+const SEGMENT_LENGTH: f64 = 4.0;
+
+/// The number of line segments of `curve`, e.g. one for a straight line.
+///
+/// The segments of a curved curve deviate from it by at most the linear resolution after Wang's
+/// formula, and are at most [`SEGMENT_LENGTH`] times the linear resolution long, so that curves
+/// are as fine as circles.
 fn segments(curve: &Bezier, resolution: &RenderResolution) -> usize {
     let points: Vec<_> = curve.get_points().collect();
     let degree = points.len() - 1;
@@ -23,9 +30,16 @@ fn segments(curve: &Bezier, resolution: &RenderResolution) -> usize {
     let second_difference = (points.windows(3))
         .map(|p| (p[0] - 2.0 * p[1] + p[2]).length())
         .fold(0.0, f64::max);
+    // The control polygon is at least as long as the curve.
+    let length: f64 = points.windows(2).map(|p| p[0].distance(p[1])).sum();
+    // A straight line, also with rounded handles, e.g. at a third of a line.
+    if second_difference <= 1e-9 * length {
+        return 1;
+    }
     let squared =
         (degree * degree.saturating_sub(1)) as f64 * second_difference / (8.0 * resolution.linear);
-    (squared.sqrt().ceil() as usize).clamp(1, MAX_SEGMENTS)
+    let by_length = length / (SEGMENT_LENGTH * resolution.linear);
+    (squared.sqrt().max(by_length).ceil() as usize).clamp(1, MAX_SEGMENTS)
 }
 
 /// A point of a curve as coordinate.
@@ -169,7 +183,7 @@ mod tests {
     }
 
     /// A circle of arcs is a polygon, whose points are on the circle and whose edges deviate from
-    /// it by at most the resolution of 0.1mm.
+    /// it by at most the resolution of 0.1mm, with about as many points as a circle primitive.
     #[test]
     fn circle() {
         let polygons = polygons("M -5 0 A 5 5 0 1 1 5 0 A 5 5 0 1 1 -5 0 Z");
@@ -179,6 +193,8 @@ mod tests {
         for c in &exterior.0 {
             assert!((radius(*c) - 5.0).abs() < 0.01, "radius {}", radius(*c));
         }
+        // A circle of 31.4mm has about 78 segments of 0.4mm.
+        assert!(exterior.0.len() >= 78, "{} points", exterior.0.len());
         // The middle of an edge is its farthest point from the circle.
         for edge in exterior.0.windows(2) {
             let middle = (edge[0] + edge[1]) / 2.0;

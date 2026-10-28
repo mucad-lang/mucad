@@ -233,3 +233,70 @@ fn render_revolve_and_spiral_direction() {
         assert!(bounds.min.z > -1e-6, "{code}: {bounds:?}");
     }
 }
+
+/// The 2D geometries of the rendered `code`, e.g. a polygon, and the bounds.
+fn render_2d(code: &str) -> (Vec<mucad_core::Geometry2D>, mucad_core::Bounds3D) {
+    let tree = Session::new().render(code);
+    let geometries = tree.root().outputs.to_2d().to_vec();
+    (geometries, tree.bounds())
+}
+
+/// An SVG path is a polygon with its y axis flipped, so that it points down like in SVG.
+#[test]
+fn render_svg_path() {
+    let (geometries, bounds) = render_2d("std::geo2d::SvgPath(d = \"M 0 0 L 10 0 L 10 10 Z\");");
+    let [mucad_core::Geometry2D::MultiPolygon(polygons)] = &geometries[..] else {
+        panic!("A polygon: {geometries:?}");
+    };
+    assert_eq!(polygons.0.len(), 1);
+    assert_eq!((bounds.min.x, bounds.max.x), (0.0, 10.0));
+    assert_eq!((bounds.min.y, bounds.max.y), (-10.0, 0.0));
+
+    // Without flipping, the y axis is the one of the path.
+    let (_, bounds) =
+        render_2d("std::geo2d::SvgPath(d = \"M 0 0 L 10 0 L 10 10 Z\", flip = false);");
+    assert_eq!((bounds.min.y, bounds.max.y), (0.0, 10.0));
+}
+
+/// An open SVG path consists of lines.
+#[test]
+fn render_svg_path_open() {
+    let (geometries, _) =
+        render_2d("std::geo2d::SvgPath(d = \"M 0 0 L 10 0 M 0 5 L 10 5\", closed = false);");
+    let [mucad_core::Geometry2D::MultiLineString(lines)] = &geometries[..] else {
+        panic!("Lines: {geometries:?}");
+    };
+    assert_eq!(lines.0.len(), 2);
+}
+
+/// A subpath inside another one is a hole, e.g. in the letter `o`.
+#[test]
+fn render_svg_path_hole() {
+    let code = "std::geo2d::SvgPath(d = \"M 0 0 H 10 V 10 H 0 Z M 2 2 H 8 V 8 H 2 Z\");";
+    let (geometries, _) = render_2d(code);
+    let [mucad_core::Geometry2D::MultiPolygon(polygons)] = &geometries[..] else {
+        panic!("A polygon: {geometries:?}");
+    };
+    assert_eq!(polygons.0.len(), 1);
+    assert_eq!(polygons.0[0].interiors().len(), 1);
+}
+
+/// An invalid SVG path is an error, but rendering continues with the other models.
+#[test]
+fn render_svg_path_invalid() {
+    let mut session = Session::new();
+    let (model, _) = session
+        .compiler
+        .compile("std::geo2d::SvgPath(d = \"M 0 0 L 10\");\nCircle(radius = 2mm);")
+        .expect("A model");
+    let (tree, issues) = session.renderer.render(&model).expect("A geometry tree");
+
+    let errors: Vec<_> = issues.iter().map(|issue| issue.to_string()).collect();
+    assert_eq!(errors.len(), 1, "{errors:?}");
+    assert!(errors[0].starts_with("invalid SVG path"), "{errors:?}");
+    assert!(
+        (tree.bounds().max.x - 2.0).abs() < 1e-6,
+        "{:?}",
+        tree.bounds()
+    );
+}

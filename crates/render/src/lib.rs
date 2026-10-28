@@ -54,12 +54,23 @@ pub enum RenderError {
         #[label("No render hook")]
         src_ref: SrcRef,
     },
+
+    /// An invalid SVG path, e.g. of `SvgPath`, which is not rendered.
+    #[error("{message}")]
+    InvalidSvgPath {
+        /// The error of the path, e.g. a missing number.
+        message: String,
+        #[label("Invalid SVG path")]
+        src_ref: SrcRef,
+    },
 }
 
 impl SrcReferrer for RenderError {
     fn src_ref(&self) -> SrcRef {
         match self {
-            Self::MissingRenderHook { src_ref, .. } => *src_ref,
+            Self::MissingRenderHook { src_ref, .. } | Self::InvalidSvgPath { src_ref, .. } => {
+                *src_ref
+            }
             Self::BuiltinError(err) => err.src_ref(),
             Self::InvalidOutputType(_) | Self::NothingToRender => SrcRef::none(),
         }
