@@ -55,6 +55,7 @@ formatted_test_case!(workbench);
 formatted_test_case!(extras);
 formatted_test_case!(extras_module);
 formatted_test_case!(extras_multiline_comment);
+formatted_test_case!(extras_comment_separator);
 formatted_test_case!(extras_workbench);
 formatted_test_case!(definition);
 formatted_test_case!(string);

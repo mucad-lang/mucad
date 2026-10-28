@@ -23,7 +23,7 @@ impl Formatter {
 
 impl Formatter {
     /// Formats a `Source` and return a formatted source and a flag if formatting has happened.
-    pub fn format(&self, source: impl Into<mu::Source>) -> Result<mu::Formatted, mu::Diagnostics> {
-        mu::format(source, &self.config).map_err(|issues| issues.into_diagnostics())
+    pub fn format(&self, source: impl Into<mu::Source>) -> Result<mu::Formatted, mu::FormatError> {
+        mu::format(source, &self.config)
     }
 }

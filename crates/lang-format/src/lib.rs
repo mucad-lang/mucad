@@ -137,21 +137,42 @@ pub struct Formatted {
     pub issues: IssueList<ParseIssue>,
 }
 
+/// An error of formatting code.
+#[derive(Debug, thiserror::Error)]
+pub enum FormatError {
+    /// The code cannot be parsed, so it is not formatted.
+    #[error("the code cannot be parsed")]
+    Parse(IssueList<ParseIssue>),
+    /// The formatted code cannot be parsed, which is an error of the formatter.
+    #[error("the formatted code cannot be parsed, which is an error of the formatter")]
+    InvalidFormat {
+        /// The formatted code, which the issues refer to, boxed for a small error.
+        formatted: Box<Source>,
+        /// The issues of parsing the formatted code.
+        issues: IssueList<ParseIssue>,
+    },
+}
+
 /// Format an AST into a new AST and a new Source
-pub fn format(
-    source: impl Into<Source>,
-    config: &FormatConfig,
-) -> Result<Formatted, IssueList<ParseIssue>> {
+///
+/// The formatted code is parsed again, it fails, if the formatter writes invalid code.
+pub fn format(source: impl Into<Source>, config: &FormatConfig) -> Result<Formatted, FormatError> {
     let original_source = source.into();
-    let (ast, _) = parse(&original_source)?;
+    let (ast, _) = parse(&original_source).map_err(FormatError::Parse)?;
     let code = format_ast(&ast, config);
     let source = Source::new(original_source.location.clone(), code);
-    parse(&source).map(|(ast, issues)| Formatted {
-        formatted: source != original_source,
-        ast,
-        source,
-        issues,
-    })
+    match parse(&source) {
+        Ok((ast, issues)) => Ok(Formatted {
+            formatted: source != original_source,
+            ast,
+            source,
+            issues,
+        }),
+        Err(issues) => Err(FormatError::InvalidFormat {
+            formatted: Box::new(source),
+            issues,
+        }),
+    }
 }
 
 /// High-level API to format a &str containing µcad source code.

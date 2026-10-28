@@ -144,7 +144,12 @@ impl Processor {
             .ok_or_else(|| miette::miette!("Document `{url}` is not open"))?;
         let formatted = mu::Formatter::new()
             .format(document.source.clone())
-            .map_err(|_| miette::miette!("Document `{url}` has syntax errors"))?;
+            .map_err(|err| match err {
+                mu::FormatError::Parse(_) => miette::miette!("Document `{url}` has syntax errors"),
+                mu::FormatError::InvalidFormat { .. } => {
+                    miette::miette!("Document `{url}` cannot be formatted: {err}")
+                }
+            })?;
         Ok(document
             .source
             .compare(&formatted.source)
