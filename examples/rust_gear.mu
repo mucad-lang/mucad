@@ -1,5 +1,7 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CC_BY
+//
+// The Rust logo is a registered trademark of the Rust Foundation.
 
 sketch RustGear(r = 50mm) {
     use std::ops::polar_array;

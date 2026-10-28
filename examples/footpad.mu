@@ -1,8 +1,12 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: MIT
 
+//! For the web-viewer: Go with the cursor above any literal (e.g. `45mm`)
+//! and use up/down arrows + Alt key to fiddle change the parameter values.
+
 use std::ops::*;
 
+/// A part definition for a parametric footpad mount.
 part FootPad(
     height = 45mm,
     base = (x = 155mm, y = 101mm, z = 18mm),
