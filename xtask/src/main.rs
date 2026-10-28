@@ -1,6 +1,7 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod change_version;
 mod check_readme;
 mod doctest;
 mod update_copyright;
@@ -28,6 +29,15 @@ struct Cli {
 enum Commands {
     /// Update copyright notices across project files
     UpdateCopyright,
+
+    /// Change the version of the whole workspace, e.g. `0.6.1`, and update `Cargo.lock`
+    ChangeVersion {
+        /// The new version, e.g. `0.6.1` or `0.7.0-rc.1`
+        version: String,
+        /// Only list the files to change
+        #[arg(long)]
+        dry_run: bool,
+    },
 
     /// Run the shell commands of README.md files one by one, to check them manually
     CheckReadme {
@@ -82,6 +92,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .update()?;
 
             Ok(())
+        }
+        Commands::ChangeVersion { version, dry_run } => {
+            change_version::change_version(&version, dry_run)
         }
         Commands::CheckReadme { paths, list } => {
             let paths = if paths.is_empty() {
