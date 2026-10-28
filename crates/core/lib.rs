@@ -11,6 +11,7 @@ pub mod geo2d;
 pub mod geo3d;
 pub mod geometry;
 pub mod length;
+pub mod svg;
 pub mod traits;
 pub mod triangle;
 
