@@ -11,7 +11,7 @@
 Simple basic shapes can be composed to create complex geometries which then can be rendered into STL
 or SVG files, e.g. for 3D printing or CNC milling.
 
-**Note**: This repo is a [fork of microcad](codeberg.org/microcad/microcad) to maintain an active release.
+**Note**: This repo is a [fork of microcad](https://codeberg.org/microcad/microcad) to maintain an active release.
 
 Feel free to [contribute](CONTRIBUTE.md) by opening issues or pull requests.
 
@@ -117,7 +117,7 @@ Please read the [README.md](editors/web-viewer/README.md) in there in order to k
 
 ## Documentation
 
-- [Language reference](http://docs.mucad.org/latest/language)
+- [Language reference](http://docs.mucad.org/)
 - [Contribute Documentation](CONTRIBUTE.md)
 
 ## Licensing
