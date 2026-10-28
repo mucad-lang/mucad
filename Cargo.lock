@@ -4314,7 +4314,7 @@ dependencies = [
 
 [[package]]
 name = "mucad"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "assert_cmd",
  "clap",
@@ -4336,7 +4336,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-builtin"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "cgmath",
  "derive_more",
@@ -4355,7 +4355,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-core"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "bezier-rs",
  "bytemuck",
@@ -4378,7 +4378,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-docgen"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "clap",
  "derive_more",
@@ -4394,7 +4394,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-driver"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "base64",
  "brotli",
@@ -4427,7 +4427,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-export"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "cargo_metadata",
  "cgmath",
@@ -4449,7 +4449,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-hash"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "derive_more",
  "rustc-hash 2.1.3",
@@ -4458,7 +4458,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-import"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "miette",
  "mucad-lang-base",
@@ -4470,7 +4470,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lang-base"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "bytemuck",
  "color-print",
@@ -4494,7 +4494,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lang-eval"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "derive_more",
  "insta",
@@ -4513,7 +4513,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lang-format"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "insta",
  "mucad-lang-base",
@@ -4524,7 +4524,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lang-lower"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "derive_more",
  "insta",
@@ -4547,7 +4547,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lang-markdown"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "clap",
  "derive_more",
@@ -4562,7 +4562,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lang-parse"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "chumsky",
  "derive_more",
@@ -4579,7 +4579,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lang-resolve"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "custom_debug",
  "derive_more",
@@ -4605,7 +4605,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lang-types"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "bytemuck",
  "cgmath",
@@ -4627,7 +4627,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-lsp"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "clap",
  "crossbeam",
@@ -4649,7 +4649,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-macros"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "mucad-hash",
  "proc-macro-crate",
@@ -4660,7 +4660,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-render"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "cgmath",
  "derive_more",
@@ -4682,7 +4682,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-std"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "dirs 7.0.0",
  "mucad-lang-base",
@@ -4695,7 +4695,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-viewer"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "bevy",
  "bevy_mod_outline",
@@ -4722,7 +4722,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-viewer-ipc"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "crossbeam",
  "env_logger",
@@ -4739,7 +4739,7 @@ dependencies = [
 
 [[package]]
 name = "mucad-wasm"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "cgmath",
  "console_error_panic_hook",
@@ -8288,7 +8288,7 @@ checksum = "b9cc00251562a284751c9973bace760d86c0276c471b4be569fe6b068ee97a56"
 
 [[package]]
 name = "xtask"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "chrono",
  "clap",
@@ -8296,7 +8296,9 @@ dependencies = [
  "glob",
  "mucad-driver",
  "regex",
+ "semver",
  "tempfile",
+ "toml_edit 0.25.17+spec-1.1.0",
  "walkdir",
 ]
 

@@ -5,7 +5,7 @@ expression: "ir.to_ron().expect(\"No error\")"
 (
     header: (
         magic: "µ",
-        version: ("0.6.0"),
+        version: ("0.6.1"),
         kind: Ir,
     ),
     payload: (

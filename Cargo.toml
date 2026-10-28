@@ -65,7 +65,7 @@ description = "µcad: A CAD programming language for everybody"
 authors = [
     "Michael Winkelmann (michael@winkelmann.site)",
 ]
-version = "0.6.0"
+version = "0.6.1"
 edition = "2024"
 homepage = "https://mucad.org"
 repository = "https://codeberg.org/mucad/mucad"
@@ -74,24 +74,24 @@ license = "AGPL-3.0-or-later"
 keywords = ["cad", "dsl", "geometry", "programming-language"]
 
 [workspace.dependencies]
-mucad-builtin = { path = "crates/builtin", version = "0.6.0" }
-mucad-core = { path = "crates/core", version = "0.6.0" }
-mucad-docgen = { path = "crates/docgen", version = "0.6.0" }
-mucad-driver = { path = "crates/driver", version = "0.6.0" }
-mucad-export = { path = "crates/export", version = "0.6.0" }
-mucad-hash = { path = "crates/hash", version = "0.6.0" }
-mucad-import = { path = "crates/import", version = "0.6.0" }
-mucad-lang-base = { path = "crates/lang-base", version = "0.6.0" }
-mucad-lang-eval = { path = "crates/lang-eval", version = "0.6.0" }
-mucad-lang-format = { path = "crates/lang-format", version = "0.6.0" }
-mucad-lang-lower = { path = "crates/lang-lower", version = "0.6.0" }
-mucad-lang-markdown = { path = "crates/lang-markdown", version = "0.6.0" }
-mucad-lang-parse = { path = "crates/lang-parse", version = "0.6.0" }
-mucad-lang-resolve = { path = "crates/lang-resolve", version = "0.6.0" }
-mucad-lang-types = { path = "crates/lang-types", version = "0.6.0" }
-mucad-lsp = { path = "crates/lsp", version = "0.6.0" }
-mucad-macros = { path = "crates/macros", version = "0.6.0" }
-mucad-render = { path = "crates/render", version = "0.6.0" }
-mucad-std = { path = "crates/std", version = "0.6.0" }
-mucad-viewer-ipc = { path = "crates/viewer-ipc", version = "0.6.0" }
-mucad-viewer = { path = "crates/viewer", version = "0.6.0" }
+mucad-builtin = { path = "crates/builtin", version = "0.6.1" }
+mucad-core = { path = "crates/core", version = "0.6.1" }
+mucad-docgen = { path = "crates/docgen", version = "0.6.1" }
+mucad-driver = { path = "crates/driver", version = "0.6.1" }
+mucad-export = { path = "crates/export", version = "0.6.1" }
+mucad-hash = { path = "crates/hash", version = "0.6.1" }
+mucad-import = { path = "crates/import", version = "0.6.1" }
+mucad-lang-base = { path = "crates/lang-base", version = "0.6.1" }
+mucad-lang-eval = { path = "crates/lang-eval", version = "0.6.1" }
+mucad-lang-format = { path = "crates/lang-format", version = "0.6.1" }
+mucad-lang-lower = { path = "crates/lang-lower", version = "0.6.1" }
+mucad-lang-markdown = { path = "crates/lang-markdown", version = "0.6.1" }
+mucad-lang-parse = { path = "crates/lang-parse", version = "0.6.1" }
+mucad-lang-resolve = { path = "crates/lang-resolve", version = "0.6.1" }
+mucad-lang-types = { path = "crates/lang-types", version = "0.6.1" }
+mucad-lsp = { path = "crates/lsp", version = "0.6.1" }
+mucad-macros = { path = "crates/macros", version = "0.6.1" }
+mucad-render = { path = "crates/render", version = "0.6.1" }
+mucad-std = { path = "crates/std", version = "0.6.1" }
+mucad-viewer-ipc = { path = "crates/viewer-ipc", version = "0.6.1" }
+mucad-viewer = { path = "crates/viewer", version = "0.6.1" }
