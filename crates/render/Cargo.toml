@@ -28,3 +28,4 @@ mucad-builtin = { workspace = true }
 [dev-dependencies]
 pretty_assertions = "1.4"
 insta = "1.45.0"
+test-case = "3.4.0"

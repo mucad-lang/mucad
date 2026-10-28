@@ -4,6 +4,7 @@
 //! Model methods and trait implementations for rendering.
 
 mod attribute;
+pub mod bezier;
 mod cache;
 mod context;
 mod diag;

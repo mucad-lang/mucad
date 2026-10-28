@@ -4675,6 +4675,7 @@ dependencies = [
  "mucad-macros",
  "pretty_assertions",
  "rustc-hash 2.1.3",
+ "test-case",
  "thiserror 2.0.21",
  "web-time",
 ]
