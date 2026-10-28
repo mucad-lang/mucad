@@ -15,24 +15,26 @@ part FootPad(
         x = base.x / 2 - corner_radius,
         y = base.y / 2 - corner_radius,
     );
+
+    // Create 4 holes
     hole_pos = (x = [-1, 1] * s.x, y = [-1, 1] * s.y);
     radius = corner_radius;
 
+    // Create the base plate with 4 rounded corners.
     base_lower = Circle(radius, c = hole_pos)
         .hull()
         .extrude(12mm);
 
-    base_upper_height = slot.x;
-    base_lower_height = base.z - base_upper_height;
+    base_lower_height = base.z - slot.x;
 
-    center = {
-        (Circle(d = center_hole.d_outer) - Circle(d = center_hole.d_inner))
+    center_pole = {
+        Circle(d = center_hole.d_outer)
             .extrude(height);
 
+        // Cut off on top.
         Rect(height = slot.x, width = center_hole.d_outer)
             .extrude(slot.y)
             .translate(z = height - slot.y);
-
     }.subtract();
 
     holes = {
@@ -45,7 +47,7 @@ part FootPad(
             .extrude(height);
     }.union();
 
-    base_lower | center - holes;
+    base_lower | center_pole - holes;
 }
 
 FootPad();
