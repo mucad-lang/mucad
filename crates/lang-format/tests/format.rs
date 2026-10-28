@@ -46,6 +46,7 @@ macro_rules! unformatted_test_case {
 formatted_test_case!(statement_list_whitespace);
 formatted_test_case!(list);
 formatted_test_case!(tuple);
+formatted_test_case!(tuple_type);
 formatted_test_case!(body);
 formatted_test_case!(expression);
 formatted_test_case!(expression_if);
@@ -54,6 +55,7 @@ formatted_test_case!(workbench);
 formatted_test_case!(extras);
 formatted_test_case!(extras_module);
 formatted_test_case!(extras_multiline_comment);
+formatted_test_case!(extras_comment_separator);
 formatted_test_case!(extras_workbench);
 formatted_test_case!(definition);
 formatted_test_case!(string);

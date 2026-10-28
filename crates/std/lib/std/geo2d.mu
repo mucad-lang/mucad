@@ -166,3 +166,16 @@ pub sketch SinusoidalGearProfile(module: Length, teeth: Integer, roundness = 0.5
 pub sketch Text(height: Length, text: String, font_file = "") {
     __mu::geo2d::Text(height, text, font_file);
 }
+
+/// A path like the `d` attribute of an SVG path, with coordinates in millimeters.
+///
+/// A closed path is a polygon, an open path consists of lines. The y axis is flipped, because it
+/// points down in SVG and up in µcad, so that a path of an SVG file is not upside down.
+///
+/// # Examples
+/// * Triangle: `SvgPath(d = "M 0 0 L 10 0 L 10 10 Z");`
+/// * Open curve as lines: `SvgPath(d = "M 0 0 C 5 10 15 10 20 0", closed = false);`
+/// * Without flipping the y axis: `SvgPath(d = "M 0 0 L 10 0 L 10 10 Z", flip = false);`
+pub sketch SvgPath(d: String, closed: Bool = true, flip: Bool = true) {
+    __mu::geo2d::SvgPath(d, closed, flip);
+}

@@ -245,6 +245,7 @@ fn format_parse_error_keeps_file() {
         .arg("format")
         .arg(&input)
         .assert()
+        .failure()
         .stderr(predicate::str::contains("Parse error"));
 
     assert_eq!(read(&input), PARSE_ERROR);

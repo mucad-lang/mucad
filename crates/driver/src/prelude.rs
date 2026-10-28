@@ -124,7 +124,7 @@ pub mod format {
 }
 
 pub use crate::Formatter;
-pub use format::{FormatConfig, Formatted, format};
+pub use format::{FormatConfig, FormatError, Formatted, format};
 
 /// Symbols from `mucad_render`
 pub mod render {

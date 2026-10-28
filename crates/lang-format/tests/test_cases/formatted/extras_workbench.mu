@@ -1,4 +1,4 @@
-sketch A( /* B */ ) {
+sketch A(/* B */) {
     // C
 }
 

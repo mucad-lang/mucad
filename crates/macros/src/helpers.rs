@@ -29,6 +29,7 @@ impl quote::ToTokens for BuiltinType {
             "Angle" => quote! { mucad_lang_types::Type::angle() },
             "Length" => quote! { mucad_lang_types::Type::length() },
             "Color" => quote! { mucad_lang_types::Type::color() },
+            "bool" => quote! { mucad_lang_types::Type::Bool },
             "List" => {
                 quote! { mucad_lang_types::Type::list() }
             }

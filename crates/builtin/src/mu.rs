@@ -735,6 +735,19 @@ pub mod geo2d {
         /// Font file (`*.ttf` or `*.otf`), a built-in font if empty.
         pub font_file: String,
     }
+
+    /// A path like the `d` attribute of an SVG path, e.g. `M 0 0 L 10 0 L 10 10 Z`, with
+    /// coordinates in millimeters.
+    #[derive(Serialize, Deserialize, Debug)]
+    #[builtin_primitive(Geometry2D)]
+    pub struct SvgPath {
+        /// The path data, the `d` attribute of an SVG path.
+        pub d: String,
+        /// Whether the path is closed into polygons, otherwise it is rendered as lines.
+        pub closed: bool,
+        /// Whether the y axis is flipped, because it points down in SVG and up in µcad.
+        pub flip: bool,
+    }
 }
 
 /// Built-in 3D primitives

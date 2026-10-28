@@ -3,7 +3,7 @@
 // Comment 2
 a; // Comment 3
 
-b /* Comment 4 */ ;
+b /* Comment 4 */;
 
 foo
     .a(test) // Foo Comment

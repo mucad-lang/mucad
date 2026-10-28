@@ -37,12 +37,21 @@ impl RunCommand<()> for Format {
                     eprintln!("Document has been already formatted.");
                 }
             }
-            Err(err) => {
-                eprintln!(
-                    "Parse error:\n{}",
-                    err.render_to_string(&source, &Default::default())
-                        .into_diagnostic()?
-                );
+            // The file is unchanged after an error, which fails the command.
+            Err(mu::FormatError::Parse(issues)) => {
+                let report = (issues.into_diagnostics())
+                    .render_to_string(&source, &Default::default())
+                    .into_diagnostic()?;
+                return Err(miette::miette!("Parse error:\n{report}"));
+            }
+            Err(mu::FormatError::InvalidFormat { formatted, issues }) => {
+                let report = (issues.into_diagnostics())
+                    .render_to_string(formatted.as_ref(), &Default::default())
+                    .into_diagnostic()?;
+                return Err(miette::miette!(
+                    "The formatted code cannot be parsed, the document is unchanged. This is an \
+                     error of the formatter, please report it with the document:\n{report}"
+                ));
             }
         }
 

@@ -27,7 +27,7 @@ pub use primitives::*;
 pub use reflect::*;
 pub use size::*;
 
-pub use geo::{Buffer, ConvexHull};
+pub use geo::{BooleanOps, Buffer, ConvexHull};
 
 /// Forward type from `geo::Coord`;
 pub type Coord = geo::Coord<Scalar>;

@@ -267,6 +267,8 @@ struct RenderState {
     indent_pending: bool,
     softline_pending: bool,
     extra_pending: bool,
+    /// The last text ends with an opening bracket, which has no space behind it.
+    after_open_bracket: bool,
 }
 
 impl Node {
@@ -282,6 +284,8 @@ impl Node {
             if state.indent_pending {
                 let spaces = " ".repeat(state.indent_level);
                 state.indent_pending = false;
+                // The indentation may have changed since the line break, e.g. in a list.
+                state.column = state.indent_level;
                 write!(f, "{spaces}")
             } else {
                 Ok(())
@@ -311,9 +315,14 @@ impl Node {
 
         match self {
             Node::Text(s) => {
+                // No space in front of a separator or a closing bracket, e.g. after a comment.
+                if s.starts_with([',', ';', ')', ']']) {
+                    state.softline_pending = false;
+                }
                 write_extra_pending(f, state)?;
                 write_pending_indent(f, state)?;
                 state.column += s.len();
+                state.after_open_bracket = s.ends_with(['(', '[']);
                 write!(f, "{s}")
             }
             Node::SingleLineComment(s) => {
@@ -330,8 +339,9 @@ impl Node {
                 writeln!(f)
             }
             Node::Softline => {
-                state.softline_pending =
-                    state.column as i32 - state.indent_level as i32 > 0 && !state.indent_pending;
+                state.softline_pending = state.column as i32 - state.indent_level as i32 > 0
+                    && !state.indent_pending
+                    && !state.after_open_bracket;
                 Ok(())
             }
             Node::Group(group) => {
