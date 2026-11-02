@@ -21,12 +21,9 @@ derive_more = { version = "2.0.1", features = [
 fixed = { version = "1.31", features = ["serde"] }
 log = "0.4"
 miette = { version = "7.6.0", features = ["derive", "fancy"] }
-round = "0.1.2"
-rustc-hash = "2.1.1"
 strum = { version = "0.28", features = ["derive"] }
 serde = { version = "1.0", features = ["derive", "rc"] }
 thiserror = "2.0.17"
-typetag = "0.2"
 
 mucad-lang-base = { workspace = true }
 mucad-macros = { workspace = true }

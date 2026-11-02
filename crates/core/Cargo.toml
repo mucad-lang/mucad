@@ -18,15 +18,11 @@ bytemuck = "1.24.0"
 cgmath = { version = "0.18", features = ["serde"] }
 derive_more = { version = "2", features = ["deref", "deref_mut", "from"] }
 geo = { version = "0.33", features = ["use-serde"] }
-log = "0.4"
 manifold-rust = { version = "0.19" }
-rustc-hash = "2.1.1"
 strum = { version = "0.28", features = ["derive"] }
 thiserror = "2.0"
-toml = "1.1.2"
 miette = "7.6.0"
 bezier-rs = "0.5"
-serde = { version = "1.0", features = ["derive"] }
 svgtypes = "0.16.1"
 
 mucad-hash = { workspace = true }

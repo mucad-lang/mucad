@@ -16,9 +16,7 @@ derive_more = { version = "2.0.1", features = [
     "display",
     "debug",
 ] }
-log = "0.4"
 miette = { version = "7.6.0", features = ["derive", "fancy"] }
-rustc-hash = "2.1.1"
 strum = { version = "0.28", features = ["derive"] }
 thiserror = "2.0.17"
 ron = { version = "0.12", features = ["integer128"] }

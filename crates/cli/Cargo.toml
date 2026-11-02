@@ -19,10 +19,7 @@ path = "main.rs"
 clap = { version = "4", features = ["derive"] }
 clap_complete = "4"
 env_logger = "0.11"
-lazy_static = "1.4"
 log = "0.4"
-toml = "1.1.2"
-dirs = "6"
 num-format = "0.4"
 rust-embed = "8.9"
 miette = { version = "7.6.0", features = ["fancy"] }

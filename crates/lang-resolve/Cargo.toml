@@ -10,11 +10,9 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-custom_debug = "0.6"
 derive_more = { version = "2.0.1", features = ["deref", "deref_mut"] }
 log = "0.4"
 miette = { version = "7.6.0", features = ["derive", "fancy"] }
-postcard = { version = "1.1", features = ["alloc"] }
 semver = { version = "1.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 strum = { version = "0.28", features = ["derive"] }

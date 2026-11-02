@@ -14,13 +14,8 @@ version.workspace = true
 path = "lib.rs"
 
 [dependencies]
-mucad-lang-base = { workspace = true }
 mucad-lang-types = { workspace = true }
-
-thiserror = "2.0.12"
 toml = "1.1.2"
-serde = "1"
-miette = "7.6.0"
 
 
 [lints.rust]

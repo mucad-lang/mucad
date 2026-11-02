@@ -14,12 +14,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-derive_more = { version = "2", features = ["deref", "deref_mut", "from"] }
-log = "0.4"
 miette = "7.3.0"
-serde = "1.0"
-thiserror = "2.0"
-toml = { version = "1.1.2", features = ["serde"] }
 
 # Used by bin_builtin
 clap = { version = "4", features = ["derive"], optional = true }
