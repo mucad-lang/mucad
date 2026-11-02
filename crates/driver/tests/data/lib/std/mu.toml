@@ -3,5 +3,5 @@
 [library]
 name = "std"
 description = "Minimal µcad standard library for tests"
-version = "0.6.1"
+version = "0.6.2"
 no_std = true # Do not load standard library

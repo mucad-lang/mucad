@@ -1,7 +1,7 @@
 {
   "name": "mucad-web-viewer",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.6.2",
   "description": "µcad web viewer: edit, display and export µcad models in a browser",
   "license": "AGPL-3.0-or-later",
   "type": "module",
