@@ -61,10 +61,16 @@ impl Render for mu::ops::Hull {
         tree: &GeometryTree,
         context: &mut RenderContext,
     ) -> RenderResult<GeometryOutputs> {
+        let outputs = context.collect_outputs(tree).primary();
+        use GeometryType::*;
         use core::geo2d::ConvexHull;
-        let multi_polygon = context.collect_outputs(tree).primary().to_2d().union();
 
-        Ok(GeometryOutput::geo2d(multi_polygon.convex_hull()).into())
+        Ok(match outputs.ty() {
+            Geometry2D => Geometry::geo2d(outputs.to_2d().union().convex_hull()).into(),
+            Geometry3D => Geometry::geo3d(outputs.to_3d().union().convex_hull()).into(),
+            Empty => GeometryOutputs::default(),
+            Mixed => todo!("Error handling: Mixed geometry"),
+        })
     }
 }
 
