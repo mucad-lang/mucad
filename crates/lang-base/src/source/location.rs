@@ -28,7 +28,7 @@ fn url_from_file_path(path: &std::path::Path) -> Option<Url> {
 /// The `file://` URL of a path, without a file system, e.g. in a browser.
 #[cfg(not(any(unix, windows, target_os = "wasi")))]
 fn url_from_file_path(path: &std::path::Path) -> Option<Url> {
-    Url::parse(&format!("file://{}", path.display())).ok()
+    Url::parse(&format!("file://{}", crate::display_path(path))).ok()
 }
 
 /// The path of a `file://` URL.

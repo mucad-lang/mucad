@@ -39,7 +39,7 @@ fn test_filesystem_resolution_missing_extension() {
     let input = dir.path().join("logic").to_str().unwrap().to_string();
     let result = locate::to_url(&LocalFileSystem, &input).unwrap();
 
-    assert!(result.as_str().ends_with("logic.mcad"));
+    assert!(result.as_str().ends_with("logic.mcad"), "{result}");
 }
 
 #[test]

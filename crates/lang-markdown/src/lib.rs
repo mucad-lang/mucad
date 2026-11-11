@@ -20,13 +20,6 @@ pub use markdown::{Markdown, MarkdownError};
 pub use mdbook::{MdBook, MdBookConfig, MdBookError, MdBookSummary, MdBookSummaryEntry};
 pub use section::Section;
 
-/// This is a helper function to convert a path into string.
-/// It always uses `/` as separator, regardless of the platform.
-/// This hack is need because Windows uses `\\` as directory separator instead of `/` like 'normal' OSes.
-pub fn display_path(path: impl AsRef<std::path::Path>) -> String {
-    path.as_ref().display().to_string().replace('\\', "/")
-}
-
 /// Helper macro to construct a Markdown from any format string.
 #[macro_export]
 macro_rules! md {
@@ -35,4 +28,4 @@ macro_rules! md {
     };
 }
 
-pub use mucad_lang_base::WriteToFile;
+pub use mucad_lang_base::{WriteToFile, display_path};
