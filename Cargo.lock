@@ -4511,6 +4511,7 @@ dependencies = [
  "derive_more",
  "fixed",
  "insta",
+ "libm",
  "log",
  "miette",
  "mucad-lang-base",
