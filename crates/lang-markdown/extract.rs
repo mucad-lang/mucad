@@ -66,7 +66,7 @@ fn main() -> miette::Result<()> {
                 return Ok(());
             };
             let input = input_path.display();
-            let output_path = output.join(mu_base_path(&input_path, name));
+            let output_path = output.join(mu_base_path(&input_path, name.as_str()));
 
             let content = format!("// Extracted from: {input}\n\n{}\n", code_block.code());
             std::fs::write(&output_path, content).into_diagnostic()?;
