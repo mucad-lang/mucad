@@ -28,21 +28,21 @@ impl MathOps for Quantity {
     fn sin(&self) -> ValueResult {
         Ok(self
             .clone()
-            .map(|v| Scalar::from_num(v.to_num::<f64>().sin()))
+            .map(|v| Scalar::from_num(libm::sin(v.to_num())))
             .into())
     }
 
     fn cos(&self) -> Result<Self::Output, Self::Error> {
         Ok(self
             .clone()
-            .map(|v| Scalar::from_num(v.to_num::<f64>().cos()))
+            .map(|v| Scalar::from_num(libm::cos(v.to_num())))
             .into())
     }
 
     fn tan(&self) -> Result<Self::Output, Self::Error> {
         Ok(self
             .clone()
-            .map(|v| Scalar::from_num(v.to_num::<f64>().tan()))
+            .map(|v| Scalar::from_num(libm::tan(v.to_num())))
             .into())
     }
 

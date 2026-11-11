@@ -19,6 +19,7 @@ derive_more = { version = "2.0.1", features = [
     "debug",
 ] }
 fixed = { version = "1.31", features = ["serde"] }
+libm = "0.2"
 log = "0.4"
 miette = { version = "7.6.0", features = ["derive", "fancy"] }
 strum = { version = "0.28", features = ["derive"] }

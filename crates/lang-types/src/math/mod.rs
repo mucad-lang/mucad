@@ -6,6 +6,7 @@
 mod affine_transform;
 pub mod float;
 mod ops;
+mod trig;
 
 pub use affine_transform::AffineTransform;
 pub use float::*;
@@ -18,16 +19,16 @@ use cgmath::{InnerSpace, SquareMatrix};
 /// Helper function to return rotation X,Y,Z rotation matrices.
 fn rotation_matrices_xyz(x: Angle, y: Angle, z: Angle) -> (Mat3F, Mat3F, Mat3F) {
     (
-        Mat3F::from_angle_x(AngleF::from_fixed(x)),
-        Mat3F::from_angle_y(AngleF::from_fixed(y)),
-        Mat3F::from_angle_z(AngleF::from_fixed(z)),
+        trig::rotation_x(AngleF::from_fixed(x)),
+        trig::rotation_y(AngleF::from_fixed(y)),
+        trig::rotation_z(AngleF::from_fixed(z)),
     )
 }
 
 pub fn rotate_around_axis(angle: Angle, x: Scalar, y: Scalar, z: Scalar) -> Mat3 {
     let axis = Vec3::new(x, y, z);
     let angle: AngleF = angle.into_float();
-    Mat3F::from_axis_angle(axis.into_float(), angle).into_fixed()
+    trig::rotation_axis(axis.into_float(), angle).into_fixed()
 }
 
 /// Rotation about the X, then the Y, then the Z axis, which stay fixed (`Rz·Ry·Rx`).
@@ -68,7 +69,7 @@ pub fn orient_to_z(target: Vec3) -> Mat3 {
         } else {
             Vec3F::unit_y()
         };
-        return Mat3::from_float(Mat3F::from_axis_angle(
+        return Mat3::from_float(trig::rotation_axis(
             perp_axis,
             cgmath::Rad(std::f64::consts::PI),
         ));
@@ -77,9 +78,9 @@ pub fn orient_to_z(target: Vec3) -> Mat3 {
     // Normal case
     let rotation_axis = z_axis.cross(target).normalize();
     let dot = z_axis.dot(target).clamp(-1.0, 1.0); // avoid NaNs
-    let angle = cgmath::Rad(dot.acos());
+    let angle = cgmath::Rad(libm::acos(dot));
 
-    Mat3F::from_axis_angle(rotation_axis, angle).into_fixed()
+    trig::rotation_axis(rotation_axis, angle).into_fixed()
 }
 
 pub fn align_vectors_rodrigues(from: Vec3, to: Vec3) -> Mat3 {
@@ -100,7 +101,7 @@ pub fn align_vectors_rodrigues(from: Vec3, to: Vec3) -> Mat3 {
             Vec3F::unit_x()
         };
         let axis = from.cross(perp_axis).normalize();
-        return Mat3F::from_axis_angle(axis, cgmath::Rad(std::f64::consts::PI)).into_fixed();
+        return trig::rotation_axis(axis, cgmath::Rad(std::f64::consts::PI)).into_fixed();
     }
 
     let v = from.cross(to);
