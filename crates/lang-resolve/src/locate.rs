@@ -186,37 +186,30 @@ pub fn mu_toml_path(path: impl AsRef<std::path::Path>) -> std::path::PathBuf {
 pub fn to_url(fs: &dyn FileSystem, input: impl AsRef<str>) -> Result<Url, LocateError> {
     let input = input.as_ref();
 
+    fn make_file_url(fs: &dyn FileSystem, input: &str) -> Result<Url, LocateError> {
+        let resolved = resolved_path(fs, input)?;
+        // Canonicalize to absolute path to ensure the URL is valid
+        let absolute_path =
+            fs.canonicalize(&resolved)
+                .map_err(|source| LocateError::CanonicalizeFailed {
+                    path: resolved.clone(),
+                    source,
+                })?;
+        url_from_file_path(&absolute_path).ok_or(LocateError::UrlConversionFailed {
+            path: absolute_path,
+        })
+    }
+
     // Try to parse as a formal URL (e.g., https://, file://, mcad://)
     match Url::parse(input) {
-        Ok(url) => match url.scheme() {
-            // If we have a file scheme, try to resolve the file.
-            "file" => {
-                let path = url_to_file_path(&url)
-                    .ok_or_else(|| LocateError::InvalidFileUrl { url: url.clone() })?;
-                let resolved = resolved_path(fs, path)?;
-                url_from_file_path(&resolved)
-                    .ok_or(LocateError::UrlConversionFailed { path: resolved })
-            }
-            _ => Ok(url),
-        },
-
-        Err(_) => {
-            // 3. Fallback: Treat input as a raw filesystem path
-            let local_path = std::path::PathBuf::from(input);
-            let resolved = resolved_path(fs, local_path)?;
-
-            // Canonicalize to absolute path to ensure the URL is valid
-            let absolute_path =
-                fs.canonicalize(&resolved)
-                    .map_err(|source| LocateError::CanonicalizeFailed {
-                        path: resolved.clone(),
-                        source,
-                    })?;
-
-            url_from_file_path(&absolute_path).ok_or(LocateError::UrlConversionFailed {
-                path: absolute_path,
-            })
+        // Here we test if the URL was parsed and actually contains a file path, including `c:/foo/bar` on Windows.
+        Ok(_) if let Some(_) = url_from_file_path(&std::path::Path::new(input)) => {
+            make_file_url(fs, input)
         }
+        // We can simply return the URL for any other scheme than `file`.
+        Ok(url) => Ok(url),
+        // Fallback: Treat input as a raw filesystem path
+        Err(_) => make_file_url(fs, input),
     }
 }
 
@@ -230,12 +223,6 @@ fn url_from_file_path(path: &std::path::Path) -> Option<Url> {
 #[cfg(not(any(unix, windows, target_os = "wasi")))]
 fn url_from_file_path(path: &std::path::Path) -> Option<Url> {
     Url::parse(&format!("file://{}", path.display())).ok()
-}
-
-/// The path of a `file://` URL.
-#[cfg(any(unix, windows, target_os = "wasi"))]
-fn url_to_file_path(url: &Url) -> Option<std::path::PathBuf> {
-    url.to_file_path().ok()
 }
 
 /// The path of a `file://` URL, without a local file system, e.g. in a browser.
