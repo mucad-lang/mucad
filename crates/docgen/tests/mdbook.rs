@@ -67,7 +67,7 @@ fn library_mdbook() {
     let mut files: Vec<_> = mdbook
         .md_files
         .keys()
-        .map(|path| path.display().to_string())
+        .map(mucad_lang_markdown::display_path)
         .collect();
     files.sort();
     assert_eq!(

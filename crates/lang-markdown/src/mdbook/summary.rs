@@ -8,7 +8,7 @@ use derive_more::Display;
 use crate::Markdown;
 
 #[derive(Display, Debug)]
-#[display("{:indent$}- [`{name}`]({path})", "", indent = 2 * self.level, path = self.path.display())]
+#[display("{:indent$}- [`{name}`]({path})", "", indent = 2 * self.level, path = crate::display_path(&self.path))]
 pub struct MdBookSummaryEntry {
     level: usize,
     name: String,

@@ -1,0 +1,20 @@
+# Default to LF for all text files
+* text=auto eol=lf
+
+# Explicitly set line endings for specific file types
+*.rs text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.mu text eol=lf
+*.txt text eol=lf
+*.sh text eol=lf
+*.snap eol=lf
+
+# Binary files should not be touched
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.tar.gz binary
+*.snap binary

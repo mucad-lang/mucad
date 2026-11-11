@@ -28,4 +28,4 @@ macro_rules! md {
     };
 }
 
-pub use mucad_lang_base::WriteToFile;
+pub use mucad_lang_base::{WriteToFile, display_path};

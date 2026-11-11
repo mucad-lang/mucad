@@ -82,8 +82,12 @@ impl DisplayOneLine for SourceFile {
     fn to_string_one_line(&self) -> String {
         match self {
             SourceFile::NotLoaded => "NotLoaded".to_string(),
-            SourceFile::Loaded { path, .. } => format!("Loaded({})", path.display()),
-            SourceFile::Failed { path } => format!("Failed({})", path.display()),
+            SourceFile::Loaded { path, .. } => {
+                format!("Loaded({})", mucad_lang_base::display_path(path))
+            }
+            SourceFile::Failed { path } => {
+                format!("Failed({})", mucad_lang_base::display_path(path))
+            }
         }
     }
 }
