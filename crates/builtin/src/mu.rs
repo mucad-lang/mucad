@@ -339,7 +339,7 @@ pub mod debug {
         let message: String = args.try_get("message")?;
 
         // Equal like the operator `==`, e.g. with the tolerance of the number representation.
-        if matches!(a.cmp(BinaryOperator::Equal, b)?, Value::Bool(true)) {
+        if matches!(a.cmp(BinaryOperator::Equal, &b)?, Value::Bool(true)) {
             // assertion ok: return None.
             Ok(Value::None)
         } else {
@@ -572,7 +572,7 @@ pub mod list {
     pub fn contains(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let a: Rc<List> = args.try_get("a")?;
         let v = args.get("v");
-        Ok(a.contains(v).into())
+        Ok(a.contains(&v).into())
     }
 
     #[builtin_fn(list::all_equal(a: List) -> Bool)]

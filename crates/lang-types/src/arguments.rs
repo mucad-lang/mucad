@@ -21,21 +21,21 @@ impl Arguments {
     }
 
     /// Retrieves a named [`Value`] by key.
-    pub fn get(&self, name: impl AsRef<str>) -> &Value {
+    pub fn get(&self, name: impl AsRef<str>) -> Value {
         self.named_iter()
             .find_map(|(id, v)| {
                 if id == &Identifier::from(name.as_ref()) {
-                    Some(v)
+                    Some(v.clone())
                 } else {
                     None
                 }
             })
-            .unwrap() // TODO: This is not cool.
+            .unwrap_or_default()
     }
 
     /// Get `lhs` and `rhs` from binary arguments.
     pub fn get_binary(self) -> (Value, Value) {
-        (self.get("lhs").clone(), self.get("rhs").clone())
+        (self.get("lhs"), self.get("rhs"))
     }
 
     pub fn get_unary(self) -> Value {
