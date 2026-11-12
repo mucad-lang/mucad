@@ -3,9 +3,11 @@
 
 //! µcad CLI doc command
 
+use mucad_driver::prelude::base::RenderDiag;
+
 use crate::{Cli, commands::RunCommand};
 
-/// Generate documentation from code.
+/// Generate documentation from µcad source.
 #[derive(clap::Parser)]
 pub struct Doc {
     /// Input file or library name.
@@ -17,32 +19,30 @@ pub struct Doc {
 }
 
 impl RunCommand<()> for Doc {
-    fn run(&self, _cli: &Cli) -> miette::Result<()> {
-        todo!()
-        /*use mucad_driver::prelude as mu;
-        use mu::traits::*;
+    fn run(&self, cli: &Cli) -> miette::Result<()> {
+        use mu::docgen::GenerateDoc;
+        use mucad_driver::prelude as mu;
 
+        let mut compiler = cli.compiler();
 
-        let mut document = mu::Document::open(&self.input)?;
-        let params = mu::DocGenParameters {
-            generator_id: self.generator.clone(),
-            output_path: self.output.clone(),
-            resolve_parameters: match self.no_std {
-                true => mu::ResolveParameters {
-                    search_paths: vec![],
-                },
-                false => mu::ResolveParameters::default(),
-            },
-        };
+        match compiler.compile_lib(&self.input) {
+            Ok((lib, diag)) => {
+                eprintln!("{}", compiler.render_diag_to_string(&diag));
 
-        match document.doc_gen(params) {
-            Ok(_) => {}
-            Err(err) => {
-                eprintln!("Error generating documentation:\n{err}");
-                cli.print_diagnostics(&document);
+                mu::docgen::LibraryDocGenerator::new(&lib)
+                    .write_doc(
+                        self.output
+                            .clone()
+                            .unwrap_or(std::path::PathBuf::from(lib.name().unwrap())),
+                    )
+                    .map_err(|err| miette::miette!("{err}"))?;
+
+                Ok(())
             }
+            Err(diag) => Err(miette::miette!(
+                "Library has issues:\n{err}",
+                err = compiler.render_diag_to_string(&diag)
+            )),
         }
-
-        Ok(())*/
     }
 }
