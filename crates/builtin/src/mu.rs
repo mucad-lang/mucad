@@ -662,28 +662,6 @@ pub mod geo2d {
         pub end: Angle,
     }
 
-    /// A rectangle with rounded corners.
-    #[derive(Serialize, Deserialize, Debug)]
-    #[builtin_primitive(Geometry2D)]
-    pub struct RoundedRect {
-        /// Width of the rectangle.
-        pub width: Length,
-        /// Height of the rectangle.
-        pub height: Length,
-        /// X position (left side) of the rectangle.
-        pub x: Length,
-        /// Y position (bottom side) of the rectangle.
-        pub y: Length,
-        /// Radius of the bottom left corner.
-        pub radius_bottom_left: Length,
-        /// Radius of the bottom right corner.
-        pub radius_bottom_right: Length,
-        /// Radius of the top left corner.
-        pub radius_top_left: Length,
-        /// Radius of the top right corner.
-        pub radius_top_right: Length,
-    }
-
     /// A line between two points.
     #[derive(Serialize, Deserialize, Debug)]
     #[builtin_primitive(Geometry2D)]
@@ -733,7 +711,7 @@ pub mod geo2d {
         /// The text.
         pub text: String,
         /// Font file (`*.ttf` or `*.otf`), a built-in font if empty.
-        pub font_file: String,
+        pub font_name: String,
     }
 
     /// A path like the `d` attribute of an SVG path, e.g. `M 0 0 L 10 0 L 10 10 Z`, with

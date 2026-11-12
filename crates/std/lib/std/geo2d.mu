@@ -109,10 +109,10 @@ pub sketch RoundedRect(
     height: Length,
     x: Length,
     y: Length,
-    radius_bottom_left: Length,
-    radius_bottom_right: Length,
-    radius_top_left: Length,
-    radius_top_right: Length
+    radius_bottom_left = 0mm,
+    radius_bottom_right = 0mm,
+    radius_top_left = 0mm,
+    radius_top_right = 0mm,
 ) {
     init(width: Length, height: Length, radius: Length) {
         x = -width / 2.0; // center x
@@ -134,13 +134,30 @@ pub sketch RoundedRect(
         radius_top_right = radius;
     }
 
-    __mu::geo2d::RoundedRect(
-        width, height, x, y,
-        radius_bottom_left,
-        radius_bottom_right,
-        radius_top_left,
-        radius_top_right
-    );
+    init(
+        size: Length,
+        radius_bottom_left = 0.01mm,
+        radius_bottom_right = 0.01mm,
+        radius_top_left = 0.01mm,
+        radius_top_right = 0.01mm,
+    ) {
+        width = size;
+        height = size;
+        x = -size / 2.0; // center x
+        y = -size / 2.0; // center y
+    }
+
+    std::assert(radius_bottom_left + radius_bottom_right <= width);
+    std::assert(radius_top_left + radius_top_right <= width);
+    std::assert(radius_bottom_left + radius_top_left <= height);
+    std::assert(radius_bottom_right + radius_top_right <= height);
+
+    {
+        Circle(radius_bottom_left, (x = x + radius_bottom_left, y = y + radius_bottom_left));
+        Circle(radius_bottom_right, (x = x + width - radius_bottom_right, y = y + radius_bottom_right));
+        Circle(radius_top_left, (x = x + radius_top_left, y = y + height - radius_top_left));
+        Circle(radius_top_right, (x = x + width - radius_top_right, y = y + height - radius_top_right));
+    }.std::ops::hull()
 }
 
 /// Circle sector definition.

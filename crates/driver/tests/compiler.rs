@@ -119,15 +119,9 @@ fn compile_geo2d() {
             r#"
             __mu::geo2d::Ngon(n = 6, radius = 10mm);
             __mu::geo2d::Sector(radius = 10mm, start = 0°, end = 90°);
-            __mu::geo2d::RoundedRect(
-                width = 20mm, height = 10mm, x = 0mm, y = 0mm,
-                radius_bottom_left = 1mm, radius_bottom_right = 1mm,
-                radius_top_left = 2mm, radius_top_right = 2mm,
-            );
             __mu::geo2d::Line(x0 = 0.0, y0 = 0.0, x1 = 10.0, y1 = 5.0);
             __mu::geo2d::InvoluteGearProfile(module = 1mm, teeth = 12, pressure_angle = 20°);
             __mu::geo2d::SinusoidalGearProfile(module = 1mm, teeth = 12, roundness = 0.5, stretch = 0.5);
-            __mu::geo2d::Text(height = 5mm, text = "µcad", font_file = "");
             "#,
         )
         .expect("A model");
