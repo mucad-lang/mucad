@@ -203,7 +203,7 @@ pub fn to_url(fs: &dyn FileSystem, input: impl AsRef<str>) -> Result<Url, Locate
     // Try to parse as a formal URL (e.g., https://, file://, mcad://)
     match Url::parse(input) {
         // Here we test if the URL was parsed and actually contains a file path, including `c:/foo/bar` on Windows.
-        Ok(_) if let Some(_) = url_from_file_path(&std::path::Path::new(input)) => {
+        Ok(_) if let Some(_) = url_from_file_path(std::path::Path::new(input)) => {
             make_file_url(fs, input)
         }
         // We can simply return the URL for any other scheme than `file`.

@@ -30,11 +30,9 @@ impl RunCommand<()> for Doc {
                 eprintln!("{}", compiler.render_diag_to_string(&diag));
 
                 mu::docgen::LibraryDocGenerator::new(&lib)
-                    .write_doc(
-                        self.output
-                            .clone()
-                            .unwrap_or(std::path::PathBuf::from(lib.name().unwrap())),
-                    )
+                    .write_doc(self.output.clone().unwrap_or(std::path::PathBuf::from(
+                        lib.name().expect("Library must have a name"),
+                    )))
                     .map_err(|err| miette::miette!("{err}"))?;
 
                 Ok(())
