@@ -36,7 +36,7 @@ pub trait ConstantVisitorMut: LeafVisitorMut {
 
     fn visit_constant_expr(&mut self, expr: &mut ir::ConstantExpression) {
         match expr {
-            ir::ConstantExpression::Invalid => {}
+            ir::ConstantExpression::Error(_) => {}
             ir::ConstantExpression::Value(value) => self.visit_constant_value(value),
             ir::ConstantExpression::Path(path) => self.visit_path(path),
             ir::ConstantExpression::Call(call) => self.visit_constant_call(call),
@@ -88,7 +88,7 @@ pub trait WorkbenchExpressionVisitorMut: ConstantVisitorMut {
 
     fn visit_workbench_expr(&mut self, expr: &mut ir::workbench::WorkbenchExpression) {
         match expr {
-            ir::WorkbenchExpression::Invalid => {}
+            ir::WorkbenchExpression::Error(_) => {}
             ir::WorkbenchExpression::Value(constant_value) => {
                 self.visit_constant_value(constant_value)
             }
@@ -178,7 +178,7 @@ pub trait FnVisitorMut: ConstantVisitorMut {
 
     fn visit_fn_expr(&mut self, expr: &mut ir::function::FunctionExpression) {
         match expr {
-            ir::FunctionExpression::Invalid => {}
+            ir::FunctionExpression::Error(_) => {}
             ir::FunctionExpression::Value(value) => self.visit_constant_value(value),
             ir::FunctionExpression::Path(path) => self.visit_path(path),
             ir::FunctionExpression::Scope(scope) => self.visit_fn_scope(scope),

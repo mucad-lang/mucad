@@ -242,10 +242,9 @@ impl Desugar<ast::Expression> for ir::ConstantExpression {
             ast::Expression::UnaryOperation(unop) => ir::Call::desugar(unop, context)?.into(),
             ast::Expression::ElementAccess(access) => Self::desugar(access, context)?,
             expr => {
-                context.push_err(LowerError::InvalidConstantExpression {
-                    src_ref: context.span_to_src_ref(&expr.span()),
-                });
-                Self::Invalid
+                let src_ref = context.span_to_src_ref(&expr.span());
+                context.push_err(LowerError::InvalidConstantExpression { src_ref });
+                Self::Error(src_ref)
             }
         })
     }

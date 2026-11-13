@@ -165,7 +165,7 @@ impl DeriveType for ir::ConstantExpression {
             ir::ConstantExpression::Value(value) => value.ty(),
             ir::ConstantExpression::Path(path) => ctx.path_type(path),
             ir::ConstantExpression::Call(call) => ctx.call_type(&call.path),
-            ir::ConstantExpression::Invalid => Type::Any,
+            _ => Type::Any,
         }
     }
 }
@@ -178,9 +178,7 @@ impl DeriveType for ir::WorkbenchExpression {
             ir::WorkbenchExpression::Call(call) => ctx.call_type(&call.path),
             // The model of a group depends on its statements.
             ir::WorkbenchExpression::If(if_) => if_type(if_, &|_| Type::Any),
-            ir::WorkbenchExpression::Group(_)
-            | ir::WorkbenchExpression::Marker(_)
-            | ir::WorkbenchExpression::Invalid => Type::Any,
+            ir::WorkbenchExpression::Group(_) | ir::WorkbenchExpression::Marker(_) => Type::Any,
             _ => Type::Any,
         }
     }
@@ -194,7 +192,6 @@ impl DeriveType for ir::FunctionExpression {
             ir::FunctionExpression::Call(call) => ctx.call_type(&call.path),
             ir::FunctionExpression::Scope(scope) => scope.derive_type(ctx),
             ir::FunctionExpression::If(if_) => if_type(if_, &|scope| scope.derive_type(ctx)),
-            ir::FunctionExpression::Invalid => Type::Any,
             _ => Type::Any,
         }
     }

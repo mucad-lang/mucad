@@ -203,7 +203,7 @@ impl std::fmt::Display for ir::ConstantExpression {
             f,
             "{name}({expr})",
             expr = match &self {
-                ir::ConstantExpression::Invalid => String::new(),
+                ir::ConstantExpression::Error(_) => String::new(),
                 ir::ConstantExpression::Value(constant_value) =>
                     constant_value.to_string_one_line(),
                 ir::ConstantExpression::Path(path) => path.to_string_one_line(),

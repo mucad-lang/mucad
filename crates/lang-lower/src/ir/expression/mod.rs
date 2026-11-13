@@ -71,7 +71,7 @@ pub trait ExprSpec: Serialize + SrcReferrer + SingleIdentifier + From<Value> {
 /// An expression that can be evaluated during `resolve` phase.
 #[derive(Debug, Clone, From, IntoStaticStr, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ConstantExpression {
-    Invalid,
+    Error(SrcRef),
     Value(ir::ConstantValue),
     Path(ir::Path),
     Call(ir::Call<ConstantExpression>),
@@ -89,7 +89,7 @@ impl SingleIdentifier for ConstantExpression {
 impl SrcReferrer for ConstantExpression {
     fn src_ref(&self) -> SrcRef {
         match &self {
-            ConstantExpression::Invalid => SrcRef::none(),
+            ConstantExpression::Error(src_ref) => *src_ref,
             ConstantExpression::Value(literal) => literal.src_ref(),
             ConstantExpression::Path(name) => name.src_ref(),
             ConstantExpression::Call(call) => call.src_ref,

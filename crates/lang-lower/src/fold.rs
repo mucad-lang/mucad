@@ -95,7 +95,7 @@ impl<'a, 'source> ir::visitor::LeafVisitorMut for Fold<'a, 'source> {}
 impl<'a, 'source> ir::visitor::ConstantVisitorMut for Fold<'a, 'source> {
     fn visit_constant_expr(&mut self, expr: &mut ir::ConstantExpression) {
         let value = match expr {
-            ir::ConstantExpression::Invalid | ir::ConstantExpression::Value(_) => None,
+            ir::ConstantExpression::Error(_) | ir::ConstantExpression::Value(_) => None,
             ir::ConstantExpression::Path(path) => self.path_to_value(path),
             ir::ConstantExpression::Call(call) => {
                 self.call_to_value(call, |fold, expr| fold.visit_constant_expr(expr))
@@ -109,7 +109,7 @@ impl<'a, 'source> ir::visitor::ConstantVisitorMut for Fold<'a, 'source> {
 impl<'a, 'source> ir::visitor::WorkbenchExpressionVisitorMut for Fold<'a, 'source> {
     fn visit_workbench_expr(&mut self, expr: &mut ir::workbench::WorkbenchExpression) {
         let value = match expr {
-            ir::WorkbenchExpression::Invalid | ir::WorkbenchExpression::Value(_) => None,
+            ir::WorkbenchExpression::Error(_) | ir::WorkbenchExpression::Value(_) => None,
             ir::WorkbenchExpression::Path(path) => self.path_to_value(path),
             ir::WorkbenchExpression::Call(call) => {
                 self.call_to_value(call, |fold, expr| fold.visit_workbench_expr(expr))
@@ -133,7 +133,7 @@ impl<'a, 'source> ir::visitor::WorkbenchVisitorMut for Fold<'a, 'source> {}
 impl<'a, 'source> ir::visitor::FnVisitorMut for Fold<'a, 'source> {
     fn visit_fn_expr(&mut self, expr: &mut ir::function::FunctionExpression) {
         let value = match expr {
-            ir::FunctionExpression::Invalid | ir::FunctionExpression::Value(_) => None,
+            ir::FunctionExpression::Error(_) | ir::FunctionExpression::Value(_) => None,
             ir::FunctionExpression::Path(path) => self.path_to_value(path),
             ir::FunctionExpression::Call(call) => {
                 self.call_to_value(call, |fold, expr| fold.visit_fn_expr(expr))

@@ -173,7 +173,7 @@ impl Eval for symbol::WorkbenchExpression {
     fn eval(&self, context: &mut EvalContext) -> EvalResult {
         match &self {
             // The error has already been reported when lowering.
-            symbol::WorkbenchExpression::Invalid => Ok(Value::None),
+            symbol::WorkbenchExpression::Error(_) => Ok(Value::None),
             symbol::WorkbenchExpression::Value(constant_value) => {
                 Ok(constant_value.value().clone())
             }

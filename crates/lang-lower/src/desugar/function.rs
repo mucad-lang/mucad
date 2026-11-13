@@ -103,7 +103,7 @@ impl Desugar<ast::Expression> for ir::FunctionExpression {
             ast::Expression::Body(body) => Self::Scope(ir::Scope::desugar(body, context)?),
             ast::Expression::ElementAccess(access) => Self::desugar(access, context)?,
             ast::Expression::If(if_expr) => Self::If(ir::If::desugar(if_expr, context)?),
-            ast::Expression::Error(_) => todo!(),
+            ast::Expression::Error(span) => Self::Error(context.span_to_src_ref(span)),
         })
     }
 }

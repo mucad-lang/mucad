@@ -4,7 +4,7 @@
 use crate::{Desugar, LowerContext, LowerError, LowerResult, desugar::DesugarExpr, ir};
 
 use mucad_builtin::__mu;
-use mucad_lang_base::{Identifier, PushIssue, SpanToSrcRef, SrcRef};
+use mucad_lang_base::{Identifier, PushIssue, SpanToSrcRef, SrcRef, SrcReferrer};
 use mucad_lang_parse::ast;
 
 impl<Expr: DesugarExpr> Desugar<ast::Call> for ir::Call<Expr> {
@@ -177,7 +177,7 @@ pub fn lower_spec(
         .and_then(|r| r.as_ref().ok())
         .copied()
         .map(|w| ir::ConstantValue::new(w as i64).into())
-        .unwrap_or(ir::ConstantExpression::Invalid);
+        .unwrap_or(ir::ConstantExpression::Error(expr.src_ref()));
 
     let precision = spec
         .precision
@@ -185,7 +185,7 @@ pub fn lower_spec(
         .and_then(|r| r.as_ref().ok())
         .copied()
         .map(|p| ir::ConstantValue::new(p as i64).into())
-        .unwrap_or(ir::ConstantExpression::Invalid);
+        .unwrap_or(ir::ConstantExpression::Error(expr.src_ref()));
 
     Ok(ir::Call {
         path: __mu!(core::format_spec).into(),

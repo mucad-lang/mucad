@@ -63,7 +63,7 @@ impl std::fmt::Display for ir::WorkbenchExpression {
             f,
             "{name}({expr})",
             expr = match &self {
-                ir::WorkbenchExpression::Invalid => String::new(),
+                ir::WorkbenchExpression::Error(_) => String::new(),
                 ir::WorkbenchExpression::Value(constant_value) =>
                     constant_value.to_string_one_line(),
                 ir::WorkbenchExpression::Path(path) => path.to_string_one_line(),

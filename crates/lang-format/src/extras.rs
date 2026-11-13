@@ -42,7 +42,7 @@ impl Format for ast::LeadingExtras {
                     .take(2)
                     .collect::<Vec<Node>>()
                     .into(),
-                _ => todo!(),
+                _ => unimplemented!(),
             })
             .collect::<Vec<_>>()
             .into();
@@ -76,7 +76,7 @@ impl Format for ast::TrailingExtras {
                         .take(2) // Two white spaces maximum
                         .collect::<Vec<_>>()
                         .into(),
-                    _ => todo!(),
+                    _ => unimplemented!(),
                 })
                 .collect::<Vec<_>>()
         )

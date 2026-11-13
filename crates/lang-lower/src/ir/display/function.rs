@@ -37,7 +37,7 @@ impl std::fmt::Display for ir::FunctionExpression {
             f,
             "{name}({expr})",
             expr = match &self {
-                ir::FunctionExpression::Invalid => String::new(),
+                ir::FunctionExpression::Error(_) => String::new(),
                 ir::FunctionExpression::Value(constant_value) =>
                     constant_value.to_string_one_line(),
                 ir::FunctionExpression::Path(path) => path.to_string_one_line(),

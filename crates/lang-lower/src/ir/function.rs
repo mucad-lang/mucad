@@ -103,7 +103,7 @@ pub struct Scope {
 #[derive(Debug, Clone, Hash, From, IntoStaticStr, PartialEq, Serialize, Deserialize)]
 pub enum FunctionExpression {
     /// Invalid expression (an error occurred)
-    Invalid,
+    Error(SrcRef),
     /// A constant value
     Value(ir::ConstantValue),
     /// A path to a constant
@@ -145,7 +145,7 @@ impl ir::ExprSpec for FunctionExpression {
 impl CastInto<ir::FunctionExpression> for ir::ConstantExpression {
     fn cast_into(self: ir::ConstantExpression) -> ir::FunctionExpression {
         match self {
-            ir::ConstantExpression::Invalid => ir::FunctionExpression::Invalid,
+            ir::ConstantExpression::Error(src_ref) => ir::FunctionExpression::Error(src_ref),
             ir::ConstantExpression::Value(literal) => ir::FunctionExpression::Value(literal),
             ir::ConstantExpression::Path(path) => ir::FunctionExpression::Path(path),
             ir::ConstantExpression::Call(call) => ir::FunctionExpression::Call(call.cast_into()),
@@ -156,7 +156,7 @@ impl CastInto<ir::FunctionExpression> for ir::ConstantExpression {
 impl SrcReferrer for FunctionExpression {
     fn src_ref(&self) -> SrcRef {
         match &self {
-            FunctionExpression::Invalid => SrcRef::none(),
+            FunctionExpression::Error(src_ref) => *src_ref,
             FunctionExpression::Value(literal) => literal.src_ref(),
             FunctionExpression::Path(name) => name.src_ref(),
             FunctionExpression::Scope(scope) => scope.src_ref,

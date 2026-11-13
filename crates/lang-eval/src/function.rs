@@ -173,7 +173,7 @@ impl Eval<FlowSignal> for symbol::FunctionExpression {
         use symbol::FunctionExpression as Expr;
         match self {
             // The error has already been reported when lowering.
-            Expr::Invalid => Ok(FlowSignal::Yield(Value::None)),
+            Expr::Error(_) => Ok(FlowSignal::Yield(Value::None)),
             Expr::Value(literal) => Ok(FlowSignal::Yield(literal.value().clone())),
             Expr::Path(name) => name.eval(context),
             Expr::Scope(s) => s.eval(context),
@@ -224,7 +224,7 @@ impl Eval<FlowSignal> for symbol::FunctionStatement {
                     FlowSignal::Return(value) => Ok(FlowSignal::Return(value)),
                 }
             }
-            _ => todo!(),
+            _ => unimplemented!(),
         }
     }
 }

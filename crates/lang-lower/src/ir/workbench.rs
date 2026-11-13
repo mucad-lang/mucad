@@ -221,7 +221,7 @@ impl Marker {
 #[non_exhaustive]
 #[derive(Debug, Clone, From, PartialEq, IntoStaticStr, Hash, Serialize, Deserialize)]
 pub enum WorkbenchExpression {
-    Invalid,
+    Error(SrcRef),
     Value(ir::ConstantValue),
     Path(ir::Path),
     Group(ir::Group),
@@ -248,7 +248,7 @@ impl SrcReferrer for WorkbenchExpression {
     fn src_ref(&self) -> SrcRef {
         use WorkbenchExpression::*;
         match &self {
-            Invalid => SrcRef::none(),
+            Error(src_ref) => *src_ref,
             Value(literal) => literal.src_ref(),
             Path(name) => name.src_ref(),
             Group(group) => group.src_ref,
@@ -282,7 +282,7 @@ impl SingleIdentifier for WorkbenchExpression {
 impl CastInto<ir::WorkbenchExpression> for ir::ConstantExpression {
     fn cast_into(self: ir::ConstantExpression) -> ir::WorkbenchExpression {
         match self {
-            ir::ConstantExpression::Invalid => ir::WorkbenchExpression::Invalid,
+            ir::ConstantExpression::Error(src_ref) => ir::WorkbenchExpression::Error(src_ref),
             ir::ConstantExpression::Value(literal) => ir::WorkbenchExpression::Value(literal),
             ir::ConstantExpression::Path(name) => ir::WorkbenchExpression::Path(name),
             ir::ConstantExpression::Call(call) => ir::WorkbenchExpression::Call(call.cast_into()),
