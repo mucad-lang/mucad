@@ -123,7 +123,26 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
                         src_ref: self.src_ref,
                     }),
                 }
-            }
+            },
+            symbol::Path::Resolved(symbol::SymbolId::Item(id)) => {
+                let args = self.args.eval(context)?;
+        
+                match context.lib_id() {
+                    Some(lib_id) => context.call_symbol(*lib_id, *id, &args),
+                    None => context.catch(EvalErrorKind::NoLibraryToEvaluate),
+                }
+                .map(FlowSignal::Yield)
+            },
+            symbol::Path::Resolved(symbol::SymbolId::External(external_id)) => {
+                let args = self.args.eval(context)?;
+        
+                context.call_symbol(
+                    external_id.lib_id,
+                    external_id.id,
+                    &args,
+                )
+                .map(FlowSignal::Yield)
+            },
             _ => context.catch(EvalError::new(EvalErrorKind::SymbolCannotBeCalled {
                 path: context.current_symbol_name().unwrap_or_default(),
                 src_ref: self.src_ref,
