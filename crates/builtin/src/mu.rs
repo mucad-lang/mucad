@@ -435,13 +435,13 @@ pub mod math {
         Ok(x.sqrt()?)
     }
 
-    #[builtin_fn(math::sin(x: Any) -> Any)]
+    #[builtin_fn(math::sin(x: Angle) -> Scalar)]
     pub fn sin(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let x = args.get("x");
         Ok(x.sin()?)
     }
 
-    #[builtin_fn(math::cos(x: Any) -> Any)]
+    #[builtin_fn(math::cos(x: Angle) -> Scalar)]
     pub fn cos(args: Arguments, _ctx: &mut BuiltinEvalContext) -> BuiltinResult {
         let x = args.get("x");
         Ok(x.cos()?)
