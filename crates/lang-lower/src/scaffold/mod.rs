@@ -198,6 +198,12 @@ impl ir::Attributes {
                         ctx,
                     );
                 }
+                // `#[introduced]` without the version, e.g. instead of `#[introduced("0.6.0")]`.
+                "introduced" => ctx.push_err(LowerError::MissingAttributeArgument {
+                    attr: "introduced".to_string(),
+                    arg: "version".to_string(),
+                    src_ref: tag.src_ref(),
+                }),
                 _ => {}
             }
         }
@@ -241,16 +247,26 @@ impl ir::Attributes {
                     }
                 }
                 "deprecated" => {
-                    let since = cmd.argument_list.extract_arg_value("since");
-                    let since =
-                        Self::value_as_string(since, ctx).and_then(|s| s.parse::<Version>().ok());
+                    // An invalid version is reported, like the one of `#[introduced]`.
+                    let mut version = |arg: &str| {
+                        let value = cmd.argument_list.extract_arg_value(arg);
+                        let string = Self::value_as_string(value, ctx)?;
+                        match string.parse::<Version>() {
+                            Ok(version) => Some(version),
+                            Err(_) => {
+                                ctx.push_err(LowerError::InvalidVersionString {
+                                    value: string,
+                                    src_ref: cmd.src_ref,
+                                });
+                                None
+                            }
+                        }
+                    };
+                    let since = version("since");
+                    let removal_in = version("removal_in");
 
                     let note = cmd.argument_list.extract_arg_value("note");
                     let note = Self::value_as_string(note, ctx);
-
-                    let removal_in = cmd.argument_list.extract_arg_value("removal_in");
-                    let removal_in = Self::value_as_string(removal_in, ctx)
-                        .and_then(|s| s.parse::<Version>().ok());
 
                     let dep = Stability::Deprecated {
                         since,

@@ -1,0 +1,10 @@
+---
+source: crates/lang-resolve/tests/library.rs
+expression: lib
+---
+pub [ROOT] Root
+└── pub mod stability_file_module: SourceFile Loaded(stability_file_module.mu)
+    ├── ⚠️ pub mod old: SourceFile Loaded(stability_file_module/old.mu) /// The old module, declared deprecated.
+    │   └── pub const A: Constant Any: Value(1)
+    └── 🧪 pub mod new: SourceFile Loaded(stability_file_module/new.mu) /// The new module, experimental by its file.
+        └── pub const B: Constant Any: Value(2)

@@ -35,6 +35,9 @@ pub struct ModelAttributes {
 #[derive(Debug, PartialEq, Clone, Hash, Serialize, Deserialize)]
 pub struct WorkbenchStatement {
     pub attr: ModelAttributes,
+    /// The version annotation of a property, e.g. `#[deprecated] prop a = 42mm;`, which is part
+    /// of the API of the workbench, the default for other statements.
+    pub ver: VersionAnnotation,
     pub src_ref: SrcRef,
     pub visibility: ir::Visibility, // public = property
     pub keyword_src_ref: SrcRef,
@@ -55,6 +58,7 @@ impl WorkbenchStatement {
         Self {
             name: Some(Identifier::from(name.as_ref())),
             attr: Default::default(),
+            ver: Default::default(),
             src_ref: Default::default(),
             visibility: Visibility::Public,
             keyword_src_ref: Default::default(),
@@ -68,6 +72,7 @@ impl From<WorkbenchExpression> for WorkbenchStatement {
     fn from(expression: WorkbenchExpression) -> Self {
         Self {
             attr: Default::default(),
+            ver: Default::default(),
             src_ref: Default::default(),
             visibility: Default::default(),
             keyword_src_ref: Default::default(),

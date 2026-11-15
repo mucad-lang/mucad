@@ -10,7 +10,7 @@ expression: "ir.to_ron().expect(\"No error\")"
     ),
     payload: (
         input_hash: "0xa18f78da53e23991",
-        output_hash: "0xe943f85c528134cc",
+        output_hash: "0x9418bf0df406d2d7",
         tree: (
             root: (
                 index1: 1,
@@ -358,6 +358,10 @@ expression: "ir.to_ron().expect(\"No error\")"
                                             resolution: None,
                                             name: None,
                                             layer: None,
+                                        ),
+                                        ver: (
+                                            introduced: None,
+                                            stability: Stable,
                                         ),
                                         src_ref: "11:5 @ 0xa5eb23e1ba0633ef (323..419)",
                                         visibility: Public,

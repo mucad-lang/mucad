@@ -1,0 +1,43 @@
+---
+source: crates/lang-lower/tests/display.rs
+expression: ir
+---
+pub stability: Source
+├── /// A deprecated module.
+│   deprecated (since 0.6.0)
+│   pub old: InlineModule
+│   └── pub A: Constant = Any: Value(1)
+├── /// A stable constant.
+│   pub STABLE: Constant = Any: Value(1)
+├── /// A deprecated constant.
+│   deprecated
+│   pub DEPRECATED: Constant = Any: Value(2)
+├── /// An experimental constant.
+│   experimental
+│   pub EXPERIMENTAL: Constant = Any: Value(3)
+├── /// A deprecated function with all arguments.
+│   deprecated (since 0.5.0, removal in 0.7.0, "Use g() instead")
+│   pub f: Function = ()
+│   
+│       statements:
+│       - return Value(1)
+│   
+├── /// An experimental function introduced in 0.6.0.
+│   experimental (introduced in v0.6.0)
+│   pub g: Function = ()
+│   
+│       statements:
+│       - return Value(2)
+│   
+└── /// An experimental sketch.
+    experimental
+    pub Disc: Workbench = sketch(radius: Length)
+        inits:
+        - init(radius: Length)
+        - init(r: Length) [deprecated ("Use the diameter")]
+        - init(diameter: Length) [experimental]
+    
+        statements:
+        - prop r: Any [deprecated ("Use radius")] Path(radius)
+        - prop d: Any [experimental] Call(__mu::core::mul[0x5da4622536ec034](lhs = Path(r…
+        - prop Call(__mu::geo2d::Circle[0x1801bf438d8b094](radius? = Path(radius)))

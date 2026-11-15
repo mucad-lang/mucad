@@ -42,7 +42,8 @@ impl std::fmt::Display for Symbol {
 impl DisplayOneLine for Symbol {
     fn to_string_one_line(&self) -> String {
         format!(
-            "{vis}{keyword} {name}{def}{ver}{doc}",
+            // The stability marker is in front of the symbol, e.g. `⚠️ pub fn f: …`.
+            "{ver}{vis}{keyword} {name}{def}{doc}",
             vis = match &self.meta.vis {
                 Visibility::Public => "pub ",
                 Visibility::Private => "",

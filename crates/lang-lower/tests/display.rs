@@ -34,3 +34,4 @@ macro_rules! snapshot_test_display {
 
 snapshot_test_display!(circle);
 snapshot_test_display!(builtin);
+snapshot_test_display!(stability);

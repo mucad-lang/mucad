@@ -6,7 +6,7 @@
 pub mod def;
 mod symbol_path;
 
-use mucad_lang_base::VersionAnnotation;
+use mucad_lang_base::{Stability, VersionAnnotation};
 use mucad_lang_lower::ir;
 
 use std::hash::Hash;
@@ -44,6 +44,21 @@ impl Symbol {
             doc: item.doc.clone(),
             ver: item.ver.clone(),
             def: SymbolDef::SourceFile(SourceFile::Loaded { path, source }),
+        }
+    }
+
+    /// Attach the declaration `item` of a file module, e.g. `#[deprecated] mod geo;`, to the
+    /// symbol of its loaded source file: the documentation of the declaration comes before the
+    /// one of the file, e.g. `//! …`, the version annotation of the declaration before the one
+    /// of the inner attributes of the file, e.g. `#![experimental]`.
+    pub(crate) fn attach_declaration(&mut self, item: &ir::Item) {
+        self.doc = DocBlock::merge(&item.doc, &self.doc);
+        let (declared, file) = (&item.ver, &mut self.ver);
+        if declared.introduced.is_some() {
+            file.introduced = declared.introduced.clone();
+        }
+        if declared.stability != Stability::Stable {
+            file.stability = declared.stability.clone();
         }
     }
 

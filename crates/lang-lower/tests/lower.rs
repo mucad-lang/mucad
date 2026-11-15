@@ -158,6 +158,7 @@ test_diagnostic!(unexpected_statements);
 test_diagnostic!(init);
 test_diagnostic!(init_statement);
 test_diagnostic!(rect);
+test_diagnostic!(stability_errors);
 
 /// Test serialization
 #[test_that::test]

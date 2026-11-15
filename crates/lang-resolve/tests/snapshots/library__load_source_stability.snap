@@ -1,0 +1,14 @@
+---
+source: crates/lang-resolve/tests/library.rs
+expression: lib_ctx.lib()
+---
+pub [ROOT] Root
+└── pub mod stability: SourceFile Loaded(stability.mu)
+    ├── ⚠️ pub mod old: InlineModule /// A deprecated module.
+    │   └── pub const A: Constant Any: Value(1)
+    ├── pub const STABLE: Constant Any: Value(1) /// A stable constant.
+    ├── ⚠️ pub const DEPRECATED: Constant Any: Value(2) /// A deprecated constant.
+    ├── 🧪 pub const EXPERIMENTAL: Constant Any: Value(3) /// An experimental constant.
+    ├── ⚠️ pub fn f: Function () /// A deprecated function with all arguments.
+    ├── 🧪 pub fn g: Function () /// An experimental function introduced in 0.6.0.
+    └── 🧪 pub sketch Disc: Workbench sketch(radius: Length) /// An experimental sketch.

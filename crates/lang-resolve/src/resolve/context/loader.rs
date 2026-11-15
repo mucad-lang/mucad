@@ -244,7 +244,12 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                                 }
                             };
                             match loaded {
-                                Ok((Some(id), _)) => id,
+                                // The declaration, e.g. `#[deprecated] mod geo;`, belongs to
+                                // the symbol of the file.
+                                Ok((Some(id), _)) => {
+                                    self.arena_mut()[id].get_mut().attach_declaration(item);
+                                    id
+                                }
                                 // The issues of the file module have been recorded already.
                                 Ok((None, path)) => {
                                     let path = self.lib().relative_path(path);

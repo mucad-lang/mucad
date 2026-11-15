@@ -1,14 +1,25 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use mucad_lang_base::{DisplayOneLine, element::Visibility};
+use mucad_lang_base::{DisplayOneLine, VersionAnnotation, element::Visibility};
 
 use crate::ir::{self, display::fmt_statements};
 
+/// Write the version annotation of an initializer or a property behind it, e.g.
+/// ` [deprecated (since 0.5.0)]`, nothing for the default.
+fn fmt_ver(ver: &VersionAnnotation, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    if *ver == VersionAnnotation::default() {
+        Ok(())
+    } else {
+        write!(f, " [{ver}]")
+    }
+}
+
 impl std::fmt::Display for ir::Init {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // TODO: Display attributes
-        write!(f, "init({})", self.parameters)
+        // TODO: Display the documentation
+        write!(f, "init({})", self.parameters)?;
+        fmt_ver(&self.attr.ver, f)
     }
 }
 
@@ -39,6 +50,11 @@ impl std::fmt::Display for ir::WorkbenchStatement {
         // TODO Display attributes and exports
         if let Some(name) = &self.name {
             write!(f, "{name}: {ty}", ty = self.ty)?;
+            // Behind the name of a property, before its expression, which may be shortened.
+            fmt_ver(&self.ver, f)?;
+            if self.ver != VersionAnnotation::default() {
+                write!(f, " ")?;
+            }
         };
         write!(f, "{}", self.expression)
     }

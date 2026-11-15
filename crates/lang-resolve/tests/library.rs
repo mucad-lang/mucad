@@ -124,3 +124,54 @@ fn source_files_relative_to_library() {
     };
     assert_eq!(loaded.source_files(), files);
 }
+
+/// The stability attributes are attached to their symbols.
+#[test]
+fn load_source_stability() {
+    let mut library = Library::new();
+    let mut ctx = ResolveContext::new();
+    let mut lib_ctx = lib_ctx(&mut library, &mut ctx);
+
+    lib_ctx
+        .load_file("tests/test_cases/stability.mu")
+        .expect("No error");
+    insta::assert_snapshot!("load_source_stability", lib_ctx.lib());
+}
+
+/// The declaration of a file module, e.g. `#[deprecated] mod old;`, is attached to the symbol
+/// of its file, before the inner attributes of the file, e.g. `#![experimental]`.
+#[test]
+fn load_source_stability_file_module() {
+    let mut library = Library::new();
+    let mut ctx = ResolveContext::new();
+    let mut lib_ctx = lib_ctx(&mut library, &mut ctx);
+
+    lib_ctx
+        .load_file("tests/test_cases/stability_file_module.mu")
+        .expect("No error");
+    let lib = lib_ctx.lib();
+    let root = lib.root();
+    let file = root
+        .find_symbol_node("stability_file_module")
+        .expect("The file")
+        .id;
+    let module = |name: &str| {
+        let id = lib.look_up(file, &path(name)).expect("A module");
+        lib.arena[id].get().clone()
+    };
+
+    let old = module("old");
+    assert!(matches!(
+        old.ver.stability,
+        mucad_lang_base::Stability::Deprecated { .. }
+    ));
+    assert_eq!(
+        old.doc.content,
+        "The old module, declared deprecated.\nThe declaration wins over this attribute."
+    );
+    assert_eq!(
+        module("new").ver.stability,
+        mucad_lang_base::Stability::Experimental
+    );
+    insta::assert_snapshot!("load_source_stability_file_module", lib);
+}
