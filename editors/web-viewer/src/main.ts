@@ -643,9 +643,9 @@ addLiteralStepping(
 // The completions are copied, so that the objects of WebAssembly can be freed at once.
 addCompletion((code, lineNo, column) =>
   mucad.complete(code, lineNo, column).map((completion) => {
-    const { name, kind, doc } = completion;
+    const { name, kind, doc, stability } = completion;
     completion.free();
-    return { name, kind, doc };
+    return { name, kind, doc, stability };
   }),
 );
 

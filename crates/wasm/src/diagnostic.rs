@@ -28,6 +28,7 @@ pub struct Diagnostic {
     end_line_no: u32,
     end_column: u32,
     severity: Severity,
+    deprecated: bool,
 }
 
 #[wasm_bindgen]
@@ -67,6 +68,12 @@ impl Diagnostic {
     pub fn severity(&self) -> Severity {
         self.severity
     }
+
+    /// Whether this is the use of a deprecated symbol, which editors show crossed out.
+    #[wasm_bindgen(getter)]
+    pub fn deprecated(&self) -> bool {
+        self.deprecated
+    }
 }
 
 impl Diagnostic {
@@ -98,6 +105,7 @@ impl Diagnostic {
                 Some(mu::base::Severity::Warning) => Severity::Warning,
                 Some(mu::base::Severity::Error) | None => Severity::Error,
             },
+            deprecated: diagnostic.is_deprecated_use(),
         }
     }
 }

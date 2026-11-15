@@ -113,6 +113,8 @@ function marker(diagnostic: Diagnostic): monaco.editor.IMarkerData {
     endLineNumber: diagnostic.endLineNo,
     endColumn: diagnostic.endColumn,
     source: "µcad",
+    // The use of a deprecated symbol is crossed out.
+    tags: diagnostic.deprecated ? [monaco.MarkerTag.Deprecated] : undefined,
   };
 }
 
@@ -178,6 +180,8 @@ export interface Completion {
   kind: string;
   /** The documentation in Markdown. */
   doc?: string;
+  /** `stable`, `experimental` or `deprecated`. */
+  stability: string;
 }
 
 /** The Monaco kinds of the kinds of completions. */
@@ -214,7 +218,12 @@ export function addCompletion(
       const suggestions: monaco.languages.CompletionItem[] = symbols.map((symbol) => ({
         label: symbol.name,
         kind: COMPLETION_KINDS[symbol.kind] ?? monaco.languages.CompletionItemKind.Variable,
-        detail: symbol.kind,
+        // Deprecated symbols are crossed out, experimental ones are marked in the detail.
+        detail: symbol.stability === "experimental" ? `${symbol.kind} (experimental)` : symbol.kind,
+        tags:
+          symbol.stability === "deprecated"
+            ? [monaco.languages.CompletionItemTag.Deprecated]
+            : undefined,
         documentation: symbol.doc ? { value: symbol.doc } : undefined,
         insertText: symbol.name,
         range,

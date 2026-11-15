@@ -15,6 +15,14 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
+    /// Whether the diagnostic is about the use of a deprecated symbol, which editors show
+    /// crossed out: its code is of a stage and `deprecated`, e.g. `resolve::deprecated`.
+    pub fn is_deprecated_use(&self) -> bool {
+        self.report
+            .code()
+            .is_some_and(|code| code.to_string().ends_with("::deprecated"))
+    }
+
     pub fn render_source(
         &self,
         mut f: &mut dyn std::fmt::Write,

@@ -79,13 +79,7 @@ impl ToLsp for mu::Diagnostic {
             source: Some("µcad".into()),
             // Editors cross out the use of a deprecated symbol.
             tags: self
-                .code()
-                .is_some_and(|code| {
-                    matches!(
-                        code.to_string().as_str(),
-                        "resolve::deprecated" | "eval::deprecated"
-                    )
-                })
+                .is_deprecated_use()
                 .then(|| vec![lsp::DiagnosticTag::DEPRECATED]),
             message: match self.help() {
                 Some(help) => format!("{}\n{help}", self.report),

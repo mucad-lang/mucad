@@ -13,6 +13,7 @@ pub struct Completion {
     name: String,
     kind: String,
     doc: Option<String>,
+    stability: String,
 }
 
 #[wasm_bindgen]
@@ -35,6 +36,12 @@ impl Completion {
     pub fn doc(&self) -> Option<String> {
         self.doc.clone()
     }
+
+    /// The stability of the symbol: `stable`, `experimental` or `deprecated`.
+    #[wasm_bindgen(getter)]
+    pub fn stability(&self) -> String {
+        self.stability.clone()
+    }
 }
 
 impl From<mu::resolve::Completion> for Completion {
@@ -52,6 +59,11 @@ impl From<mu::resolve::Completion> for Completion {
                 CompletionKind::Builtin => "built-in".into(),
             },
             doc: completion.doc,
+            stability: match completion.stability {
+                mu::base::Stability::Stable => "stable".into(),
+                mu::base::Stability::Experimental => "experimental".into(),
+                mu::base::Stability::Deprecated { .. } => "deprecated".into(),
+            },
         }
     }
 }
