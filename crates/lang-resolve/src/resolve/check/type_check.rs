@@ -119,10 +119,10 @@ impl TypeCheck<'_> {
     ///
     /// Named statements and properties, with all statements in them, are no primary output.
     fn check_output(&mut self, statements: &[ir::WorkbenchStatement], output: &WorkbenchOutput) {
-        for statement in statements
-            .iter()
-            .filter(|statement| statement.name.is_none())
-        {
+        for statement in statements.iter().filter_map(|statement| match statement {
+            ir::WorkbenchStatement::Expression(statement) => Some(statement),
+            ir::WorkbenchStatement::Prop(_) | ir::WorkbenchStatement::Assignment(_) => None,
+        }) {
             match &statement.expression {
                 ir::WorkbenchExpression::Group(group) => {
                     self.check_output(&group.statements, output)
@@ -220,9 +220,16 @@ impl visitor::ConstantVisitor for TypeCheck<'_> {
 
 impl visitor::WorkbenchExpressionVisitor for TypeCheck<'_> {
     fn visit_workbench_statement(&mut self, statement: &ir::workbench::WorkbenchStatement) {
-        self.check_type(&statement.ty, &statement.expression);
+        // The declared type of a property, e.g. `prop a: Length = 1mm;`.
+        match statement {
+            ir::WorkbenchStatement::Expression(_) => {}
+            ir::WorkbenchStatement::Prop(prop) => self.check_type(&prop.ty, &prop.expression),
+            ir::WorkbenchStatement::Assignment(assignment) => {
+                self.check_type(&assignment.ty, &assignment.expression)
+            }
+        }
         // Statements of groups, e.g. `{ x: Length = 1mm; }`.
-        self.visit_workbench_expr(&statement.expression);
+        self.visit_workbench_expr(statement.expression());
     }
 }
 

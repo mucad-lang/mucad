@@ -64,11 +64,14 @@ pub trait ConstantVisitorMut: LeafVisitorMut {
 /// Visitor for workbench statements and expressions.
 pub trait WorkbenchExpressionVisitorMut: ConstantVisitorMut {
     fn visit_workbench_statement(&mut self, statement: &mut ir::workbench::WorkbenchStatement) {
-        self.visit_model_attributes(&mut statement.attr);
-        if let Some(name) = &mut statement.name {
-            self.visit_name(name);
+        use ir::workbench::WorkbenchStatement;
+        self.visit_model_attributes(statement.attr_mut());
+        match statement {
+            WorkbenchStatement::Expression(_) => {}
+            WorkbenchStatement::Prop(prop) => self.visit_name(&mut prop.name),
+            WorkbenchStatement::Assignment(assignment) => self.visit_name(&mut assignment.name),
         }
-        self.visit_workbench_expr(&mut statement.expression);
+        self.visit_workbench_expr(statement.expression_mut());
     }
 
     fn visit_model_attributes(&mut self, attr: &mut ir::ModelAttributes) {

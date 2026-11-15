@@ -1,7 +1,7 @@
 // Copyright © 2026 The µcad authors <info@mucad.org>
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use mucad_lang_base::{DisplayOneLine, VersionAnnotation, element::Visibility};
+use mucad_lang_base::{DisplayOneLine, VersionAnnotation};
 
 use crate::ir::{self, display::fmt_statements};
 
@@ -42,21 +42,26 @@ impl std::fmt::Display for ir::WorkbenchSignature {
 
 impl std::fmt::Display for ir::WorkbenchStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self.visibility {
-            Visibility::Public => write!(f, "prop ")?,
-            Visibility::Private => {}
-        };
-
         // TODO Display attributes and exports
-        if let Some(name) = &self.name {
-            write!(f, "{name}: {ty}", ty = self.ty)?;
-            // Behind the name of a property, before its expression, which may be shortened.
-            fmt_ver(&self.ver, f)?;
-            if self.ver != VersionAnnotation::default() {
-                write!(f, " ")?;
+        match self {
+            ir::WorkbenchStatement::Expression(statement) => write!(f, "{}", statement.expression),
+            ir::WorkbenchStatement::Prop(prop) => {
+                write!(f, "prop {name}: {ty}", name = prop.name, ty = prop.ty)?;
+                // Behind the name of a property, before its expression, which may be shortened.
+                if prop.ver != VersionAnnotation::default() {
+                    fmt_ver(&prop.ver, f)?;
+                    write!(f, " ")?;
+                }
+                write!(f, "{}", prop.expression)
             }
-        };
-        write!(f, "{}", self.expression)
+            ir::WorkbenchStatement::Assignment(assignment) => write!(
+                f,
+                "{name}: {ty}{expression}",
+                name = assignment.name,
+                ty = assignment.ty,
+                expression = assignment.expression
+            ),
+        }
     }
 }
 
@@ -97,7 +102,20 @@ impl DisplayOneLine for ir::WorkbenchExpression {}
 impl std::fmt::Display for ir::Workbench {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.signature)?;
-        fmt_statements(&self.statements, f)
+        if !self.statements.is_empty() {
+            writeln!(f)?;
+            writeln!(f, "    statements:")?;
+        }
+        self.statements.iter().try_for_each(|statement| {
+            // The documentation of a property above it, like the one of an item.
+            if let ir::WorkbenchStatement::Prop(prop) = statement {
+                prop.doc
+                    .content
+                    .lines()
+                    .try_for_each(|line| writeln!(f, "    /// {line}"))?;
+            }
+            writeln!(f, "    - {}", statement.to_string_one_line())
+        })
     }
 }
 

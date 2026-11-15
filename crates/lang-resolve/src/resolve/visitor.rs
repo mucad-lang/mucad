@@ -11,7 +11,6 @@ use crate::{
 };
 use mucad_lang_base::{
     Identifier, PushIssue, SingleIdentifier, SrcReferrer, SymbolId, ToCompactString,
-    element::Visibility,
 };
 
 pub struct ResolveVisitor<'a, 'lib, 'ctx> {
@@ -366,14 +365,22 @@ impl<'a, 'lib, 'ctx> visitor::WorkbenchExpressionVisitorMut for ResolveVisitor<'
     ) {
         use mucad_lang_lower::ir::visitor::LeafVisitorMut;
 
-        self.visit_model_attributes(&mut statement.attr);
-        if let Some(name) = &mut statement.name {
-            self.visit_name(name);
+        use mucad_lang_lower::ir::WorkbenchStatement;
+
+        self.visit_model_attributes(statement.attr_mut());
+        match statement {
+            WorkbenchStatement::Expression(_) => {}
+            WorkbenchStatement::Prop(prop) => self.visit_name(&mut prop.name),
+            WorkbenchStatement::Assignment(assignment) => self.visit_name(&mut assignment.name),
         }
-        self.visit_workbench_expr(&mut statement.expression);
-        // Properties (`prop`) can be used from outside.
-        if let Some(name) = &mut statement.name {
-            self.declare_property(name.clone(), statement.visibility != Visibility::Public);
+        self.visit_workbench_expr(statement.expression_mut());
+        // Properties (`prop`) can be used from outside, assignments are hidden.
+        match statement {
+            WorkbenchStatement::Expression(_) => {}
+            WorkbenchStatement::Prop(prop) => self.declare_property(prop.name.clone(), false),
+            WorkbenchStatement::Assignment(assignment) => {
+                self.declare_property(assignment.name.clone(), true)
+            }
         }
     }
 

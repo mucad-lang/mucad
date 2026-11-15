@@ -11,7 +11,6 @@ use crate::{
 use derive_more::{Display, From};
 use mucad_lang_base::{
     Identifier, SingleIdentifier, SrcRef, SrcReferrer, VersionAnnotation, boxed,
-    element::Visibility,
 };
 
 pub use mucad_lang_base::element::WorkbenchKind;
@@ -31,19 +30,111 @@ pub struct ModelAttributes {
     pub layer: Option<ir::ConstantExpression>,
 }
 
-/// Each WorkbenchStatement eventually evals into a [`Models`]
+/// A statement of a workbench, which eventually evals into a model or a property of it.
+// A property is larger by its documentation and version annotation, but not much: the other
+// statements are not smaller than before, when all statements had all fields.
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug, PartialEq, Clone, Hash, From, Serialize, Deserialize)]
+pub enum WorkbenchStatement {
+    /// An expression of a child model, e.g. `Circle(r = 42mm);`.
+    Expression(ExpressionStatement),
+    /// An input or output property, e.g. `prop a = 42mm;`.
+    Prop(PropertyStatement),
+    /// An assignment of a hidden property, e.g. `a = 42mm;`.
+    Assignment(AssignmentStatement),
+}
+
+/// An expression of a child model, e.g. `Circle(r = 42mm);`.
 #[derive(Debug, PartialEq, Clone, Hash, Serialize, Deserialize)]
-pub struct WorkbenchStatement {
+pub struct ExpressionStatement {
     pub attr: ModelAttributes,
-    /// The version annotation of a property, e.g. `#[deprecated] prop a = 42mm;`, which is part
-    /// of the API of the workbench, the default for other statements.
+    pub src_ref: SrcRef,
+    pub expression: WorkbenchExpression,
+}
+
+/// An input or output property, e.g. `prop a = 42mm;`, which is part of the API of the
+/// workbench.
+#[derive(Debug, PartialEq, Clone, Hash, Serialize, Deserialize)]
+pub struct PropertyStatement {
+    pub attr: ModelAttributes,
+    /// The documentation, e.g. `/// The radius.` above `prop r = 42mm;`.
+    pub doc: DocBlock,
+    /// The version annotation, e.g. of `#[deprecated] prop a = 42mm;`.
     pub ver: VersionAnnotation,
     pub src_ref: SrcRef,
-    pub visibility: ir::Visibility, // public = property
+    /// The source reference of the `prop` keyword.
     pub keyword_src_ref: SrcRef,
-    pub name: Option<ir::Identifier>,
+    pub name: ir::Identifier,
     pub ty: ir::Type,
     pub expression: WorkbenchExpression,
+}
+
+/// An assignment of a hidden property, e.g. `a = 42mm;`.
+#[derive(Debug, PartialEq, Clone, Hash, Serialize, Deserialize)]
+pub struct AssignmentStatement {
+    pub attr: ModelAttributes,
+    pub src_ref: SrcRef,
+    pub name: ir::Identifier,
+    pub ty: ir::Type,
+    pub expression: WorkbenchExpression,
+}
+
+/// The parts, which all statements have.
+impl WorkbenchStatement {
+    /// The attributes of the model or the property, e.g. `#[color = "red"]`.
+    pub fn attr(&self) -> &ModelAttributes {
+        match self {
+            Self::Expression(statement) => &statement.attr,
+            Self::Prop(statement) => &statement.attr,
+            Self::Assignment(statement) => &statement.attr,
+        }
+    }
+
+    /// The attributes of the model or the property, e.g. `#[color = "red"]`.
+    pub fn attr_mut(&mut self) -> &mut ModelAttributes {
+        match self {
+            Self::Expression(statement) => &mut statement.attr,
+            Self::Prop(statement) => &mut statement.attr,
+            Self::Assignment(statement) => &mut statement.attr,
+        }
+    }
+
+    /// The expression of the model or the value of the property.
+    pub fn expression(&self) -> &WorkbenchExpression {
+        match self {
+            Self::Expression(statement) => &statement.expression,
+            Self::Prop(statement) => &statement.expression,
+            Self::Assignment(statement) => &statement.expression,
+        }
+    }
+
+    /// The expression of the model or the value of the property.
+    pub fn expression_mut(&mut self) -> &mut WorkbenchExpression {
+        match self {
+            Self::Expression(statement) => &mut statement.expression,
+            Self::Prop(statement) => &mut statement.expression,
+            Self::Assignment(statement) => &mut statement.expression,
+        }
+    }
+
+    /// The name of a property, `None` for an expression.
+    pub fn name(&self) -> Option<&ir::Identifier> {
+        match self {
+            Self::Expression(_) => None,
+            Self::Prop(statement) => Some(&statement.name),
+            Self::Assignment(statement) => Some(&statement.name),
+        }
+    }
+}
+
+impl SrcReferrer for WorkbenchStatement {
+    fn src_ref(&self) -> SrcRef {
+        match self {
+            Self::Expression(statement) => statement.src_ref,
+            Self::Prop(statement) => statement.src_ref,
+            Self::Assignment(statement) => statement.src_ref,
+        }
+    }
 }
 
 /// Builder methods for testing
@@ -55,31 +146,37 @@ impl WorkbenchStatement {
 
     /// Construct a property, `prop a = 42mm`.
     pub fn prop(name: impl AsRef<str>, expr: impl Into<WorkbenchExpression>) -> Self {
-        Self {
-            name: Some(Identifier::from(name.as_ref())),
+        Self::Prop(PropertyStatement {
             attr: Default::default(),
+            doc: Default::default(),
             ver: Default::default(),
             src_ref: Default::default(),
-            visibility: Visibility::Public,
             keyword_src_ref: Default::default(),
+            name: Identifier::from(name.as_ref()),
             ty: Default::default(),
             expression: expr.into(),
-        }
+        })
+    }
+
+    /// Construct an assignment, `a = 42mm`.
+    pub fn assignment(name: impl AsRef<str>, expr: impl Into<WorkbenchExpression>) -> Self {
+        Self::Assignment(AssignmentStatement {
+            attr: Default::default(),
+            src_ref: Default::default(),
+            name: Identifier::from(name.as_ref()),
+            ty: Default::default(),
+            expression: expr.into(),
+        })
     }
 }
 
 impl From<WorkbenchExpression> for WorkbenchStatement {
     fn from(expression: WorkbenchExpression) -> Self {
-        Self {
+        Self::Expression(ExpressionStatement {
             attr: Default::default(),
-            ver: Default::default(),
             src_ref: Default::default(),
-            visibility: Default::default(),
-            keyword_src_ref: Default::default(),
-            name: None,
-            ty: Default::default(),
             expression,
-        }
+        })
     }
 }
 

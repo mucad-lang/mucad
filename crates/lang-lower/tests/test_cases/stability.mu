@@ -52,6 +52,7 @@ pub sketch Disc(radius: Length) {
     prop r = radius;
 
     /// An experimental property.
+    /// Twice the radius.
     #[experimental]
     prop d = radius * 2;
 

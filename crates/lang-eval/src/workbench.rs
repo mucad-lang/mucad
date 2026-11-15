@@ -14,10 +14,7 @@ use crate::{
 };
 
 use mucad_builtin::BuiltinItem;
-use mucad_lang_base::{
-    DisplayWithCtx, PushIssue, SrcReferrer,
-    element::{Visibility, WorkbenchKind},
-};
+use mucad_lang_base::{DisplayWithCtx, PushIssue, SrcReferrer, element::WorkbenchKind};
 use mucad_lang_resolve::library::symbol;
 
 use mucad_lang_types::{
@@ -189,34 +186,34 @@ impl Eval for symbol::WorkbenchExpression {
 
 impl Eval<()> for symbol::WorkbenchStatement {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<()> {
-        let value = self.expression.eval(context)?;
-        let value = attach_attributes(&self.attr, value, context)?;
-        match &self.name {
-            // If we have an id, this becomes a property in the current model
-            Some(name) => {
-                let property = Property {
-                    name: name.clone(),
-                    value,
-                    src_ref: self.src_ref,
-                    ty: match &self.visibility {
-                        Visibility::Public => PropertyType::Output,
-                        Visibility::Private => PropertyType::Hidden,
-                    },
-                };
-                context
-                    .model_tree_builder_mut()
-                    .add_model_property(property);
-            }
-            // If we have no id, we have a child model.
-            None => {
+        let value = self.expression().eval(context)?;
+        let value = attach_attributes(self.attr(), value, context)?;
+        let (name, ty) = match self {
+            // An expression becomes a child model.
+            symbol::WorkbenchStatement::Expression(_) => {
                 // It might be that the value is none, because an if expression might not produce a model when its condition is not fulfilled
                 if !value.is_none() {
                     context
                         .model_tree_builder_mut()
                         .add_model_child(ModelTree::from(value));
                 }
+                return Ok(());
             }
-        }
+            // A property becomes an output property of the current model.
+            symbol::WorkbenchStatement::Prop(prop) => (&prop.name, PropertyType::Output),
+            // An assignment becomes a hidden property of the current model.
+            symbol::WorkbenchStatement::Assignment(assignment) => {
+                (&assignment.name, PropertyType::Hidden)
+            }
+        };
+        context
+            .model_tree_builder_mut()
+            .add_model_property(Property {
+                name: name.clone(),
+                value,
+                src_ref: self.src_ref(),
+                ty,
+            });
         Ok(())
     }
 }

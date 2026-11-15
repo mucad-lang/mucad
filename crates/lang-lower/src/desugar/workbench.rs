@@ -279,16 +279,13 @@ fn reject_exports(attr: ir::Attributes, context: &mut LowerContext) -> LowerResu
 impl Desugar<ast::LocalAssignment> for ir::WorkbenchStatement {
     fn desugar(node: &ast::LocalAssignment, context: &mut LowerContext) -> LowerResult<Self> {
         reject_exports(ir::Attributes::desugar(&node.attr, context)?, context)?;
-        Ok(Self {
+        Ok(Self::Assignment(ir::AssignmentStatement {
             attr: ir::ModelAttributes::desugar(&node.attr, context)?,
-            ver: Default::default(),
             src_ref: context.span_to_src_ref(&node.span),
-            visibility: ir::Visibility::Private,
-            keyword_src_ref: SrcRef::none(),
-            name: Some(ir::Identifier::desugar(&node.id, context)?),
+            name: ir::Identifier::desugar(&node.id, context)?,
             ty: ir::Type::desugar(&node.ty, context)?,
             expression: ir::WorkbenchExpression::desugar(node.expr.as_ref(), context)?,
-        })
+        }))
     }
 }
 
@@ -298,16 +295,16 @@ impl Desugar<ast::PropertyAssignment> for ir::WorkbenchStatement {
         // A property is part of the API of the workbench, e.g. `#[deprecated] prop a = 42mm;`.
         let ver = attr.fetch_ver(context);
         reject_exports(attr, context)?;
-        Ok(Self {
+        Ok(Self::Prop(ir::PropertyStatement {
             attr: ir::ModelAttributes::desugar(&node.attr, context)?,
+            doc: ir::DocBlock::desugar(&node.doc, context)?,
             ver,
             src_ref: context.span_to_src_ref(&node.span),
-            visibility: ir::Visibility::Public,
             keyword_src_ref: context.span_to_src_ref(&node.keyword_span),
-            name: Some(ir::Identifier::desugar(&node.id, context)?),
+            name: ir::Identifier::desugar(&node.id, context)?,
             ty: ir::Type::desugar(&node.ty, context)?,
             expression: ir::WorkbenchExpression::desugar(node.value.as_ref(), context)?,
-        })
+        }))
     }
 }
 
@@ -339,16 +336,11 @@ impl Desugar<ast::Attributes> for ir::ModelAttributes {
 impl Desugar<ast::ExpressionStatement> for ir::WorkbenchStatement {
     fn desugar(node: &ast::ExpressionStatement, context: &mut LowerContext) -> LowerResult<Self> {
         reject_exports(ir::Attributes::desugar(&node.attr, context)?, context)?;
-        Ok(Self {
+        Ok(Self::Expression(ir::ExpressionStatement {
             attr: ir::ModelAttributes::desugar(&node.attr, context)?,
-            ver: Default::default(),
             src_ref: context.span_to_src_ref(&node.span),
-            visibility: ir::Visibility::Public,
-            keyword_src_ref: SrcRef::none(),
-            name: None,
-            ty: ir::Type::default(),
             expression: ir::WorkbenchExpression::desugar(&node.expr, context)?,
-        })
+        }))
     }
 }
 

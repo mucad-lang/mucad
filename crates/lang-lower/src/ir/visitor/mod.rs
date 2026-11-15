@@ -70,11 +70,11 @@ pub trait ConstantVisitor: LeafVisitor {
 /// Visitor for workbench statements and expressions.
 pub trait WorkbenchExpressionVisitor: ConstantVisitor {
     fn visit_workbench_statement(&mut self, statement: &ir::workbench::WorkbenchStatement) {
-        self.visit_model_attributes(&statement.attr);
-        if let Some(name) = &statement.name {
+        self.visit_model_attributes(statement.attr());
+        if let Some(name) = statement.name() {
             self.visit_name(name);
         }
-        self.visit_workbench_expr(&statement.expression);
+        self.visit_workbench_expr(statement.expression());
     }
 
     fn visit_model_attributes(&mut self, attr: &ir::ModelAttributes) {
