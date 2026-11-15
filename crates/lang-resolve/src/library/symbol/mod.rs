@@ -48,10 +48,12 @@ impl Symbol {
     }
 
     /// Attach the declaration `item` of a file module, e.g. `#[deprecated] mod geo;`, to the
-    /// symbol of its loaded source file: the documentation of the declaration comes before the
-    /// one of the file, e.g. `//! …`, the version annotation of the declaration before the one
-    /// of the inner attributes of the file, e.g. `#![experimental]`.
+    /// symbol of its loaded source file: its visibility, e.g. private for `mod geo;`, the
+    /// documentation of the declaration before the one of the file, e.g. `//! …`, and the
+    /// version annotation of the declaration before the one of the inner attributes of the
+    /// file, e.g. `#![experimental]`.
     pub(crate) fn attach_declaration(&mut self, item: &ir::Item) {
+        self.meta.vis = item.meta.vis.clone();
         self.doc = DocBlock::merge(&item.doc, &self.doc);
         let (declared, file) = (&item.ver, &mut self.ver);
         if declared.introduced.is_some() {
