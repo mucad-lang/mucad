@@ -77,6 +77,16 @@ impl ToLsp for mu::Diagnostic {
                 .code()
                 .map(|code| lsp::NumberOrString::String(code.to_string())),
             source: Some("µcad".into()),
+            // Editors cross out the use of a deprecated symbol.
+            tags: self
+                .code()
+                .is_some_and(|code| {
+                    matches!(
+                        code.to_string().as_str(),
+                        "resolve::deprecated" | "eval::deprecated"
+                    )
+                })
+                .then(|| vec![lsp::DiagnosticTag::DEPRECATED]),
             message: match self.help() {
                 Some(help) => format!("{}\n{help}", self.report),
                 None => self.report.to_string(),
@@ -123,10 +133,17 @@ pub fn completion_item(completion: &mu::resolve::Completion) -> lsp::CompletionI
         CompletionKind::Constant => (lsp::CompletionItemKind::CONSTANT, "const".into()),
         CompletionKind::Builtin => (lsp::CompletionItemKind::FUNCTION, "built-in".into()),
     };
+    // Deprecated symbols are crossed out, experimental ones are marked in the detail.
+    let deprecated = completion.stability.is_deprecated();
+    let detail = match completion.stability {
+        mu::base::Stability::Experimental => format!("{detail} (experimental)"),
+        _ => detail,
+    };
     lsp::CompletionItem {
         label: completion.name.to_string(),
         kind: Some(kind),
         detail: Some(detail),
+        tags: deprecated.then(|| vec![lsp::CompletionItemTag::DEPRECATED]),
         documentation: completion.doc.clone().map(|doc| {
             lsp::Documentation::MarkupContent(lsp::MarkupContent {
                 kind: lsp::MarkupKind::Markdown,

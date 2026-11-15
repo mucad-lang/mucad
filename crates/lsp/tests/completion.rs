@@ -121,3 +121,27 @@ async fn completion_capability() {
         .and_then(|options| options.trigger_characters);
     assert_eq!(trigger_characters, Some(vec![":".into()]));
 }
+
+/// Deprecated symbols are crossed out, experimental ones are marked in the detail.
+#[tokio::test]
+async fn complete_stability() {
+    let code =
+        format!("{CODE}#[deprecated]\nsketch Old() {{}}\n#[experimental]\nsketch Odd() {{}}\nO|");
+    let items = complete(&code).await;
+    let item = |label: &str| {
+        items
+            .iter()
+            .find(|item| item.label == label)
+            .unwrap_or_else(|| panic!("`{label}` in {:?}", labels(&items)))
+    };
+
+    assert_eq!(item("Odd").detail.as_deref(), Some("sketch (experimental)"));
+    assert_eq!(item("Odd").tags, None);
+    assert_eq!(item("Old").detail.as_deref(), Some("sketch"));
+    assert_eq!(
+        item("Old").tags,
+        Some(vec![lsp::CompletionItemTag::DEPRECATED])
+    );
+    // Stable symbols have no tags.
+    assert_eq!(item("Disc").tags, None);
+}

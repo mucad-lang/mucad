@@ -4,7 +4,7 @@
 //! Symbols to complete a path, e.g. in an editor.
 
 use mucad_lang_base::{
-    ExternalId, Identifier, LibraryId, Shared, Source, SymbolId, element::WorkbenchKind,
+    ExternalId, Identifier, LibraryId, Shared, Source, Stability, SymbolId, element::WorkbenchKind,
 };
 use mucad_lang_lower::ir::UnresolvedPath;
 
@@ -38,6 +38,8 @@ pub struct Completion {
     pub kind: CompletionKind,
     /// The documentation of the symbol, if it has some.
     pub doc: Option<String>,
+    /// The stability of the symbol, e.g. to show deprecated symbols crossed out.
+    pub stability: Stability,
 }
 
 impl ResolveContext {
@@ -152,6 +154,7 @@ impl Completion {
                     name,
                     kind: CompletionKind::Builtin,
                     doc: None,
+                    stability: Stability::Stable,
                 });
             }
             SymbolId::Local(_) => return None,
@@ -172,6 +175,7 @@ impl Completion {
             name,
             kind,
             doc: (!doc.is_empty()).then(|| doc.to_string()),
+            stability: symbol.ver.stability.clone(),
         })
     }
 
@@ -181,6 +185,7 @@ impl Completion {
             name,
             kind: CompletionKind::Library,
             doc: None,
+            stability: Stability::Stable,
         }
     }
 }
