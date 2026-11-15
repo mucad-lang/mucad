@@ -12,7 +12,7 @@ mod mdbook;
 mod section;
 pub mod table_builder;
 
-pub use block::Block;
+pub use block::{Block, BlockQuote};
 pub use code_block::{CodeBlock, CodeBlockHeader};
 pub use error::ParseError;
 pub use list::{ListItem, OrderedList, UnorderedList};

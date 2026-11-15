@@ -8,7 +8,7 @@ use mucad_lang_resolve::{SymbolDef, SymbolNodeExt, SymbolNodeRef, library::symbo
 
 use crate::{
     GenerateDoc, LibraryDocGenerator,
-    mdbook::{ToMd, doc_block},
+    mdbook::{ToMd, doc_block, stability_block, stability_tag},
 };
 
 impl ToMd for symbol::ParameterList {
@@ -42,7 +42,10 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
                 }
                 _ => format!("./{id}.md"),
             };
-            let link = format!("[`{id}`]({filename})");
+            let link = match stability_tag(&symbol.ver) {
+                Some(tag) => format!("[`{id}`]({filename}) {tag}"),
+                None => format!("[`{id}`]({filename})"),
+            };
             Some(md::ListItem::new(
                 match symbol.doc().and_then(|doc| doc.lines().next()) {
                     Some(summary) => format!("{link}: {summary}"),
@@ -63,6 +66,14 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
                 .collect()
         }
 
+        /// `item` with the stability tag of `symbol` behind it, e.g. `👎 *Deprecated*`.
+        fn with_tag(item: String, symbol: &SymbolNodeRef<'_>) -> String {
+            match stability_tag(&symbol.ver) {
+                Some(tag) => format!("{item} {tag}"),
+                None => item,
+            }
+        }
+
         fn is_workbench(symbol: &SymbolNodeRef<'_>, kind: WorkbenchKind) -> bool {
             matches!(symbol.def(), SymbolDef::Workbench(workbench) if workbench.signature.kind == kind)
         }
@@ -70,10 +81,13 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
         let mut md = md::Markdown::default();
 
         if let Some(id) = self.name() {
+            // The stability above the documentation, like in the Rust docs.
             md.add_section(md::Section::new(
                 1,
                 id.to_string(),
-                doc_block(self.doc().map(String::as_str)),
+                stability_block(&self.ver)
+                    .into_iter()
+                    .chain(doc_block(self.doc().map(String::as_str))),
             ));
         }
 
@@ -124,9 +138,9 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
         let constants = self
             .children()
             .filter_map(|symbol| match (symbol.name(), symbol.def()) {
-                (Some(id), SymbolDef::Constant(constant)) => constant
-                    .value()
-                    .map(|value| md::ListItem::new(format!("`{id}` = `{value}`"))),
+                (Some(id), SymbolDef::Constant(constant)) => constant.value().map(|value| {
+                    md::ListItem::new(with_tag(format!("`{id}` = `{value}`"), &symbol))
+                }),
                 _ => None,
             });
         if let Some(section) = md::Section::list(2, "Constants", constants) {
@@ -137,9 +151,10 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
         let aliases = self
             .children()
             .filter_map(|symbol| match (symbol.name(), symbol.def()) {
-                (Some(id), SymbolDef::Alias(alias)) => {
-                    Some(md::ListItem::new(format!("`{id}` => `{}`", alias.path)))
-                }
+                (Some(id), SymbolDef::Alias(alias)) => Some(md::ListItem::new(with_tag(
+                    format!("`{id}` => `{}`", alias.path),
+                    &symbol,
+                ))),
                 _ => None,
             });
         if let Some(section) = md::Section::list(2, "Aliases", aliases) {

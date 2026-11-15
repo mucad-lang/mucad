@@ -4270,6 +4270,7 @@ dependencies = [
  "clap",
  "miette",
  "mucad-builtin",
+ "mucad-lang-base",
  "mucad-lang-markdown",
  "mucad-lang-resolve",
 ]

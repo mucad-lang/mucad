@@ -20,6 +20,7 @@ miette = "7.3.0"
 clap = { version = "4", features = ["derive"], optional = true }
 
 mucad-builtin = { workspace = true }
+mucad-lang-base = { workspace = true }
 mucad-lang-markdown = { workspace = true }
 mucad-lang-resolve = { workspace = true }
 

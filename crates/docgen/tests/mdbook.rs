@@ -132,3 +132,43 @@ fn write_builtin_mdbook() {
 
     std::fs::remove_dir_all(&dir).expect("Clean up");
 }
+
+/// The stability of a symbol is shown above its documentation and behind its name in lists,
+/// like in the Rust docs.
+#[test]
+fn library_mdbook_stability() {
+    let mut ctx = ResolveContext::new();
+    let (lib, issues) = mucad_lang_resolve::resolve("tests/test_cases/stability_lib.mu", &mut ctx)
+        .expect("No error");
+    assert!(!issues.has_errors(), "{issues:?}");
+
+    let mdbook = LibraryDocGenerator::new(&lib)
+        .generate_doc()
+        .expect("No error");
+    let readme = md_file(&mdbook, "README.md");
+    assert!(
+        readme.contains("- [`Gear`](./Gear.md) 🔬 *Experimental*: An experimental sketch.\n"),
+        "{readme}"
+    );
+    assert!(
+        readme.contains(
+            "### f\n\n> 👎 Deprecated since 0.5.0, will be removed in 0.7.0: Use `g()` instead\n\n\
+             The old function.\n"
+        ),
+        "{readme}"
+    );
+    assert!(readme.contains("### g\n\nThe new function.\n"), "{readme}");
+    assert!(
+        readme.contains("- `OLD` = `1` 👎 *Deprecated*\n"),
+        "{readme}"
+    );
+
+    assert_eq!(
+        md_file(&mdbook, "Gear.md"),
+        "# Gear\n\n\
+         > 🔬 This is an experimental API, which may change or be removed in any version.\n\
+         >\n\
+         > Introduced in 0.6.0\n\n\
+         An experimental sketch.\n"
+    );
+}
