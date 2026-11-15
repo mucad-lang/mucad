@@ -171,7 +171,7 @@ pub enum LowerError {
 
     #[error("Conflicting stability attributes found")]
     #[diagnostic(
-        code(mucad::lower::conflicting_stability),
+        code(lower::conflicting_stability),
         help(
             "A symbol can only have one stability level (e.g., choose between #[stable], #[experimental], or #[deprecated])"
         )
@@ -182,7 +182,7 @@ pub enum LowerError {
     },
 
     #[error("Duplicate #[{attr}] attribute")]
-    #[diagnostic(code(mucad::lower::duplicate_attribute))]
+    #[diagnostic(code(lower::duplicate_attribute))]
     DuplicateAttribute {
         attr: String,
         #[label("duplicate attribute")]
@@ -191,7 +191,7 @@ pub enum LowerError {
 
     #[error("Invalid version format '{value}'")]
     #[diagnostic(
-        code(mucad::lower::invalid_version_string),
+        code(lower::invalid_version_string),
         help("Version must follow semantic versioning, e.g., \"0.2.0\"")
     )]
     InvalidVersionString {
@@ -202,7 +202,7 @@ pub enum LowerError {
 
     #[error("Attribute #[{attr}] requires a '{arg}' argument")]
     #[diagnostic(
-        code(mucad::lower::missing_attribute_argument),
+        code(lower::missing_attribute_argument),
         help("Provide the argument like #[{attr}({arg} = \"...\")]")
     )]
     MissingAttributeArgument {
@@ -213,7 +213,7 @@ pub enum LowerError {
     },
 
     #[error("Export attributes are only allowed in source workbenches")]
-    #[diagnostic(code(mucad::lower::export_not_allowed))]
+    #[diagnostic(code(lower::export_not_allowed))]
     ExportNotAllowed {
         #[label("export attribute")]
         src_ref: SrcRef,
@@ -221,7 +221,7 @@ pub enum LowerError {
 
     #[error("An export of a statement without name requires a file name")]
     #[diagnostic(
-        code(mucad::lower::export_without_file),
+        code(lower::export_without_file),
         help("Add a file name, e.g. #[export = \"model.stl\"], or assign the model to a name")
     )]
     ExportWithoutFile {

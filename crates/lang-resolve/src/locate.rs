@@ -13,7 +13,7 @@ use crate::Manifest;
 pub enum LocateError {
     #[error("No µcad file found at: {path}")]
     #[diagnostic(
-        code(mucad::locate::file_not_found),
+        code(locate::file_not_found),
         help(
             "Ensure the file exists or has a supported extension ({})",
             MUCAD_EXTENSIONS
@@ -26,15 +26,15 @@ pub enum LocateError {
     FileNotFound { path: std::path::PathBuf },
 
     #[error("Invalid file URL path: {url}")]
-    #[diagnostic(code(mucad::locate::invalid_file_url))]
+    #[diagnostic(code(locate::invalid_file_url))]
     InvalidFileUrl { url: Url },
 
     #[error("Failed to convert path '{path}' to a valid file URL")]
-    #[diagnostic(code(mucad::locate::url_conversion_failed))]
+    #[diagnostic(code(locate::url_conversion_failed))]
     UrlConversionFailed { path: std::path::PathBuf },
 
     #[error("Failed to find absolute path for: {path}")]
-    #[diagnostic(code(mucad::locate::canonicalize_failed))]
+    #[diagnostic(code(locate::canonicalize_failed))]
     CanonicalizeFailed {
         path: std::path::PathBuf,
         #[source]
