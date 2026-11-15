@@ -129,6 +129,35 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
             });
         }
 
+        // The properties of a workbench, like the fields of a type in the Rust docs.
+        if let SymbolDef::Workbench(workbench) = self.def() {
+            let properties: Vec<_> = workbench
+                .statements
+                .iter()
+                .filter_map(|statement| match statement {
+                    symbol::WorkbenchStatement::Prop(prop) => Some(prop),
+                    _ => None,
+                })
+                .collect();
+            if !properties.is_empty() {
+                md.add_section(md::Section::new(2, "Properties", []));
+            }
+            properties.into_iter().for_each(|prop| {
+                // Only a written type, e.g. `prop r: Length = 1mm;`, is known without deriving it.
+                let heading = match prop.ty.src_ref.is_some() {
+                    true => format!("`{}: {}`", prop.name, prop.ty),
+                    false => format!("`{}`", prop.name),
+                };
+                md.add_section(md::Section::new(
+                    3,
+                    heading,
+                    stability_block(&prop.ver)
+                        .into_iter()
+                        .chain(doc_block(Some(&prop.doc.content))),
+                ))
+            });
+        }
+
         // Lists of symbols with their own pages.
         let lists = [
             (

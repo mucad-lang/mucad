@@ -134,8 +134,8 @@ fn write_builtin_mdbook() {
 }
 
 /// The stability of a symbol is shown above its documentation and behind its name in lists,
-/// like in the Rust docs. The initializers of a workbench are documented with their stability,
-/// the first one with the parameters of the workbench.
+/// like in the Rust docs. The initializers and properties of a workbench are documented with
+/// their stability, the first initializer with the parameters of the workbench.
 #[test]
 fn library_mdbook_stability() {
     let mut ctx = ResolveContext::new();
@@ -177,6 +177,12 @@ fn library_mdbook_stability() {
          With the diameter instead of the radius.\n\n\
          ### `Gear(r: Length)`\n\n\
          > 👎 Deprecated: Use `radius`\n\n\
-         With the old name of the radius.\n"
+         With the old name of the radius.\n\n\
+         ## Properties\n\n\
+         ### `outer_radius: Length`\n\n\
+         The radius of the tips of the teeth.\n\n\
+         ### `size`\n\n\
+         > 👎 Deprecated: Use `outer_radius`\n\n\
+         The size of the gear.\n"
     );
 }

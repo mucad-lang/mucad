@@ -24,6 +24,13 @@ pub sketch Gear(radius: Length, teeth = 12) {
         radius = r;
     }
 
+    /// The radius of the tips of the teeth.
+    prop outer_radius: Length = radius + 1mm;
+
+    /// The size of the gear.
+    #[deprecated(note = "Use `outer_radius`")]
+    prop size = 2 * radius;
+
     __mu::geo2d::Circle(radius = radius);
 }
 
