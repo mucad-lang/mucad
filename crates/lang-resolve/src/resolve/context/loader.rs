@@ -55,7 +55,8 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
     }
 
     /// Resolve the paths of the loaded library and infer the types of its parameters,
-    /// then check its symbol names, aliases, initializers and types.
+    /// then check its symbol names, aliases, initializers, types and the stability of the used
+    /// symbols.
     fn resolve(&mut self) {
         ResolveVisitor::new(self).visit();
         let builtins = BuiltinLibrary::new();
@@ -68,6 +69,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                 lib: self.lib(),
                 lib_cache: &lib_cache,
                 builtins: &builtins,
+                deny_experimental: self.ctx().deny_experimental() || self.lib().deny_experimental(),
             };
             [
                 TypeCheck::check(&ctx),
@@ -75,6 +77,7 @@ impl<'lib, 'ctx> ResolveLibraryContext<'lib, 'ctx> {
                 AliasCheck::check(&ctx),
                 InitCheck::check(&ctx),
                 CaseCheck::check(&ctx),
+                StabilityCheck::check(&ctx),
             ]
         };
         issues

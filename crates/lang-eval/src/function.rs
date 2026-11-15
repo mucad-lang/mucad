@@ -101,7 +101,7 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<FlowSignal> {
         use crate::argument_match::ArgumentMatch;
         match &self.path {
-            symbol::Path::Resolved(symbol::SymbolId::Builtin(builtin_id)) => {
+            symbol::Path::Resolved { id: symbol::SymbolId::Builtin(builtin_id), .. } => {
                 let args = self.args.eval(context)?;
 
                 match context.builtins().get(*builtin_id) {
@@ -124,7 +124,7 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
                     }),
                 }
             },
-            symbol::Path::Resolved(symbol::SymbolId::Item(id)) => {
+            symbol::Path::Resolved { id: symbol::SymbolId::Item(id), .. } => {
                 let args = self.args.eval(context)?;
         
                 match context.lib_id() {
@@ -133,7 +133,7 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
                 }
                 .map(FlowSignal::Yield)
             },
-            symbol::Path::Resolved(symbol::SymbolId::External(external_id)) => {
+            symbol::Path::Resolved { id: symbol::SymbolId::External(external_id), .. } => {
                 let args = self.args.eval(context)?;
         
                 context.call_symbol(
@@ -154,14 +154,14 @@ impl Eval<FlowSignal> for symbol::function::FunctionCall {
 impl Eval<FlowSignal> for symbol::Path {
     fn eval(&self, context: &mut EvalContext) -> EvalResult<FlowSignal> {
         match self {
-            symbol::Path::Resolved(symbol::SymbolId::Local(identifier)) => {
+            symbol::Path::Resolved { id: symbol::SymbolId::Local(identifier), .. } => {
                 use crate::context::StackRead;
                 match context.get_local(identifier) {
                     Some(local) => Ok(FlowSignal::Yield(local.clone())),
                     None => context.catch(EvalErrorKind::LocalNotFound(identifier.clone())),
                 }
             }
-            symbol::Path::Resolved(symbol::SymbolId::Builtin(builtin)) => {
+            symbol::Path::Resolved { id: symbol::SymbolId::Builtin(builtin), .. } => {
                 match context.builtins().get(*builtin) {
                     Some(BuiltinItem::Constant(c)) => Ok(FlowSignal::Yield(c.value())),
                     Some(item) => context.catch(EvalErrorKind::BuiltinConstantExpected {
@@ -174,7 +174,7 @@ impl Eval<FlowSignal> for symbol::Path {
                     }),
                 }
             }
-            symbol::Path::Resolved(id) | symbol::Path::HumanReadable { id, .. } => {
+            symbol::Path::Resolved { id, .. } | symbol::Path::HumanReadable { id, .. } => {
                 Ok(FlowSignal::Yield(id.eval(context)?))
             }
             symbol::Path::Unresolved(unresolved_path) => {

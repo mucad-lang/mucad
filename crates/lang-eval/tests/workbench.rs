@@ -198,7 +198,7 @@ fn circle_init() {
                 ),
             ]),
         ])
-        .with_statements([WorkbenchStatement::expr(call_circle(Path::Resolved(
+        .with_statements([WorkbenchStatement::expr(call_circle(Path::from(
             SymbolId::Local("radius".into()),
         )))]);
 

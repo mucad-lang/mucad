@@ -70,6 +70,20 @@ pub enum ResolveErrorKind {
     #[error("Source '{0}' has no path.")]
     SourceHasNoPath(String),
 
+    /// An experimental symbol of another library is used, which is denied, see
+    /// `ResolveContextBuilder::with_deny_experimental`.
+    #[error("Use of experimental `{path}`")]
+    #[diagnostic(
+        code(resolve::experimental),
+        help("Experimental symbols are denied, e.g. by `--deny-experimental`")
+    )]
+    Experimental {
+        /// The path as written, e.g. `std::geo2d::Gear`.
+        path: String,
+        #[label("Experimental")]
+        src_ref: SrcRef,
+    },
+
     #[error("Unresolved symbol: {path}")]
     UnresolvedPath {
         path: String,
@@ -239,6 +253,7 @@ impl SrcReferrer for ResolveError {
                 specified_src_ref, ..
             } => *specified_src_ref,
             UnresolvedPath { src_ref, .. }
+            | Experimental { src_ref, .. }
             | AmbiguousPath { src_ref, .. }
             | PropertyAlreadyDefined { src_ref, .. }
             | CyclicAlias { src_ref, .. }

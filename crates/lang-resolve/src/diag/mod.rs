@@ -43,6 +43,20 @@ pub enum ResolveWarning {
         src_ref: SrcRef,
     },
 
+    /// An experimental symbol of another library is used, e.g. of `std`, which may change or
+    /// be removed in any version.
+    #[error("Use of experimental `{path}`")]
+    #[diagnostic(
+        code(resolve::experimental),
+        help("It may change or be removed in any version")
+    )]
+    Experimental {
+        /// The path as written, e.g. `std::geo2d::Gear`.
+        path: String,
+        #[label("Experimental")]
+        src_ref: SrcRef,
+    },
+
     /// A local is never used, e.g. a parameter or variable of a function.
     #[error("Unused local `{name}`")]
     #[diagnostic(help("Remove it or start its name with `_`, e.g. `_{name}`"))]
@@ -58,6 +72,7 @@ impl SrcReferrer for ResolveWarning {
         match self {
             Self::WrongCase { src_ref, .. }
             | Self::Deprecated { src_ref, .. }
+            | Self::Experimental { src_ref, .. }
             | Self::UnusedLocal { src_ref, .. } => *src_ref,
             Self::Parse(_) | Self::Lower(_) => SrcRef::none(),
         }

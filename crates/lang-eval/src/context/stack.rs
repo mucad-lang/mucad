@@ -3,7 +3,7 @@
 
 use derive_more::From;
 use mucad_builtin::BuiltinItem;
-use mucad_lang_base::{HashMap, Name, SrcRef, SrcReferrer, ToCompactString};
+use mucad_lang_base::{HashMap, LibraryId, Name, SrcRef, SrcReferrer, ToCompactString};
 use mucad_lang_resolve::library::symbol;
 use mucad_lang_types::{
     Arguments, Value,
@@ -170,6 +170,8 @@ impl ContextScope for WorkbenchInitFrame {
 pub struct SymbolCallFrame {
     pub path: symbol::Path,
     pub src_ref: SrcRef,
+    /// The library of the caller, e.g. to report experimental symbols of another library.
+    pub caller_lib_id: Option<LibraryId>,
 }
 
 impl ContextScope for SymbolCallFrame {

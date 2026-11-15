@@ -1,0 +1,7 @@
+# A standard library with experimental symbols for tests, using only existing built-ins.
+
+[library]
+name = "std"
+description = "µcad standard library with experimental symbols for tests"
+version = "0.1.0"
+no_std = true # Do not load standard library

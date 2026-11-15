@@ -117,7 +117,13 @@ impl std::fmt::Display for UnresolvedPath {
 #[derive(Clone, Debug, Display, From, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Path {
     /// A Path that has been resolved into a `SymbolId`.
-    Resolved(SymbolId),
+    #[display("{id}")]
+    #[from(skip)]
+    Resolved {
+        id: SymbolId,
+        /// Where the path is written, e.g. to report the use of a deprecated symbol.
+        src_ref: SrcRef,
+    },
     /// A path that still needs to be resolved by the symbol resolver.
     Unresolved(UnresolvedPath),
     /// A human readable resolved path.
@@ -129,15 +135,25 @@ impl Path {
     /// Return the symbol id of this path, if it has been resolved
     pub fn symbol_id(&self) -> Option<&SymbolId> {
         match &self {
-            Path::Resolved(id) | Path::HumanReadable { id, .. } => Some(id),
+            Path::Resolved { id, .. } | Path::HumanReadable { id, .. } => Some(id),
             Path::Unresolved(_) => None,
+        }
+    }
+}
+
+impl From<SymbolId> for Path {
+    /// A resolved path, which is not written in a source, e.g. for tests.
+    fn from(id: SymbolId) -> Self {
+        Self::Resolved {
+            id,
+            src_ref: SrcRef::none(),
         }
     }
 }
 
 impl From<BuiltinId> for Path {
     fn from(id: BuiltinId) -> Self {
-        Self::Resolved(SymbolId::Builtin(id))
+        Self::from(SymbolId::Builtin(id))
     }
 }
 
@@ -145,7 +161,8 @@ impl SrcReferrer for Path {
     fn src_ref(&self) -> SrcRef {
         match self {
             Path::Unresolved(path) => path.src_ref,
-            _ => SrcRef::none(),
+            Path::Resolved { src_ref, .. } => *src_ref,
+            Path::HumanReadable { .. } => SrcRef::none(),
         }
     }
 }

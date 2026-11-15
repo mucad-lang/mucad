@@ -12,7 +12,7 @@ pub mod visitor;
 use std::collections::BTreeMap;
 
 pub use manifest::{Dependency, LibrarySection, Manifest, ManifestError};
-use mucad_lang_base::{ExternalId, LibraryId, LibraryInfo, Name, SrcRef, Stability, Version};
+use mucad_lang_base::{ExternalId, LibraryId, LibraryInfo, Name, SrcRef, Version};
 use mucad_lang_lower::ir::UnresolvedPath;
 use mucad_macros::Artifact;
 pub use search::Search;
@@ -117,6 +117,14 @@ impl Library {
             Some(manifest) => manifest.library.no_std.unwrap_or(false),
             None => false, // Load std by default
         }
+    }
+
+    /// Whether using an experimental symbol of another library is an error, see the manifest.
+    pub fn deny_experimental(&self) -> bool {
+        self.manifest
+            .as_ref()
+            .and_then(|manifest| manifest.library.deny_experimental)
+            .unwrap_or(false)
     }
 
     pub fn name(&self) -> Option<&Name> {
@@ -235,30 +243,6 @@ impl Library {
             }
         }
         in_lib(node_id)
-    }
-
-    /// The stability of the deprecated node `node_id` of this library or of the first deprecated
-    /// alias on the way to its target, e.g. of `#[deprecated] pub use g as f;`, `None` if none
-    /// of them is deprecated.
-    ///
-    /// The target of an alias in another library is not followed, see [`Library::symbol_id`].
-    pub fn deprecation(&self, node_id: SymbolNodeId) -> Option<&Stability> {
-        // Limit the depth to stop at cyclic aliases.
-        let mut node_id = node_id;
-        for _ in 0..16 {
-            let symbol = SymbolNodeRef::new(node_id, &self.arena).get();
-            if symbol.ver.stability.is_deprecated() {
-                return Some(&symbol.ver.stability);
-            }
-            match &symbol.def {
-                SymbolDef::Alias(alias) => match alias.path.symbol_id() {
-                    Some(SymbolId::Item(target)) => node_id = *target,
-                    _ => return None,
-                },
-                _ => return None,
-            }
-        }
-        None
     }
 
     /// Public entry point for symbol lookup.

@@ -11,10 +11,6 @@ pub fn f() {
     return g();
 }
 
-// The old name of `g`.
-#[deprecated]
-pub use g as h;
-
 #[deprecated(since = "0.6.0")]
 pub mod old {
     pub const A = 1;
@@ -31,14 +27,14 @@ pub const B = 2;
 // Inside a deprecated function, deprecated symbols are not reported.
 #[deprecated]
 pub fn uses_deprecated() {
-    return f() + h() + old::A;
+    return f() + B + old::A;
 }
 
 pub fn uses() {
     a = f(); // warning: resolve::deprecated
-    b = h(); // warning: resolve::deprecated
-    c = old::A; // warning: resolve::deprecated
-    return a + b + c + g();
+    // A deprecated module in a path is not reported, only a deprecated symbol.
+    b = old::A;
+    return a + b + g();
 }
 
 // The default value is also one of the implicit init, but reported once.

@@ -69,6 +69,8 @@ pub struct Compiler {
     resolve_context: mu::ResolveContext,
     /// Do not load the standard library.
     no_std: bool,
+    /// Using an experimental symbol of another library is an error instead of a warning.
+    deny_experimental: bool,
     /// Paths to search for the standard library.
     search_paths: Vec<std::path::PathBuf>,
     /// The standard library, which is loaded once per compiler.
@@ -107,8 +109,11 @@ impl Compiler {
     /// A compiler with the library settings of a driver config.
     pub fn from_config(config: &mu::DriverConfig) -> Compiler {
         Self {
-            resolve_context: mu::ResolveContext::new(),
+            resolve_context: mu::ResolveContext::builder()
+                .with_deny_experimental(config.deny_experimental)
+                .build(),
             no_std: config.no_std,
+            deny_experimental: config.deny_experimental,
             search_paths: config.search_paths.clone(),
             std: None,
         }
@@ -118,6 +123,7 @@ impl Compiler {
     pub fn with_file_system(mut self, file_system: Arc<dyn mu::base::FileSystem>) -> Self {
         self.resolve_context = mu::ResolveContext::builder()
             .with_file_system(file_system)
+            .with_deny_experimental(self.deny_experimental)
             .build();
         self
     }
@@ -144,6 +150,7 @@ impl Compiler {
                 let eval_context = mu::EvalContext::builder()
                     .with_lib_cache(self.resolve_context.lib_cache())
                     .with_lib_id(lib_id)
+                    .with_deny_experimental(self.deny_experimental)
                     .build();
                 mu::eval::eval(eval_context).into_compile_result()
             })
@@ -162,6 +169,7 @@ impl Compiler {
         let eval_context = mu::EvalContext::builder()
             .with_lib_cache(self.resolve_context.lib_cache())
             .with_lib_id(mu::base::LibraryId::ROOT)
+            .with_deny_experimental(self.deny_experimental)
             .build();
         mu::eval::call(eval_context, id, args).into_compile_result()
     }

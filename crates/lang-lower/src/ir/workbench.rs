@@ -281,7 +281,7 @@ impl Init {
             .map(|parameter| {
                 ir::InitStatement::new(
                     parameter.id.clone(),
-                    ir::Path::Resolved(mucad_lang_base::SymbolId::Local(parameter.id.id().clone())),
+                    ir::Path::from(mucad_lang_base::SymbolId::Local(parameter.id.id().clone())),
                 )
             })
             .collect();
@@ -334,9 +334,7 @@ pub enum WorkbenchExpression {
 
 impl WorkbenchExpression {
     pub(crate) fn local(id: &str) -> Self {
-        Self::Path(ir::Path::Resolved(mucad_lang_base::SymbolId::Local(
-            id.into(),
-        )))
+        Self::Path(ir::Path::from(mucad_lang_base::SymbolId::Local(id.into())))
     }
 }
 

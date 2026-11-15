@@ -33,7 +33,11 @@ fn target_alias(node: SymbolNodeRef<'_>) -> Option<SymbolNodeRef<'_>> {
     let SymbolDef::Alias(alias) = &node.get().def else {
         return None;
     };
-    let Path::Resolved(SymbolId::Item(target)) = &alias.path else {
+    let Path::Resolved {
+        id: SymbolId::Item(target),
+        ..
+    } = &alias.path
+    else {
         return None;
     };
     let target = SymbolNodeRef::new(*target, node.arena);

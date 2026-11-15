@@ -93,7 +93,7 @@ impl Eval for BuiltinItem {
 impl Eval for symbol::Path {
     fn eval(&self, context: &mut EvalContext) -> EvalResult {
         match self {
-            symbol::Path::Resolved(symbol_id)
+            symbol::Path::Resolved { id: symbol_id, .. }
             | symbol::Path::HumanReadable { id: symbol_id, .. } => symbol_id.eval(context),
             symbol::Path::Unresolved(unresolved_path) => {
                 context.catch(EvalErrorKind::UnresolvedPath {
@@ -130,7 +130,7 @@ impl Eval<ArgumentValueList> for symbol::workbench::ArgumentList {
 impl Eval for symbol::workbench::WorkbenchCall {
     fn eval(&self, context: &mut EvalContext) -> EvalResult {
         let symbol_id = match &self.path {
-            symbol::Path::Resolved(symbol_id)
+            symbol::Path::Resolved { id: symbol_id, .. }
             | symbol::Path::HumanReadable { id: symbol_id, .. } => Some(symbol_id),
             symbol::Path::Unresolved(_) => None,
         };
@@ -295,8 +295,8 @@ impl Callable for symbol::Workbench {
             .into());
         };
 
-        // The init is chosen by the arguments, so only now its deprecation is known.
-        context.warn_deprecated_init(init);
+        // The init is chosen by the arguments, so only now its stability is known.
+        context.check_init_stability(init);
 
         let arguments = init.argument_multi_match(args).map_err(|err| {
             EvalError::argument_match(

@@ -5,6 +5,7 @@ mod alias_check;
 mod case_check;
 mod duplicate_check;
 mod init_check;
+mod stability_check;
 mod type_check;
 
 pub(crate) use alias_check::AliasCheck;
@@ -12,6 +13,7 @@ pub(crate) use case_check::CaseCheck;
 pub(crate) use duplicate_check::DuplicateCheck;
 pub(crate) use init_check::InitCheck;
 use mucad_lang_base::IssueList;
+pub(crate) use stability_check::StabilityCheck;
 pub(crate) use type_check::{TypeCheck, infer_parameter_types};
 
 use mucad_builtin::BuiltinLibrary;
@@ -25,6 +27,9 @@ pub(crate) struct CheckContext<'a> {
     /// The other libraries, e.g. `std`.
     pub(crate) lib_cache: &'a LibraryCache,
     pub(crate) builtins: &'a BuiltinLibrary,
+    /// Whether using an experimental symbol of another library is an error instead of a
+    /// warning, by the resolve context or by the manifest of the library.
+    pub(crate) deny_experimental: bool,
 }
 
 impl<'a> CheckContext<'a> {

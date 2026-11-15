@@ -11,6 +11,11 @@ use serde::Deserialize;
 pub struct DriverConfig {
     pub no_std: bool,
 
+    /// Using an experimental symbol of another library, e.g. of `std`, is an error instead of a
+    /// warning (default: `false`).
+    #[serde(default)]
+    pub deny_experimental: bool,
+
     pub search_paths: Vec<std::path::PathBuf>,
 
     /// Default extension (default: `µcad`).
@@ -30,6 +35,7 @@ impl Default for DriverConfig {
     fn default() -> Self {
         Self {
             no_std: false,
+            deny_experimental: false,
             default_extension: "µcad".to_string(),
             export: Default::default(),
             format: Default::default(),

@@ -21,7 +21,7 @@ impl<'a, Ctx: LookUpName> MakeHumanReadable<'a, Ctx> {
 
 impl<'a, Ctx: LookUpName> ir::visitor::LeafVisitorMut for MakeHumanReadable<'a, Ctx> {
     fn visit_path(&mut self, path: &mut ir::Path) {
-        if let ir::Path::Resolved(symbol_id) = path
+        if let ir::Path::Resolved { id: symbol_id, .. } = path
             && let Some(name) = self.ctx.look_up_symbol_name(symbol_id)
         {
             *path = ir::Path::HumanReadable {

@@ -141,10 +141,14 @@ impl<'a> Search<'a> {
         }
 
         match &wildcard.path {
-            Path::Resolved(SymbolId::Item(module)) => self.in_scope(*module, parts),
-            Path::Resolved(SymbolId::External(module)) => {
-                self.external.look_up(module, parts).map(LookUp::External)
-            }
+            Path::Resolved {
+                id: SymbolId::Item(module),
+                ..
+            } => self.in_scope(*module, parts),
+            Path::Resolved {
+                id: SymbolId::External(module),
+                ..
+            } => self.external.look_up(module, parts).map(LookUp::External),
             // Not resolved yet, e.g. while resolving the wildcard itself.
             Path::Unresolved(path) => match self.with_scope(scope, |search| search.path(path))? {
                 LookUp::Local(module) => self.in_scope(module, parts),
@@ -228,8 +232,14 @@ impl<'a> Search<'a> {
         }
 
         match &wildcard.path {
-            Path::Resolved(SymbolId::Item(module)) => self.symbols_in(*module),
-            Path::Resolved(SymbolId::External(module)) => self.external_symbols(module),
+            Path::Resolved {
+                id: SymbolId::Item(module),
+                ..
+            } => self.symbols_in(*module),
+            Path::Resolved {
+                id: SymbolId::External(module),
+                ..
+            } => self.external_symbols(module),
             // Not resolved, e.g. while resolving the wildcard itself.
             Path::Unresolved(path) => match self.with_scope(scope, |search| search.path(path)) {
                 Some(LookUp::Local(module)) => self.symbols_in(module),
@@ -242,10 +252,14 @@ impl<'a> Search<'a> {
     /// The symbol the alias `node` with `path` stands for, e.g. a module.
     fn alias_target(&mut self, node: SymbolNodeId, path: &Path) -> Option<LookUp> {
         match path {
-            Path::Resolved(SymbolId::Item(module)) => Some(LookUp::Local(*module)),
-            Path::Resolved(module @ SymbolId::External(_)) => {
-                Some(LookUp::External(module.clone()))
-            }
+            Path::Resolved {
+                id: SymbolId::Item(module),
+                ..
+            } => Some(LookUp::Local(*module)),
+            Path::Resolved {
+                id: module @ SymbolId::External(_),
+                ..
+            } => Some(LookUp::External(module.clone())),
             // Not resolved yet, e.g. while resolving other imports.
             Path::Unresolved(path) => {
                 let scope = node.parent(&self.lib.arena)?;

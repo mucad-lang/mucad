@@ -1052,3 +1052,111 @@ Disc(radius = 1mm);
         ]
     );
 }
+
+/// A compiler with the standard library with experimental symbols in
+/// `tests/data/experimental/std`.
+fn experimental_std_compiler(deny_experimental: bool) -> Compiler {
+    Compiler::from_config(&mu::DriverConfig {
+        search_paths: vec!["tests/data/experimental".into()],
+        deny_experimental,
+        ..Default::default()
+    })
+}
+
+/// The code, line in an editor and message of each diagnostic.
+fn diagnostics(compiler: &mut Compiler, source: &str) -> Vec<(String, u32, String)> {
+    let diags = match compiler.compile(source) {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+    diags
+        .iter()
+        .map(|diag| {
+            (
+                diag.report
+                    .code()
+                    .map(|code| code.to_string())
+                    .unwrap_or_default(),
+                diag.src_ref.line().expect("A line") + 1,
+                diag.report.to_string(),
+            )
+        })
+        .collect()
+}
+
+/// Experimental symbols of another library are reported as warnings: a sketch and an
+/// initializer, which a call picks. The own experimental symbols are not reported.
+#[test]
+fn compile_experimental() {
+    const SOURCE: &str = r#"std::geo2d::Gear(radius = 1mm);
+std::geo2d::Circle(diameter = 2mm);
+std::geo2d::Circle(radius = 1mm);
+
+#[experimental]
+sketch Mine() {
+    __mu::geo2d::Circle(radius = 1mm);
+}
+
+Mine();
+"#;
+    let warning = |code: &str, line, message: &str| (code.to_string(), line, message.to_string());
+    assert_eq!(
+        diagnostics(&mut experimental_std_compiler(false), SOURCE),
+        [
+            warning(
+                "resolve::experimental",
+                1,
+                "Use of experimental `std::geo2d::Gear`"
+            ),
+            warning(
+                "eval::experimental",
+                2,
+                "Use of experimental `init(diameter: Length)` of `std::geo2d::Circle`"
+            ),
+        ]
+    );
+}
+
+/// With `deny_experimental`, experimental symbols of another library are errors: while
+/// resolving, which stops the compilation, and of initializers while evaluating.
+#[test]
+fn compile_deny_experimental() {
+    let errors = |source: &str| {
+        let mut compiler = experimental_std_compiler(true);
+        let diags = match compiler.compile(source) {
+            Ok((_, diags)) | Err(diags) => diags,
+        };
+        assert!(diags.has_errors(), "{diags:?}");
+        diagnostics(&mut experimental_std_compiler(true), source)
+    };
+    assert_eq!(
+        errors("std::geo2d::Gear(radius = 1mm);"),
+        [(
+            "resolve::experimental".to_string(),
+            1,
+            "Use of experimental `std::geo2d::Gear`".to_string()
+        )]
+    );
+    assert_eq!(
+        errors("std::geo2d::Circle(diameter = 2mm);"),
+        [(
+            "eval::experimental".to_string(),
+            1,
+            "Use of experimental `init(diameter: Length)` of `std::geo2d::Circle`".to_string()
+        )]
+    );
+}
+
+/// A library can deny experimental symbols of other libraries in its manifest, without
+/// `deny_experimental` of the compiler.
+#[test]
+fn compile_lib_deny_experimental() {
+    let diags = match experimental_std_compiler(false).compile_lib("tests/data/deny_experimental") {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+    let errors: Vec<_> = diags
+        .iter()
+        .filter(|diag| diag.severity() == Some(mu::base::Severity::Error))
+        .map(|diag| diag.report.to_string())
+        .collect();
+    assert_eq!(errors, ["Use of experimental `std::geo2d::Gear`"]);
+}

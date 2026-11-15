@@ -676,7 +676,7 @@ fn resolve_file_module_not_located() {
 }
 
 /// The uses of deprecated symbols are reported once at each use, see `// warning:` in the test
-/// case: of functions, aliases, constants and modules in a path, not inside deprecated symbols.
+/// case: of functions and constants, not inside deprecated symbols.
 #[test]
 fn resolve_deprecated() {
     use mucad_lang_base::Diagnostics;

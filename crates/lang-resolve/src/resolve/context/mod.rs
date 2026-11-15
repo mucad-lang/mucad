@@ -36,6 +36,9 @@ pub struct ResolveContext {
     loading: Vec<std::path::PathBuf>,
     /// Symbols which can be used by name without `use`, e.g. of `std`.
     prelude: Option<Prelude>,
+    /// Whether using an experimental symbol of another library is an error instead of a
+    /// warning, also if the manifest of the library allows it.
+    deny_experimental: bool,
 }
 
 /// Builder methods.
@@ -205,6 +208,11 @@ impl ResolveContext {
     pub fn prelude(&self) -> Option<&Prelude> {
         self.prelude.as_ref()
     }
+
+    /// Whether using an experimental symbol of another library is an error instead of a warning.
+    pub fn deny_experimental(&self) -> bool {
+        self.deny_experimental
+    }
 }
 
 /// Builder for constructing a [`ResolveContext`].
@@ -214,6 +222,7 @@ pub struct ResolveContextBuilder {
     file_system: Option<Arc<dyn FileSystem>>,
     lib_cache: Option<SharedMut<LibraryCache>>,
     src_cache: Option<SharedMut<SourceCache>>,
+    deny_experimental: bool,
 }
 
 impl ResolveContextBuilder {
@@ -257,6 +266,12 @@ impl ResolveContextBuilder {
         self
     }
 
+    /// Using an experimental symbol of another library is an error instead of a warning.
+    pub fn with_deny_experimental(mut self, deny_experimental: bool) -> Self {
+        self.deny_experimental = deny_experimental;
+        self
+    }
+
     /// Build and initialize the [`ResolveContext`].
     pub fn build(self) -> ResolveContext {
         ResolveContext {
@@ -269,6 +284,7 @@ impl ResolveContextBuilder {
             src_cache: self.src_cache.unwrap_or_default(),
             loading: Vec::new(),
             prelude: None,
+            deny_experimental: self.deny_experimental,
         }
     }
 }

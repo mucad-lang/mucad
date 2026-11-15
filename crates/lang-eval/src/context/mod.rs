@@ -12,7 +12,7 @@ pub use stack::*;
 use mucad_builtin::{BuiltinEvalContext, BuiltinLibrary};
 use mucad_lang_base::{
     ExternalId, IssueList, LibraryId, LookUpName, Name, PushIssue, Shared, SharedMut, SrcRef,
-    SymbolId, ToCompactString,
+    Stability, SymbolId, ToCompactString,
 };
 use mucad_lang_types::{ArgumentValueList, Value, model::ModelTreeBuilderMut};
 
@@ -33,6 +33,10 @@ pub struct EvalContext {
 
     /// All libraries, including the one being evaluated.
     lib_cache: SharedMut<LibraryCache>,
+
+    /// Whether using an experimental initializer of another library is an error instead of a
+    /// warning, also if the manifest of the library allows it.
+    deny_experimental: bool,
 }
 
 /// Builder functions
@@ -142,6 +146,7 @@ impl EvalContext {
             SymbolCallFrame {
                 path: call.path.clone(),
                 src_ref: call.src_ref,
+                caller_lib_id: self.lib_id,
             },
             |context| context.call_symbol(lib_id, id, &args),
         )
@@ -298,30 +303,66 @@ impl ModelTreeBuilderMut for EvalContext {
     }
 }
 
-/// Deprecations
+/// Stability
 impl EvalContext {
-    /// Report the call of the deprecated initializer `init` of the current workbench, nothing
-    /// if `init` is not deprecated.
+    /// Report the call of the deprecated or experimental initializer `init` of the current
+    /// workbench, experimental ones only for a call of another library, e.g. of `std`.
     ///
     /// A call evaluated again, e.g. in a workbench called twice, is reported once, see
     /// [`IssueList`].
-    pub(crate) fn warn_deprecated_init(&mut self, init: &symbol::workbench::Init) {
-        let Some(deprecation) = init.attr.ver.stability.deprecation() else {
-            return;
-        };
+    pub(crate) fn check_init_stability(&mut self, init: &symbol::workbench::Init) {
+        let stability = &init.attr.ver.stability;
         let src_ref = self.current_symbol_src_ref();
-        self.push_warn(EvalWarning::DeprecatedInit {
-            workbench: self.current_symbol_name().unwrap_or_default(),
-            init: format!("init({})", init.parameters),
-            deprecation,
-            note: init
-                .attr
-                .ver
-                .stability
-                .deprecation_note()
-                .map(str::to_string),
-            src_ref,
-        });
+        let workbench = self.current_symbol_name().unwrap_or_default();
+        let init_name = format!("init({})", init.parameters);
+
+        if let Some(deprecation) = stability.deprecation() {
+            self.push_warn(EvalWarning::DeprecatedInit {
+                workbench: workbench.clone(),
+                init: init_name.clone(),
+                deprecation,
+                note: stability.deprecation_note().map(str::to_string),
+                src_ref,
+            });
+        }
+        if *stability == Stability::Experimental && self.called_from_other_library() {
+            if self.deny_experimental() {
+                self.push_err(EvalErrorKind::ExperimentalInit {
+                    workbench,
+                    init: init_name,
+                    src_ref,
+                });
+            } else {
+                self.push_warn(EvalWarning::ExperimentalInit {
+                    workbench,
+                    init: init_name,
+                    src_ref,
+                });
+            }
+        }
+    }
+
+    /// Whether the current workbench is called from another library than its own, e.g. a
+    /// workbench of `std` from the evaluated library.
+    fn called_from_other_library(&self) -> bool {
+        let caller = self
+            .stack
+            .current_call_scope()
+            .find_map(|frame| match frame {
+                StackFrame::Call(call) => Some(call.caller_lib_id),
+                _ => None,
+            })
+            .flatten();
+        caller.is_some() && caller != self.lib_id
+    }
+
+    /// Whether experimental symbols of other libraries are denied by the context or by the
+    /// manifest of the evaluated library.
+    fn deny_experimental(&self) -> bool {
+        self.deny_experimental
+            || self
+                .library(&LibraryId::ROOT)
+                .is_some_and(|lib| lib.deny_experimental())
     }
 }
 
@@ -365,6 +406,7 @@ pub struct EvalContextBuilder {
     builtins: Option<Shared<BuiltinLibrary>>,
     lib_id: Option<LibraryId>,
     lib_cache: Option<SharedMut<LibraryCache>>,
+    deny_experimental: bool,
 }
 
 impl EvalContextBuilder {
@@ -391,6 +433,12 @@ impl EvalContextBuilder {
         self
     }
 
+    /// Using an experimental initializer of another library is an error instead of a warning.
+    pub fn with_deny_experimental(mut self, deny_experimental: bool) -> Self {
+        self.deny_experimental = deny_experimental;
+        self
+    }
+
     /// Build and initialize the [`EvalContext`].
     pub fn build(self) -> EvalContext {
         EvalContext {
@@ -401,6 +449,7 @@ impl EvalContextBuilder {
                 .unwrap_or_else(|| Shared::new(BuiltinLibrary::new())),
             lib_id: self.lib_id,
             lib_cache: self.lib_cache.unwrap_or_default(),
+            deny_experimental: self.deny_experimental,
         }
     }
 }

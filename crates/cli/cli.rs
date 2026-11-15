@@ -24,6 +24,10 @@ pub struct Cli {
     #[arg(short, action = clap::ArgAction::Count)]
     pub(crate) verbose: u8,
 
+    /// Using an experimental symbol of another library, e.g. of `std`, is an error.
+    #[arg(long, global = true)]
+    deny_experimental: bool,
+
     /// Subcommands.
     #[command(subcommand)]
     command: Commands,
@@ -38,9 +42,13 @@ impl Cli {
     pub fn new() -> miette::Result<Self> {
         let mut cli = Self::parse();
 
-        if let Some(config_path) = &cli.config_path {
-            cli.config = std::rc::Rc::new(mu::DriverConfig::load(config_path)?);
-        }
+        let mut config = match &cli.config_path {
+            Some(config_path) => mu::DriverConfig::load(config_path)?,
+            None => mu::DriverConfig::default(),
+        };
+        // The flag denies experimental symbols, also if the config file allows them.
+        config.deny_experimental |= cli.deny_experimental;
+        cli.config = std::rc::Rc::new(config);
         Ok(cli)
     }
 

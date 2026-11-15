@@ -1,0 +1,6 @@
+# A library, which denies experimental symbols of other libraries.
+
+[library]
+name = "strict"
+version = "0.1.0"
+deny_experimental = true

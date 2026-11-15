@@ -71,7 +71,7 @@ macro_rules! expr {
     };
     // A local identifier
     ($id:ident) => {
-        symbol::Path::Resolved(SymbolId::Local(stringify!($id).into()))
+        symbol::Path::from(SymbolId::Local(stringify!($id).into()))
     };
     ($id:ident.$field:ident) => {
         call_builtin!(core::member_access(

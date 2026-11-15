@@ -50,6 +50,9 @@ pub struct LibrarySection {
     pub license: Option<String>,
     /// Do not load the standard library by default.
     pub no_std: Option<bool>,
+    /// Using an experimental symbol of another library, e.g. of `std`, is an error instead of a
+    /// warning.
+    pub deny_experimental: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Serialize, Deserialize)]

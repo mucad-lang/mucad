@@ -42,6 +42,7 @@ Manifest {
         no_std: Some(
             true,
         ),
+        deny_experimental: None,
     },
     dependencies: Some(
         {

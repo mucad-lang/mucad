@@ -55,6 +55,23 @@ pub enum EvalErrorKind {
         inits: Vec<String>,
     },
 
+    /// A call of another library uses an experimental initializer, which is denied, see
+    /// `EvalContextBuilder::with_deny_experimental`.
+    #[error("Use of experimental `{init}` of `{workbench}`")]
+    #[diagnostic(
+        code(eval::experimental),
+        help("Experimental symbols are denied, e.g. by `--deny-experimental`")
+    )]
+    ExperimentalInit {
+        /// The name of the workbench, e.g. `std::geo2d::Circle`.
+        workbench: String,
+        /// The initializer, e.g. `init(r: Length)`.
+        init: String,
+        /// The call.
+        #[label("Experimental")]
+        src_ref: SrcRef,
+    },
+
     #[error("This expression is expected to return a value.")]
     ExpectedExpression { src_ref: SrcRef },
 
@@ -162,6 +179,7 @@ impl SrcReferrer for EvalErrorKind {
             } => *context_src_ref,
             EvalErrorKind::IfConditionIsNotBool { src_ref, .. } => *src_ref,
             EvalErrorKind::NoInitializationFound { src_ref, .. } => *src_ref,
+            EvalErrorKind::ExperimentalInit { src_ref, .. } => *src_ref,
             EvalErrorKind::ExpectedExpression { src_ref } => *src_ref,
             EvalErrorKind::CallReturnValueIgnored(src_ref) => *src_ref,
             EvalErrorKind::SymbolCannotBeCalled { src_ref, .. } => *src_ref,
@@ -276,13 +294,32 @@ pub enum EvalWarning {
         #[label("{deprecation}")]
         src_ref: SrcRef,
     },
+
+    /// A call of another library uses an experimental initializer, e.g. of `std`, which may
+    /// change or be removed in any version.
+    #[error("Use of experimental `{init}` of `{workbench}`")]
+    #[diagnostic(
+        code(eval::experimental),
+        help("It may change or be removed in any version")
+    )]
+    ExperimentalInit {
+        /// The name of the workbench, e.g. `std::geo2d::Circle`.
+        workbench: String,
+        /// The initializer, e.g. `init(r: Length)`.
+        init: String,
+        /// The call.
+        #[label("Experimental")]
+        src_ref: SrcRef,
+    },
 }
 
 impl SrcReferrer for EvalWarning {
     fn src_ref(&self) -> SrcRef {
         match self {
             Self::Builtin(_) => SrcRef::none(),
-            Self::DeprecatedInit { src_ref, .. } => *src_ref,
+            Self::DeprecatedInit { src_ref, .. } | Self::ExperimentalInit { src_ref, .. } => {
+                *src_ref
+            }
         }
     }
 }
