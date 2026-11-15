@@ -29,6 +29,30 @@ impl ToMd for symbol::ParameterList {
     }
 }
 
+/// The parameters as written in code, e.g. `radius: Length, center = (x = 0mm, y = 0mm)`, with
+/// the values of constant default values.
+fn parameters(parameters: &symbol::ParameterList) -> String {
+    use symbol::ExprSpec;
+
+    parameters
+        .iter()
+        .map(|param| {
+            let mut text = param.id.to_string();
+            if let Some(ty) = &param.ty {
+                text += &format!(": {ty}");
+            }
+            if let Some(default) = &param.default_value {
+                match default.value() {
+                    Some(value) => text += &format!(" = {value}"),
+                    None => text += &format!(" = {default}"),
+                }
+            }
+            text
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
 impl<'a> ToMd for SymbolNodeRef<'a> {
     fn to_md(&self) -> md::Markdown {
         use mucad_lang_resolve::library::WorkbenchKind;
@@ -89,6 +113,20 @@ impl<'a> ToMd for SymbolNodeRef<'a> {
                     .into_iter()
                     .chain(doc_block(self.doc().map(String::as_str))),
             ));
+        }
+
+        // The initializers of a workbench, like the constructors of a type in the Rust docs.
+        if let (Some(id), SymbolDef::Workbench(workbench)) = (self.name(), self.def()) {
+            md.add_section(md::Section::new(2, "Initializers", []));
+            workbench.signature.inits.iter().for_each(|init| {
+                md.add_section(md::Section::new(
+                    3,
+                    format!("`{id}({})`", parameters(&init.parameters)),
+                    stability_block(&init.attr.ver)
+                        .into_iter()
+                        .chain(doc_block(Some(&init.attr.doc.content))),
+                ))
+            });
         }
 
         // Lists of symbols with their own pages.

@@ -134,7 +134,8 @@ fn write_builtin_mdbook() {
 }
 
 /// The stability of a symbol is shown above its documentation and behind its name in lists,
-/// like in the Rust docs.
+/// like in the Rust docs. The initializers of a workbench are documented with their stability,
+/// the first one with the parameters of the workbench.
 #[test]
 fn library_mdbook_stability() {
     let mut ctx = ResolveContext::new();
@@ -169,6 +170,13 @@ fn library_mdbook_stability() {
          > 🔬 This is an experimental API, which may change or be removed in any version.\n\
          >\n\
          > Introduced in 0.6.0\n\n\
-         An experimental sketch.\n"
+         An experimental sketch.\n\n\
+         ## Initializers\n\n\
+         ### `Gear(radius: Length, teeth: Integer = 12)`\n\n\
+         ### `Gear(diameter: Length, teeth: Integer = 12)`\n\n\
+         With the diameter instead of the radius.\n\n\
+         ### `Gear(r: Length)`\n\n\
+         > 👎 Deprecated: Use `radius`\n\n\
+         With the old name of the radius.\n"
     );
 }

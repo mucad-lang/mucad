@@ -12,7 +12,18 @@ pub fn f() {
 /// An experimental sketch.
 #[experimental]
 #[introduced(version = "0.6.0")]
-pub sketch Gear(radius: Length) {
+pub sketch Gear(radius: Length, teeth = 12) {
+    /// With the diameter instead of the radius.
+    init(diameter: Length, teeth = 12) {
+        radius = diameter / 2;
+    }
+
+    /// With the old name of the radius.
+    #[deprecated(note = "Use `radius`")]
+    init(r: Length) {
+        radius = r;
+    }
+
     __mu::geo2d::Circle(radius = radius);
 }
 
