@@ -674,3 +674,36 @@ fn resolve_file_module_not_located() {
         SymbolDef::SourceFile(SourceFile::NotLoaded)
     ));
 }
+
+/// The uses of deprecated symbols are reported once at each use, see `// warning:` in the test
+/// case: of functions, aliases, constants and modules in a path, not inside deprecated symbols.
+#[test]
+fn resolve_deprecated() {
+    use mucad_lang_base::Diagnostics;
+    use mucad_lang_parse::{
+        Ast, Parse, ParseContext,
+        ast::visitor::{ExpectedDiagnostic, ExpectedDiagnostics, collect_expected_diagnostics},
+    };
+
+    let file = "tests/test_cases/deprecated.mu";
+    let mut ctx = ResolveContext::new();
+    let (_lib, issues) = mucad_lang_resolve::resolve(file, &mut ctx).expect("No fatal error");
+
+    let source = mucad_lang_base::Source::load(file).expect("A source");
+    let parse_context = ParseContext::from(&source);
+    let ast = Ast::parse(&parse_context).expect("No parse error");
+    let expected = collect_expected_diagnostics(&parse_context, &ast);
+
+    let diagnostics = Diagnostics::from(issues);
+    let observed = ExpectedDiagnostics::new(
+        diagnostics
+            .iter()
+            .map(|diag| ExpectedDiagnostic {
+                severity: diag.severity().unwrap_or_default(),
+                line: diag.src_ref.line().expect("A line"),
+                code: diag.code().map(|code| code.to_string()),
+            })
+            .collect(),
+    );
+    assert_eq!(observed, expected, "{diagnostics:?}");
+}

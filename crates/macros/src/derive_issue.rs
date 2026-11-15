@@ -27,6 +27,8 @@ fn issue_attr<T: Parse>(attrs: &[syn::Attribute], key: &str) -> Result<Option<T>
 /// with `::error`, `::warning` or `::advice`, e.g. `render::error` for `#[issue(code = "render")]`.
 /// Help, labels and related diagnostics are those of the error, warning or advice, which can be
 /// returned by a method, e.g. `#[issue(diagnostic = kind)]` for `EvalError::kind()`.
+///
+/// The hash of an issue, see `Issue::hash`, is of its severity, code, message and position.
 pub fn derive_issue_impl(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     derive_issue(&input)
@@ -86,6 +88,18 @@ fn derive_issue(input: &DeriveInput) -> Result<TokenStream2> {
 
                 fn diagnostic(&self) -> &dyn Diagnostic {
                     match self { #(Self::#variants(inner) => #diagnostics,)* }
+                }
+
+                fn hash(&self) -> mucad_lang_base::HashId {
+                    let src_ref = mucad_lang_base::SrcReferrer::src_ref(self);
+                    mucad_lang_base::hash_id!(
+                        Issue::severity(self) as u8,
+                        Diagnostic::code(self).map(|code| code.to_string()),
+                        self.to_string(),
+                        src_ref.source_hash,
+                        src_ref.start,
+                        src_ref.end,
+                    )
                 }
             }
 

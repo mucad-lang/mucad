@@ -72,6 +72,40 @@ pub enum Stability {
     },
 }
 
+impl Stability {
+    /// Whether the symbol is deprecated, e.g. by `#[deprecated]`.
+    pub fn is_deprecated(&self) -> bool {
+        matches!(self, Self::Deprecated { .. })
+    }
+
+    /// When a deprecated symbol was deprecated and will be removed, e.g. `Deprecated since
+    /// 0.5.0, will be removed in 0.7.0`, without its note, `None` if it is not deprecated.
+    pub fn deprecation(&self) -> Option<String> {
+        let Self::Deprecated {
+            since, removal_in, ..
+        } = self
+        else {
+            return None;
+        };
+        let mut text = String::from("Deprecated");
+        if let Some(since) = since {
+            text += &format!(" since {since}");
+        }
+        if let Some(removal_in) = removal_in {
+            text += &format!(", will be removed in {removal_in}");
+        }
+        Some(text)
+    }
+
+    /// The note of a deprecated symbol, e.g. which symbol to use instead.
+    pub fn deprecation_note(&self) -> Option<&str> {
+        match self {
+            Self::Deprecated { note, .. } => note.as_deref(),
+            _ => None,
+        }
+    }
+}
+
 /// Version annotation for a symbol in µcad.
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VersionAnnotation {
@@ -210,6 +244,31 @@ mod tests {
         assert!(!since.is_deprecated_at(&version("0.5.9")));
         assert!(since.is_deprecated_at(&target));
         assert!(since.is_deprecated_at(&version("0.7.0")));
+    }
+
+    #[test]
+    fn deprecation() {
+        assert_eq!(Stability::Stable.deprecation(), None);
+        assert_eq!(Stability::Experimental.deprecation(), None);
+        assert!(!Stability::Experimental.is_deprecated());
+
+        let plain = deprecated(None, None, None);
+        assert!(plain.is_deprecated());
+        assert_eq!(plain.deprecation().as_deref(), Some("Deprecated"));
+        assert_eq!(plain.deprecation_note(), None);
+
+        let all = deprecated(Some("0.5.0"), Some("Use g()"), Some("0.7.0"));
+        assert_eq!(
+            all.deprecation().as_deref(),
+            Some("Deprecated since 0.5.0, will be removed in 0.7.0")
+        );
+        assert_eq!(all.deprecation_note(), Some("Use g()"));
+        assert_eq!(
+            deprecated(None, None, Some("0.7.0"))
+                .deprecation()
+                .as_deref(),
+            Some("Deprecated, will be removed in 0.7.0")
+        );
     }
 
     #[test]

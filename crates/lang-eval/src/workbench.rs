@@ -295,6 +295,9 @@ impl Callable for symbol::Workbench {
             .into());
         };
 
+        // The init is chosen by the arguments, so only now its deprecation is known.
+        context.warn_deprecated_init(init);
+
         let arguments = init.argument_multi_match(args).map_err(|err| {
             EvalError::argument_match(
                 context.current_symbol_src_ref(),

@@ -298,6 +298,33 @@ impl ModelTreeBuilderMut for EvalContext {
     }
 }
 
+/// Deprecations
+impl EvalContext {
+    /// Report the call of the deprecated initializer `init` of the current workbench, nothing
+    /// if `init` is not deprecated.
+    ///
+    /// A call evaluated again, e.g. in a workbench called twice, is reported once, see
+    /// [`IssueList`].
+    pub(crate) fn warn_deprecated_init(&mut self, init: &symbol::workbench::Init) {
+        let Some(deprecation) = init.attr.ver.stability.deprecation() else {
+            return;
+        };
+        let src_ref = self.current_symbol_src_ref();
+        self.push_warn(EvalWarning::DeprecatedInit {
+            workbench: self.current_symbol_name().unwrap_or_default(),
+            init: format!("init({})", init.parameters),
+            deprecation,
+            note: init
+                .attr
+                .ver
+                .stability
+                .deprecation_note()
+                .map(str::to_string),
+            src_ref,
+        });
+    }
+}
+
 /// Built-in calls
 impl EvalContext {
     /// Run `f` with a context for a built-in called at `src_ref`

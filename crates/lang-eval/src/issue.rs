@@ -256,6 +256,35 @@ pub enum EvalWarning {
     /// A warning of a built-in, e.g. `__mu::debug::print`.
     #[error(transparent)]
     Builtin(#[from] BuiltinWarning),
+
+    /// A call uses a deprecated initializer, e.g. `Disc(r = 1mm)` of
+    /// `#[deprecated] init(r: Length)`, which is chosen when calling.
+    #[error("Use of deprecated `{init}` of `{workbench}`")]
+    #[diagnostic(code(eval::deprecated))]
+    DeprecatedInit {
+        /// The name of the workbench, e.g. `std::geo2d::Circle`.
+        workbench: String,
+        /// The initializer, e.g. `init(r: Length)`.
+        init: String,
+        /// When it was deprecated and will be removed, see
+        /// [`mucad_lang_base::Stability::deprecation`].
+        deprecation: String,
+        /// The note of the deprecation, e.g. which initializer to use instead.
+        #[help]
+        note: Option<String>,
+        /// The call.
+        #[label("{deprecation}")]
+        src_ref: SrcRef,
+    },
+}
+
+impl SrcReferrer for EvalWarning {
+    fn src_ref(&self) -> SrcRef {
+        match self {
+            Self::Builtin(_) => SrcRef::none(),
+            Self::DeprecatedInit { src_ref, .. } => *src_ref,
+        }
+    }
 }
 
 #[derive(Debug, Error, Diagnostic)]
@@ -297,7 +326,8 @@ impl SrcReferrer for EvalIssue {
     fn src_ref(&self) -> SrcRef {
         match self {
             Self::Error(err) => err.src_ref(),
-            _ => SrcRef::none(),
+            Self::Warning(warn) => warn.src_ref(),
+            Self::Advice(_) => SrcRef::none(),
         }
     }
 }

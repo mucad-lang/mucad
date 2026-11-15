@@ -983,3 +983,72 @@ fn type_check_workbench_output(source: &str) -> Vec<String> {
 fn type_check_constants(source: &str) -> Vec<String> {
     error_messages(&mut compiler(), source)
 }
+
+/// Deprecated symbols and initializers are reported once at each use: symbols while resolving,
+/// initializers when a call picks them, also if the call is evaluated twice.
+#[test]
+fn compile_deprecated() {
+    const SOURCE: &str = r#"sketch Disc(radius: Length) {
+    #[deprecated(since = "0.5.0", note = "Use the radius")]
+    init(r: Length) {
+        radius = r;
+    }
+
+    __mu::geo2d::Circle(radius);
+}
+
+#[deprecated]
+fn size() {
+    return 2mm;
+}
+
+sketch Twice() {
+    Disc(r = 1mm);
+}
+
+Disc(r = size());
+Twice();
+Twice();
+Disc(radius = 1mm);
+"#;
+    let diags = match compiler().compile(SOURCE) {
+        Ok((_, diags)) | Err(diags) => diags,
+    };
+    assert!(!diags.has_errors(), "{diags:?}");
+
+    let warnings: Vec<_> = diags
+        .iter()
+        .map(|diag| {
+            (
+                diag.report
+                    .code()
+                    .map(|code| code.to_string())
+                    .unwrap_or_default(),
+                // The line in an editor, counted from 1.
+                diag.src_ref.line().expect("A line") + 1,
+                diag.report.to_string(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        warnings,
+        [
+            (
+                "resolve::deprecated".to_string(),
+                19,
+                "Use of deprecated `size`".to_string()
+            ),
+            (
+                "eval::deprecated".to_string(),
+                19,
+                "Use of deprecated `init(r: Length)` of `Disc`".to_string()
+            ),
+            // The call in `Twice`, evaluated twice.
+            (
+                "eval::deprecated".to_string(),
+                16,
+                "Use of deprecated `init(r: Length)` of `Disc`".to_string()
+            ),
+        ]
+    );
+}

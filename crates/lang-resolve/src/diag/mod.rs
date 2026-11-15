@@ -27,6 +27,22 @@ pub enum ResolveWarning {
         src_ref: SrcRef,
     },
 
+    /// A deprecated symbol is used, e.g. `f()` of `#[deprecated] fn f()`.
+    #[error("Use of deprecated `{path}`")]
+    #[diagnostic(code(resolve::deprecated))]
+    Deprecated {
+        /// The path as written, e.g. `old::f`.
+        path: String,
+        /// When it was deprecated and will be removed, see
+        /// [`mucad_lang_base::Stability::deprecation`].
+        deprecation: String,
+        /// The note of the deprecation, e.g. which symbol to use instead.
+        #[help]
+        note: Option<String>,
+        #[label("{deprecation}")]
+        src_ref: SrcRef,
+    },
+
     /// A local is never used, e.g. a parameter or variable of a function.
     #[error("Unused local `{name}`")]
     #[diagnostic(help("Remove it or start its name with `_`, e.g. `_{name}`"))]
@@ -40,7 +56,9 @@ pub enum ResolveWarning {
 impl SrcReferrer for ResolveWarning {
     fn src_ref(&self) -> SrcRef {
         match self {
-            Self::WrongCase { src_ref, .. } | Self::UnusedLocal { src_ref, .. } => *src_ref,
+            Self::WrongCase { src_ref, .. }
+            | Self::Deprecated { src_ref, .. }
+            | Self::UnusedLocal { src_ref, .. } => *src_ref,
             Self::Parse(_) | Self::Lower(_) => SrcRef::none(),
         }
     }

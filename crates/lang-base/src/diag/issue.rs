@@ -10,7 +10,7 @@
 
 use miette::{Diagnostic, Severity};
 
-use crate::SrcReferrer;
+use crate::{HashId, SrcReferrer};
 
 /// A trait to define an issue.
 pub trait Issue:
@@ -31,14 +31,29 @@ pub trait Issue:
 
     /// The diagnostic of the error, warning or advice with its help and labels.
     fn diagnostic(&self) -> &dyn Diagnostic;
+
+    /// A hash to find an equal issue, see [`IssueList`]: of its severity, code and message and
+    /// of its position in the source.
+    ///
+    /// Source references have no hash of their own, so that they do not change the hashes of
+    /// the code, their position is hashed instead. `#[derive(Issue)]` implements it.
+    fn hash(&self) -> HashId;
 }
 
 /// An issue list contains issues (errors, warnings, advices) and tracks error and warning count.
+///
+/// An issue equal to one in the list, see [`Issue::hash`], is not added again, e.g. of code,
+/// which is checked or evaluated twice.
+///
+/// Issues without a position in the source, e.g. of `__mu::debug::warning("…")` evaluated
+/// twice, are all added, because they may be reported at different places.
 #[derive(Debug)]
 pub struct IssueList<I: Issue> {
     issues: Vec<I>,
     err_count: usize,
     warn_count: usize,
+    /// The hashes of the issues with a position in the source.
+    hashes: crate::HashSet<HashId>,
 }
 
 impl<I: Issue> IssueList<I> {
@@ -90,6 +105,7 @@ impl<I: Issue> Default for IssueList<I> {
             issues: vec![],
             err_count: 0,
             warn_count: 0,
+            hashes: Default::default(),
         }
     }
 }
@@ -138,9 +154,12 @@ pub trait PushIssue<I: Issue> {
 }
 
 impl<I: Issue> PushIssue<I> for IssueList<I> {
-    /// Push an issue and count it by its severity.
+    /// Push an issue and count it by its severity, unless an equal issue is in the list.
     fn push_issue(&mut self, issue: impl Into<I>) {
         let issue = issue.into();
+        if issue.src_ref().is_some() && !self.hashes.insert(issue.hash()) {
+            return;
+        }
         match Issue::severity(&issue) {
             Severity::Error => self.err_count += 1,
             Severity::Warning => self.warn_count += 1,
@@ -163,5 +182,96 @@ impl<I: Issue> PushIssue<I> for IssueList<I> {
     fn push_advice(&mut self, advice: impl Into<I::Advice>) {
         let advice_type: I::Advice = advice.into();
         self.push_issue(advice_type);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::SrcRef;
+
+    /// A warning with a message at a position, e.g. of a deprecated symbol.
+    #[derive(Debug)]
+    struct TestIssue {
+        message: &'static str,
+        src_ref: SrcRef,
+    }
+
+    impl std::fmt::Display for TestIssue {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.message)
+        }
+    }
+
+    impl std::error::Error for TestIssue {}
+    impl Diagnostic for TestIssue {}
+
+    impl SrcReferrer for TestIssue {
+        fn src_ref(&self) -> SrcRef {
+            self.src_ref
+        }
+    }
+
+    impl Issue for TestIssue {
+        type Error = Self;
+        type Warning = Self;
+        type Advice = Self;
+
+        fn severity(&self) -> Severity {
+            Severity::Warning
+        }
+
+        fn diagnostic(&self) -> &dyn Diagnostic {
+            self
+        }
+
+        fn hash(&self) -> HashId {
+            crate::hash_id!(
+                self.message,
+                self.src_ref.source_hash,
+                self.src_ref.start,
+                self.src_ref.end
+            )
+        }
+    }
+
+    fn at(start: usize) -> SrcRef {
+        SrcRef {
+            start,
+            end: start + 1,
+            source_hash: mucad_hash::HashId::new(42),
+            ..Default::default()
+        }
+    }
+
+    fn issue(message: &'static str, src_ref: SrcRef) -> TestIssue {
+        TestIssue { message, src_ref }
+    }
+
+    /// An equal issue at the same position is not added again, issues without a position are.
+    #[test]
+    fn equal_issues() {
+        let mut issues = IssueList::<TestIssue>::new();
+        issues.push_issue(issue("Use of deprecated `f`", at(1)));
+        issues.push_issue(issue("Use of deprecated `f`", at(1)));
+        // Another message or position.
+        issues.push_issue(issue("Use of deprecated `g`", at(1)));
+        issues.push_issue(issue("Use of deprecated `f`", at(5)));
+        // Without a position, e.g. of `__mu::debug::warning("…")` evaluated twice.
+        issues.push_issue(issue("Check", SrcRef::none()));
+        issues.push_issue(issue("Check", SrcRef::none()));
+
+        let messages: Vec<_> = issues.iter().map(|issue| issue.message).collect();
+        assert_eq!(
+            messages,
+            [
+                "Use of deprecated `f`",
+                "Use of deprecated `g`",
+                "Use of deprecated `f`",
+                "Check",
+                "Check"
+            ]
+        );
+        assert_eq!(issues.warn_count(), 5);
     }
 }

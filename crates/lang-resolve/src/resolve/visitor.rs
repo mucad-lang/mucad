@@ -5,13 +5,19 @@
 
 use crate::{
     ResolveErrorKind, ResolveLibraryContext, ResolveWarning, SymbolNodeRef,
-    library::{Symbol, SymbolArena, SymbolNodeId, symbol, visitor},
+    library::{LookUp, Symbol, SymbolArena, SymbolNodeId, symbol, visitor},
     resolve::context::ExternalResolver,
     resolve::stack::{self, LocalTable, ResolveStack, ResolveStackFrame, ScopeAccess, SymbolFrame},
 };
 use mucad_lang_base::{
-    Identifier, PushIssue, SingleIdentifier, SrcReferrer, SymbolId, ToCompactString,
+    Identifier, Name, PushIssue, SingleIdentifier, SrcReferrer, Stability, SymbolId,
+    ToCompactString,
 };
+use mucad_lang_lower::ir::UnresolvedPath;
+
+/// A symbol a path stands for, with the stability of the symbol or of an alias on the way to
+/// it, if one of them is deprecated, see [`crate::Library::deprecation`].
+type Found = (SymbolId, Option<Stability>);
 
 pub struct ResolveVisitor<'a, 'lib, 'ctx> {
     stack: ResolveStack,
@@ -218,6 +224,8 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
     }
 
     /// Resolve `path` to a symbol of this library, of an external library or of the prelude.
+    ///
+    /// The use of a deprecated symbol is reported, also of a deprecated module in the path.
     fn resolve_symbol(&mut self, path: &mut symbol::Path) {
         let symbol::Path::Unresolved(unresolved_path) = path else {
             return;
@@ -228,60 +236,166 @@ impl<'a, 'lib, 'ctx> ResolveVisitor<'a, 'lib, 'ctx> {
             return;
         }
 
-        let mut paths = Vec::new();
+        let (mut found, missing_library) = self.look_up(unresolved_path);
+        if let Some(name) = missing_library {
+            self.lib_ctx.push_err(ResolveErrorKind::LibraryNotLoaded {
+                name: name.to_string(),
+            });
+        }
+
+        // Unresolved and ambiguous paths stay unresolved, evaluation reports them again.
+        match found.len() {
+            0 => self.lib_ctx.push_err(ResolveErrorKind::UnresolvedPath {
+                path: unresolved_path.to_string(),
+                src_ref: unresolved_path.src_ref,
+            }),
+            1 => {
+                let unresolved_path = unresolved_path.clone();
+                let (symbol_id, deprecation) = found.remove(0);
+                *path = symbol::Path::Resolved(symbol_id);
+                self.warn_deprecated(&unresolved_path, deprecation);
+            }
+            _ => self.lib_ctx.push_err(ResolveErrorKind::AmbiguousPath {
+                path: unresolved_path.to_string(),
+                candidates: found
+                    .into_iter()
+                    .map(|(id, _)| symbol::Path::Resolved(id).to_string())
+                    .collect(),
+                src_ref: unresolved_path.src_ref,
+            }),
+        }
+    }
+
+    /// The symbols `path` stands for: of this library, of an external library or, without
+    /// both, of the prelude, and the name of an external library of the path, which is not
+    /// loaded.
+    fn look_up(&self, path: &UnresolvedPath) -> (Vec<Found>, Option<Name>) {
+        let mut found = Vec::new();
+        let mut missing_library = None;
 
         let external = ExternalResolver::new(self.lib_ctx.lib_cache());
 
         // Look up in current library being resolved, including glob imports of other libraries.
         if let Some(symbol_node_id) = self.stack.symbol_node_id() {
             let lib = self.lib_ctx.lib();
-            paths.extend(
-                lib.look_up_symbol(symbol_node_id, unresolved_path, &external)
-                    .map(|found| symbol::Path::Resolved(found.symbol_id(lib, None))),
-            );
+            if let Some(look_up) = lib.look_up_symbol(symbol_node_id, path, &external) {
+                found.push(self.found(lib, look_up, None));
+            }
         }
 
         // Look up external libraries.
-        if !unresolved_path.is_absolute
-            && let Some(external_name) = unresolved_path.external_name()
+        if !path.is_absolute
+            && let Some(external_name) = path.external_name()
             && let Some(dep) = self.lib_ctx.lib().dependencies.get(&external_name)
         {
             let lib = self.lib_ctx.lib_cache().read_unwrap().get(dep);
             match lib {
                 Some(lib) => {
                     // The library appears in its own tree under its name, so only `mu` is removed.
-                    let path = unresolved_path.without_mu_prefix();
-                    paths.extend(lib.look_up_symbol(lib.root, &path, &external).map(|found| {
-                        symbol::Path::Resolved(found.symbol_id(&lib, Some(lib.id())))
-                    }));
+                    let path = path.without_mu_prefix();
+                    if let Some(look_up) = lib.look_up_symbol(lib.root, &path, &external) {
+                        found.push(self.found(&lib, look_up, Some(lib.id())));
+                    }
                 }
-                None => self.lib_ctx.push_err(ResolveErrorKind::LibraryNotLoaded {
-                    name: external_name.to_string(),
-                }),
+                None => missing_library = Some(external_name),
             }
         }
 
         // The prelude has the lowest priority, e.g. `Circle` for `std::geo2d::Circle`.
-        if paths.is_empty()
-            && let Some(id) = unresolved_path.single_identifier()
+        if found.is_empty()
+            && let Some(id) = path.single_identifier()
             && let Some(symbol_id) = self.lib_ctx.prelude_symbol(id)
         {
-            paths.push(symbol::Path::Resolved(symbol_id));
+            let deprecation = self.deprecation(&symbol_id);
+            found.push((symbol_id, deprecation));
         }
 
-        // Unresolved and ambiguous paths stay unresolved, evaluation reports them again.
-        match paths.len() {
-            0 => self.lib_ctx.push_err(ResolveErrorKind::UnresolvedPath {
-                path: unresolved_path.to_string(),
-                src_ref: unresolved_path.src_ref,
-            }),
-            1 => *path = paths.remove(0),
-            _ => self.lib_ctx.push_err(ResolveErrorKind::AmbiguousPath {
-                path: unresolved_path.to_string(),
-                candidates: paths.iter().map(|path| path.to_string()).collect(),
-                src_ref: unresolved_path.src_ref,
-            }),
+        (found, missing_library)
+    }
+
+    /// The symbol found in `lib` with its deprecation, also of an alias on the way to it.
+    ///
+    /// `lib_id` is the ID of `lib`, if it is another library than the one being resolved.
+    fn found(
+        &self,
+        lib: &crate::Library,
+        look_up: LookUp,
+        lib_id: Option<mucad_lang_base::LibraryId>,
+    ) -> Found {
+        let alias_deprecation = match &look_up {
+            LookUp::Local(node_id) => lib.deprecation(*node_id).cloned(),
+            LookUp::External(_) => None,
+        };
+        let symbol_id = look_up.symbol_id(lib, lib_id);
+        let deprecation = alias_deprecation.or_else(|| self.deprecation(&symbol_id));
+        (symbol_id, deprecation)
+    }
+
+    /// The stability of the symbol `id` of this or another library, if it is deprecated.
+    fn deprecation(&self, id: &SymbolId) -> Option<Stability> {
+        match id {
+            SymbolId::Item(node_id) => self.lib_ctx.lib().deprecation(*node_id).cloned(),
+            SymbolId::External(external_id) => {
+                let lib = self
+                    .lib_ctx
+                    .lib_cache()
+                    .read_unwrap()
+                    .get(&external_id.lib_id)?;
+                lib.deprecation(external_id.id).cloned()
+            }
+            SymbolId::Builtin(_) | SymbolId::Local(_) => None,
         }
+    }
+
+    /// Report the use of a deprecated symbol by `path` with its `deprecation`, and of a
+    /// deprecated module in it, e.g. of `old` in `old::A`.
+    ///
+    /// Like in Rust, deprecated symbols used inside a deprecated symbol are not reported.
+    fn warn_deprecated(&mut self, path: &UnresolvedPath, deprecation: Option<Stability>) {
+        if self.in_deprecated_symbol() {
+            return;
+        }
+        // The modules in the path, e.g. `old` of `old::A`, reported at their name.
+        for len in 1..path.parts.len() {
+            let module = UnresolvedPath {
+                is_absolute: path.is_absolute,
+                parts: path.parts[..len].into(),
+                src_ref: path.parts[len - 1].src_ref(),
+            };
+            if let (found, _) = self.look_up(&module)
+                && let [(_, Some(stability))] = found.as_slice()
+            {
+                self.push_deprecated(&module, stability);
+            }
+        }
+        if let Some(stability) = deprecation {
+            self.push_deprecated(path, &stability);
+        }
+    }
+
+    /// Report the use of the deprecated symbol `path`.
+    ///
+    /// A path visited again, e.g. a default value of a parameter, which is also one of the
+    /// implicit init, is reported once, see [`mucad_lang_base::IssueList`].
+    fn push_deprecated(&mut self, path: &UnresolvedPath, stability: &Stability) {
+        self.lib_ctx.push_warn(ResolveWarning::Deprecated {
+            path: path.to_string(),
+            deprecation: stability.deprecation().unwrap_or_default(),
+            note: stability.deprecation_note().map(str::to_string),
+            src_ref: path.src_ref,
+        });
+    }
+
+    /// Whether the symbol being resolved or a module around it is deprecated.
+    fn in_deprecated_symbol(&self) -> bool {
+        let Some(node_id) = self.stack.symbol_node_id() else {
+            return false;
+        };
+        let lib = self.lib_ctx.lib();
+        let node = SymbolNodeRef::new(node_id, &lib.arena);
+        std::iter::once(node)
+            .chain(node.ancestors())
+            .any(|node| node.get().ver.stability.is_deprecated())
     }
 }
 
