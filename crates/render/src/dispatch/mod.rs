@@ -24,6 +24,7 @@ impl RenderHooks {
         // 2D Primitives
         hooks.insert::<mu::geo2d::Circle>();
         hooks.insert::<mu::geo2d::Rect>();
+        hooks.insert::<mu::geo2d::InvoluteGearProfile>();
         hooks.insert::<mu::geo2d::SinusoidalGearProfile>();
         hooks.insert::<mu::geo2d::Sector>();
         hooks.insert::<mu::geo2d::SvgPath>();
