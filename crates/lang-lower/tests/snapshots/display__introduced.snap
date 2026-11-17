@@ -1,0 +1,11 @@
+---
+source: crates/lang-lower/tests/display.rs
+expression: ir
+---
+pub introduced: Source
+├── /// Introduced with the name of the version.
+│   stable (introduced in v0.6.0)
+│   pub NAMED: Constant = Any: Value(1)
+└── /// Introduced without the name of the version.
+    experimental (introduced in v0.7.0)
+    pub POSITIONAL: Constant = Any: Value(2)

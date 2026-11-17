@@ -151,6 +151,7 @@ impl ir::Attributes {
     /// Any parsing errors, duplicate attributes, or conflicting stability declarations
     /// are recorded into `ctx` via `push_diag`.
     ///
+    /// #[introduced("0.2.0")]
     /// #[introduced(version = "0.2.0")]
     /// #[stable]
     /// #[experimental]
@@ -216,8 +217,14 @@ impl ir::Attributes {
             };
 
             match cmd_name {
+                // `#[introduced("0.6.0")]` or `#[introduced(version = "0.6.0")]`.
                 "introduced" => {
-                    let value = cmd.argument_list.extract_arg_value("version");
+                    use ir::ExprSpec;
+                    let value = cmd.argument_list.extract_arg_value("version").or_else(|| {
+                        cmd.argument_list
+                            .extract_first_unnamed_arg_expr()
+                            .and_then(|expr| expr.value())
+                    });
                     let ver_str = Self::value_as_string(value, ctx);
                     if let Some(ver_str) = ver_str {
                         match ver_str.parse::<Version>() {
