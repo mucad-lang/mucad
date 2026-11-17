@@ -30,7 +30,22 @@ pub sketch Hexagon(radius: Length) {
 /// The profile of an involute spur gear with the standard pressure angle of 20°.
 ///
 /// Two gears mesh, if they have the same module and pressure angle.
-pub sketch InvoluteGearProfile(module: Length, teeth: Integer, pressure_angle = 20°) {
+/// The backlash is the play between their teeth, the clearance the gap between the tips of
+/// the teeth of one gear and the root circle of the other.
+#[introduced("0.7.0")]
+#[experimental]
+pub sketch InvoluteGearProfile(
+    module: Length,
+    teeth: Integer,
+    pressure_angle = 20°,
+    backlash = 0mm,
+    clearance: Length,
+) {
+    /// The clearance of a quarter of the module, like in OpenSCAD.
+    init(module: Length, teeth: Integer, pressure_angle = 20°, backlash = 0mm) {
+        clearance = module / 4;
+    }
+
     /// The radius of the pitch circle, at which two gears roll on each other.
     prop pitch_radius = module * teeth / 2.0;
     /// The radius of the tips of the teeth.
@@ -40,7 +55,7 @@ pub sketch InvoluteGearProfile(module: Length, teeth: Integer, pressure_angle = 
     /// The distance between two teeth at the pitch circle, the circular pitch.
     prop tooth_distance = (outer_radius - pitch_radius) * __mu::math::PI;
 
-    __mu::geo2d::InvoluteGearProfile(module, teeth, pressure_angle);
+    __mu::geo2d::InvoluteGearProfile(module, teeth, pressure_angle, backlash, clearance);
 }
 
 

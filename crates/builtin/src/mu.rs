@@ -684,8 +684,14 @@ pub mod geo2d {
         pub module: Length,
         /// Number of teeth.
         pub teeth: Integer,
-        /// Pressure angle.
+        /// Pressure angle, typically `20°`.
         pub pressure_angle: Angle,
+        /// Play between the teeth of two gears at the pitch circle, by which a tooth is
+        /// thinner, e.g. `0mm`.
+        pub backlash: Length,
+        /// Gap between the tips of the teeth of the other gear and the root circle, which the
+        /// dedendum is longer than the addendum, e.g. a quarter of the module.
+        pub clearance: Length,
     }
 
     /// The profile of a gear with sinusoidal teeth.

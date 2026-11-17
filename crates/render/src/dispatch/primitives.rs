@@ -145,13 +145,14 @@ impl RenderPolygon for __mu::geo2d::SinusoidalGearProfile {
 }
 
 /// The outline of an involute spur gear.
-/// - the addendum is the module, the dedendum 1.25 times the module, with a clearance of a
-///   quarter module,
-/// - the teeth are as thick as the gaps at the pitch circle, half the circular pitch,
+/// - the addendum is the module, the dedendum the module and the clearance,
+/// - the teeth are as thick as the gaps at the pitch circle, half the circular pitch, less the
+///   backlash,
 /// - the flanks are involutes of the base circle and, below it, radial lines down to the root
 ///   circle, the gaps between the teeth are arcs of the root circle.
 ///
-/// A gear without at least three teeth, a size or a pressure angle in `0°..90°` is empty.
+/// A gear without at least three teeth, a size, a pressure angle in `0°..90°`, a root circle or
+/// teeth, e.g. with a backlash of the circular pitch, is empty.
 impl RenderPolygon for __mu::geo2d::InvoluteGearProfile {
     fn render_polygon(&self, resolution: &RenderResolution) -> mucad_core::Polygon {
         use mucad_core::{Coord, LineString, Polygon, Scalar, consts::PI};
@@ -159,15 +160,22 @@ impl RenderPolygon for __mu::geo2d::InvoluteGearProfile {
         let teeth: i64 = self.teeth.to_num();
         let module = self.module.as_mm();
         let pressure_angle: mucad_core::Angle = self.pressure_angle.into_float();
+        let empty = || Polygon::new(LineString::new(vec![]), vec![]);
         if teeth < 3 || module <= 0.0 || !(0.0..PI / 2.0).contains(&pressure_angle.0) {
-            return Polygon::new(LineString::new(vec![]), vec![]);
+            return empty();
         }
 
         let z = teeth as Scalar;
         let pitch_radius = module * z / 2.0;
         let base_radius = pitch_radius * pressure_angle.0.cos();
         let outer_radius = pitch_radius + module;
-        let root_radius = pitch_radius - 1.25 * module;
+        let root_radius = pitch_radius - module - self.clearance.as_mm();
+        // Half a tooth at the pitch circle is a quarter of the angle between two teeth, less
+        // the backlash: `(360° / teeth - backlash_angle) / 4` in OpenSCAD.
+        let half_tooth = (2.0 * PI / z - self.backlash.as_mm() / pitch_radius) / 4.0;
+        if root_radius <= 0.0 || half_tooth <= 0.0 {
+            return empty();
+        }
         // The involutes start at the base circle, or at the root circle above it.
         let start_radius = base_radius.max(root_radius);
 
@@ -177,8 +185,6 @@ impl RenderPolygon for __mu::geo2d::InvoluteGearProfile {
         // The polar angle of the involute at its parameter, e.g. `tan φ - φ` at the pitch circle.
         let involute_angle = |t: Scalar| t - t.atan();
         let pitch_angle = involute_angle(involute_parameter(pitch_radius));
-        // Half a tooth at the pitch circle is a quarter of the angle between two teeth.
-        let half_tooth = PI / (2.0 * z);
         // The angle between a flank and the center of its tooth at the involute parameter `t`,
         // zero where the flanks of a pointed tooth meet.
         let flank_angle = |t: Scalar| (half_tooth - involute_angle(t) + pitch_angle).max(0.0);
@@ -272,16 +278,55 @@ mod tests {
     use super::*;
     use mucad_core::{Polygon, Scalar, consts::PI};
 
-    /// An involute gear profile with the module in mm and the pressure angle in degrees.
+    /// An involute gear profile with the module in mm and the pressure angle in degrees,
+    /// without backlash and with the clearance of a quarter module, like in OpenSCAD.
     fn gear(module: Scalar, teeth: i64, pressure_angle: Scalar) -> Polygon {
+        gear_with(module, teeth, pressure_angle, 0.0, module / 4.0)
+    }
+
+    /// An involute gear profile with a backlash and a clearance in mm.
+    fn gear_with(
+        module: Scalar,
+        teeth: i64,
+        pressure_angle: Scalar,
+        backlash: Scalar,
+        clearance: Scalar,
+    ) -> Polygon {
+        use mucad_lang_types::Length;
         __mu::geo2d::InvoluteGearProfile {
-            module: mucad_lang_types::Length::mm(module),
+            module: Length::mm(module),
             teeth: mucad_lang_types::Integer::from_num(teeth),
             pressure_angle: cgmath::Rad(mucad_lang_types::Scalar::from_num(
                 pressure_angle.to_radians(),
             )),
+            backlash: Length::mm(backlash),
+            clearance: Length::mm(clearance),
         }
         .render_polygon(&RenderResolution::high())
+    }
+
+    /// The part of the pitch circle inside the gear.
+    fn pitch_circle_inside(polygon: &Polygon, pitch_radius: Scalar) -> Scalar {
+        let samples = 100_000;
+        let inside = (0..samples)
+            .filter(|i| {
+                let angle = 2.0 * PI * (*i as Scalar + 0.5) / samples as Scalar;
+                contains(
+                    polygon,
+                    (pitch_radius * angle.cos(), pitch_radius * angle.sin()),
+                )
+            })
+            .count();
+        inside as Scalar / samples as Scalar
+    }
+
+    /// The smallest distance of a point of the outline to the center.
+    fn min_radius(polygon: &Polygon) -> Scalar {
+        polygon
+            .exterior()
+            .coords()
+            .map(|p| p.x.hypot(p.y))
+            .fold(Scalar::MAX, Scalar::min)
     }
 
     /// Whether `(x, y)` is inside `polygon`, by counting the crossings of a ray to the right.
@@ -302,18 +347,7 @@ mod tests {
     #[test_case::test_case(1.5, 60, 25.0; "60 teeth starting at the root circle")]
     fn tooth_thickness_at_pitch_circle(module: Scalar, teeth: i64, pressure_angle: Scalar) {
         let polygon = gear(module, teeth, pressure_angle);
-        let pitch_radius = module * teeth as Scalar / 2.0;
-        let samples = 100_000;
-        let inside = (0..samples)
-            .filter(|i| {
-                let angle = 2.0 * PI * (*i as Scalar + 0.5) / samples as Scalar;
-                contains(
-                    &polygon,
-                    (pitch_radius * angle.cos(), pitch_radius * angle.sin()),
-                )
-            })
-            .count();
-        let ratio = inside as Scalar / samples as Scalar;
+        let ratio = pitch_circle_inside(&polygon, module * teeth as Scalar / 2.0);
         assert!((ratio - 0.5).abs() < 0.005, "{ratio}");
     }
 
@@ -348,11 +382,47 @@ mod tests {
         assert!((turned - 2.0 * PI).abs() < eps, "{turned}");
     }
 
+    /// The backlash makes the teeth thinner at the pitch circle: by `backlash / (2π module)` of
+    /// it, the circular pitch is `π module`.
+    #[test_case::test_case(2.0, 20, 0.5; "half a millimeter")]
+    #[test_case::test_case(1.0, 12, 0.2; "12 teeth")]
+    fn backlash(module: Scalar, teeth: i64, backlash: Scalar) {
+        let polygon = gear_with(module, teeth, 20.0, backlash, module / 4.0);
+        let ratio = pitch_circle_inside(&polygon, module * teeth as Scalar / 2.0);
+        let expected = 0.5 - backlash / (2.0 * PI * module);
+        assert!((ratio - expected).abs() < 0.005, "{ratio} != {expected}");
+    }
+
+    /// The clearance deepens the root circle below the tips of the other gear.
+    #[test_case::test_case(0.0; "no clearance")]
+    #[test_case::test_case(0.5; "half a module")]
+    #[test_case::test_case(1.2; "more than the module")]
+    fn clearance(clearance: Scalar) {
+        let (module, teeth) = (2.0, 30);
+        let polygon = gear_with(module, teeth, 20.0, 0.0, clearance);
+        let root_radius = module * teeth as Scalar / 2.0 - module - clearance;
+        let min = min_radius(&polygon);
+        assert!((min - root_radius).abs() < 1e-9, "{min} != {root_radius}");
+    }
+
     /// A gear without three teeth, a size or a valid pressure angle is empty.
     #[test_case::test_case(1.0, 2, 20.0; "two teeth")]
     #[test_case::test_case(0.0, 20, 20.0; "no module")]
     #[test_case::test_case(1.0, 20, 90.0; "no base circle")]
     fn invalid(module: Scalar, teeth: i64, pressure_angle: Scalar) {
         assert!(gear(module, teeth, pressure_angle).exterior().0.is_empty());
+    }
+
+    /// A gear without teeth or root circle is empty: with a backlash of the circular pitch or
+    /// a clearance, which is deeper than the center.
+    #[test_case::test_case(PI * 2.0, 0.5; "backlash of the circular pitch")]
+    #[test_case::test_case(0.0, 20.0; "no root circle")]
+    fn no_teeth_or_root(backlash: Scalar, clearance: Scalar) {
+        assert!(
+            gear_with(2.0, 12, 20.0, backlash, clearance)
+                .exterior()
+                .0
+                .is_empty()
+        );
     }
 }

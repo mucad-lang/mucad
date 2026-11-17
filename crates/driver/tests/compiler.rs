@@ -120,7 +120,7 @@ fn compile_geo2d() {
             __mu::geo2d::Ngon(n = 6, radius = 10mm);
             __mu::geo2d::Sector(radius = 10mm, start = 0°, end = 90°);
             __mu::geo2d::Line(x0 = 0.0, y0 = 0.0, x1 = 10.0, y1 = 5.0);
-            __mu::geo2d::InvoluteGearProfile(module = 1mm, teeth = 12, pressure_angle = 20°);
+            __mu::geo2d::InvoluteGearProfile(module = 1mm, teeth = 12, pressure_angle = 20°, backlash = 0mm, clearance = 0.25mm);
             __mu::geo2d::SinusoidalGearProfile(module = 1mm, teeth = 12, roundness = 0.5, stretch = 0.5);
             "#,
         )

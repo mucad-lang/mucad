@@ -16,6 +16,8 @@ Group
 │       - y0 [in]: Scalar = 0
 │       - y1 [in]: Scalar = 5
 ├── Builtin(__mu::geo2d::InvoluteGearProfile[0x7bcb95d94b1b9570])
+│       - backlash [in]: Length = 0mm
+│       - clearance [in]: Length = 0.25mm
 │       - module [in]: Length = 1mm
 │       - pressure_angle [in]: Angle = 20°
 │       - teeth [in]: Integer = 12
